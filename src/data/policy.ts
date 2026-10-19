@@ -8,7 +8,7 @@ import { todayOf } from "./selectors";
 
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
-  | "handoffs" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data";
+  | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -24,6 +24,8 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   "docs.legal":    { read: ["elder", "guardian"], write: ["guardian"], review: ["reviewer"] },
   approvals:       { read: ["elder", "guardian"], approve: ["guardian"], propose: ["family", "pro@shift", "pro"] },
   handoffs:        { read: ["guardian", "family", "pro"], write: ["pro@shift"] },
+  vitals:          { read: ["elder", "guardian"], write: ["guardian"] },
+  appointments:    { read: ["elder", "guardian", "family", "pro"], write: ["guardian"] },
   circle:          { read: ["elder", "guardian", "family", "pro"], invite: ["elder", "guardian"], revoke: ["elder", "guardian"] },
   schedule:        { read: ["elder", "guardian", "family", "pro"], write: ["guardian"], propose: ["pro", "family"] },
   history:         { read: ["elder", "guardian", "family"] },
@@ -57,6 +59,8 @@ export function can(s: State, actorId: string, action: Action, resource: Resourc
   if (!allowed) return false;
   // The elder's "Pause sharing" switch (CC-81) limits family and caregivers to emergencies.
   if (s.settings.sharingPaused && (role === "family" || role === "pro") && !ALWAYS_SHARED.includes(resource)) return false;
+  // Health readings reach the guardian only while Maggie chooses to share them (CC-87).
+  if (resource === "vitals" && role === "guardian" && action === "read" && !s.settings.vitals.shareWithGuardian) return false;
   return true;
 }
 

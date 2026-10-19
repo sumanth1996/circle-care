@@ -297,6 +297,60 @@ with sync_playwright() as p:
         expect(pg.get_by_text("Net Promoter Score")).to_be_visible()
     step("CC-76 NPS survey scrubs health words; CC-77 dashboard hides small groups", nps)
 
+    # ---------- Health & Calendar (CC-84 – CC-98) ----------
+    def health():
+        pg.goto(B + "/app/guardian/health")
+        expect(pg.get_by_text("unusual reading", exact=False).first).to_be_visible()
+        expect(pg.get_by_text("Stand hours").first).to_be_visible()
+        pg.get_by_role("button", name="Heart & oxygen").click()
+        expect(pg.get_by_text("Heart rate high: 128 bpm").first).to_be_visible()
+        expect(pg.get_by_text("Blood oxygen low: 89%").first).to_be_visible()
+        pg.get_by_role("button", name="Show all readings as a table").click()
+        expect(pg.locator(".data-table tbody tr").first).to_be_visible()
+        assert pg.locator(".data-table tbody tr").count() >= 20
+        pg.get_by_role("button", name="Previous day").click()
+        expect(pg.get_by_text("Yesterday")).to_be_visible()
+        pg.get_by_role("button", name="Activity").click()
+        expect(pg.get_by_text("How Maggie spent", exact=False)).to_be_visible()
+        expect(pg.get_by_text("Mental well-being", exact=False)).to_be_visible()
+    step("CC-84/85/86/89-92 guardian Health: summary, vitals, table, activity", health)
+
+    def health_alert():
+        pg.goto(B + "/app/guardian/health")
+        pg.get_by_role("button", name="Demo mode", exact=False).click()
+        pg.get_by_role("button", name="Simulate a sudden heart-rate change").click()
+        pg.wait_for_timeout(600)
+        pg.goto(B + "/app/guardian/alerts")
+        expect(pg.get_by_text("Heart rate high", exact=False).first).to_be_visible()
+    step("CC-86 a sudden heart-rate change alerts the guardian", health_alert)
+
+    def health_sharing():
+        pg.goto(B + "/app/elder/privacy")
+        pg.get_by_role("switch", name="Share health readings with Sarah").uncheck(force=True)
+        pg.goto(B + "/app/guardian/health")
+        expect(pg.get_by_text("Maggie isn't sharing health readings")).to_be_visible()
+        pg.goto(B + "/app/elder/privacy")
+        pg.get_by_role("switch", name="Share health readings with Sarah").check(force=True)
+        pg.goto(B + "/app/guardian/health")
+        expect(pg.get_by_role("heading", name="Health", exact=True)).to_be_visible()
+    step("CC-87 Maggie controls whether Sarah sees health readings", health_sharing)
+
+    def calendar():
+        pg.goto(B + "/app/guardian/calendar")
+        expect(pg.get_by_text("Up next", exact=False)).to_be_visible()
+        expect(pg.locator(".cal-cell")).to_have_count(pg.locator(".cal-row:not(.cal-head)").count() * 7)
+        pg.get_by_role("button", name="Next month").click()
+        pg.get_by_role("button", name="Today", exact=True).click()
+        pg.get_by_role("button", name="Add appointment").click()
+        pg.get_by_label("What").fill("Blood pressure recheck")
+        pg.get_by_label("With (doctor, lab or pharmacy)").fill("Dr. Hannah Brooks")
+        pg.locator(".pill-check", has_text="Lisinopril").click()
+        pg.get_by_role("button", name="Add to calendar").click()
+        expect(pg.locator(".appt", has_text="Blood pressure recheck")).to_be_visible()
+        pg.locator(".appt", has_text="Blood pressure recheck").get_by_role("button", name="Cancel").click()
+        expect(pg.locator(".appt", has_text="Blood pressure recheck").get_by_text("Cancelled")).to_be_visible()
+    step("CC-94/96/97 month calendar: next-up, navigation, add and cancel", calendar)
+
     def sign_out_all():
         pg.goto(B + "/app/guardian/privacy")
         pg.get_by_role("button", name="Sign out everywhere", exact=False).click()

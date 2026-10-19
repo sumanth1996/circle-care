@@ -22,6 +22,8 @@ This repository is a working product prototype built from the Circle Care roadma
 | App | `/#/app`, then pick a person |
 | Demo MFA code | `482913` |
 | Switch person / presenter controls | Tap the **Demo Â· Name** pill at the top of the app |
+| Guardian Health (vitals, activity, well-being) | `/#/app/guardian/health` |
+| Guardian Calendar (medication appointments) | `/#/app/guardian/calendar` |
 | Review team console (internal) | `/#/app/review` |
 | Pilot dashboard (internal) | `/#/app/pilot` |
 
@@ -54,7 +56,7 @@ Open the deployed URL in Safari (iOS) or Chrome (Android), then choose **Share â
 
 ```bash
 npm install
-npm test           # 180 unit tests: permission matrix, audit chain, rules engine
+npm test           # 217 unit tests: permission matrix, audit chain, rules engine
 npm run dev        # http://localhost:5000
 npm run build      # type-check + production build into dist/
 npm run preview    # serve the production build
@@ -104,7 +106,8 @@ Requires Node 20+.
 - **Guardian verification:** a review team approves or rejects legal-authority documents with a reason.
 - **Session lock:** caregiver and guardian apps lock after inactivity; the elder can opt in.
 - **Content Security Policy** on production builds; voice confirmation uses on-device speech only.
-- **Accessible:** 0 axe-core WCAG 2.1 AA violations across 22 screens.
+- **Health readings are the elder's to share:** heart rate, blood oxygen, activity and sleep reach the guardian only while Maggie keeps "Share health readings with Sarah" on.
+- **Accessible:** 0 axe-core WCAG 2.1 AA violations across 24 screens.
 
 ### What a production build still needs
 

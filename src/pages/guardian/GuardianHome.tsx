@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
-import { Sun, Pill, ListChecks, UserRound, Bell, ChevronRight, AlertTriangle, Siren, CalendarX2, CheckCircle2, ClipboardList, Clock3 } from "lucide-react";
-import { useStore } from "../../data/store";
-import { clock, dosesFor, tasksFor, checkinToday, checkinMissed, caregiverOnShift, alertsFor, pendingApprovals, lateCheckins, coverageGaps, member, nameOf, feed, activeSos, northStar, checkinStreak } from "../../data/selectors";
+import { Sun, Pill, ListChecks, UserRound, Bell, ChevronRight, AlertTriangle, Siren, CalendarX2, CheckCircle2, ClipboardList, Clock3, HeartPulse, CalendarHeart } from "lucide-react";
+import { useStore, GUARDIAN } from "../../data/store";
+import { can } from "../../data/policy";
+import { readingsFor, detectEvents } from "../../lib/health";
+import { clock, dosesFor, tasksFor, checkinToday, checkinMissed, caregiverOnShift, alertsFor, pendingApprovals, lateCheckins, coverageGaps, member, nameOf, feed, activeSos, northStar, checkinStreak, todayOf } from "../../data/selectors";
 import { Avatar, Ring } from "../../components/ui";
 import { fmtTime, greeting, fmtShortDay, relative } from "../../lib/time";
 import "./guardian.css";
@@ -23,6 +25,15 @@ export default function GuardianHome() {
   const sos = activeSos(state);
 
   useEffect(() => { actions.logView("the dashboard"); }, [actions]);
+
+  // Health and calendar tiles (CC-84, CC-94).
+  const health = (() => {
+    if (!can(state, GUARDIAN, "read", "vitals")) return null;
+    const r = readingsFor(todayOf(state), now, state.settings.vitals.intervalMin, state.health.overrides);
+    const last = r.at(-1);
+    return last ? { hr: last.hr, spo2: last.spo2, events: detectEvents(r, state.settings.vitals.thresholds).length } : null;
+  })();
+  const nextAppt = [...state.appointments].filter((a) => a.status === "scheduled" && a.date >= todayOf(state)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
 
   type Attn = { key: string; icon: typeof AlertTriangle; color: string; title: string; sub: string; to: string };
   const attention: Attn[] = [];
@@ -70,6 +81,18 @@ export default function GuardianHome() {
           <span className="tile-k"><UserRound size={16} /> With Maggie now</span>
           {cg ? <span className="row"><Avatar m={cg} size={34} /><span className="tile-v">{cg.short}</span></span> : <span className="tile-v">No one</span>}
           <span className="tile-sub">{cg ? `Checked in at ${fmtTime(state.visits.find((v) => v.caregiverId === cg.id && !v.checkOut)?.checkIn ?? now)}` : "Next shift on the schedule"}</span>
+        </Link>
+        {health && (
+          <Link to="/app/guardian/health" className="tile-s">
+            <span className="row between"><span className="tile-k"><HeartPulse size={16} /> Health</span>{health.events ? <AlertTriangle color="#d03b3b" size={20} /> : null}</span>
+            <span className="tile-v">{health.hr} bpm · {health.spo2}%</span>
+            <span className="tile-sub">{health.events ? `${health.events} unusual ${health.events === 1 ? "reading" : "readings"} today` : "Heart rate and oxygen in usual range"}</span>
+          </Link>
+        )}
+        <Link to="/app/guardian/calendar" className="tile-s">
+          <span className="tile-k"><CalendarHeart size={16} /> Next appointment</span>
+          <span className="tile-v">{nextAppt ? nextAppt.title : "None scheduled"}</span>
+          <span className="tile-sub">{nextAppt ? `${nextAppt.date === todayOf(state) ? "Today" : fmtShortDay(nextAppt.date)} at ${fmtTime(nextAppt.time)}` : "Add one in Calendar"}</span>
         </Link>
         <Link to="/app/guardian/alerts" className="tile-s">
           <span className="tile-k"><Bell size={16} /> Alerts</span>

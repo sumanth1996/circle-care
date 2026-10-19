@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { NavLink, Navigate, Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import {
-  Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, type LucideIcon,
+  Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, HeartPulse, CalendarHeart, type LucideIcon,
 } from "lucide-react";
 import { useStore } from "../data/store";
 import { activeSos, alertsFor, member, meId, nameOf, pendingApprovals, unreadCount, clock } from "../data/selectors";
@@ -71,9 +71,11 @@ export default function AppShell({ persona }: { persona: Persona }) {
     persona === "guardian"
       ? [
           { to: "/app/guardian", label: "Home", icon: Home, tab: true },
-          { to: "/app/guardian/meds", label: "Medications", icon: Pill, tab: true },
+          { to: "/app/guardian/health", label: "Health", icon: HeartPulse, tab: true },
+          { to: "/app/guardian/calendar", label: "Calendar", icon: CalendarHeart, tab: true },
           { to: "/app/guardian/approvals", label: "Approvals", icon: CheckCircle2, badge: pendingApprovals(state).length, tab: true },
-          { to: "/app/guardian/schedule", label: "Schedule", icon: CalendarDays, tab: true },
+          { to: "/app/guardian/meds", label: "Medications", icon: Pill },
+          { to: "/app/guardian/schedule", label: "Shift schedule", icon: CalendarDays },
           { to: "/app/guardian/circle", label: "Care circle", icon: Users },
           { to: "/app/guardian/feed", label: "Activity", icon: Activity },
           { to: "/app/guardian/digest", label: "Weekly digest", icon: BarChart3 },

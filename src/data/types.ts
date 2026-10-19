@@ -183,6 +183,27 @@ export interface Alert {
   link?: string;
 }
 
+/** Medication-related appointments on the guardian Calendar (CC-94 – CC-98). */
+export type AppointmentKind = "doctor" | "lab" | "refill" | "review";
+export interface Appointment {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
+  durationMin: number;
+  kind: AppointmentKind;
+  title: string;
+  /** Who the appointment is with, or the pharmacy. */
+  provider: string;
+  location: string;
+  /** Medicines this appointment is about. */
+  medIds: string[];
+  /** Member taking Maggie, if any. */
+  escortId?: string;
+  prep?: string;
+  status: "scheduled" | "done" | "cancelled";
+  createdBy: string;
+}
+
 export interface Settings {
   checkinWindow: { start: string; end: string };
   escalation: string[]; // ordered member ids
@@ -203,6 +224,14 @@ export interface Settings {
   toured: Partial<Record<Persona, boolean>>;
   /** Pilot setup-call requests (CC-75). */
   setupCallRequested?: string;
+  /** Health readings from Maggie's watch (CC-84 – CC-88). */
+  vitals: {
+    /** Minutes between readings; 30 by default. */
+    intervalMin: number;
+    thresholds: { hrHigh: number; hrLow: number; hrJump: number; spo2Low: number; spo2Drop: number };
+    /** Maggie's choice to share health readings with her guardian. */
+    shareWithGuardian: boolean;
+  };
   emergencyCard: {
     allergies: string;
     conditions: string;
@@ -232,6 +261,15 @@ export interface State {
   approvals: Approval[];
   notes: CareNote[];
   docs: CareDoc[];
+  appointments: Appointment[];
+  /** Body measurements and simulated device readings (CC-84). */
+  health: {
+    heightCm: number;
+    birthYear: number;
+    device: string;
+    /** Readings injected by the presenter to demonstrate alerts. */
+    overrides: { at: string; hr?: number; spo2?: number; addedAt: string }[];
+  };
   audit: AuditEvent[];
   alerts: Alert[];
   settings: Settings;

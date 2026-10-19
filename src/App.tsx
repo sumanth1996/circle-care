@@ -30,6 +30,8 @@ import Schedule from "./pages/guardian/Schedule";
 import Feed from "./pages/guardian/Feed";
 import Digest from "./pages/guardian/Digest";
 import GuardianSettings from "./pages/guardian/GuardianSettings";
+import Health from "./pages/guardian/Health";
+import Calendar from "./pages/guardian/Calendar";
 import Notes from "./pages/shared/Notes";
 import EmergencyCard from "./pages/shared/EmergencyCard";
 import SosResponder from "./pages/shared/SosResponder";
@@ -85,6 +87,8 @@ export default function App() {
             <Route path="/app/guardian" element={<AppShell persona="guardian" />}>
               <Route index element={<GuardianHome />} />
               <Route path="meds" element={<Medications />} />
+              <Route path="health" element={<Health />} />
+              <Route path="calendar" element={<Calendar />} />
               <Route path="approvals" element={<Approvals />} />
               <Route path="circle" element={<Circle />} />
               <Route path="schedule" element={<Schedule />} />

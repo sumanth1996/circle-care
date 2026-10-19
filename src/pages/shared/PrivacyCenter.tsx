@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound } from "lucide-react";
+import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse } from "lucide-react";
 import { useStore } from "../../data/store";
 import { clock, member, nameOf } from "../../data/selectors";
 import { Avatar, Sheet, Toggle, download, useToast } from "../../components/ui";
@@ -69,6 +69,14 @@ export default function PrivacyCenter() {
           <PauseCircle size={30} color="var(--elder)" style={{ flex: "none" }} />
           <div className="grow"><b>Pause sharing</b><p className="muted small">{state.settings.sharingPaused ? "Sharing is paused. Only SOS alerts go out." : "Stops sharing with family and caregivers. SOS still works."}</p></div>
           {isElder ? <Toggle checked={state.settings.sharingPaused} onChange={(v) => { actions.settings({ sharingPaused: v }); toast(v ? "Sharing paused" : "Sharing is back on"); }} label="Pause sharing" /> : <span className={`badge ${state.settings.sharingPaused ? "orange" : "green"}`}>{state.settings.sharingPaused ? "Paused" : "On"}</span>}
+        </div>
+      </section>
+
+      <section className="panel stack" style={{ "--gap": "12px" } as React.CSSProperties}>
+        <div className="row">
+          <HeartPulse size={30} color="var(--red)" style={{ flex: "none" }} />
+          <div className="grow"><b>Share health readings with Sarah</b><p className="muted small">Heart rate, blood oxygen, activity and sleep from {isElder ? "your" : "Maggie's"} watch. {state.settings.vitals.shareWithGuardian ? "Only Sarah can see them." : "Not shared right now."}</p></div>
+          {isElder ? <Toggle checked={state.settings.vitals.shareWithGuardian} onChange={(v) => { actions.setHealthSharing(v); toast(v ? "Sharing health readings with Sarah" : "Health readings are private"); }} label="Share health readings with Sarah" /> : <span className={`badge ${state.settings.vitals.shareWithGuardian ? "green" : "orange"}`}>{state.settings.vitals.shareWithGuardian ? "Shared" : "Private"}</span>}
         </div>
       </section>
 

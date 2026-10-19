@@ -2,7 +2,7 @@ import os
 from playwright.sync_api import sync_playwright
 B = "http://127.0.0.1:4173/#"
 AXE = os.path.join(os.path.dirname(__file__), "..", "..", "node_modules", "axe-core", "axe.min.js")
-pages = ["/", "/how-it-works", "/features", "/who-its-for", "/privacy", "/pilot", "/app", "/app/elder", "/app/elder/next", "/app/elder/privacy", "/app/elder/settings", "/app/guardian", "/app/guardian/meds", "/app/guardian/approvals", "/app/guardian/privacy", "/app/guardian/notes", "/app/guardian/settings", "/app/guardian/circle", "/app/guardian/digest", "/app/caregiver", "/app/pilot", "/app/review"]
+pages = ["/", "/how-it-works", "/features", "/who-its-for", "/privacy", "/pilot", "/app", "/app/elder", "/app/elder/next", "/app/elder/privacy", "/app/elder/settings", "/app/guardian", "/app/guardian/meds", "/app/guardian/approvals", "/app/guardian/privacy", "/app/guardian/notes", "/app/guardian/settings", "/app/guardian/circle", "/app/guardian/digest", "/app/guardian/health", "/app/guardian/calendar", "/app/caregiver", "/app/pilot", "/app/review"]
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
     ctx = b.new_context(viewport={"width": 1280, "height": 900}, timezone_id="America/New_York", bypass_csp=True)

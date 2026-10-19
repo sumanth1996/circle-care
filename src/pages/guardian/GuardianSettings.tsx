@@ -57,6 +57,19 @@ export default function GuardianSettings() {
         <p className="tiny">High-priority medicines escalate twice as fast.</p>
       </section>
 
+      <section id="health" className="stack" style={{ "--gap": "8px" } as React.CSSProperties}>
+        <h2 className="section-title">Health readings</h2>
+        <div className="list">
+          <label className="list-row" style={row}><span className="grow">New reading every<span className="list-sub" style={{ display: "block" }}>From Maggie's watch</span></span><select className="input" style={{ width: 140 }} value={s.vitals.intervalMin} onChange={(e) => actions.settings({ vitals: { ...s.vitals, intervalMin: +e.target.value } })}>{[15, 30, 60].map((n) => <option key={n} value={n}>{n} minutes</option>)}</select></label>
+          <label className="list-row" style={row}><span className="grow">Alert if heart rate is above</span><select className="input" style={{ width: 140 }} value={s.vitals.thresholds.hrHigh} onChange={(e) => actions.settings({ vitals: { ...s.vitals, thresholds: { ...s.vitals.thresholds, hrHigh: +e.target.value } } })}>{[100, 110, 120, 130].map((n) => <option key={n} value={n}>{n} bpm</option>)}</select></label>
+          <label className="list-row" style={row}><span className="grow">…or below (while awake)</span><select className="input" style={{ width: 140 }} value={s.vitals.thresholds.hrLow} onChange={(e) => actions.settings({ vitals: { ...s.vitals, thresholds: { ...s.vitals.thresholds, hrLow: +e.target.value } } })}>{[40, 45, 50, 55].map((n) => <option key={n} value={n}>{n} bpm</option>)}</select></label>
+          <label className="list-row" style={row}><span className="grow">Sudden heart-rate change<span className="list-sub" style={{ display: "block" }}>Between two readings</span></span><select className="input" style={{ width: 140 }} value={s.vitals.thresholds.hrJump} onChange={(e) => actions.settings({ vitals: { ...s.vitals, thresholds: { ...s.vitals.thresholds, hrJump: +e.target.value } } })}>{[15, 20, 25, 30, 40].map((n) => <option key={n} value={n}>{n}+ bpm</option>)}</select></label>
+          <label className="list-row" style={row}><span className="grow">Alert if blood oxygen is below</span><select className="input" style={{ width: 140 }} value={s.vitals.thresholds.spo2Low} onChange={(e) => actions.settings({ vitals: { ...s.vitals, thresholds: { ...s.vitals.thresholds, spo2Low: +e.target.value } } })}>{[88, 90, 92, 94].map((n) => <option key={n} value={n}>{n}%</option>)}</select></label>
+          <label className="list-row" style={row}><span className="grow">Sudden oxygen drop</span><select className="input" style={{ width: 140 }} value={s.vitals.thresholds.spo2Drop} onChange={(e) => actions.settings({ vitals: { ...s.vitals, thresholds: { ...s.vitals.thresholds, spo2Drop: +e.target.value } } })}>{[3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}+ points</option>)}</select></label>
+        </div>
+        <p className="tiny">Ask Maggie's doctor what range is right for her. Maggie decides whether readings are shared with you — {s.vitals.shareWithGuardian ? "she's sharing them now" : "she has turned sharing off"}.</p>
+      </section>
+
       <section className="stack" style={{ "--gap": "8px" } as React.CSSProperties}>
         <h2 className="section-title">Security</h2>
         <div className="list">

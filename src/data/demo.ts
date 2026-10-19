@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent } fro
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -186,6 +186,8 @@ export function seed(now = new Date()): State {
       { id: uid("d"), name: "Hospital discharge summary.pdf", kind: "Discharge summary", by: GUARDIAN, at: iso(ymd(addDays(now, -55)), "15:30"), size: "488 KB" },
       { id: uid("d"), name: "Healthcare power of attorney.pdf", kind: "Legal authority", by: GUARDIAN, at: iso(ymd(addDays(now, -60)), "09:00"), size: "1.1 MB", status: "verified" },
     ],
+    appointments: appointmentsSeed(now),
+    health: { heightCm: 163, birthYear: 1946, device: "Maggie's watch", overrides: [] },
     audit,
     alerts: [
       { id: uid("al"), at: iso(ymd(addDays(now, -1)), "17:30"), to: ["guardian"], title: "You have a new request in Circle Care", detail: "James asked to add Ruth Okafor as a respite caregiver for 2 weeks.", severity: "info", read: [], link: "/app/guardian/approvals" },
@@ -207,6 +209,7 @@ export function seed(now = new Date()): State {
       sessionLockMin: 15,
       elderLockMin: 0,
       toured: {},
+      vitals: { intervalMin: 30, thresholds: { hrHigh: 110, hrLow: 50, hrJump: 25, spo2Low: 92, spo2Drop: 4 }, shareWithGuardian: true },
       emergencyCard: {
         allergies: "Penicillin",
         conditions: "High blood pressure, type 2 diabetes",
@@ -217,4 +220,31 @@ export function seed(now = new Date()): State {
       },
     },
   };
+}
+
+/** Medication-related appointments around today, including two on the same day. */
+function appointmentsSeed(now: Date): State["appointments"] {
+  const d = (n: number) => ymd(addDays(now, n));
+  // The care note says the eye appointment is next Thursday at 10 AM.
+  const toThu = ((4 - now.getDay() + 7) % 7) || 7;
+  const a = (n: number, time: string, kind: State["appointments"][number]["kind"], title: string, provider: string, location: string, medIds: string[], extra: Partial<State["appointments"][number]> = {}) => ({
+    id: uid("appt"), date: d(n), time, durationMin: kind === "refill" ? 15 : kind === "lab" ? 20 : 45, kind, title, provider, location, medIds,
+    status: (n < 0 ? "done" : "scheduled") as "done" | "scheduled", createdBy: GUARDIAN, ...extra,
+  });
+  return [
+    a(-12, "16:00", "refill", "Pick up Atorvastatin refill", "Lakeshore Pharmacy", "212 Lake St", ["med-atorvastatin"], { escortId: FAMILY }),
+    a(-6, "10:30", "doctor", "Blood pressure check", "Dr. Hannah Brooks", "Grand River Family Medicine", ["med-lisinopril"], { escortId: GUARDIAN }),
+    a(-3, "09:00", "review", "Pharmacist medication review", "Lakeshore Pharmacy", "Phone call", ["med-lisinopril", "med-metformin", "med-vitd", "med-atorvastatin"]),
+    a(0, "16:30", "refill", "Pick up Metformin refill", "Lakeshore Pharmacy", "212 Lake St", ["med-metformin"], { escortId: CAREGIVER }),
+    a(2, "08:15", "lab", "A1c and kidney blood test", "Grand River Lab", "Suite 110, 400 Fulton St", ["med-metformin", "med-lisinopril"], { prep: "No food after midnight. Take morning medicines after the test.", escortId: CAREGIVER }),
+    a(2, "11:00", "doctor", "Diabetes follow-up", "Dr. Hannah Brooks", "Grand River Family Medicine", ["med-metformin"], { escortId: CAREGIVER, prep: "Bring the glucose log." }),
+    a(toThu, "10:00", "doctor", "Eye exam (diabetes screening)", "Dr. Omar Patel", "Lakeview Eye Care", ["med-metformin"], { escortId: GUARDIAN, prep: "Pupils will be dilated — bring sunglasses." }),
+    a(9, "14:00", "refill", "Lisinopril 90-day refill", "Lakeshore Pharmacy", "Mail order", ["med-lisinopril"]),
+    a(14, "09:30", "lab", "Cholesterol panel", "Grand River Lab", "Suite 110, 400 Fulton St", ["med-atorvastatin"], { prep: "Fasting for 10 hours." }),
+    a(14, "13:00", "refill", "Vitamin D3 refill", "Lakeshore Pharmacy", "212 Lake St", ["med-vitd"], { escortId: FAMILY }),
+    a(16, "15:00", "doctor", "Cardiology follow-up", "Dr. Lena Ortiz", "Mercy Heart Center", ["med-lisinopril", "med-atorvastatin"], { escortId: GUARDIAN, prep: "Bring the heart-rate report from the Health tab." }),
+    a(21, "10:00", "review", "Annual medication review", "Dr. Hannah Brooks", "Grand River Family Medicine", ["med-lisinopril", "med-metformin", "med-vitd", "med-atorvastatin"], { escortId: GUARDIAN }),
+    a(28, "16:00", "refill", "Metformin refill", "Lakeshore Pharmacy", "212 Lake St", ["med-metformin"]),
+    a(35, "08:30", "lab", "Kidney function test", "Grand River Lab", "Suite 110, 400 Fulton St", ["med-metformin"]),
+  ];
 }

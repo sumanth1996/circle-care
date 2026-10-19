@@ -1,10 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc } from "./types";
+import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc, Appointment } from "./types";
 import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo";
 import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, activeSos, member, todayVisit, tasksFor, checkinToday } from "./selectors";
 import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
-import { hm, uid, ymd, toMin, minutesOfDay } from "../lib/time";
+import { hm, uid, ymd, toMin, minutesOfDay, fmtTime } from "../lib/time";
+import { readingsFor, detectEvents } from "../lib/health";
 import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
 
 export const STATE_KEY = "circle-care-demo";
@@ -12,9 +13,9 @@ export const STATE_KEY = "circle-care-demo";
 type Updater = (draft: State) => void;
 
 /** Adds an alert unless one with the same key already exists. */
-export function pushAlert(s: State, a: Omit<Alert, "id" | "at" | "read">) {
+export function pushAlert(s: State, a: Omit<Alert, "id" | "at" | "read">, at?: string) {
   if (a.key && s.alerts.some((x) => x.key === a.key)) return;
-  s.alerts.push({ ...a, id: uid("al"), at: clock(s).toISOString(), read: [] });
+  s.alerts.push({ ...a, id: uid("al"), at: at ?? clock(s).toISOString(), read: [] });
 }
 
 export function audit(s: State, actorId: string, action: AuditEvent["action"], resource: string) {
@@ -122,6 +123,19 @@ export function evaluate(s: State) {
     if (n >= 3) pushAlert(s, { key: `sec-deny-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", title: "Circle Care security notice", detail: `${nameOf(s, actorId)} tried ${n} times to open information their role doesn't allow.`, link: "/app/guardian/circle" });
   }
 
+  // Abnormal heart rate or blood oxygen (CC-86, CC-88): the guardian is told, if Maggie shares readings.
+  if (s.settings.vitals.shareWithGuardian) {
+    const readings = readingsFor(today, now, s.settings.vitals.intervalMin, s.health.overrides);
+    for (const e of detectEvents(readings, s.settings.vitals.thresholds)) {
+      const o = s.health.overrides.find((x) => x.at === e.at);
+      pushAlert(s, {
+        key: `vital-${e.metric}-${e.at}`, to: ["guardian"], severity: e.kind === "high" || e.kind === "low" ? "warning" : "info",
+        title: "Circle Care health notice",
+        detail: `${e.label} at ${fmtTime(e.at)}. Open Health to see the trend.`, link: "/app/guardian/health",
+      }, o?.addedAt ?? e.at);
+    }
+  }
+
   // Time-bound access ends automatically (CC-25).
   for (const m of s.members) {
     if (m.expiresOn && m.status === "active" && m.expiresOn < today) {
@@ -206,7 +220,15 @@ function useStoreState(initial: State) {
         viewed.current = {};
       },
       skipAhead: (min: number) => update((s) => { s.clockOffsetMin += min; }),
-      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request") => update((s) => {
+      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen") => update((s) => {
+        if (what === "heart-rate" || what === "oxygen") {
+          const now = clock(s);
+          const latest = readingsFor(todayOf(s), now, s.settings.vitals.intervalMin, s.health.overrides).at(-1);
+          if (!latest) return;
+          s.health.overrides = s.health.overrides.filter((o) => o.at !== latest.at);
+          s.health.overrides.push(what === "heart-rate" ? { at: latest.at, hr: latest.hr + 38, addedAt: now.toISOString() } : { at: latest.at, spo2: 88, addedAt: now.toISOString() });
+          return;
+        }
         const today = todayOf(s);
         const nowMin = minutesOfDay(clock(s));
         if (what === "late-caregiver") {
@@ -442,6 +464,36 @@ function useStoreState(initial: State) {
         if (g && ok) g.verification = "verified";
         audit(s, "trust-safety", ok ? "approved" : "declined", `legal document “${d.name}”`);
         pushAlert(s, { to: ["elder", "guardian"], severity: "info", title: "Update from Circle Care", detail: ok ? `${g?.short ?? "The guardian"}'s legal authority was verified.` : `“${d.name}” couldn't be verified: ${reason}. Please upload a new copy.`, link: "/app/guardian/notes" });
+      }),
+      /** CC-96: guardian adds or edits a medication-related appointment. */
+      saveAppointment: (a: Omit<Appointment, "id" | "createdBy" | "status"> & { id?: string }) => update((s) => {
+        if (!guard(s, "write", "appointments")) return;
+        const i = a.id ? s.appointments.findIndex((x) => x.id === a.id) : -1;
+        if (i >= 0) {
+          s.appointments[i] = { ...s.appointments[i], ...a, id: s.appointments[i].id };
+          audit(s, actor(s), "updated", `appointment “${a.title}”`);
+        } else {
+          s.appointments.push({ ...a, id: uid("appt"), createdBy: actor(s), status: "scheduled" });
+          audit(s, actor(s), "created", `appointment “${a.title}”`);
+          if (a.escortId && a.escortId !== actor(s)) {
+            const who = s.members.find((m) => m.id === a.escortId);
+            const to: Persona[] = who?.role === "pro" ? ["caregiver"] : [];
+            if (to.length) pushAlert(s, { to, severity: "info", title: "You have an update in Circle Care", detail: `Sarah asked you to take Maggie to “${a.title}” on ${a.date} at ${fmtTime(a.time)}.` });
+          }
+        }
+        pushAlert(s, { to: ["elder"], severity: "info", title: "Update from Circle Care", detail: `New appointment: ${a.title} on ${a.date} at ${fmtTime(a.time)}.` });
+      }),
+      setAppointmentStatus: (id: string, status: Appointment["status"]) => update((s) => {
+        if (!guard(s, "write", "appointments")) return;
+        const a = s.appointments.find((x) => x.id === id);
+        if (a) { a.status = status; audit(s, actor(s), "updated", `appointment “${a.title}” (${status})`); }
+      }),
+      /** CC-87: only Maggie decides whether her guardian sees her health readings. */
+      setHealthSharing: (on: boolean) => update((s) => {
+        if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "change health sharing"); return; }
+        s.settings.vitals.shareWithGuardian = on;
+        audit(s, ELDER, "updated", on ? "health sharing (on)" : "health sharing (off)");
+        pushAlert(s, { to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: on ? "Maggie is sharing her health readings with you again." : "Maggie stopped sharing her health readings. Her medicines, check-ins and SOS still work as before." });
       }),
       docViewed: (name: string) => update((s) => { audit(s, actor(s), "viewed", `document “${name}”`); }),
       invite: (m: Pick<Member, "name" | "role" | "relation" | "phone" | "expiresOn">) => update((s) => {
