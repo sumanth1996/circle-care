@@ -1,0 +1,11 @@
+.shift-card { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 22px 24px; border-radius: var(--r-lg); background: var(--care-soft); color: #0f5f6c; }
+.shift-card.on { background: linear-gradient(135deg, #30b0c7, #3fc3d9); color: #fff; box-shadow: 0 16px 40px rgba(48, 176, 199, 0.28); }
+.shift-card .btn:not([style]) { background: var(--care); }
+.dose-row { flex-wrap: wrap; }
+.dose-row.open { background: linear-gradient(90deg, #fff8ec, #fff 60%); }
+.dose-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+@media (max-width: 560px) { .dose-actions { width: 100%; justify-content: flex-end; } }
+.check { appearance: none; -webkit-appearance: none; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #c7c7cc; display: grid; place-items: center; cursor: pointer; flex: none; margin: 0; transition: background 0.15s, border-color 0.15s; }
+.check:checked { background: var(--green); border-color: var(--green); }
+.check:checked::after { content: ""; width: 7px; height: 13px; border: solid #fff; border-width: 0 3px 3px 0; transform: translateY(-2px) rotate(45deg); }
+.draft { background: linear-gradient(135deg, #f2f7ff, #f6f2ff); border-radius: var(--r-md); padding: 18px; }
