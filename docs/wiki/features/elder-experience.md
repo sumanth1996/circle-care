@@ -107,7 +107,7 @@ A gentle repeat reminder is pushed to the elder **10 minutes** after an unconfir
 |---|---|
 | Window | 08:00–10:00 by default (guardian Settings) |
 | Banner appears | From window start − 60 minutes until she checks in |
-| Mood | The home-screen button records 😊 ("Pleasant"); mood feeds the guardian's [Health](health-insights.md#mood-and-well-being) view |
+| Mood | The home-screen button records 😊 ("Pleasant"); mood feeds the guardian's [Health](health-insights.md#activity-sleep-and-mood-cc-89-cc-92) view |
 | Missed | After the window ends, one more prompt to Maggie; 15 minutes later, the guardian is alerted ([Alerts](alerts-and-notifications.md)) |
 | Only Maggie | `elderCheckin` refuses any other actor and logs a `denied` entry |
 

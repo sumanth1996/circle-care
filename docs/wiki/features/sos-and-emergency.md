@@ -51,7 +51,7 @@
 ### Responding (guardian, caregiver, family)
 
 6. Every guardian and caregiver screen shows a red bar: **Maggie pressed SOS** *at 4:08 PM* · **Respond**. A critical banner also appears.
-7. The responder screen: **Maggie needs help** — *"Pressed SOS at 4:08 PM · Just now"*, location *"At home · 214 Maple Ave (demo address)"*, buttons **I'm on my way**, **Call Maggie** and **Call 911**, and the escalation list with *Alerted / Next / Responding* badges.
+7. The responder screen: **Maggie needs help** — *"Pressed SOS at 4:08 PM · Just now"*, location *"At home · 412 Elizabeth St, Noe Valley, San Francisco (demo address)"*, buttons **I'm on my way**, **Call Maggie** and **Call 911**, and the escalation list with *Alerted / Next / Responding* badges.
 8. Tapping **I'm on my way** stops escalation and notifies everyone: *"Sarah is responding to Maggie's SOS."*
 9. Maggie's screen switches to the responder's photo and **"Sarah is coming"** — *"Stay where you are if you can. Sarah answered at 4:09 PM."*
 10. The SOS is closed either by Maggie (**I'm OK now**, recorded as *"Resolved by Maggie — Sarah arrived."*) or by the responder, who must type **What happened? (required to close)** and tap **Mark resolved**.
@@ -62,7 +62,7 @@
   <figcaption>The responder view on a phone.</figcaption>
 </figure>
 
-### Emergency card (CC-53)
+### Emergency card (CC-53) {#emergency-card}
 
 12. **Emergency card** (elder home link, caregiver tab, guardian menu) shows a red-topped card: name, age, blood type, **Allergies** (in red), **Conditions**, **Current medicines** (all non-paused medicines with strength), **Decisions** (directives) and one-tap calls to the first two people on the SOS list.
 13. The footer states *"Approved by Maggie on …"* or *"Waiting for Maggie to approve"*.
@@ -184,12 +184,12 @@ Critical banners are visually distinct (red). The guardian setting **Emergencies
 | In the prototype | In production (planned) |
 |---|---|
 | Alerts are in-app only, shown to the guardian and caregiver views | Push with **critical-alert entitlement** (iOS) / high-priority channels (Android), plus SMS and voice-call fallback to each person on the chain ([R2 Native apps](../roadmap.md)) |
-| Location is a placeholder (*"214 Maple Ave (demo address)"* — not updated to San Francisco in v0.4) | Device location at the moment of SOS, shared only with responders |
+| Location is a fixed demo address in Noe Valley, San Francisco | Device location at the moment of SOS, shared only with responders |
 | SMS fallback only sets a flag | Real SMS sent from the device or server when offline |
 | Call 911 is a `tel:` link | Optional integration with a monitored response partner; legal review of claims |
 | `sosStart` is not permission-checked so the presenter can trigger it | Only the elder's device can raise SOS |
 | Lock-screen QR is a decorative placeholder | Signed, time-limited emergency link (1 hour) with access logging |
-| Emergency card shows "Age 81" (hard-coded) while Maggie's birth year gives 80 | Derive age from date of birth |
+| Emergency card age ("Age 80") is hard-coded | Derive age from date of birth |
 | Fall detection, inactivity and wandering alerts not built | [R3 Wearables & Fall Detection](../roadmap.md) |
 
 ## Related pages

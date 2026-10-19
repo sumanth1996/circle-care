@@ -37,7 +37,7 @@ export default function Landing() {
             <Photo k="laughing" w={400} eager />
             <span className="orbit-label"><b>James</b> Grandson, weekends</span>
           </div>
-          <figcaption className="orbit-caption"><b>Maggie, 81.</b> Still lives at home. Still makes her own decisions.</figcaption>
+          <figcaption className="orbit-caption"><b>Maggie, 80.</b> Still lives at home. Still makes her own decisions.</figcaption>
         </figure>
       </header>
 

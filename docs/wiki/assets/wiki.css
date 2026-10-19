@@ -69,3 +69,8 @@
 .md-typeset .cc-elder { color: var(--cc-elder); font-weight: 600; }
 .md-typeset .cc-care  { color: var(--cc-care);  font-weight: 600; }
 .md-typeset .cc-guard { color: var(--cc-guard); font-weight: 600; }
+
+/* Full-width tables (feature fact sheets, matrices) */
+.md-typeset__table { display: block; }
+.md-typeset__table table:not([class]) { display: table; width: 100%; }
+.md-typeset table:not([class]) th:empty { padding: 0; }

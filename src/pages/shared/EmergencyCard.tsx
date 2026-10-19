@@ -36,7 +36,7 @@ export default function EmergencyCard() {
       <article className="panel stack" style={{ "--gap": "16px", borderTop: "6px solid var(--red)" } as React.CSSProperties}>
         <div className="row">
           <Avatar m={elder} size={72} />
-          <div><h2 className="t-md">{elder?.name}</h2><p className="muted">Age 81 · Blood type {card.bloodType}</p></div>
+          <div><h2 className="t-md">{elder?.name}</h2><p className="muted">Age 80 · Blood type {card.bloodType}</p></div>
         </div>
         <div className="grid-2">
           <div><p className="tiny">Allergies</p><p style={{ fontWeight: 700, color: "#d70015" }}>{card.allergies || "None known"}</p></div>

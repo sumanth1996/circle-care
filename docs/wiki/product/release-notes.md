@@ -28,8 +28,8 @@ Prototype versions are derived from the repository history (`git log`). All comm
 
 ### Known issues
 
-- The SOS responder screen still shows the placeholder address *"214 Maple Ave (demo address)"*, which is not a San Francisco address.
-- The website and emergency card show Maggie as **81**, while her birth year (1946) and the Health page give **80**.
+- The SOS responder demo address now uses Noe Valley, San Francisco.
+- Maggie's age is now **80** everywhere (website, emergency card, Health), matching her 1946 birth year.
 
 ---
 

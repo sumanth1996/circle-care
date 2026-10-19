@@ -5,6 +5,8 @@ Status: Working drafts as of 2026-10-19. Circle Care is a CSPO-training concept 
 
 Each doc starts with its Notion story ID so it can be linked from the Circle Care Product Hub backlog.
 
+These drafts are also published in the **Circle Care Product Wiki** (MkDocs site built from this folder; see `mkdocs.yml` and [wiki/how-to-contribute.md](wiki/how-to-contribute.md)) under *Research & Compliance*, alongside product, feature, architecture and roadmap pages.
+
 ## Index
 
 | Story | Doc | What it is | Needs human action |
@@ -33,7 +35,7 @@ These came from reading the code, not from research:
 1. ~~Several store actions bypassed the permission check.~~ **Fixed Oct 19, 2026:** every data-changing action is now checked (a new `handoffs` resource covers hand-offs; elder-only and member-specific actions check the actor). See [permission matrix](security/permission-matrix.md#coverage-gaps-prototype).
 2. The elder cannot read guardian-only notes (`notes.private`), which conflicts with "her data, her decision" and may conflict with a right of access.
 3. The CSP is a `<meta>` tag, so it can't block framing; clickjacking protection needs an HTTP header from the host (the misleading `vite.config.ts` comment has been corrected).
-4. ~~No committed axe-core or Playwright scripts.~~ **Fixed:** `tests/e2e/e2e.py` (25 scenarios) and `tests/e2e/a11y.py` (22 screens) are committed; see `tests/e2e/README.md`.
+4. ~~No committed axe-core or Playwright scripts.~~ **Fixed:** `tests/e2e/e2e.py` (29 scenarios) and `tests/e2e/a11y.py` (24 screens) are committed; see `tests/e2e/README.md`.
 5. The `/pilot` form collects name and contact but the prototype discards them; production needs a separate, deletable contact store.
 
 ## Conventions
