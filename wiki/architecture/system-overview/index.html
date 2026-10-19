@@ -1,0 +1,3253 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Product, feature, architecture and roadmap documentation for Circle Care, a privacy-first care-coordination concept product.">
+      
+      
+        <meta name="author" content="Sumanth (Product Owner, CSPO)">
+      
+      
+        <link rel="canonical" href="https://sumanth1996.github.io/circle-care/wiki/architecture/system-overview/">
+      
+      
+        <link rel="prev" href="../../features/pilot-and-feedback/">
+      
+      
+        <link rel="next" href="../data-model/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>System overview - Circle Care Product Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/wiki.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#system-overview" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Circle Care Product Wiki" class="md-header__button md-logo" aria-label="Circle Care Product Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 5.5A3.5 3.5 0 0 1 15.5 9a3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 8.5 9 3.5 3.5 0 0 1 12 5.5M5 8c.56 0 1.08.15 1.53.42-.15 1.43.27 2.85 1.13 3.96C7.16 13.34 6.16 14 5 14a3 3 0 0 1-3-3 3 3 0 0 1 3-3m14 0a3 3 0 0 1 3 3 3 3 0 0 1-3 3c-1.16 0-2.16-.66-2.66-1.62a5.54 5.54 0 0 0 1.13-3.96c.45-.27.97-.42 1.53-.42M5.5 18.25c0-2.07 2.91-3.75 6.5-3.75s6.5 1.68 6.5 3.75V20h-13zM0 20v-1.5c0-1.39 1.89-2.56 4.45-2.9-.59.68-.95 1.62-.95 2.65V20zm24 0h-3.5v-1.75c0-1.03-.36-1.97-.95-2.65 2.56.34 4.45 1.51 4.45 2.9z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Circle Care Product Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              System overview
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sumanth1996/circle-care" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sumanth1996/circle-care
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../product/personas/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Product
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../features/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture & Security
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../roadmap/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Roadmap
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../research-and-compliance/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Research & Compliance
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../how-to-contribute/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Circle Care Product Wiki" class="md-nav__button md-logo" aria-label="Circle Care Product Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 5.5A3.5 3.5 0 0 1 15.5 9a3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 8.5 9 3.5 3.5 0 0 1 12 5.5M5 8c.56 0 1.08.15 1.53.42-.15 1.43.27 2.85 1.13 3.96C7.16 13.34 6.16 14 5 14a3 3 0 0 1-3-3 3 3 0 0 1 3-3m14 0a3 3 0 0 1 3 3 3 3 0 0 1-3 3c-1.16 0-2.16-.66-2.66-1.62a5.54 5.54 0 0 0 1.13-3.96c.45-.27.97-.42 1.53-.42M5.5 18.25c0-2.07 2.91-3.75 6.5-3.75s6.5 1.68 6.5 3.75V20h-13zM0 20v-1.5c0-1.39 1.89-2.56 4.45-2.9-.59.68-.95 1.62-.95 2.65V20zm24 0h-3.5v-1.75c0-1.03-.36-1.97-.95-2.65 2.56.34 4.45 1.51 4.45 2.9z"/></svg>
+
+    </a>
+    Circle Care Product Wiki
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sumanth1996/circle-care" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sumanth1996/circle-care
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Product
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../product/personas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Personas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../product/demo-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demo guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../product/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../product/release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../product/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../features/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Features
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/website-and-onboarding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website & onboarding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/elder-experience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Elder experience
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/sos-and-emergency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SOS & emergency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/medications-and-tasks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Medications & tasks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/caregiver-shifts-and-handoffs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caregiver shifts & hand-offs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/guardian-dashboard-and-approvals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guardian dashboard & approvals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/health-insights/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health insights
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/care-calendar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Care calendar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/care-circle-and-access/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Care circle & access
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/notes-and-documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notes & documents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/privacy-center/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy Center
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/alerts-and-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alerts & notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/pilot-and-feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pilot & feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture & Security
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture & Security
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System overview
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        At a glance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component diagram
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Component diagram">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#in-production-planned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In production (planned)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Routes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#website-and-entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Website and entry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elder-appelder-inside-appshell-personaelder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Elder — /app/elder (inside AppShell persona="elder")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caregiver-appcaregiver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caregiver — /app/caregiver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guardian-appguardian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guardian — /app/guardian
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#state-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        State model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-cutting-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-cutting UI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pwa-and-service-worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PWA and service worker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-and-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build and deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#external-dependencies-at-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External dependencies at runtime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security & privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quality-and-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality & testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../traceability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Traceability matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research & Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research & Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research-and-compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research &amp; Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/01-recruiting-screener/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-1 Recruiting screener
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/02-interview-guide-elders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-2 Interview guide (elders)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/03-interview-guide-caregivers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-3 Interview guide (caregivers)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/04-interview-guide-guardians/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-4 Interview guide (guardians)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/05-journey-maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-5 Journey maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/06-opportunity-solution-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-6 Opportunity solution tree
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/07-competitive-teardown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-7 Competitive teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compliance/08-regulatory-memo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-8 Regulatory memo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compliance/09-data-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-9 Data inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compliance/30-vendor-baa-register/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-30 Vendor & BAA register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../compliance/79-hipaa-security-risk-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-79 HIPAA security risk analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Security
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/10-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-10 Threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/permission-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-18 Permission matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/34-incident-response-runbook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-34 Incident response runbook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/78-security-test-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-78 Security test plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pilot
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pilot
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pilot/74-pilot-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-74 Pilot plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-contribute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        At a glance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component diagram
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Component diagram">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#in-production-planned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In production (planned)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Routes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#website-and-entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Website and entry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elder-appelder-inside-appshell-personaelder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Elder — /app/elder (inside AppShell persona="elder")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caregiver-appcaregiver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caregiver — /app/caregiver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guardian-appguardian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guardian — /app/guardian
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#state-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        State model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-cutting-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-cutting UI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pwa-and-service-worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PWA and service worker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-and-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build and deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#external-dependencies-at-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External dependencies at runtime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="system-overview">System overview<a class="headerlink" href="#system-overview" title="Permanent link">&para;</a></h1>
+<p>This page describes how the Circle Care <strong>prototype v0.4</strong> is built. It is a single-page web application with no backend: all data, rules and permission checks run in the browser. Where a production design differs, it is called out as <strong>In production (planned)</strong>.</p>
+<h2 id="at-a-glance">At a glance<a class="headerlink" href="#at-a-glance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Prototype choice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UI</td>
+<td>React 19 + TypeScript, Vite build, lucide-react icons, hand-written CSS (no UI framework)</td>
+</tr>
+<tr>
+<td>Routing</td>
+<td>React Router 7 <code>HashRouter</code> (URLs like <code>/#/app/guardian</code>) so any static host works without rewrites</td>
+</tr>
+<tr>
+<td>State</td>
+<td>One <code>State</code> object in a React context (<code>StoreProvider</code> in <code>src/data/store.tsx</code>), updated immutably via <code>structuredClone</code></td>
+</tr>
+<tr>
+<td>Business rules</td>
+<td><code>evaluate()</code> rules engine, run every 15 s and after every change</td>
+</tr>
+<tr>
+<td>Authorisation</td>
+<td><code>can()</code> and the <code>MATRIX</code> in <code>src/data/policy.ts</code></td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>Browser <code>localStorage</code>, encrypted with AES-256-GCM; key and files in IndexedDB</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td>SHA-256 hash-chained log (<code>src/data/audit.ts</code>, <code>src/lib/sha256.ts</code>)</td>
+</tr>
+<tr>
+<td>Offline / install</td>
+<td>Web app manifest + service worker (<code>public/</code>)</td>
+</tr>
+<tr>
+<td>Charts</td>
+<td>Dependency-free SVG components (<code>src/components/charts.tsx</code>)</td>
+</tr>
+<tr>
+<td>Speech</td>
+<td>Web Speech API — synthesis for read-aloud; recognition only when on-device</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td>Replit static deployment (<code>.replit</code>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="component-diagram">Component diagram<a class="headerlink" href="#component-diagram" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Browser["Browser (single device)"]
+      direction TB
+      subgraph UI["React UI — src/pages, src/components"]
+        Site["Website pages&lt;br/&gt;Landing, site/*"]
+        Shell["AppShell&lt;br/&gt;tabs, banners, lock, privacy shield,&lt;br/&gt;persona switcher"]
+        Elder["Elder pages"]
+        Care["Caregiver pages"]
+        Guard["Guardian pages"]
+        Shared["Shared pages&lt;br/&gt;Privacy Center, Notes, Alerts,&lt;br/&gt;Emergency card, SOS responder"]
+        Internal["Internal pages&lt;br/&gt;Review console, Pilot dashboard"]
+      end
+      subgraph Data["Data layer — src/data"]
+        Store["store.tsx&lt;br/&gt;StoreProvider · actions · guard()"]
+        Rules["evaluate()&lt;br/&gt;rules engine"]
+        Policy["policy.ts&lt;br/&gt;MATRIX · can()"]
+        Sel["selectors.ts&lt;br/&gt;derived views"]
+        Audit["audit.ts&lt;br/&gt;hash chain"]
+        Seed["demo.ts&lt;br/&gt;seed data"]
+      end
+      subgraph Lib["Libraries — src/lib"]
+        Sec["secureStorage.ts&lt;br/&gt;AES-GCM · PBKDF2 · upload checks"]
+        Health["health.ts&lt;br/&gt;simulated readings · detection"]
+        Voice["voice.ts&lt;br/&gt;on-device recognition"]
+        Pilot["pilot.ts&lt;br/&gt;NPS · leads · scrubbing"]
+        Sha["sha256.ts"]
+      end
+      LS[("localStorage&lt;br/&gt;enc:v1:… state&lt;br/&gt;pilot + NPS keys")]
+      IDB[("IndexedDB&lt;br/&gt;non-extractable key&lt;br/&gt;encrypted files")]
+      SW["Service worker&lt;br/&gt;sw.js"]
+    end
+    Unsplash["images.unsplash.com&lt;br/&gt;(stock photos)"]
+    Fonts["Google Fonts"]
+
+    UI --&gt; Store
+    Store --&gt; Policy
+    Store --&gt; Rules
+    Store --&gt; Audit
+    Rules --&gt; Sel
+    Rules --&gt; Health
+    UI --&gt; Sel
+    Audit --&gt; Sha
+    Store --&gt; Sec
+    Sec --&gt; LS
+    Sec --&gt; IDB
+    Guard --&gt; Health
+    Elder --&gt; Voice
+    UI --&gt; Pilot
+    Pilot --&gt; LS
+    Seed --&gt; Store
+    UI -.-&gt; Unsplash
+    UI -.-&gt; Fonts</code></pre>
+<h3 id="in-production-planned">In production (planned)<a class="headerlink" href="#in-production-planned" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart LR
+    Apps["Native iOS / Android apps&lt;br/&gt;+ web app"] --&gt;|TLS, auth tokens| API["API gateway"]
+    API --&gt; AuthZ["Same policy (MATRIX / can())&lt;br/&gt;enforced server-side"]
+    AuthZ --&gt; Svc["Care services&lt;br/&gt;meds · schedule · circle · health"]
+    Svc --&gt; DB[("Encrypted database&lt;br/&gt;managed, rotated keys")]
+    Svc --&gt; Files[("Document store&lt;br/&gt;virus scan · encryption")]
+    Svc --&gt; AuditS[("Append-only audit log&lt;br/&gt;externally anchored")]
+    Sched["Rules scheduler"] --&gt; Svc
+    Sched --&gt; Notify["Notification service&lt;br/&gt;push · SMS · email (BAA vendors)"]
+    HK["HealthKit / Health Connect"] --&gt; Apps</code></pre>
+<p>Everything that touches health information must run on vendors that have signed a BAA (see the <a href="../../../compliance/30-vendor-baa-register/">vendor &amp; BAA register</a>).</p>
+<h2 id="routes">Routes<a class="headerlink" href="#routes" title="Permanent link">&para;</a></h2>
+<p>From <code>src/App.tsx</code>. All paths are hash routes (prefix <code>/#</code>).</p>
+<h3 id="website-and-entry">Website and entry<a class="headerlink" href="#website-and-entry" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code></td>
+<td><code>Landing</code></td>
+<td>Home page</td>
+</tr>
+<tr>
+<td><code>/how-it-works</code></td>
+<td><code>site/HowItWorks</code></td>
+<td>A day in the circle; setup steps</td>
+</tr>
+<tr>
+<td><code>/features</code></td>
+<td><code>site/Features</code></td>
+<td>Features per persona</td>
+</tr>
+<tr>
+<td><code>/who-its-for</code></td>
+<td><code>site/WhoItsFor</code></td>
+<td>Personas</td>
+</tr>
+<tr>
+<td><code>/privacy</code></td>
+<td><code>site/Privacy</code></td>
+<td>Privacy pillars, "never" list, FAQ</td>
+</tr>
+<tr>
+<td><code>/pilot</code></td>
+<td><code>site/Pilot</code></td>
+<td>Pilot recruitment</td>
+</tr>
+<tr>
+<td><code>/app</code></td>
+<td><code>Welcome</code></td>
+<td>Choose a person; sign-up</td>
+</tr>
+<tr>
+<td><code>/app/sign-in/:persona</code></td>
+<td><code>SignIn</code></td>
+<td>Sign-in, MFA, consent</td>
+</tr>
+<tr>
+<td><code>/app/invite/:memberId</code></td>
+<td><code>Invite</code></td>
+<td>Accept an invitation</td>
+</tr>
+<tr>
+<td><code>/app/review</code></td>
+<td><code>internal/Review</code></td>
+<td>Review team console</td>
+</tr>
+<tr>
+<td><code>/app/pilot</code></td>
+<td><code>internal/PilotDashboard</code></td>
+<td>Pilot dashboard</td>
+</tr>
+<tr>
+<td><code>/app/sos</code></td>
+<td><code>SosRedirect</code></td>
+<td>Redirects to the current persona's SOS page</td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td>—</td>
+<td>Redirects to <code>/</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="elder-appelder-inside-appshell-personaelder">Elder — <code>/app/elder</code> (inside <code>AppShell persona="elder"</code>)<a class="headerlink" href="#elder-appelder-inside-appshell-personaelder" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Component</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(index)</td>
+<td><code>elder/ElderHome</code></td>
+</tr>
+<tr>
+<td><code>next</code></td>
+<td><code>elder/ElderNext</code></td>
+</tr>
+<tr>
+<td><code>sos</code></td>
+<td><code>elder/ElderSos</code></td>
+</tr>
+<tr>
+<td><code>call</code></td>
+<td><code>elder/ElderCall</code></td>
+</tr>
+<tr>
+<td><code>privacy</code></td>
+<td><code>shared/PrivacyCenter</code></td>
+</tr>
+<tr>
+<td><code>settings</code></td>
+<td><code>elder/ElderSettings</code></td>
+</tr>
+<tr>
+<td><code>decisions</code></td>
+<td><code>elder/ElderDecisions</code></td>
+</tr>
+<tr>
+<td><code>card</code></td>
+<td><code>shared/EmergencyCard</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="caregiver-appcaregiver">Caregiver — <code>/app/caregiver</code><a class="headerlink" href="#caregiver-appcaregiver" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Component</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(index)</td>
+<td><code>caregiver/CaregiverToday</code></td>
+</tr>
+<tr>
+<td><code>handoff</code></td>
+<td><code>caregiver/CaregiverHandoff</code></td>
+</tr>
+<tr>
+<td><code>schedule</code></td>
+<td><code>caregiver/CaregiverSchedule</code></td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td><code>shared/Notes</code> wrapped in <code>AccessGuard resource="notes"</code></td>
+</tr>
+<tr>
+<td><code>card</code></td>
+<td><code>shared/EmergencyCard</code></td>
+</tr>
+<tr>
+<td><code>alerts</code></td>
+<td><code>shared/Alerts</code></td>
+</tr>
+<tr>
+<td><code>sos</code></td>
+<td><code>shared/SosResponder</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="guardian-appguardian">Guardian — <code>/app/guardian</code><a class="headerlink" href="#guardian-appguardian" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Component</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(index)</td>
+<td><code>guardian/GuardianHome</code></td>
+</tr>
+<tr>
+<td><code>meds</code></td>
+<td><code>guardian/Medications</code></td>
+</tr>
+<tr>
+<td><code>health</code></td>
+<td><code>guardian/Health</code></td>
+</tr>
+<tr>
+<td><code>calendar</code></td>
+<td><code>guardian/Calendar</code></td>
+</tr>
+<tr>
+<td><code>approvals</code></td>
+<td><code>guardian/Approvals</code></td>
+</tr>
+<tr>
+<td><code>circle</code></td>
+<td><code>guardian/Circle</code></td>
+</tr>
+<tr>
+<td><code>schedule</code></td>
+<td><code>guardian/Schedule</code></td>
+</tr>
+<tr>
+<td><code>feed</code></td>
+<td><code>guardian/Feed</code></td>
+</tr>
+<tr>
+<td><code>digest</code></td>
+<td><code>guardian/Digest</code></td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td><code>shared/Notes</code></td>
+</tr>
+<tr>
+<td><code>privacy</code></td>
+<td><code>shared/PrivacyCenter</code></td>
+</tr>
+<tr>
+<td><code>card</code></td>
+<td><code>shared/EmergencyCard</code></td>
+</tr>
+<tr>
+<td><code>settings</code></td>
+<td><code>guardian/GuardianSettings</code></td>
+</tr>
+<tr>
+<td><code>alerts</code></td>
+<td><code>shared/Alerts</code></td>
+</tr>
+<tr>
+<td><code>sos</code></td>
+<td><code>shared/SosResponder</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>AppShell</code> redirects to <code>/app/sign-in/&lt;persona&gt;</code> when that persona is not signed in. On the guardian app, Home, Health, Calendar and Approvals are tabs on phones; the rest are under <strong>More</strong>.</p>
+<h2 id="state-model">State model<a class="headerlink" href="#state-model" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>One state object</strong> (<code>State</code> in <code>src/data/types.ts</code>) holds the whole circle: members, medicines, doses, tasks, shifts, visits, hand-offs, SOS events, check-ins, approvals, notes, documents, appointments, health settings, audit log, alerts and settings. See <a href="../data-model/">Data model</a>.</li>
+<li><strong>Updates</strong> go through <code>update(fn)</code>: the state is deep-copied with <code>structuredClone</code>, the action mutates the draft, <code>evaluate()</code> runs, and React re-renders.</li>
+<li><strong>Actions</strong> (<code>actions</code> in <code>useStoreState</code>) are the only way to change data. Each guarded action calls <code>guard(state, action, resource)</code> → <code>can()</code>; refusals change nothing and write a <code>denied</code> audit entry.</li>
+<li><strong>Selectors</strong> (<code>src/data/selectors.ts</code>) compute derived views — dose states, next item, late check-ins, coverage gaps, streaks, adherence, North Star, activity feed.</li>
+<li><strong>Demo clock</strong>: <code>clock(state)</code> = now + <code>clockOffsetMin</code> so presenters can skip ahead.</li>
+<li><strong>Versioning</strong>: <code>STATE_VERSION = 6</code>. A stored state with another version is discarded and reseeded.</li>
+<li><strong>Persistence</strong>: saves are debounced by 250 ms and flushed on <code>pagehide</code>. See <a href="../security-and-privacy/#encryption-at-rest">Security &amp; privacy</a>.</li>
+<li><strong>Read logging</strong>: <code>logView(resource)</code> writes a <em>viewed</em> entry at most once per resource every 10 minutes.</li>
+</ul>
+<h2 id="rules-engine">Rules engine<a class="headerlink" href="#rules-engine" title="Permanent link">&para;</a></h2>
+<p><code>evaluate(state)</code> in <code>src/data/store.tsx</code> is a pure function over the state draft. It runs <strong>every 15 seconds</strong> (<code>setInterval</code>) and <strong>after every action</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Rule</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Dose repeat reminder at +10 min; caregiver and guardian escalation at their thresholds</td>
+<td>CC-39, CC-42, CC-43</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Missed check-in: elder prompt after window end; guardian at +15 min</td>
+<td>CC-52</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Late caregiver check-in (&gt; 15 min)</td>
+<td>CC-57</td>
+</tr>
+<tr>
+<td>4</td>
+<td>SOS escalation step every <code>escalationDelayMin</code> minutes</td>
+<td>CC-48</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Approval waiting &gt; 24 h</td>
+<td>CC-64</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Suspicious access: ≥ 8 views in 5 min, ≥ 3 denials in 10 min</td>
+<td>CC-35</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Unusual vital signs (if shared)</td>
+<td>CC-86, CC-88</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Expire time-limited members</td>
+<td>CC-25</td>
+</tr>
+</tbody>
+</table>
+<p><code>pushAlert()</code> ignores an alert whose <code>key</code> already exists, which makes the engine idempotent. Full catalogue: <a href="../../features/alerts-and-notifications/">Alerts &amp; notifications</a>.</p>
+<p><strong>In production (planned):</strong> the same rules run server-side on a scheduler, independent of any open browser, with delivery through a notification service.</p>
+<h2 id="cross-cutting-ui">Cross-cutting UI<a class="headerlink" href="#cross-cutting-ui" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Responsibility</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AppShell</code></td>
+<td>Header, side nav / tab bar, SOS bar, sharing-paused banner, notification banners, session lock, NPS card, welcome tour, privacy shield</td>
+<td>CC-14, CC-26, CC-75, CC-76</td>
+</tr>
+<tr>
+<td><code>PersonaSheet</code></td>
+<td>Demo mode and presenter controls</td>
+<td>CC-80</td>
+</tr>
+<tr>
+<td><code>Extras.tsx</code></td>
+<td><code>PrivacyShield</code>, <code>AccessGuard</code>, <code>WelcomeTour</code>, <code>NpsCard</code></td>
+<td>CC-19, CC-26, CC-75, CC-76</td>
+</tr>
+<tr>
+<td><code>ui.tsx</code></td>
+<td>Avatar (contrast-aware initials), Toggle, Segmented, Sheet, Ring, PillArt, Toast, <code>useSpeech</code>, <code>download</code></td>
+<td>CC-71, CC-72</td>
+</tr>
+<tr>
+<td><code>charts.tsx</code></td>
+<td>LineChart, ColumnChart, Sparkline, Meter, ChartLegend</td>
+<td>CC-84</td>
+</tr>
+<tr>
+<td><code>Site.tsx</code></td>
+<td>Website navigation, footer with photo credits, page hero</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pwa-and-service-worker">PWA and service worker<a class="headerlink" href="#pwa-and-service-worker" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Manifest</td>
+<td><code>public/manifest.webmanifest</code> — name <em>Circle Care</em>, <code>start_url: /#/app</code>, <code>display: standalone</code>, background/theme <code>#FBFBFD</code>, 192/512 PNG icons (512 also maskable) and an SVG icon</td>
+</tr>
+<tr>
+<td>Service worker</td>
+<td><code>public/sw.js</code>, cache <code>circle-care-v1</code>. Pre-caches the app shell (<code>/</code>, <code>/index.html</code>, manifest, icons). <strong>Network-first</strong> for same-origin GET requests, falling back to cache and then to <code>/index.html</code></td>
+</tr>
+<tr>
+<td>Registration</td>
+<td><code>src/main.tsx</code>, production builds only</td>
+</tr>
+<tr>
+<td>Install</td>
+<td>Safari → <em>Share → Add to Home Screen</em>; Chrome → <em>Install app</em> / <em>Add to Home Screen</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="build-and-deploy">Build and deploy<a class="headerlink" href="#build-and-deploy" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>npm install</code></td>
+<td>Install dependencies (Node 20+)</td>
+</tr>
+<tr>
+<td><code>npm run dev</code></td>
+<td>Vite dev server on port <strong>5000</strong>, all hosts (Replit preview)</td>
+</tr>
+<tr>
+<td><code>npm test</code></td>
+<td>Vitest unit tests</td>
+</tr>
+<tr>
+<td><code>npm run build</code></td>
+<td><code>tsc --noEmit</code> type-check, then <code>vite build</code> into <code>dist/</code> with the CSP meta tag injected</td>
+</tr>
+<tr>
+<td><code>npm run preview</code></td>
+<td>Serve <code>dist/</code> on port 4173</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Replit.</strong> <code>.replit</code> runs <code>npm install &amp;&amp; npm run dev</code> (Node 20, port 5000 → 80). The deployment target is <strong>static</strong>: build <code>npm install &amp;&amp; npm run build</code>, public directory <code>dist</code>. Import the GitHub repository into Replit, press <strong>Run</strong>, then <strong>Deploy → Static</strong>. The deployed URL is the live demo ("your Replit URL").</p>
+<p><strong>This wiki</strong> is built separately with MkDocs (<code>mkdocs build</code>, <code>mkdocs gh-deploy</code>) — see <a href="../../how-to-contribute/">How to contribute</a>.</p>
+<h2 id="external-dependencies-at-runtime">External dependencies at runtime<a class="headerlink" href="#external-dependencies-at-runtime" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Why</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>images.unsplash.com</code></td>
+<td>Stock photography on the website and avatars</td>
+<td>Allowed by CSP <code>img-src</code>; credited in the footer; app works without it</td>
+</tr>
+<tr>
+<td>Google Fonts (Inter)</td>
+<td>Typography</td>
+<td>Allowed by CSP <code>style-src</code> / <code>font-src</code></td>
+</tr>
+</tbody>
+</table>
+<p>No analytics, no trackers and no API calls.</p>
+<h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../data-model/">Data model</a></li>
+<li><a href="../security-and-privacy/">Security &amp; privacy</a></li>
+<li><a href="../quality-and-testing/">Quality &amp; testing</a></li>
+<li><a href="../../traceability/">Traceability matrix</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Circle Care is a concept product. All people and data in it are fictional.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "search.highlight", "content.code.copy", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

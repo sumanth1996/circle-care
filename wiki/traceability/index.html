@@ -1,0 +1,2864 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Product, feature, architecture and roadmap documentation for Circle Care, a privacy-first care-coordination concept product.">
+      
+      
+        <meta name="author" content="Sumanth (Product Owner, CSPO)">
+      
+      
+        <link rel="canonical" href="https://sumanth1996.github.io/circle-care/wiki/traceability/">
+      
+      
+        <link rel="prev" href="../architecture/quality-and-testing/">
+      
+      
+        <link rel="next" href="../roadmap/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Traceability matrix - Circle Care Product Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/wiki.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#traceability-matrix" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Circle Care Product Wiki" class="md-header__button md-logo" aria-label="Circle Care Product Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 5.5A3.5 3.5 0 0 1 15.5 9a3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 8.5 9 3.5 3.5 0 0 1 12 5.5M5 8c.56 0 1.08.15 1.53.42-.15 1.43.27 2.85 1.13 3.96C7.16 13.34 6.16 14 5 14a3 3 0 0 1-3-3 3 3 0 0 1 3-3m14 0a3 3 0 0 1 3 3 3 3 0 0 1-3 3c-1.16 0-2.16-.66-2.66-1.62a5.54 5.54 0 0 0 1.13-3.96c.45-.27.97-.42 1.53-.42M5.5 18.25c0-2.07 2.91-3.75 6.5-3.75s6.5 1.68 6.5 3.75V20h-13zM0 20v-1.5c0-1.39 1.89-2.56 4.45-2.9-.59.68-.95 1.62-.95 2.65V20zm24 0h-3.5v-1.75c0-1.03-.36-1.97-.95-2.65 2.56.34 4.45 1.51 4.45 2.9z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Circle Care Product Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Traceability matrix
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sumanth1996/circle-care" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sumanth1996/circle-care
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../product/personas/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Product
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../features/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture/system-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture & Security
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../roadmap/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Roadmap
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../research-and-compliance/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Research & Compliance
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../how-to-contribute/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Circle Care Product Wiki" class="md-nav__button md-logo" aria-label="Circle Care Product Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 5.5A3.5 3.5 0 0 1 15.5 9a3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 8.5 9 3.5 3.5 0 0 1 12 5.5M5 8c.56 0 1.08.15 1.53.42-.15 1.43.27 2.85 1.13 3.96C7.16 13.34 6.16 14 5 14a3 3 0 0 1-3-3 3 3 0 0 1 3-3m14 0a3 3 0 0 1 3 3 3 3 0 0 1-3 3c-1.16 0-2.16-.66-2.66-1.62a5.54 5.54 0 0 0 1.13-3.96c.45-.27.97-.42 1.53-.42M5.5 18.25c0-2.07 2.91-3.75 6.5-3.75s6.5 1.68 6.5 3.75V20h-13zM0 20v-1.5c0-1.39 1.89-2.56 4.45-2.9-.59.68-.95 1.62-.95 2.65V20zm24 0h-3.5v-1.75c0-1.03-.36-1.97-.95-2.65 2.56.34 4.45 1.51 4.45 2.9z"/></svg>
+
+    </a>
+    Circle Care Product Wiki
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sumanth1996/circle-care" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sumanth1996/circle-care
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Product
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../product/personas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Personas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../product/demo-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demo guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../product/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../product/release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../product/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../features/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Features
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/website-and-onboarding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website & onboarding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/elder-experience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Elder experience
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/sos-and-emergency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SOS & emergency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/medications-and-tasks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Medications & tasks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/caregiver-shifts-and-handoffs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caregiver shifts & hand-offs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/guardian-dashboard-and-approvals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guardian dashboard & approvals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/health-insights/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health insights
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/care-calendar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Care calendar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/care-circle-and-access/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Care circle & access
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/notes-and-documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notes & documents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/privacy-center/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy Center
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/alerts-and-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alerts & notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/pilot-and-feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pilot & feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture & Security
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture & Security
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/system-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/data-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security & privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/quality-and-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality & testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Traceability matrix
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Traceability matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#by-feature-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        By feature page
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#by-story" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        By story
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research & Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research & Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research-and-compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research &amp; Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/01-recruiting-screener/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-1 Recruiting screener
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/02-interview-guide-elders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-2 Interview guide (elders)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/03-interview-guide-caregivers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-3 Interview guide (caregivers)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/04-interview-guide-guardians/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-4 Interview guide (guardians)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/05-journey-maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-5 Journey maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/06-opportunity-solution-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-6 Opportunity solution tree
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/07-competitive-teardown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-7 Competitive teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compliance/08-regulatory-memo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-8 Regulatory memo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compliance/09-data-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-9 Data inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compliance/30-vendor-baa-register/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-30 Vendor & BAA register
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compliance/79-hipaa-security-risk-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-79 HIPAA security risk analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Security
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/10-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-10 Threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/permission-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-18 Permission matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/34-incident-response-runbook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-34 Incident response runbook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/78-security-test-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-78 Security test plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pilot
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pilot
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pilot/74-pilot-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-74 Pilot plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to-contribute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#by-feature-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        By feature page
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#by-story" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        By story
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="traceability-matrix">Traceability matrix<a class="headerlink" href="#traceability-matrix" title="Permanent link">&para;</a></h1>
+<p>Links each feature page to its Notion user stories (<code>CC-n</code>), the code that implements them and the tests that cover them. Story IDs were <strong>derived from code comments</strong> (<code>grep -rn "CC-[0-9]" src</code>) on 2026-10-19, plus test names and the four approved additions listed in the repository README. Story titles live in Notion; where a story number appears only inside a range comment (e.g. "CC-94 – CC-98") it is shown in <em>italics</em>.</p>
+<p>Test abbreviations: <strong>U</strong> = unit test file in <code>src/__tests__/</code>, <strong>E</strong> = e2e scenario number from <a href="../architecture/quality-and-testing/#e2e-scenarios">Quality &amp; testing</a>, <strong>A</strong> = axe-core accessibility screen.</p>
+<h2 id="by-feature-page">By feature page<a class="headerlink" href="#by-feature-page" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Feature page</th>
+<th>Stories</th>
+<th>Code</th>
+<th>Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../features/website-and-onboarding/">F-01 Website &amp; onboarding</a></td>
+<td>CC-11, CC-12, CC-13, CC-14, CC-15, CC-17, CC-22, CC-75</td>
+<td><code>pages/Landing.tsx</code>, <code>pages/site/*</code>, <code>components/Site.tsx</code>, <code>pages/Welcome.tsx</code>, <code>pages/SignIn.tsx</code>, <code>pages/elder/Consent.tsx</code>, <code>pages/Invite.tsx</code>, <code>components/Extras.tsx</code> (WelcomeTour), <code>components/AppShell.tsx</code> (lock)</td>
+<td>E1, E2, E3, E4, E21, E28 · A: 6 site pages + <code>/app</code></td>
+</tr>
+<tr>
+<td><a href="../features/elder-experience/">F-02 Elder experience</a></td>
+<td>CC-14, CC-39, CC-40, CC-48, CC-52, CC-65, CC-68, CC-69, CC-70, CC-71, CC-72, CC-73</td>
+<td><code>pages/elder/ElderHome.tsx</code>, <code>ElderNext.tsx</code>, <code>ElderCall.tsx</code>, <code>ElderDecisions.tsx</code>, <code>ElderSettings.tsx</code>, <code>lib/voice.ts</code>, <code>components/ui.tsx</code> (useSpeech, Avatar contrast)</td>
+<td>U rules, health · E5, E9, E22 · A: 4 elder screens</td>
+</tr>
+<tr>
+<td><a href="../features/sos-and-emergency/">F-03 SOS &amp; emergency</a></td>
+<td>CC-46, CC-47, CC-48, CC-49, CC-50, CC-52, CC-53</td>
+<td><code>pages/elder/ElderSos.tsx</code>, <code>pages/shared/SosResponder.tsx</code>, <code>pages/shared/EmergencyCard.tsx</code>, <code>data/store.tsx</code> (sosStart/Acknowledge/Resolve, evaluate), <code>pages/guardian/Circle.tsx</code> (order)</td>
+<td>U rules (CC-52), policy · E5, E6, E22</td>
+</tr>
+<tr>
+<td><a href="../features/medications-and-tasks/">F-04 Medications &amp; tasks</a></td>
+<td>CC-36, CC-37, CC-38, CC-39, CC-40, CC-41, CC-42, CC-43, CC-44, CC-45, CC-64</td>
+<td><code>pages/guardian/Medications.tsx</code>, <code>pages/caregiver/CaregiverToday.tsx</code>, <code>pages/elder/ElderNext.tsx</code>, <code>data/selectors.ts</code> (dosesFor, doseThresholds, tasksFor), <code>data/store.tsx</code> (recordDose, verifyDose, saveMed, requestMedChange, completeTask, evaluate)</td>
+<td>U rules, policy · E7, E8, E9 · A: meds, caregiver, elder/next</td>
+</tr>
+<tr>
+<td><a href="../features/caregiver-shifts-and-handoffs/">F-05 Caregiver shifts &amp; hand-offs</a></td>
+<td>CC-38, CC-54, CC-55, CC-56, CC-57, CC-58, CC-59, CC-60, CC-82</td>
+<td><code>pages/caregiver/CaregiverToday.tsx</code>, <code>CaregiverHandoff.tsx</code>, <code>CaregiverSchedule.tsx</code>, <code>pages/guardian/Schedule.tsx</code>, <code>data/selectors.ts</code> (lateCheckins, coverageGaps), <code>data/policy.ts</code> (onShift)</td>
+<td>U policy · E7, E10, E11, E12 · A: caregiver</td>
+</tr>
+<tr>
+<td><a href="../features/guardian-dashboard-and-approvals/">F-06 Guardian dashboard &amp; approvals</a></td>
+<td>CC-14, CC-42, CC-50, CC-52, CC-59, CC-61, CC-62, CC-63, CC-64, CC-65, CC-83</td>
+<td><code>pages/guardian/GuardianHome.tsx</code>, <code>Approvals.tsx</code>, <code>Feed.tsx</code>, <code>Digest.tsx</code>, <code>GuardianSettings.tsx</code>, <code>data/selectors.ts</code> (feed, northStar, adherenceByDay, checkinStreak)</td>
+<td>U rules (CC-64), policy · E3, E9, E14, E18, E21 · A: guardian home, approvals, digest, settings</td>
+</tr>
+<tr>
+<td><a href="../features/health-insights/">F-07 Health insights</a></td>
+<td>CC-84, CC-85, CC-86, CC-87, CC-88, CC-89, <em>CC-90</em>, CC-91, CC-92, CC-93</td>
+<td><code>pages/guardian/Health.tsx</code>, <code>lib/health.ts</code>, <code>components/charts.tsx</code>, <code>data/store.tsx</code> (evaluate vitals, setHealthSharing, simulate), <code>data/policy.ts</code> (vitals)</td>
+<td>U health (21) · E24, E25, E26 · A: health</td>
+</tr>
+<tr>
+<td><a href="../features/care-calendar/">F-08 Care calendar</a></td>
+<td>CC-94, <em>CC-95</em>, CC-96, <em>CC-97</em>, CC-98</td>
+<td><code>pages/guardian/Calendar.tsx</code>, <code>data/types.ts</code> (Appointment), <code>data/demo.ts</code> (appointmentsSeed), <code>data/store.tsx</code> (saveAppointment, setAppointmentStatus)</td>
+<td>U health (appointments) · E27 · A: calendar</td>
+</tr>
+<tr>
+<td><a href="../features/care-circle-and-access/">F-09 Care circle &amp; access</a></td>
+<td>CC-15, CC-16, CC-17, CC-18, CC-19, CC-20, CC-21, CC-23, CC-24, CC-25, CC-48</td>
+<td><code>pages/guardian/Circle.tsx</code>, <code>pages/internal/Review.tsx</code>, <code>pages/Invite.tsx</code>, <code>data/policy.ts</code>, <code>data/store.tsx</code> (invite, revoke, reviewDoc, evaluate expiry)</td>
+<td>U policy (183), rules (CC-25) · E13, E15, E16 · A: circle, review</td>
+</tr>
+<tr>
+<td><a href="../features/notes-and-documents/">F-10 Notes &amp; documents</a></td>
+<td>CC-19, CC-23, CC-66, CC-67</td>
+<td><code>pages/shared/Notes.tsx</code>, <code>lib/secureStorage.ts</code> (inspectUpload, putFile, getFile), <code>components/Extras.tsx</code> (AccessGuard), <code>styles.css</code> (watermark)</td>
+<td>U policy · E8, E11, E15, E29 · A: notes</td>
+</tr>
+<tr>
+<td><a href="../features/privacy-center/">F-11 Privacy Center</a></td>
+<td>CC-20, CC-21, CC-22, CC-26, CC-27, CC-28, CC-29, CC-32, CC-33, CC-81, CC-87</td>
+<td><code>pages/shared/PrivacyCenter.tsx</code>, <code>data/audit.ts</code>, <code>lib/sha256.ts</code>, <code>lib/secureStorage.ts</code> (encrypt/decryptWithPassphrase, wipeDevice), <code>components/Extras.tsx</code> (PrivacyShield)</td>
+<td>U audit, sha256, policy (CC-81) · E12, E19, E20, E26, E28, E29 · A: elder &amp; guardian privacy</td>
+</tr>
+<tr>
+<td><a href="../features/alerts-and-notifications/">F-12 Alerts &amp; notifications</a></td>
+<td>CC-25, CC-31, CC-35, CC-39, CC-42, CC-50, CC-52, CC-57, CC-63, CC-64, CC-86</td>
+<td><code>data/store.tsx</code> (evaluate, pushAlert), <code>pages/shared/Alerts.tsx</code>, <code>components/AppShell.tsx</code> (banners), <code>data/types.ts</code> (Alert)</td>
+<td>U rules (7), health · E7, E17, E18, E25</td>
+</tr>
+<tr>
+<td><a href="../features/pilot-and-feedback/">F-13 Pilot &amp; feedback</a></td>
+<td>CC-74, CC-75, CC-76, CC-77, CC-80</td>
+<td><code>pages/site/Pilot.tsx</code>, <code>lib/pilot.ts</code>, <code>components/Extras.tsx</code> (NpsCard), <code>pages/internal/PilotDashboard.tsx</code>, <code>components/PersonaSheet.tsx</code></td>
+<td>E1, E23 (and presenter controls in E7, E17, E18, E25) · A: pilot, <code>/app/pilot</code></td>
+</tr>
+<tr>
+<td><a href="../architecture/security-and-privacy/">Security &amp; privacy</a></td>
+<td>CC-18, CC-19, CC-26 – CC-33, CC-35, CC-78</td>
+<td><code>data/policy.ts</code>, <code>data/audit.ts</code>, <code>lib/secureStorage.ts</code>, <code>vite.config.ts</code> (CSP)</td>
+<td>U policy, audit, sha256 · E19, E20</td>
+</tr>
+</tbody>
+</table>
+<h2 id="by-story">By story<a class="headerlink" href="#by-story" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Story</th>
+<th>Feature page(s)</th>
+<th>Code references</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CC-1 – CC-10</td>
+<td><a href="../research-and-compliance/">Research &amp; Compliance</a> (working docs)</td>
+<td><code>pages/site/WhoItsFor.tsx</code> cites CC-2, CC-3, CC-4</td>
+</tr>
+<tr>
+<td>CC-11</td>
+<td>F-01</td>
+<td><code>SignIn.tsx</code>, <code>Welcome.tsx</code></td>
+</tr>
+<tr>
+<td>CC-12, CC-13</td>
+<td>F-01</td>
+<td><code>SignIn.tsx</code> (comment "CC-11/12/13")</td>
+</tr>
+<tr>
+<td>CC-14</td>
+<td>F-01, F-02, F-06</td>
+<td><code>AppShell.tsx</code>, <code>types.ts</code>, <code>GuardianSettings.tsx</code></td>
+</tr>
+<tr>
+<td>CC-15</td>
+<td>F-01, F-09</td>
+<td><code>Welcome.tsx</code>, <code>Circle.tsx</code></td>
+</tr>
+<tr>
+<td>CC-16</td>
+<td>F-09</td>
+<td><code>Circle.tsx</code> (comment "CC-15/16")</td>
+</tr>
+<tr>
+<td>CC-17</td>
+<td>F-01, F-09</td>
+<td><code>Invite.tsx</code></td>
+</tr>
+<tr>
+<td>CC-18</td>
+<td>F-09, Security</td>
+<td><code>policy.ts</code>, <code>Circle.tsx</code>, <code>policy.test.ts</code>; doc <code>security/permission-matrix.md</code></td>
+</tr>
+<tr>
+<td>CC-19</td>
+<td>F-09, F-10, Security</td>
+<td><code>policy.ts</code>, <code>store.tsx</code>, <code>Extras.tsx</code>, <code>types.ts</code></td>
+</tr>
+<tr>
+<td>CC-20, CC-21</td>
+<td>F-09, F-11</td>
+<td><code>PrivacyCenter.tsx</code></td>
+</tr>
+<tr>
+<td>CC-22</td>
+<td>F-01, F-11</td>
+<td><code>store.tsx</code>, <code>Consent.tsx</code></td>
+</tr>
+<tr>
+<td>CC-23</td>
+<td>F-09, F-10</td>
+<td><code>types.ts</code>, <code>Notes.tsx</code></td>
+</tr>
+<tr>
+<td>CC-24</td>
+<td>F-09</td>
+<td><code>store.tsx</code>, <code>types.ts</code>, <code>Circle.tsx</code>, <code>Review.tsx</code></td>
+</tr>
+<tr>
+<td>CC-25</td>
+<td>F-09, F-12</td>
+<td><code>store.tsx</code>, <code>types.ts</code>, <code>Circle.tsx</code>, <code>rules.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-26</td>
+<td>F-11, Security</td>
+<td><code>secureStorage.ts</code>, <code>store.tsx</code>, <code>Extras.tsx</code>, <code>styles.css</code></td>
+</tr>
+<tr>
+<td>CC-27</td>
+<td>F-11, Security</td>
+<td><code>store.tsx</code>, <code>secureStorage.ts</code></td>
+</tr>
+<tr>
+<td>CC-28</td>
+<td>F-11, Security</td>
+<td><code>audit.ts</code>, <code>types.ts</code>, <code>audit.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-29</td>
+<td>F-11</td>
+<td><code>PrivacyCenter.tsx</code></td>
+</tr>
+<tr>
+<td>CC-30</td>
+<td>Research &amp; Compliance</td>
+<td>doc <code>compliance/30-vendor-baa-register.md</code></td>
+</tr>
+<tr>
+<td>CC-31</td>
+<td>F-12</td>
+<td><code>types.ts</code>, <code>Alerts.tsx</code></td>
+</tr>
+<tr>
+<td>CC-32</td>
+<td>F-11, Security</td>
+<td><code>secureStorage.ts</code>, <code>PrivacyCenter.tsx</code></td>
+</tr>
+<tr>
+<td>CC-33</td>
+<td>F-11, Security</td>
+<td><code>store.tsx</code>, <code>secureStorage.ts</code></td>
+</tr>
+<tr>
+<td>CC-34</td>
+<td>Research &amp; Compliance</td>
+<td>doc <code>security/34-incident-response-runbook.md</code></td>
+</tr>
+<tr>
+<td>CC-35</td>
+<td>F-12, Security</td>
+<td><code>store.tsx</code>, <code>rules.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-36, CC-37, CC-44</td>
+<td>F-04</td>
+<td><code>Medications.tsx</code></td>
+</tr>
+<tr>
+<td>CC-38</td>
+<td>F-04, F-05</td>
+<td><code>CaregiverToday.tsx</code></td>
+</tr>
+<tr>
+<td>CC-39</td>
+<td>F-02, F-04, F-12</td>
+<td><code>store.tsx</code>, <code>ElderNext.tsx</code></td>
+</tr>
+<tr>
+<td>CC-40</td>
+<td>F-02, F-04</td>
+<td><code>ElderNext.tsx</code></td>
+</tr>
+<tr>
+<td>CC-41</td>
+<td>F-04</td>
+<td><code>types.ts</code>, <code>CaregiverToday.tsx</code></td>
+</tr>
+<tr>
+<td>CC-42</td>
+<td>F-04, F-06, F-12</td>
+<td><code>store.tsx</code>, <code>GuardianSettings.tsx</code></td>
+</tr>
+<tr>
+<td>CC-43</td>
+<td>F-04</td>
+<td><code>store.tsx</code>, <code>Medications.tsx</code></td>
+</tr>
+<tr>
+<td>CC-45</td>
+<td>F-04</td>
+<td><code>CaregiverToday.tsx</code></td>
+</tr>
+<tr>
+<td>CC-46, CC-47</td>
+<td>F-03</td>
+<td><code>ElderSos.tsx</code></td>
+</tr>
+<tr>
+<td>CC-48</td>
+<td>F-02, F-03, F-09</td>
+<td><code>store.tsx</code>, <code>Circle.tsx</code></td>
+</tr>
+<tr>
+<td>CC-49</td>
+<td>F-03</td>
+<td><code>SosResponder.tsx</code></td>
+</tr>
+<tr>
+<td>CC-50</td>
+<td>F-03, F-06, F-12</td>
+<td><code>GuardianSettings.tsx</code></td>
+</tr>
+<tr>
+<td>CC-52</td>
+<td>F-02, F-03, F-06, F-12</td>
+<td><code>store.tsx</code>, <code>GuardianSettings.tsx</code>, <code>rules.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-53</td>
+<td>F-03</td>
+<td><code>EmergencyCard.tsx</code></td>
+</tr>
+<tr>
+<td>CC-54, CC-60</td>
+<td>F-05</td>
+<td><code>Schedule.tsx</code></td>
+</tr>
+<tr>
+<td>CC-55</td>
+<td>F-05</td>
+<td><code>CaregiverSchedule.tsx</code></td>
+</tr>
+<tr>
+<td>CC-56</td>
+<td>F-05</td>
+<td><code>CaregiverToday.tsx</code></td>
+</tr>
+<tr>
+<td>CC-57</td>
+<td>F-05, F-12</td>
+<td><code>store.tsx</code>, <code>Schedule.tsx</code></td>
+</tr>
+<tr>
+<td>CC-58</td>
+<td>F-05</td>
+<td><code>CaregiverHandoff.tsx</code></td>
+</tr>
+<tr>
+<td>CC-59</td>
+<td>F-05, F-06</td>
+<td><code>CaregiverToday.tsx</code>, <code>GuardianHome.tsx</code></td>
+</tr>
+<tr>
+<td>CC-61</td>
+<td>F-06</td>
+<td><code>GuardianHome.tsx</code></td>
+</tr>
+<tr>
+<td>CC-62</td>
+<td>F-06</td>
+<td><code>Feed.tsx</code></td>
+</tr>
+<tr>
+<td>CC-63</td>
+<td>F-06, F-12</td>
+<td><code>GuardianSettings.tsx</code></td>
+</tr>
+<tr>
+<td>CC-64</td>
+<td>F-04, F-06, F-12</td>
+<td><code>store.tsx</code>, <code>Approvals.tsx</code>, <code>rules.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-65</td>
+<td>F-02, F-06</td>
+<td><code>ElderDecisions.tsx</code></td>
+</tr>
+<tr>
+<td>CC-66</td>
+<td>F-10</td>
+<td><code>Notes.tsx</code></td>
+</tr>
+<tr>
+<td>CC-67</td>
+<td>F-10</td>
+<td><code>types.ts</code>, <code>secureStorage.ts</code>, <code>Notes.tsx</code>, <code>styles.css</code></td>
+</tr>
+<tr>
+<td>CC-68, CC-69, CC-70</td>
+<td>F-02</td>
+<td><code>ElderHome.tsx</code>, <code>ElderCall.tsx</code>, <code>ElderSettings.tsx</code></td>
+</tr>
+<tr>
+<td>CC-71, CC-72</td>
+<td>F-02</td>
+<td><code>ui.tsx</code>, <code>styles.css</code></td>
+</tr>
+<tr>
+<td>CC-73</td>
+<td>F-02</td>
+<td><code>voice.ts</code>, <code>ElderNext.tsx</code></td>
+</tr>
+<tr>
+<td>CC-74</td>
+<td>F-13</td>
+<td><code>pilot.ts</code>, <code>site/Pilot.tsx</code>; doc <code>pilot/74-pilot-plan.md</code></td>
+</tr>
+<tr>
+<td>CC-75</td>
+<td>F-01, F-13</td>
+<td><code>Extras.tsx</code>, <code>types.ts</code></td>
+</tr>
+<tr>
+<td>CC-76</td>
+<td>F-13</td>
+<td><code>Extras.tsx</code>, <code>pilot.ts</code>, <code>styles.css</code></td>
+</tr>
+<tr>
+<td>CC-77</td>
+<td>F-13</td>
+<td><code>PilotDashboard.tsx</code></td>
+</tr>
+<tr>
+<td>CC-78</td>
+<td>Security</td>
+<td><code>vite.config.ts</code>; doc <code>security/78-security-test-plan.md</code></td>
+</tr>
+<tr>
+<td>CC-79</td>
+<td>Research &amp; Compliance</td>
+<td>doc <code>compliance/79-hipaa-security-risk-analysis.md</code></td>
+</tr>
+<tr>
+<td>CC-80</td>
+<td>F-13</td>
+<td><code>PersonaSheet.tsx</code> ("Approved feature: Persona switcher demo mode")</td>
+</tr>
+<tr>
+<td>CC-81</td>
+<td>F-11</td>
+<td><code>policy.ts</code>, <code>PrivacyCenter.tsx</code> ("Approved feature: Privacy Center"), <code>policy.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-82</td>
+<td>F-05</td>
+<td><code>CaregiverHandoff.tsx</code> ("Smart hand-off summary")</td>
+</tr>
+<tr>
+<td>CC-83</td>
+<td>F-06</td>
+<td><code>Digest.tsx</code> ("Weekly family digest")</td>
+</tr>
+<tr>
+<td>CC-84 – CC-93</td>
+<td>F-07</td>
+<td><code>health.ts</code>, <code>Health.tsx</code>, <code>store.tsx</code>, <code>policy.ts</code>, <code>types.ts</code>, <code>GuardianHome.tsx</code>, <code>health.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-94 – CC-98</td>
+<td>F-08</td>
+<td><code>Calendar.tsx</code>, <code>types.ts</code>, <code>store.tsx</code>, <code>GuardianHome.tsx</code>, <code>calendar.css</code></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Stories without code references</p>
+<p>CC-51 does not appear in code or docs comments; CC-90, CC-95 and CC-97 appear only inside range comments. Check their status in Notion.</p>
+</div>
+<h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../features/">Features</a></li>
+<li><a href="../architecture/quality-and-testing/">Quality &amp; testing</a></li>
+<li><a href="../research-and-compliance/">Research &amp; Compliance</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Circle Care is a concept product. All people and data in it are fictional.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "search.highlight", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
