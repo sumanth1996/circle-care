@@ -2,6 +2,8 @@
 
 **Care, in one circle.** Circle Care keeps an older adult, their caregivers and their legal guardian on the same page, with the elder in charge of who sees what.
 
+📘 **Product wiki:** https://sumanth1996.github.io/circle-care/ — what Circle Care is, every feature with screenshots, architecture, security, and the Release 2–5 roadmap. Source pages live in [`docs/`](docs/); rebuild with `pip install -r docs/requirements-docs.txt && mkdocs gh-deploy`.
+
 This repository is a working product prototype built from the Circle Care roadmap and backlog in Notion. It includes:
 
 - **A Keynote-style website** that introduces the product, the three people it serves, and its privacy promise.
