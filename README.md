@@ -55,7 +55,7 @@ Open the deployed URL in Safari (iOS) or Chrome (Android), then choose **Share â
 ```bash
 npm install
 npm test           # 180 unit tests: permission matrix, audit chain, rules engine
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5000
 npm run build      # type-check + production build into dist/
 npm run preview    # serve the production build
 ```
