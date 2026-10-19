@@ -3,27 +3,28 @@
    one soft color per persona, red reserved for emergencies only. */
 
 :root {
+  /* Colors are tuned to meet WCAG 2.1 AA contrast (4.5:1) for text, including on the soft tints (CC-71). */
   --canvas: #fbfbfd;
   --paper: #ffffff;
   --mist: #f5f5f7;
   --line: #e8e8ed;
   --ink: #1d1d1f;
   --ink-2: #424245;
-  --muted: #6e6e73;
-  --faint: #86868b;
+  --muted: #636366;
+  --faint: #6e6e73;
 
-  --blue: #0071e3;
+  --blue: #0066cc;
   --blue-soft: #e8f1fd;
-  --elder: #ff9f0a;
+  --elder: #b84f00;
   --elder-soft: #fff4e5;
-  --care: #30b0c7;
+  --care: #127a8c;
   --care-soft: #e6f6f9;
   --guard: #5e5ce6;
   --guard-soft: #efeffd;
-  --green: #34c759;
+  --green: #1e7f36;
   --green-soft: #e9f8ed;
   --yellow-soft: #fff8e1;
-  --red: #ff3b30;
+  --red: #d70015;
   --red-soft: #ffeceb;
 
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Helvetica Neue", Arial, sans-serif;
@@ -144,7 +145,7 @@ button.list-row:hover, a.list-row:hover { background: #fafafa; }
 .badge.blue { background: var(--blue-soft); color: var(--blue); }
 .badge.purple { background: var(--guard-soft); color: #4a48c9; }
 .badge.teal { background: var(--care-soft); color: #137a8a; }
-.badge.orange { background: var(--elder-soft); color: #b35c00; }
+.badge.orange { background: var(--elder-soft); color: #9a4f00; }
 
 .avatar { border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff; font-weight: 700; overflow: hidden; background: var(--mist); }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -166,6 +167,7 @@ button.list-row:hover, a.list-row:hover { background: #fafafa; }
 /* Inputs */
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label, .field .label { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.field > span:first-child { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .input, select.input, textarea.input {
   width: 100%; min-height: 48px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
   background: #fff; font: inherit; font-size: 17px; color: var(--ink); transition: border-color 0.15s, box-shadow 0.15s;
@@ -203,3 +205,21 @@ textarea.input { min-height: 96px; resize: vertical; line-height: 1.4; }
 hr.sep { border: 0; height: 1px; background: var(--line); margin: 4px 0; }
 .empty { padding: 28px; text-align: center; color: var(--muted); }
 .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: var(--mist); padding: 2px 6px; border-radius: 6px; }
+
+/* Watermarked document viewer (CC-67) */
+.doc-view { position: relative; overflow: hidden; border-radius: 14px; background: var(--bg-2, #f5f5f7); min-height: 320px; display: grid; place-items: center; }
+.doc-view iframe { width: 100%; height: 60vh; border: 0; background: #fff; }
+.doc-view img { max-width: 100%; max-height: 60vh; display: block; }
+.doc-sample { display: grid; justify-items: center; gap: 8px; padding: 40px 20px; text-align: center; color: var(--ink-2); }
+.watermark { position: absolute; inset: -20%; display: flex; flex-wrap: wrap; align-content: space-around; gap: 48px 64px; transform: rotate(-24deg); pointer-events: none; }
+.watermark span { font-size: 14px; font-weight: 600; color: rgba(0, 0, 0, 0.09); white-space: nowrap; }
+
+/* Privacy blur when the app is in the app switcher (CC-26) */
+.privacy-shield { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: rgba(251, 251, 253, 0.96); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
+.boot { min-height: 100vh; background: var(--bg, #fbfbfd); }
+
+/* In-app feedback (CC-76) */
+.nps-scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
+.nps-scale button { min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); }
+.nps-scale button.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+@media (max-width: 420px) { .nps-scale button { min-height: 36px; font-size: 14px; } }

@@ -80,7 +80,7 @@ function SignUp({ onClose }: { onClose: () => void }) {
             <label htmlFor="su-pw">Password</label>
             <input id="su-pw" className="input" type="password" required value={form.pw} onChange={set("pw")} autoComplete="new-password" aria-describedby="pw-hint" />
             <div className="pw-meter" aria-hidden="true">{[0, 1, 2, 3].map((i) => <span key={i} className={i < s ? `on s${s}` : ""} />)}</div>
-            <span id="pw-hint" className="hint" style={weak ? { color: "#b35c00" } : undefined}>
+            <span id="pw-hint" className="hint" style={weak ? { color: "#9a4f00" } : undefined}>
               {weak ? "Add more: use 10+ characters with upper and lower case, a number and a symbol." : "Use 10 or more characters with a mix of letters, numbers and symbols."}
             </span>
           </div>

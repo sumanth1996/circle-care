@@ -1,24 +1,14 @@
 import { Link } from "react-router-dom";
 import { Pill, Siren, Sun, CalendarClock, ShieldCheck, BarChart3, Lock, Eye, FileCheck2, PauseCircle, Bell, ChevronRight } from "lucide-react";
 import { Photo } from "../components/ui";
-import { photos } from "../data/images";
 import { Logo } from "../components/Logo";
+import { SiteNav, SiteFooter } from "../components/Site";
 import "./landing.css";
 
 export default function Landing() {
   return (
     <div className="lp">
-      <nav className="lp-nav" aria-label="Main">
-        <div className="lp-nav-inner">
-          <Link to="/" className="lp-brand" aria-label="Circle Care home"><Logo size={24} /> Circle Care</Link>
-          <div className="lp-links">
-            <a href="#people">Who it's for</a>
-            <a href="#features">Features</a>
-            <a href="#privacy">Privacy</a>
-          </div>
-          <Link to="/app" className="btn sm">Open the app</Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       <header className="lp-hero">
         <h1 className="t-hero balance">Care, in one circle.</h1>
@@ -27,7 +17,7 @@ export default function Landing() {
         </p>
         <div className="row lp-cta" style={{ justifyContent: "center" }}>
           <Link to="/app" className="btn lg">Try the demo</Link>
-          <a href="#people" className="btn lg ghost">See how it works <ChevronRight size={20} /></a>
+          <Link to="/how-it-works" className="btn lg ghost">See how it works <ChevronRight size={20} /></Link>
         </div>
 
         <figure className="orbit" aria-label="Maggie at the center of her care circle, with her caregiver and her daughter around her">
@@ -51,10 +41,11 @@ export default function Landing() {
         </figure>
       </header>
 
-      <section id="people" className="lp-section">
+      <section className="lp-section">
         <div className="lp-wrap">
           <h2 className="t-xl center balance">Three people. One plan.</h2>
           <p className="lede center balance lp-sub">Everyone sees exactly what they need to help — and nothing more.</p>
+          <p className="center" style={{ marginTop: 14 }}><Link to="/who-its-for" className="more-link">Meet the people <ChevronRight size={18} /></Link></p>
           <div className="people">
             <article className="person" style={{ "--tone": "var(--elder)", "--tone-soft": "var(--elder-soft)" } as React.CSSProperties}>
               <Photo k="elderPortrait" w={800} className="person-img" />
@@ -114,9 +105,10 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="features" className="lp-section">
+      <section className="lp-section">
         <div className="lp-wrap">
           <h2 className="t-xl center balance">Everything a day of care needs.</h2>
+          <p className="center" style={{ marginTop: 14 }}><Link to="/features" className="more-link">See all features <ChevronRight size={18} /></Link></p>
           <div className="bento">
             <article className="tile tile-wide tile-photo">
               <Photo k="walker" w={1400} className="tile-bg" />
@@ -166,10 +158,11 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="privacy" className="lp-section lp-mist">
+      <section className="lp-section lp-mist">
         <div className="lp-wrap">
           <h2 className="t-xl center balance">Her data. Her decision.</h2>
           <p className="lede center balance lp-sub">Circle Care is designed to the HIPAA standard — and built around the elder, not the app.</p>
+          <p className="center" style={{ marginTop: 14 }}><Link to="/privacy" className="more-link">How we protect Maggie's data <ChevronRight size={18} /></Link></p>
           <div className="privacy">
             <div className="lock" aria-label="Example lock-screen notification that contains no health details">
               <div className="lock-time">9:41</div>
@@ -200,17 +193,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="lp-footer">
-        <div className="lp-wrap stack" style={{ "--gap": "10px" } as React.CSSProperties}>
-          <p className="small"><b>Circle Care</b> is a product concept. The demo uses fictional people and runs entirely in your browser — no real health information is collected or sent anywhere.</p>
-          <p className="tiny">
-            Photos from Unsplash, used under the Unsplash License:{" "}
-            {Object.values(photos).map((p, i, arr) => (
-              <span key={p.page}><a href={p.page} target="_blank" rel="noreferrer">{p.credit}</a>{i < arr.length - 1 ? ", " : "."}</span>
-            ))}
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

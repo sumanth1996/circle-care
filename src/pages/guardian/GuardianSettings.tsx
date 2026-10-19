@@ -1,11 +1,18 @@
+import { useState } from "react";
 import { useStore } from "../../data/store";
-import { Toggle } from "../../components/ui";
+import { Toggle, Sheet, useToast } from "../../components/ui";
+import { member, nameOf } from "../../data/selectors";
+import { fmtShortDay } from "../../lib/time";
 
 /** CC-63 alert channels & quiet hours · CC-52 check-in window · CC-42 dose escalation timers · CC-14 session lock · CC-50 critical alerts. */
 export default function GuardianSettings() {
   const { state, actions } = useStore();
   const s = state.settings;
   const row = { minHeight: 60 };
+  const toast = useToast();
+  const [behalf, setBehalf] = useState(false);
+  const [why, setWhy] = useState("");
+  const verified = member(state, state.members.find((m) => m.role === "guardian")?.id ?? "")?.verification === "verified";
   return (
     <div className="page narrow stack" style={{ "--gap": "22px" } as React.CSSProperties}>
       <div className="page-head"><div><p className="page-kicker">Sarah</p><h1>Settings</h1></div></div>
@@ -57,6 +64,24 @@ export default function GuardianSettings() {
           <div className="list-row" style={row}><span className="grow">Two-step sign-in</span><span className="badge green">Always on</span></div>
         </div>
       </section>
+      <section className="stack" style={{ "--gap": "8px" } as React.CSSProperties}>
+        <h2 className="section-title">Maggie's agreement</h2>
+        <div className="panel flat small">
+          {s.consent ? <p>Version {s.consent.version} agreed {fmtShortDay(s.consent.at)} by {nameOf(state, s.consent.by)}{s.consent.onBehalfReason ? ` on Maggie's behalf — “${s.consent.onBehalfReason}”` : ""}.</p> : <p>Maggie hasn't agreed to how her information is shared yet.</p>}
+          <p className="muted" style={{ marginTop: 6 }}>If Maggie can't review the agreement herself, you can accept it for her as her verified legal guardian. Your reason is recorded and Maggie can see it.</p>
+        </div>
+        <button className="btn secondary" style={{ alignSelf: "flex-start" }} disabled={!verified} onClick={() => setBehalf(true)}>Agree on Maggie's behalf</button>
+        {!verified && <p className="tiny">Available once your legal authority is verified.</p>}
+      </section>
+      {behalf && (
+        <Sheet title="Agree on Maggie's behalf" onClose={() => setBehalf(false)}>
+          <form className="stack" onSubmit={(e) => { e.preventDefault(); if (why.trim().length < 10) return; actions.acceptConsent(why.trim()); setBehalf(false); setWhy(""); toast("Recorded"); }}>
+            <p>Only do this if Maggie can't take part herself. She'll still be able to read the agreement, see who agreed and change her privacy choices.</p>
+            <label className="field"><span>Why is Maggie unable to agree herself?</span><textarea className="input" value={why} onChange={(e) => setWhy(e.target.value)} placeholder="At least 10 characters" /></label>
+            <button className="btn lg block" disabled={why.trim().length < 10}>Agree as her guardian</button>
+          </form>
+        </Sheet>
+      )}
     </div>
   );
 }

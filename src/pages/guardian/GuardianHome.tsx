@@ -30,6 +30,8 @@ export default function GuardianHome() {
   for (const d of dosesFor(state).filter((d) => d.state === "escalated" || d.state === "late")) attention.push({ key: d.key, icon: Pill, color: d.state === "escalated" ? "var(--red)" : "var(--elder)", title: `${d.med.name} not confirmed`, sub: `Due ${fmtTime(d.time)} · ${d.minutesLate} min ago${d.med.critical ? " · high priority" : ""}`, to: "/app/guardian/feed" });
   if (checkinMissed(state)) attention.push({ key: "ci", icon: Sun, color: "var(--elder)", title: "Maggie hasn't checked in", sub: `Window ended at ${fmtTime(state.settings.checkinWindow.end)} — consider calling`, to: "/app/guardian/feed" });
   for (const s of lateCheckins(state)) attention.push({ key: `late-${s.id}`, icon: Clock3, color: "var(--elder)", title: `${nameOf(state, s.caregiverId)} hasn't arrived`, sub: `Shift started at ${fmtTime(s.start)}`, to: "/app/guardian/schedule" });
+  // CC-59: hand-offs nobody has read yet.
+  for (const h of state.handoffs.filter((h) => !h.acknowledgedAt && now.getTime() - new Date(h.at).getTime() < 3 * 86400000)) attention.push({ key: `ho-${h.id}`, icon: ClipboardList, color: "var(--care)", title: `${nameOf(state, h.by)}'s hand-off hasn't been read`, sub: `Sent ${relative(h.at, now)} · the next caregiver will see it when they check in`, to: "/app/guardian/feed" });
   const pend = pendingApprovals(state);
   if (pend.length) attention.push({ key: "ap", icon: ClipboardList, color: "var(--guard)", title: `${pend.length} ${pend.length === 1 ? "request needs" : "requests need"} your approval`, sub: pend.map((p) => p.title).join(" · "), to: "/app/guardian/approvals" });
   const gaps = coverageGaps(state, 7);

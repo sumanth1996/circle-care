@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Volume2, Check, Clock, X, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Volume2, Check, Clock, X, CheckCircle2, Mic } from "lucide-react";
 import { useStore } from "../../data/store";
 import { nextUp, dosesFor, tasksFor, isOpen } from "../../data/selectors";
 import { PillArt, IconTile, taskIcons, useSpeech, useToast } from "../../components/ui";
 import { fmtTime } from "../../lib/time";
+import { voiceSupport, voiceMaybe, listenOnce, intentOf } from "../../lib/voice";
 import "./elder.css";
 
 /** CC-39 reminder card · CC-40 taken / skipped / refused (the elder's choice is respected). */
@@ -16,6 +17,9 @@ export default function ElderNext() {
   const [refusing, setRefusing] = useState(false);
   const [reason, setReason] = useState("");
   const n = nextUp(state);
+  const [voiceOff, setVoiceOff] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [heard, setHeard] = useState<string | null>(null);
   const later = [
     ...dosesFor(state).filter((d) => d.state === "upcoming").map((d) => ({ t: d.time, label: d.med.name })),
     ...tasksFor(state).filter((t) => !t.done).map((t) => ({ t: t.task.time, label: t.task.title })),
@@ -29,6 +33,23 @@ export default function ElderNext() {
     toast(msg);
     if (state.settings.readAloud) speak(msg);
     back();
+  };
+
+  // CC-73: say "I took it" or "skip" instead of tapping. On-device recognition only.
+  const listen = async () => {
+    setHeard(null);
+    setListening(true);
+    if ((await voiceSupport()) !== "on-device") { setVoiceOff(true); setListening(false); return; }
+    try {
+      const said = await listenOnce().result;
+      const intent = intentOf(said);
+      if (intent === "unknown") { setHeard(said ? `I heard “${said}”. Please tap a button instead.` : "I didn't catch that. Please tap a button instead."); return; }
+      record(intent);
+    } catch {
+      setHeard("Voice isn't working right now. Please tap a button instead.");
+    } finally {
+      setListening(false);
+    }
   };
 
   return (
@@ -60,6 +81,9 @@ export default function ElderNext() {
                 <button className="btn" style={{ background: "var(--green)" }} onClick={() => record("taken")}><Check size={30} /> I took it</button>
                 <button className="btn plain" onClick={() => record("skipped")}><Clock size={26} /> Skip this time</button>
                 <button className="btn ghost" style={{ minHeight: 56, color: "var(--muted)" }} onClick={() => setRefusing(true)}><X size={22} /> I don't want to take it</button>
+                {voiceMaybe() && !voiceOff && <button className="btn secondary" onClick={listen} disabled={listening} aria-live="polite"><Mic size={24} /> {listening ? "Listening… say “I took it” or “skip”" : "Answer with my voice"}</button>}
+                {heard && <p role="status" style={{ fontSize: "0.9em" }}>{heard}</p>}
+                {voiceOff && <p role="status" className="muted" style={{ fontSize: "0.75em" }}>Voice answers aren't available on this device without sending your voice to the internet, so we've left them off. Please tap a button.</p>}
               </div>
             ) : (
               <div className="stack">

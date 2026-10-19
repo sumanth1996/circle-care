@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { MapPin, LogIn, LogOut, Check, X, BadgeCheck, Sun, AlertTriangle, ClipboardCheck, Pencil, Lock } from "lucide-react";
+import { MapPin, LogIn, LogOut, Check, X, BadgeCheck, Sun, AlertTriangle, ClipboardCheck, Pencil, Lock, MessageSquarePlus } from "lucide-react";
 import { useStore } from "../../data/store";
 import { clock, dosesFor, tasksFor, todayVisit, member, nameOf, checkinToday, isOpen, type DoseSlot } from "../../data/selectors";
 import { Avatar, PillArt, Sheet, IconTile, taskIcons, useToast, Segmented } from "../../components/ui";
@@ -30,6 +30,8 @@ export default function CaregiverToday() {
   const [checkInSheet, setCheckInSheet] = useState(false);
   const [notGiven, setNotGiven] = useState<DoseSlot | null>(null);
   const [change, setChange] = useState<Medication | null>(null);
+  const [noteFor, setNoteFor] = useState<{ id: string; title: string } | null>(null);
+  const [taskNote, setTaskNote] = useState("");
   const ci = checkinToday(state);
   const shiftDoses = shift ? doses.filter((d) => toMin(d.time) >= toMin(shift.start) - 60 && toMin(d.time) <= toMin(shift.end)) : doses;
   const given = shiftDoses.filter((d) => d.state === "taken").length;
@@ -121,7 +123,9 @@ export default function CaregiverToday() {
                   <span className="grow">
                     <span className="list-title" style={{ display: "block", textDecoration: log ? "line-through" : undefined, color: log ? "var(--muted)" : undefined }}>{task.title}</span>
                     <span className="list-sub">{fmtTime(task.time)}{log ? ` · done by ${nameOf(state, log.by)} at ${fmtTime(log.at)}` : overdue ? " · overdue" : ""}</span>
+                    {log?.note && <span className="small" style={{ display: "block", marginTop: 2 }}>“{log.note}”</span>}
                   </span>
+                  <button type="button" className="btn sm ghost" aria-label={`Add a note to ${task.title}`} onClick={(e) => { e.preventDefault(); setTaskNote(log?.note ?? ""); setNoteFor({ id: task.id, title: task.title }); }}><MessageSquarePlus size={16} /></button>
                   <input type="checkbox" className="check" checked={!!log} onChange={(e) => e.target.checked ? actions.completeTask(task.id) : actions.undoTask(task.id)} aria-label={`${task.title} done`} />
                 </label>
               ))}
@@ -135,6 +139,15 @@ export default function CaregiverToday() {
       )}
       {notGiven && (
         <NotGivenSheet slot={notGiven} onClose={() => setNotGiven(null)} onDone={(status, reason) => { actions.recordDose(notGiven.med.id, notGiven.time, status, reason); setNotGiven(null); toast("Recorded"); }} />
+      )}
+      {noteFor && (
+        <Sheet title={noteFor.title} onClose={() => setNoteFor(null)}>
+          <form className="stack" onSubmit={(e) => { e.preventDefault(); actions.completeTask(noteFor.id, taskNote.trim() || undefined); setNoteFor(null); toast("Done, with your note"); }}>
+            <label className="field"><span>Note (optional)</span><textarea className="input" value={taskNote} onChange={(e) => setTaskNote(e.target.value)} placeholder="For example: walked 15 minutes, a bit tired" autoFocus /></label>
+            <button className="btn lg block"><Check size={20} /> Mark done</button>
+            <p className="tiny">Sarah and Maggie can see task notes.</p>
+          </form>
+        </Sheet>
       )}
       {change && <ChangeSheet med={change} onClose={() => setChange(null)} onDone={(m, reason) => { actions.requestMedChange(m, reason); setChange(null); toast("Sent to Sarah for approval"); }} />}
     </div>

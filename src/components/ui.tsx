@@ -12,11 +12,19 @@ export function Photo({ k, w = 1200, className, style, eager }: { k: PhotoKey; w
   return <img className={className} style={style} src={p.src(w)} alt={p.alt} loading={eager ? "eager" : "lazy"} decoding="async" onError={() => setFailed(true)} />;
 }
 
+/** Picks white or near-black initials, whichever reads better on the member's color (CC-71). */
+function inkOn(hex: string) {
+  const c = hex.replace("#", "").match(/../g)?.map((x) => parseInt(x, 16) / 255) ?? [0, 0, 0];
+  const [r, g, b] = c.map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return 1.05 / (lum + 0.05) >= 4.5 ? "#fff" : "#1d1d1f";
+}
+
 export function Avatar({ m, size = 40 }: { m?: Member; size?: number }) {
   if (!m) return <div className="avatar" style={{ width: size, height: size }} />;
   const photo = m.photo as PhotoKey | undefined;
   return (
-    <div className="avatar" style={{ width: size, height: size, background: m.color, fontSize: size * 0.4 }} aria-hidden="true">
+    <div className="avatar" style={{ width: size, height: size, background: m.color, color: inkOn(m.color), fontSize: size * 0.4 }} aria-hidden="true">
       {photo ? <Photo k={photo} w={size * 3} style={{ objectPosition: "center 25%" }} /> : m.name.split(" ").map((x) => x[0]).slice(0, 2).join("")}
     </div>
   );

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { FastForward, Pill, Sun, Clock3, Siren, Lock, RotateCcw, Globe, Check } from "lucide-react";
+import { FastForward, Pill, Sun, Clock3, Siren, Lock, RotateCcw, Globe, Check, ShieldAlert, MessageSquareHeart, BarChart3, FileCheck2, Hourglass } from "lucide-react";
 import { useStore } from "../data/store";
 import { member, meId, clock } from "../data/selectors";
 import type { Persona } from "../data/types";
@@ -51,7 +51,15 @@ export default function PersonaSheet({ onClose }: { onClose: () => void }) {
           <button className="list-row has-icon" onClick={() => run("Maggie missed today's check-in", () => actions.simulate("missed-checkin"))}><Sun size={22} color="var(--blue)" /><span className="grow">Simulate a missed check-in</span></button>
           <button className="list-row has-icon" onClick={() => run("Ana is running late", () => actions.simulate("late-caregiver"))}><Clock3 size={22} color="var(--blue)" /><span className="grow">Simulate a late caregiver</span></button>
           <button className="list-row has-icon" onClick={() => run("SOS sent from Maggie's phone", () => actions.sosStart())}><Siren size={22} color="var(--red)" /><span className="grow">Trigger SOS from Maggie</span></button>
-          {state.persona !== "elder" && <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:lock")); }}><Lock size={22} color="var(--blue)" /><span className="grow">Lock the app now</span></button>}
+          <button className="list-row has-icon" onClick={() => run("Ana's request is now 26 hours old", () => actions.simulate("old-request"))}><Hourglass size={22} color="var(--blue)" /><span className="grow">Simulate a request waiting a day</span></button>
+          <button className="list-row has-icon" onClick={() => run("James opened 9 records in a minute", () => actions.simulate("suspicious-access"))}><ShieldAlert size={22} color="var(--orange, #ff9f0a)" /><span className="grow">Simulate suspicious access</span></button>
+          <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:lock")); }}><Lock size={22} color="var(--blue)" /><span className="grow">Lock the app now</span></button>
+          <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:nps")); }}><MessageSquareHeart size={22} color="var(--blue)" /><span className="grow">Show the feedback survey</span></button>
+        </div>
+        <h3 className="section-title" style={{ fontSize: 17 }}>Behind the scenes</h3>
+        <div className="list">
+          <button className="list-row has-icon" onClick={() => { onClose(); nav("/app/review"); }}><FileCheck2 size={22} color="var(--blue)" /><span className="grow">Review team console</span></button>
+          <button className="list-row has-icon" onClick={() => { onClose(); nav("/app/pilot"); }}><BarChart3 size={22} color="var(--blue)" /><span className="grow">Pilot dashboard</span></button>
         </div>
         <div className="list">
           <button className="list-row has-icon" onClick={() => { if (confirm("Reset the demo to its starting data?")) { actions.resetDemo(); onClose(); nav("/app"); } }}><RotateCcw size={22} color="var(--muted)" /><span className="grow">Reset demo</span></button>

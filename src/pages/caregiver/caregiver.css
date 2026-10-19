@@ -1,5 +1,5 @@
 .shift-card { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 22px 24px; border-radius: var(--r-lg); background: var(--care-soft); color: #0f5f6c; }
-.shift-card.on { background: linear-gradient(135deg, #30b0c7, #3fc3d9); color: #fff; box-shadow: 0 16px 40px rgba(48, 176, 199, 0.28); }
+.shift-card.on { background: linear-gradient(135deg, #127a8c, #17899d); color: #fff; box-shadow: 0 16px 40px rgba(48, 176, 199, 0.28); }
 .shift-card .btn:not([style]) { background: var(--care); }
 .dose-row { flex-wrap: wrap; }
 .dose-row.open { background: linear-gradient(90deg, #fff8ec, #fff 60%); }

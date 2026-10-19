@@ -67,7 +67,7 @@ export default function ElderHome() {
           <Link to="/app/elder/next" className={`elder-tile next ${late ? "late" : ""}`} aria-label={`${label}: ${title}. ${sub}`}>
             {art}
             <span className="grow">
-              <span className="k" style={{ display: "block", color: late ? "#b35c00" : undefined }}>{label}</span>
+              <span className="k" style={{ display: "block", color: late ? "#9a4f00" : undefined }}>{label}</span>
               <span className="v" style={{ display: "block" }}>{title}</span>
               <span className="s" style={{ display: "block" }}>{sub}</span>
             </span>

@@ -9,6 +9,7 @@ import type { Persona, Alert } from "../data/types";
 import { Avatar, Sheet } from "./ui";
 import { Logo } from "./Logo";
 import PersonaSheet from "./PersonaSheet";
+import { PrivacyShield, WelcomeTour, NpsCard } from "./Extras";
 import { fmtTime } from "../lib/time";
 import "./shell.css";
 
@@ -26,18 +27,26 @@ export default function AppShell({ persona }: { persona: Persona }) {
 
   useEffect(() => { if (state.persona !== persona) actions.setPersona(persona); }, [persona, state.persona, actions]);
 
-  // Session timeout (CC-14): lock after inactivity on caregiver & guardian apps.
+  const [npsNow, setNpsNow] = useState(false);
   useEffect(() => {
-    if (persona === "elder") return;
+    const show = () => setNpsNow(true);
+    window.addEventListener("cc:nps", show);
+    return () => window.removeEventListener("cc:nps", show);
+  }, []);
+
+  // Session timeout (CC-14): lock after inactivity. Caregiver & guardian always;
+  // the elder app only if she (or Sarah, with her) turns it on.
+  const lockMin = persona === "elder" ? state.settings.elderLockMin : state.settings.sessionLockMin;
+  useEffect(() => {
     let last = Date.now();
     const bump = () => { last = Date.now(); };
     const events = ["pointerdown", "keydown", "scroll", "touchstart"];
     events.forEach((e) => window.addEventListener(e, bump, { passive: true }));
-    const t = setInterval(() => { if (Date.now() - last > state.settings.sessionLockMin * 60000) setLocked(true); }, 15000);
+    const t = setInterval(() => { if (lockMin > 0 && Date.now() - last > lockMin * 60000) setLocked(true); }, 15000);
     const lockNow = () => setLocked(true);
     window.addEventListener("cc:lock", lockNow);
     return () => { events.forEach((e) => window.removeEventListener(e, bump)); clearInterval(t); window.removeEventListener("cc:lock", lockNow); };
-  }, [persona, state.settings.sessionLockMin]);
+  }, [persona, lockMin]);
 
   // Notification banners for alerts that arrive while the app is open.
   // Only alerts created after this screen opened get a banner; older ones live in Alerts.
@@ -130,6 +139,7 @@ export default function AppShell({ persona }: { persona: Persona }) {
         {state.settings.sharingPaused && persona === "guardian" && (
           <div className="info-bar"><PauseCircle size={20} /> Maggie has paused sharing. You still have access as her legal guardian; other members only receive emergency alerts.</div>
         )}
+        {!paused && (npsNow || loc.pathname === `/app/${persona}`) && <div className="page narrow" style={{ paddingBottom: 0 }}><NpsCard persona={persona} force={npsNow} onDone={() => setNpsNow(false)} /></div>}
         {paused ? <PausedScreen /> : <Outlet />}
       </main>
 
@@ -182,13 +192,15 @@ export default function AppShell({ persona }: { persona: Persona }) {
         <div className="lock-screen" role="dialog" aria-modal="true" aria-label="Circle Care is locked">
           <Lock size={40} color="var(--blue)" />
           <h2 className="t-lg">Circle Care is locked</h2>
-          <p className="muted center balance" style={{ maxWidth: 360 }}>We lock the app after {state.settings.sessionLockMin} minutes without activity so others can't see Maggie's information.</p>
-          <button className="btn lg" onClick={() => setLocked(false)}><ScanFace size={22} /> Unlock with Face ID</button>
+          <p className="muted center balance" style={{ maxWidth: 360 }}>We lock the app after {lockMin} minute{lockMin === 1 ? "" : "s"} without activity so others can't see {persona === "elder" ? "your" : "Maggie's"} information.</p>
+          <button className="btn lg" onClick={() => setLocked(false)}><ScanFace size={22} /> Unlock with {persona === "elder" ? "your face" : "Face ID"}</button>
           <p className="tiny">Locked at {fmtTime(clock(state))}</p>
         </div>
       )}
 
       {switcher && <PersonaSheet onClose={() => setSwitcher(false)} />}
+      {!switcher && !locked && <WelcomeTour persona={persona} />}
+      <PrivacyShield />
     </div>
   );
 }

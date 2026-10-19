@@ -1,0 +1,12 @@
+.internal { min-height: 100vh; background: var(--bg, #fbfbfd); }
+.internal-top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); }
+.internal-top a { color: var(--blue); text-decoration: none; font-weight: 500; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.kpi { background: #fff; border-radius: 18px; padding: 16px; box-shadow: var(--shadow-soft); }
+.kpi b { display: block; font-size: 30px; letter-spacing: -0.02em; }
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 120px 1fr 56px; align-items: center; gap: 10px; font-size: 15px; }
+.bar-track { height: 14px; background: #ececf0; border-radius: 7px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 7px; background: var(--blue); }
+.bar-fill.neg { background: #ff9f0a; }
+@media (max-width: 480px) { .bar-row { grid-template-columns: 90px 1fr 48px; font-size: 14px; } }

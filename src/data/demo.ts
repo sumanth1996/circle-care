@@ -1,7 +1,8 @@
 import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent } from "./types";
+import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -124,13 +125,13 @@ export function seed(now = new Date()): State {
     });
   }
 
-  const audit: AuditEvent[] = [
+  const audit: AuditEvent[] = chain([
     { id: uid("a"), at: iso(ymd(addDays(now, -2)), "09:14"), actorId: GUARDIAN, action: "viewed", resource: "medications" },
     { id: uid("a"), at: iso(ymd(addDays(now, -1)), "08:05"), actorId: CAREGIVER, action: "viewed", resource: "today's schedule" },
     { id: uid("a"), at: iso(ymd(addDays(now, -1)), "14:04"), actorId: CAREGIVER, action: "created", resource: "a shift hand-off" },
     { id: uid("a"), at: iso(ymd(addDays(now, -1)), "19:20"), actorId: GUARDIAN, action: "viewed", resource: "the activity feed" },
     { id: uid("a"), at: iso(ymd(addDays(now, -1)), "20:02"), actorId: FAMILY, action: "viewed", resource: "care notes" },
-  ];
+  ]);
 
   return {
     version: STATE_VERSION,
@@ -204,6 +205,8 @@ export function seed(now = new Date()): State {
       sharingPaused: false,
       consent: { version: "1.0", at: iso(ymd(addDays(now, -60)), "10:00"), by: ELDER },
       sessionLockMin: 15,
+      elderLockMin: 0,
+      toured: {},
       emergencyCard: {
         allergies: "Penicillin",
         conditions: "High blood pressure, type 2 diabetes",

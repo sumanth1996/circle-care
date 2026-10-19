@@ -73,7 +73,7 @@ function SignIn({ p }: { p: Persona }) {
             e.preventDefault();
             if (locked) return;
             if (code === "482913") finish();
-            else { setFails(fails + 1); setError(fails + 1 >= 5 ? "" : `That code didn't match. ${5 - fails - 1} tries left.`); setCode(""); }
+            else { setFails(fails + 1); if (fails + 1 >= 5) actions.lockedOut(p); setError(fails + 1 >= 5 ? "" : `That code didn't match. ${5 - fails - 1} tries left.`); setCode(""); }
           }}>
             {locked ? (
               <div className="panel tint" style={{ background: "var(--red-soft)" }}>

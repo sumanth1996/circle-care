@@ -150,14 +150,22 @@ export interface CareDoc {
   at: string;
   size: string;
   status?: "pending" | "verified" | "rejected";
+  /** Reviewer's reason when a legal document is rejected (CC-24). */
+  rejectReason?: string;
+  /** Encrypted file content id in the device file store (CC-67). */
+  fileId?: string;
+  mime?: string;
 }
 
 export interface AuditEvent {
   id: string;
   at: string;
   actorId: string;
-  action: "viewed" | "created" | "updated" | "removed" | "approved" | "declined" | "exported" | "signed in" | "denied";
+  action: "viewed" | "created" | "updated" | "removed" | "approved" | "declined" | "exported" | "signed in" | "signed out" | "denied";
   resource: string;
+  /** Hash of the previous entry and of this entry — a tamper-evident chain (CC-28). */
+  prev: string;
+  hash: string;
 }
 
 export interface Alert {
@@ -187,8 +195,14 @@ export interface Settings {
   highContrast: boolean;
   readAloud: boolean;
   sharingPaused: boolean;
-  consent?: { version: string; at: string; by: string };
+  consent?: { version: string; at: string; by: string; onBehalfReason?: string };
   sessionLockMin: number;
+  /** Elder-chosen lock interval in minutes; 0 = never (CC-14). */
+  elderLockMin: number;
+  /** Personas that have seen the welcome tour (CC-75). */
+  toured: Partial<Record<Persona, boolean>>;
+  /** Pilot setup-call requests (CC-75). */
+  setupCallRequested?: string;
   emergencyCard: {
     allergies: string;
     conditions: string;

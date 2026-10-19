@@ -4,6 +4,11 @@ import { useLocation } from "react-router-dom";
 import { StoreProvider } from "./data/store";
 import { ToastProvider } from "./components/ui";
 import Landing from "./pages/Landing";
+import HowItWorks from "./pages/site/HowItWorks";
+import Features from "./pages/site/Features";
+import WhoItsFor from "./pages/site/WhoItsFor";
+import Privacy from "./pages/site/Privacy";
+import Pilot from "./pages/site/Pilot";
 import Welcome from "./pages/Welcome";
 import SignIn from "./pages/SignIn";
 import AppShell from "./components/AppShell";
@@ -30,6 +35,9 @@ import EmergencyCard from "./pages/shared/EmergencyCard";
 import SosResponder from "./pages/shared/SosResponder";
 import Alerts from "./pages/shared/Alerts";
 import Invite from "./pages/Invite";
+import Review from "./pages/internal/Review";
+import PilotDashboard from "./pages/internal/PilotDashboard";
+import { AccessGuard } from "./components/Extras";
 
 function ScrollTop() {
   const { pathname } = useLocation();
@@ -45,9 +53,16 @@ export default function App() {
           <ScrollTop />
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/who-its-for" element={<WhoItsFor />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/pilot" element={<Pilot />} />
             <Route path="/app" element={<Welcome />} />
             <Route path="/app/sign-in/:persona" element={<SignIn />} />
             <Route path="/app/invite/:memberId" element={<Invite />} />
+            <Route path="/app/review" element={<Review />} />
+            <Route path="/app/pilot" element={<PilotDashboard />} />
             <Route path="/app/elder" element={<AppShell persona="elder" />}>
               <Route index element={<ElderHome />} />
               <Route path="next" element={<ElderNext />} />
@@ -62,7 +77,7 @@ export default function App() {
               <Route index element={<CaregiverToday />} />
               <Route path="handoff" element={<CaregiverHandoff />} />
               <Route path="schedule" element={<CaregiverSchedule />} />
-              <Route path="notes" element={<Notes />} />
+              <Route path="notes" element={<AccessGuard resource="notes"><Notes /></AccessGuard>} />
               <Route path="card" element={<EmergencyCard />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="sos" element={<SosResponder />} />
