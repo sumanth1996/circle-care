@@ -27,7 +27,7 @@ function SignIn({ p }: { p: Persona }) {
   const locked = fails >= 5;
 
   const finish = () => {
-    if (p === "elder" && !state.settings.consent) { setStage("consent"); return; }
+    if (p === "elder" && !state.settings.consent) { actions.setPersona("elder"); setStage("consent"); return; }
     actions.signIn(p);
     nav(`/app/${p}`);
   };

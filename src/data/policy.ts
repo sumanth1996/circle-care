@@ -4,11 +4,11 @@ import { todayOf } from "./selectors";
 // Role permission matrix (CC-18) and the single enforcement point every
 // action goes through (CC-19). In this prototype the check runs in the
 // data layer on the device; in production the identical policy runs in the
-// API so no client can bypass it. See docs/permission-matrix.md.
+// API so no client can bypass it. See docs/security/permission-matrix.md.
 
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
-  | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data";
+  | "handoffs" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -23,6 +23,7 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   docs:            { read: ["elder", "guardian", "family", "pro@shift"], write: ["guardian", "family", "pro@shift"] },
   "docs.legal":    { read: ["elder", "guardian"], write: ["guardian"], review: ["reviewer"] },
   approvals:       { read: ["elder", "guardian"], approve: ["guardian"], propose: ["family", "pro@shift", "pro"] },
+  handoffs:        { read: ["guardian", "family", "pro"], write: ["pro@shift"] },
   circle:          { read: ["elder", "guardian", "family", "pro"], invite: ["elder", "guardian"], revoke: ["elder", "guardian"] },
   schedule:        { read: ["elder", "guardian", "family", "pro"], write: ["guardian"], propose: ["pro", "family"] },
   history:         { read: ["elder", "guardian", "family"] },

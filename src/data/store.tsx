@@ -3,7 +3,7 @@ import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, C
 import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo";
 import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, activeSos, member, todayVisit, tasksFor, checkinToday } from "./selectors";
 import { append } from "./audit";
-import { can, type Action, type Resource } from "./policy";
+import { can, roleOf, type Action, type Resource } from "./policy";
 import { hm, uid, ymd, toMin, minutesOfDay } from "../lib/time";
 import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
 
@@ -196,6 +196,7 @@ function useStoreState(initial: State) {
       resetDemo: () => { setState(seed()); viewed.current = {}; },
       /** CC-33: close the circle and delete its data from this device, including the encryption key. */
       closeCircle: async () => {
+        if (!can(latest.current, meId(latest.current.persona), "delete", "data")) { update((s) => { audit(s, actor(s), "denied", "delete data"); }); return; }
         await wipeDevice([STATE_KEY]);
         try {
           const log = JSON.parse(localStorage.getItem("circle-care-deletions") ?? "[]") as string[];
@@ -322,6 +323,7 @@ function useStoreState(initial: State) {
       }),
       elderSeen: (id: string) => update((s) => { const a = s.approvals.find((x) => x.id === id); if (a) a.elderSeen = true; }),
       elderAsk: (id: string, q: string) => update((s) => {
+        if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "ask about a decision"); return; }
         const a = s.approvals.find((x) => x.id === id);
         if (!a) return;
         a.elderQuestion = q;
@@ -330,6 +332,7 @@ function useStoreState(initial: State) {
       }),
       /** CC-48: the elder can suggest a change to who is alerted first. */
       elderSuggest: (text: string) => update((s) => {
+        if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "suggest SOS-list change"); return; }
         pushAlert(s, { to: ["guardian"], severity: "info", title: "You have a new message in Circle Care", detail: `Maggie suggested a change to her SOS list: “${text}”`, link: "/app/guardian/circle" });
         audit(s, ELDER, "created", "a suggestion about the SOS list");
       }),
@@ -346,6 +349,7 @@ function useStoreState(initial: State) {
         audit(s, actor(s), "created", `task “${t.title}”`);
       }),
       elderCheckin: (mood?: string) => update((s) => {
+        if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "check in for Maggie"); return; }
         const today = todayOf(s);
         s.checkins = s.checkins.filter((c) => c.date !== today);
         s.checkins.push({ date: today, at: clock(s).toISOString(), mood });
@@ -366,6 +370,7 @@ function useStoreState(initial: State) {
         pushAlert(s, { to: ["elder", "guardian", "caregiver"], severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, e.responderId)} is responding to Maggie's SOS.`, link: "/app/sos" });
       }),
       sosResolve: (outcome: string) => update((s) => {
+        if (!can(s, actor(s), "write", "sos") && !guard(s, "respond", "sos")) return;
         const e = activeSos(s);
         if (!e) return;
         e.status = "resolved";
@@ -375,6 +380,7 @@ function useStoreState(initial: State) {
       }),
       visitCheckIn: (manualReason?: string) => update((s) => {
         const by = actor(s);
+        if (s.members.find((m) => m.id === by)?.role !== "pro") { audit(s, by, "denied", "visit check-in"); return; }
         let v = todayVisit(s, by);
         if (!v) {
           const sh = s.shifts.find((x) => x.caregiverId === by) ?? s.shifts[0];
@@ -387,6 +393,7 @@ function useStoreState(initial: State) {
         audit(s, by, "viewed", "today's care plan");
       }),
       submitHandoff: (h: Omit<Handoff, "id" | "visitId" | "by" | "at">) => update((s) => {
+        if (!guard(s, "write", "handoffs")) return;
         const by = actor(s);
         const v = todayVisit(s, by);
         if (!v) return;
@@ -395,6 +402,7 @@ function useStoreState(initial: State) {
         audit(s, by, "created", "a shift hand-off");
       }),
       acknowledgeHandoff: (id: string) => update((s) => {
+        if (!guard(s, "read", "handoffs")) return;
         const h = s.handoffs.find((x) => x.id === id);
         if (h) { h.acknowledgedBy = actor(s); h.acknowledgedAt = clock(s).toISOString(); }
       }),
@@ -404,7 +412,7 @@ function useStoreState(initial: State) {
         if (i >= 0) s.shifts[i] = sh; else s.shifts.push(sh);
         if (sh.caregiverId && !sh.accepted) pushAlert(s, { to: ["caregiver"], severity: "info", title: "You have a new shift in Circle Care", detail: `Sarah offered you a shift, ${sh.start}–${sh.end}.`, link: "/app/caregiver/schedule" });
       }),
-      acceptShift: (id: string) => update((s) => { const sh = s.shifts.find((x) => x.id === id); if (sh) sh.accepted = true; }),
+      acceptShift: (id: string) => update((s) => { const sh = s.shifts.find((x) => x.id === id); if (sh && sh.caregiverId === actor(s)) sh.accepted = true; }),
       requestSwap: (shiftId: string, to: string, reason: string) => update((s) => {
         if (!guard(s, "propose", "schedule")) return;
         const sh = s.shifts.find((x) => x.id === shiftId);
@@ -465,7 +473,12 @@ function useStoreState(initial: State) {
         }
       }),
       /** CC-22: consent by the elder, or by her guardian on her behalf with a documented reason. */
-      acceptConsent: (onBehalfReason?: string) => update((s) => { s.settings.consent = { version: "1.0", at: clock(s).toISOString(), by: actor(s), onBehalfReason }; }),
+      acceptConsent: (onBehalfReason?: string) => update((s) => {
+        const who = actor(s);
+        const ok = onBehalfReason ? roleOf(s, who) === "guardian" && member(s, who)?.verification === "verified" : who === ELDER;
+        if (!ok) { audit(s, who, "denied", "accept the privacy agreement"); return; }
+        s.settings.consent = { version: "1.0", at: clock(s).toISOString(), by: actor(s), onBehalfReason };
+      }),
       markRead: (p: Persona) => update((s) => { for (const a of s.alerts) if (a.to.includes(p) && !a.read.includes(p)) a.read.push(p); }),
       exported: () => update((s) => { if (guard(s, "export", "data")) audit(s, actor(s), "exported", "a full copy of the circle's data"); }),
       denied: (resource: string) => update((s) => { audit(s, actor(s), "denied", resource); }),
