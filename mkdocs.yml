@@ -1,0 +1,119 @@
+site_name: Circle Care Product Wiki
+site_description: Product, feature, architecture and roadmap documentation for Circle Care, a privacy-first care-coordination concept product.
+site_author: Sumanth (Product Owner, CSPO)
+site_url: https://sumanth1996.github.io/circle-care/
+repo_url: https://github.com/sumanth1996/circle-care
+repo_name: sumanth1996/circle-care
+edit_uri: edit/main/docs/
+docs_dir: docs
+copyright: Circle Care is a concept product. All people and data in it are fictional.
+
+# docs/README.md is the GitHub-browsing index of the working drafts. The wiki
+# has its own landing page for that section, so README.md is left out of the
+# built site to avoid clashing with index.md.
+exclude_docs: |
+  README.md
+
+theme:
+  name: material
+  language: en
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    scheme: default
+    primary: indigo
+    accent: indigo
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/account-group
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+extra_css:
+  - wiki/assets/wiki.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+nav:
+  - Home: index.md
+  - Product:
+      - Personas: wiki/product/personas.md
+      - Demo guide: wiki/product/demo-guide.md
+      - Glossary: wiki/product/glossary.md
+      - Release notes: wiki/product/release-notes.md
+      - FAQ: wiki/product/faq.md
+  - Features:
+      - wiki/features/index.md
+      - Website & onboarding: wiki/features/website-and-onboarding.md
+      - Elder experience: wiki/features/elder-experience.md
+      - SOS & emergency: wiki/features/sos-and-emergency.md
+      - Medications & tasks: wiki/features/medications-and-tasks.md
+      - Caregiver shifts & hand-offs: wiki/features/caregiver-shifts-and-handoffs.md
+      - Guardian dashboard & approvals: wiki/features/guardian-dashboard-and-approvals.md
+      - Health insights: wiki/features/health-insights.md
+      - Care calendar: wiki/features/care-calendar.md
+      - Care circle & access: wiki/features/care-circle-and-access.md
+      - Notes & documents: wiki/features/notes-and-documents.md
+      - Privacy Center: wiki/features/privacy-center.md
+      - Alerts & notifications: wiki/features/alerts-and-notifications.md
+      - Pilot & feedback: wiki/features/pilot-and-feedback.md
+  - Architecture & Security:
+      - System overview: wiki/architecture/system-overview.md
+      - Data model: wiki/architecture/data-model.md
+      - Security & privacy: wiki/architecture/security-and-privacy.md
+      - Quality & testing: wiki/architecture/quality-and-testing.md
+      - Traceability matrix: wiki/traceability.md
+  - Roadmap: wiki/roadmap.md
+  - Research & Compliance:
+      - wiki/research-and-compliance.md
+      - Research:
+          - CC-1 Recruiting screener: research/01-recruiting-screener.md
+          - CC-2 Interview guide (elders): research/02-interview-guide-elders.md
+          - CC-3 Interview guide (caregivers): research/03-interview-guide-caregivers.md
+          - CC-4 Interview guide (guardians): research/04-interview-guide-guardians.md
+          - CC-5 Journey maps: research/05-journey-maps.md
+          - CC-6 Opportunity solution tree: research/06-opportunity-solution-tree.md
+          - CC-7 Competitive teardown: research/07-competitive-teardown.md
+      - Compliance:
+          - CC-8 Regulatory memo: compliance/08-regulatory-memo.md
+          - CC-9 Data inventory: compliance/09-data-inventory.md
+          - CC-30 Vendor & BAA register: compliance/30-vendor-baa-register.md
+          - CC-79 HIPAA security risk analysis: compliance/79-hipaa-security-risk-analysis.md
+      - Security:
+          - CC-10 Threat model: security/10-threat-model.md
+          - CC-18 Permission matrix: security/permission-matrix.md
+          - CC-34 Incident response runbook: security/34-incident-response-runbook.md
+          - CC-78 Security test plan: security/78-security-test-plan.md
+      - Pilot:
+          - CC-74 Pilot plan: pilot/74-pilot-plan.md
+  - Contributing: wiki/how-to-contribute.md

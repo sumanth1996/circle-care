@@ -1,0 +1,71 @@
+/* Circle Care Product Wiki — small additions to Material for MkDocs. */
+
+:root {
+  --cc-elder: #c25e00;
+  --cc-care: #137a8c;
+  --cc-guard: #4b49c8;
+  --cc-ok: #1a7f37;
+  --cc-warn: #9a6700;
+  --cc-plan: #5b6170;
+}
+
+/* Screenshots: soft frame and shadow so white UI stands out from the page. */
+.md-typeset figure img,
+.md-typeset img.cc-shot {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(20, 20, 50, 0.10);
+  background: #fbfbfd;
+}
+.md-typeset figure {
+  margin: 1.4em auto;
+}
+.md-typeset figure figcaption {
+  max-width: 44rem;
+  font-size: 0.72rem;
+  color: var(--md-default-fg-color--light);
+}
+/* Phone-sized screenshots should not stretch across the page. */
+.md-typeset figure.cc-phone img {
+  max-width: 300px;
+}
+.md-typeset .cc-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  align-items: flex-start;
+}
+.md-typeset .cc-pair figure {
+  margin: 0.6em 0;
+}
+
+/* Status badges used in page headers and tables. */
+.md-typeset .cc-badge {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  border: 1px solid currentColor;
+}
+.md-typeset .cc-badge--built   { color: var(--cc-ok);   background: #e9f6ee; }
+.md-typeset .cc-badge--partial { color: var(--cc-warn); background: #fdf5e3; }
+.md-typeset .cc-badge--planned { color: var(--cc-plan); background: #f0f1f4; }
+.md-typeset .cc-badge--sim     { color: var(--cc-guard); background: #eeeefc; }
+
+/* Page header "metadata" table on feature pages. */
+.md-typeset table.cc-meta,
+.md-typeset .cc-meta table {
+  font-size: 0.72rem;
+}
+.md-typeset .cc-meta table th {
+  width: 11rem;
+}
+
+/* Persona colour chips. */
+.md-typeset .cc-elder { color: var(--cc-elder); font-weight: 600; }
+.md-typeset .cc-care  { color: var(--cc-care);  font-weight: 600; }
+.md-typeset .cc-guard { color: var(--cc-guard); font-weight: 600; }

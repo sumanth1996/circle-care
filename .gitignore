@@ -5,3 +5,4 @@ dist
 .env
 .env.*
 tests/e2e/out/
+site/
