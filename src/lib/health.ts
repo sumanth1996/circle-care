@@ -214,7 +214,7 @@ export function mindfulMinutes(date: string) {
   return Math.round(5 + noise(`${date}|mind`) * 15);
 }
 
-/* ---------------- Body measurements (CC-84) ---------------- */
+/* ---------------- Body measurements (CC-93) ---------------- */
 
 export function weightSeries(today: Date, days = 30) {
   const out: { date: string; kg: number }[] = [];
