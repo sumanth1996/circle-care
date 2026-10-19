@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent } fro
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 5;
+export const STATE_VERSION = 6;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -140,11 +140,11 @@ export function seed(now = new Date()): State {
     clockOffsetMin: 0,
     elderId: ELDER,
     members: [
-      { id: ELDER, name: "Margaret Lee", short: "Maggie", role: "elder", relation: "You", phone: "+1 (616) 555-0141", color: "#FF9F0A", photo: "elder", status: "active" },
-      { id: GUARDIAN, name: "Sarah Lee", short: "Sarah", role: "guardian", relation: "Daughter · Healthcare power of attorney", phone: "+1 (616) 555-0177", color: "#5E5CE6", photo: "family", status: "active", verification: "verified", favorite: true },
-      { id: CAREGIVER, name: "Ana Rivera", short: "Ana", role: "pro", relation: "Home care aide", phone: "+1 (616) 555-0102", color: "#30B0C7", status: "active", favorite: true },
-      { id: FAMILY, name: "James Lee", short: "James", role: "family", relation: "Grandson", phone: "+1 (616) 555-0119", color: "#34C759", status: "active", favorite: true },
-      { id: RESPITE, name: "Ruth Okafor", short: "Ruth", role: "pro", relation: "Respite caregiver", phone: "+1 (616) 555-0188", color: "#FF6482", status: "pending", expiresOn: ymd(addDays(now, 14)), invitedAt: iso(ymd(addDays(now, -1)), "17:30") },
+      { id: ELDER, name: "Margaret Lee", short: "Maggie", role: "elder", relation: "You", phone: "+1 (415) 555-0141", color: "#FF9F0A", photo: "elder", status: "active" },
+      { id: GUARDIAN, name: "Sarah Lee", short: "Sarah", role: "guardian", relation: "Daughter · Healthcare power of attorney", phone: "+1 (415) 555-0177", color: "#5E5CE6", photo: "family", status: "active", verification: "verified", favorite: true },
+      { id: CAREGIVER, name: "Ana Rivera", short: "Ana", role: "pro", relation: "Home care aide", phone: "+1 (415) 555-0102", color: "#30B0C7", status: "active", favorite: true },
+      { id: FAMILY, name: "James Lee", short: "James", role: "family", relation: "Grandson", phone: "+1 (415) 555-0119", color: "#34C759", status: "active", favorite: true },
+      { id: RESPITE, name: "Ruth Okafor", short: "Ruth", role: "pro", relation: "Respite caregiver", phone: "+1 (415) 555-0188", color: "#FF6482", status: "pending", expiresOn: ymd(addDays(now, 14)), invitedAt: iso(ymd(addDays(now, -1)), "17:30") },
     ],
     meds,
     doses,
@@ -179,7 +179,7 @@ export function seed(now = new Date()): State {
     ],
     notes: [
       { id: uid("n"), by: GUARDIAN, at: iso(ymd(addDays(now, -2)), "19:40"), text: "Mom's eye appointment is moved to next Thursday at 10 AM. I'll drive her.", visibility: "everyone" },
-      { id: uid("n"), by: CAREGIVER, at: iso(ymd(addDays(now, -1)), "13:50"), text: "We tried the new walking route by the park. Maggie loved the ducks!", visibility: "everyone" },
+      { id: uid("n"), by: CAREGIVER, at: iso(ymd(addDays(now, -1)), "13:50"), text: "We tried the new walking route around Stow Lake in Golden Gate Park. Maggie loved the ducks!", visibility: "everyone" },
     ],
     docs: [
       { id: uid("d"), name: "Care plan — spring update.pdf", kind: "Care plan", by: GUARDIAN, at: iso(ymd(addDays(now, -30)), "11:00"), size: "212 KB" },
@@ -232,19 +232,19 @@ function appointmentsSeed(now: Date): State["appointments"] {
     status: (n < 0 ? "done" : "scheduled") as "done" | "scheduled", createdBy: GUARDIAN, ...extra,
   });
   return [
-    a(-12, "16:00", "refill", "Pick up Atorvastatin refill", "Lakeshore Pharmacy", "212 Lake St", ["med-atorvastatin"], { escortId: FAMILY }),
-    a(-6, "10:30", "doctor", "Blood pressure check", "Dr. Hannah Brooks", "Grand River Family Medicine", ["med-lisinopril"], { escortId: GUARDIAN }),
-    a(-3, "09:00", "review", "Pharmacist medication review", "Lakeshore Pharmacy", "Phone call", ["med-lisinopril", "med-metformin", "med-vitd", "med-atorvastatin"]),
-    a(0, "16:30", "refill", "Pick up Metformin refill", "Lakeshore Pharmacy", "212 Lake St", ["med-metformin"], { escortId: CAREGIVER }),
-    a(2, "08:15", "lab", "A1c and kidney blood test", "Grand River Lab", "Suite 110, 400 Fulton St", ["med-metformin", "med-lisinopril"], { prep: "No food after midnight. Take morning medicines after the test.", escortId: CAREGIVER }),
-    a(2, "11:00", "doctor", "Diabetes follow-up", "Dr. Hannah Brooks", "Grand River Family Medicine", ["med-metformin"], { escortId: CAREGIVER, prep: "Bring the glucose log." }),
-    a(toThu, "10:00", "doctor", "Eye exam (diabetes screening)", "Dr. Omar Patel", "Lakeview Eye Care", ["med-metformin"], { escortId: GUARDIAN, prep: "Pupils will be dilated — bring sunglasses." }),
-    a(9, "14:00", "refill", "Lisinopril 90-day refill", "Lakeshore Pharmacy", "Mail order", ["med-lisinopril"]),
-    a(14, "09:30", "lab", "Cholesterol panel", "Grand River Lab", "Suite 110, 400 Fulton St", ["med-atorvastatin"], { prep: "Fasting for 10 hours." }),
-    a(14, "13:00", "refill", "Vitamin D3 refill", "Lakeshore Pharmacy", "212 Lake St", ["med-vitd"], { escortId: FAMILY }),
-    a(16, "15:00", "doctor", "Cardiology follow-up", "Dr. Lena Ortiz", "Mercy Heart Center", ["med-lisinopril", "med-atorvastatin"], { escortId: GUARDIAN, prep: "Bring the heart-rate report from the Health tab." }),
-    a(21, "10:00", "review", "Annual medication review", "Dr. Hannah Brooks", "Grand River Family Medicine", ["med-lisinopril", "med-metformin", "med-vitd", "med-atorvastatin"], { escortId: GUARDIAN }),
-    a(28, "16:00", "refill", "Metformin refill", "Lakeshore Pharmacy", "212 Lake St", ["med-metformin"]),
-    a(35, "08:30", "lab", "Kidney function test", "Grand River Lab", "Suite 110, 400 Fulton St", ["med-metformin"]),
+    a(-12, "16:00", "refill", "Pick up Atorvastatin refill", "Fog City Pharmacy", "1840 Irving St, San Francisco, CA", ["med-atorvastatin"], { escortId: FAMILY }),
+    a(-6, "10:30", "doctor", "Blood pressure check", "Dr. Hannah Brooks", "Golden Gate Family Medicine, 2100 Webster St, San Francisco, CA", ["med-lisinopril"], { escortId: GUARDIAN }),
+    a(-3, "09:00", "review", "Pharmacist medication review", "Fog City Pharmacy", "Phone call", ["med-lisinopril", "med-metformin", "med-vitd", "med-atorvastatin"]),
+    a(0, "16:30", "refill", "Pick up Metformin refill", "Fog City Pharmacy", "1840 Irving St, San Francisco, CA", ["med-metformin"], { escortId: CAREGIVER }),
+    a(2, "08:15", "lab", "A1c and kidney blood test", "Bay Area Lab", "Suite 210, 3801 Sacramento St, San Francisco, CA", ["med-metformin", "med-lisinopril"], { prep: "No food after midnight. Take morning medicines after the test.", escortId: CAREGIVER }),
+    a(2, "11:00", "doctor", "Diabetes follow-up", "Dr. Hannah Brooks", "Golden Gate Family Medicine, 2100 Webster St, San Francisco, CA", ["med-metformin"], { escortId: CAREGIVER, prep: "Bring the glucose log." }),
+    a(toThu, "10:00", "doctor", "Eye exam (diabetes screening)", "Dr. Omar Patel", "Presidio Eye Care, 3700 California St, San Francisco, CA", ["med-metformin"], { escortId: GUARDIAN, prep: "Pupils will be dilated — bring sunglasses." }),
+    a(9, "14:00", "refill", "Lisinopril 90-day refill", "Fog City Pharmacy", "Mail order", ["med-lisinopril"]),
+    a(14, "09:30", "lab", "Cholesterol panel", "Bay Area Lab", "Suite 210, 3801 Sacramento St, San Francisco, CA", ["med-atorvastatin"], { prep: "Fasting for 10 hours." }),
+    a(14, "13:00", "refill", "Vitamin D3 refill", "Fog City Pharmacy", "1840 Irving St, San Francisco, CA", ["med-vitd"], { escortId: FAMILY }),
+    a(16, "15:00", "doctor", "Cardiology follow-up", "Dr. Lena Ortiz", "Bay Heart Center, 1100 Van Ness Ave, San Francisco, CA", ["med-lisinopril", "med-atorvastatin"], { escortId: GUARDIAN, prep: "Bring the heart-rate report from the Health tab." }),
+    a(21, "10:00", "review", "Annual medication review", "Dr. Hannah Brooks", "Golden Gate Family Medicine, 2100 Webster St, San Francisco, CA", ["med-lisinopril", "med-metformin", "med-vitd", "med-atorvastatin"], { escortId: GUARDIAN }),
+    a(28, "16:00", "refill", "Metformin refill", "Fog City Pharmacy", "1840 Irving St, San Francisco, CA", ["med-metformin"]),
+    a(35, "08:30", "lab", "Kidney function test", "Bay Area Lab", "Suite 210, 3801 Sacramento St, San Francisco, CA", ["med-metformin"]),
   ];
 }

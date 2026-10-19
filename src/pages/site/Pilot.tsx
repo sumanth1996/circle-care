@@ -45,7 +45,7 @@ export default function Pilot() {
                 <option value="caregiver">A professional caregiver</option>
               </select>
             </div>
-            <div className="field"><label htmlFor="p-state">State</label><input id="p-state" className="input" value={f.state} onChange={set("state")} placeholder="e.g. Michigan" /></div>
+            <div className="field"><label htmlFor="p-state">State</label><input id="p-state" className="input" value={f.state} onChange={set("state")} placeholder="e.g. California" /></div>
             <div className="field">
               <label htmlFor="p-pro">Does a professional caregiver visit?</label>
               <select id="p-pro" className="input" value={f.hasPro} onChange={set("hasPro")}><option value="no">No</option><option value="yes">Yes</option></select>

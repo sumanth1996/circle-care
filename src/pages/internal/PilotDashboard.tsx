@@ -25,7 +25,7 @@ function synthetic() {
     nps.push({ at: "", persona, score: Math.max(0, Math.min(10, Math.round(6 + bias + (r() - 0.5) * 5))) });
   }
   const roles = ["family", "family", "guardian", "elder", "caregiver"];
-  const leads: PilotLead[] = Array.from({ length: 41 }, (_, i) => ({ at: "", role: roles[Math.floor(r() * roles.length)], state: ["Michigan", "Ohio", "Texas", "Arizona"][i % 4], hasPro: r() > 0.45 }));
+  const leads: PilotLead[] = Array.from({ length: 41 }, () => ({ at: "", role: roles[Math.floor(r() * roles.length)], state: "California", hasPro: r() > 0.45 }));
   const circles = 24;
   const weeks = [0.71, 0.78, 0.83, 0.86, 0.88, 0.9];
   const ack = [7.5, 6.8, 6.1, 5.4, 5.2, 4.9];

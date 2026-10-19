@@ -202,7 +202,7 @@ function ApptSheet({ initial, onClose, onSave }: { initial: Partial<Appointment>
           <label className="field"><span>Length</span><select className="input" value={f.durationMin} onChange={(e) => set("durationMin", +e.target.value)}>{[15, 30, 45, 60, 90].map((n) => <option key={n} value={n}>{n} min</option>)}</select></label>
         </div>
         <label className="field"><span>With (doctor, lab or pharmacy)</span><input className="input" value={f.provider} onChange={(e) => set("provider", e.target.value)} required /></label>
-        <label className="field"><span>Where</span><input className="input" value={f.location} onChange={(e) => set("location", e.target.value)} placeholder="Address, or phone / video" /></label>
+        <label className="field"><span>Where</span><input className="input" value={f.location} onChange={(e) => set("location", e.target.value)} placeholder="e.g. 1840 Irving St, San Francisco, CA — or phone / video" /></label>
         <fieldset className="field">
           <legend style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Which medicines is it about?</legend>
           <div className="row wrap" style={{ "--gap": "8px" } as CSSProperties}>
