@@ -326,17 +326,20 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../how-to-contribute/" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../how-to-contribute/" class="md-tabs__link">
+          
   
   
     
   
   Contributing
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -634,6 +637,8 @@
       
         
           
+        
+      
         
       
         
@@ -1080,6 +1085,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/accounts-identity-payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts, identity & payments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1448,6 +1481,17 @@
     <span class="md-ellipsis">
       
         Computed, not stored
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server database (PostgreSQL) — accounts, identity &amp; payments
       
     </span>
   </a>
@@ -2425,9 +2469,31 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../how-to-contribute/" class="md-nav__link">
+    
+    
+      
         
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -2441,7 +2507,79 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-contribute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How to contribute
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-10-25-sprint-11-accounts-identity-payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2670,6 +2808,17 @@
     <span class="md-ellipsis">
       
         Computed, not stored
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server database (PostgreSQL) — accounts, identity &amp; payments
       
     </span>
   </a>
@@ -3348,6 +3497,81 @@
 </table>
 <h2 id="computed-not-stored">Computed, not stored<a class="headerlink" href="#computed-not-stored" title="Permanent link">&para;</a></h2>
 <p>Vital-sign readings, activity, sleep, weight series, dose states, coverage gaps, streaks, adherence, North Star and the activity feed are all <strong>derived</strong> on demand (<code>src/lib/health.ts</code>, <code>src/data/selectors.ts</code>).</p>
+<h2 id="server-database">Server database (PostgreSQL) — accounts, identity &amp; payments<a class="headerlink" href="#server-database" title="Permanent link">&para;</a></h2>
+<p>Since Sprint 11 (CC-189), real accounts live in PostgreSQL, separately from the browser-only demo state described above. The schema is in <code>server/migrations/001_init.sql</code> and is applied by versioned migrations.</p>
+<pre class="mermaid"><code>erDiagram
+  users ||--o{ sessions : "signs in with"
+  users ||--o| elders : "is (role = elder)"
+  users ||--o| caregivers : "is (role = caregiver)"
+  users ||--o| guardians : "is (role = guardian)"
+  users ||--o| ssn_fingerprints : "one SSN per person"
+  users ||--o| photos : has
+  users ||--o| bank_accounts : "guardian: exactly one"
+  users ||--o{ payment_cards : "guardian: up to 5, one primary"
+  users ||--o{ vault_tokens : "created"
+  users ||--o{ audit_events : "subject of"</code></pre>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Key columns</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>users</code></td>
+<td><code>id</code>, <code>email</code> (unique, lower-case), <code>password_hash</code> (scrypt), <code>role</code>, <code>failed_attempts</code>, <code>locked_until</code></td>
+<td>Sign-in identity</td>
+</tr>
+<tr>
+<td><code>sessions</code></td>
+<td><code>token_hash</code> (SHA-256), <code>user_id</code>, <code>last_seen_at</code>, <code>expires_at</code></td>
+<td>The raw token exists only in the cookie</td>
+</tr>
+<tr>
+<td><code>elders</code> / <code>caregivers</code> / <code>guardians</code></td>
+<td><code>user_id</code> (unique), <code>first_name</code>, <code>last_name</code>, <code>phone</code> (<code>+1XXXXXXXXXX</code>), <code>email</code>, <code>ssn_enc</code>, <code>ssn_last4</code></td>
+<td><strong>Separate table per persona</strong>; <code>ssn_enc</code> is AES-256-GCM ciphertext</td>
+</tr>
+<tr>
+<td><code>ssn_fingerprints</code></td>
+<td><code>fingerprint</code> (HMAC-SHA256, PK), <code>user_id</code> (unique)</td>
+<td>Duplicate-SSN detection without decrypting</td>
+</tr>
+<tr>
+<td><code>photos</code></td>
+<td><code>user_id</code>, <code>content_type</code>, <code>data_enc</code>, <code>size_bytes ≤ 2 MB</code></td>
+<td>Encrypted image</td>
+</tr>
+<tr>
+<td><code>bank_accounts</code></td>
+<td><code>vault_token</code>, <code>bank_name</code>, <code>account_type</code>, <code>account_last4</code>, <code>routing_last4</code>, <code>ach_fee_cents = 0</code></td>
+<td>One per user; <code>CHECK</code> stops full numbers</td>
+</tr>
+<tr>
+<td><code>payment_cards</code></td>
+<td><code>vault_token</code>, <code>brand</code>, <code>funding</code>, <code>last4</code>, <code>exp_month</code>, <code>exp_year</code>, <code>is_primary</code></td>
+<td>Unique index allows only one primary per user</td>
+</tr>
+<tr>
+<td><code>vault_tokens</code></td>
+<td><code>token</code>, <code>kind</code>, <code>owner_user_id</code>, <code>metadata</code> (last four only), <code>attached_at</code>, <code>revoked_at</code></td>
+<td>Simulated vault register; tokens expire after 15 min if unused</td>
+</tr>
+<tr>
+<td><code>audit_events</code></td>
+<td><code>at</code>, <code>actor_user_id</code>, <code>subject_user_id</code>, <code>action</code>, <code>detail</code> (masked JSON)</td>
+<td>Append-only (trigger blocks UPDATE/DELETE)</td>
+</tr>
+<tr>
+<td><code>audit_people_masked</code>, <code>audit_payment_methods_masked</code></td>
+<td>views</td>
+<td>The only objects an auditor's role should be able to read</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../../features/accounts-identity-payments/">Accounts, identity &amp; payments</a>.</p>
 <h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../system-overview/">System overview</a></li>

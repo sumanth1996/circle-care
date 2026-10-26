@@ -18,6 +18,8 @@
         <link rel="prev" href="../../pilot/74-pilot-plan/">
       
       
+        <link rel="next" href="../../reviews/2026-10-25-sprint-11-accounts-identity-payments/">
+      
       
         
       
@@ -27,7 +29,7 @@
     
     
       
-        <title>Contributing - Circle Care Product Wiki</title>
+        <title>How to contribute - Circle Care Product Wiki</title>
       
     
     
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing
+              How to contribute
             
           </span>
         </div>
@@ -324,17 +326,20 @@
     
   
   
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
   
   
     
   
   Contributing
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -632,6 +637,8 @@
       
         
           
+        
+      
         
       
         
@@ -1065,6 +1072,34 @@
     
   
     Pilot & feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/accounts-identity-payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts, identity & payments
   
 
     
@@ -2158,6 +2193,69 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
@@ -2173,7 +2271,7 @@
   <span class="md-ellipsis">
     
   
-    Contributing
+    How to contribute
   
 
     
@@ -2191,7 +2289,7 @@
   <span class="md-ellipsis">
     
   
-    Contributing
+    How to contribute
   
 
     
@@ -2305,6 +2403,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#delivery-roles-check-in-approval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delivery roles &amp; check-in approval
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#document-control" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2318,6 +2427,42 @@
     </ul>
   
 </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-10-25-sprint-11-accounts-identity-payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -2431,6 +2576,17 @@
     <span class="md-ellipsis">
       
         Review process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delivery-roles-check-in-approval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delivery roles &amp; check-in approval
       
     </span>
   </a>
@@ -2641,6 +2797,46 @@
 <li>Merge; the maintainer publishes with <code>mkdocs gh-deploy</code>.</li>
 <li>Update <em>Last updated</em> on each feature page you changed and add a line to the <a href="../product/release-notes/">Release notes</a> if behaviour changed.</li>
 </ol>
+<h2 id="delivery-roles-check-in-approval">Delivery roles &amp; check-in approval<a class="headerlink" href="#delivery-roles-check-in-approval" title="Permanent link">&para;</a></h2>
+<p>Every story is delivered by a named team. Roles are recorded on the story in Notion (<strong>Developer</strong>, <strong>Tester</strong>, <strong>Build &amp; Deploy</strong>, <strong>Approver</strong>, <strong>Product Owner</strong>) and in each commit message.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Who</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Product Owner</td>
+<td>Sumanth (PO)</td>
+<td>Writes and prioritises stories, accepts the increment</td>
+</tr>
+<tr>
+<td>Developer</td>
+<td>Dev Agent (AI)</td>
+<td>Builds the story and its unit/API tests</td>
+</tr>
+<tr>
+<td>Tester</td>
+<td>QA Agent (AI)</td>
+<td>Runs the unit, API, Playwright end-to-end and axe suites; records results on the story</td>
+</tr>
+<tr>
+<td>Build &amp; Deploy</td>
+<td>Release Agent (AI)</td>
+<td>Builds, pushes to GitHub, publishes the wiki, and closes the story and tasks with a comment</td>
+</tr>
+<tr>
+<td>Approver</td>
+<td>Lead Architect Agent (AI)</td>
+<td>An independent review agent that reads the full diff before check-in. Code isn't merged until it approves; the verdict is recorded in the commit (<code>Reviewed-by</code> / <code>Approved-by</code>) and in <code>docs/reviews/</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The roles are AI agents working for the Product Owner; they're labelled as agents everywhere so nobody mistakes them for people.</p>
+<p><strong>Definition of Done for a story:</strong> acceptance criteria covered by automated tests, every suite green, axe clean, privacy review recorded for PHI/PII stories, approved by the Lead Architect Agent, merged to <code>main</code>, wiki updated, and the story and its tasks closed in Notion with a comment naming the commit.</p>
 <h2 id="document-control">Document control<a class="headerlink" href="#document-control" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

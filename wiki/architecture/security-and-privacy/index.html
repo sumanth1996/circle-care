@@ -326,17 +326,20 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../how-to-contribute/" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../how-to-contribute/" class="md-tabs__link">
+          
   
   
     
   
   Contributing
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -634,6 +637,8 @@
       
         
           
+        
+      
         
       
         
@@ -1080,6 +1085,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/accounts-identity-payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts, identity & payments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1410,6 +1443,17 @@
     <span class="md-ellipsis">
       
         HIPAA posture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server-side protection of identity and payment data
       
     </span>
   </a>
@@ -2370,9 +2414,31 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../how-to-contribute/" class="md-nav__link">
+    
+    
+      
         
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -2386,7 +2452,79 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-contribute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How to contribute
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-10-25-sprint-11-accounts-identity-payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2549,6 +2687,17 @@
     <span class="md-ellipsis">
       
         HIPAA posture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server-side protection of identity and payment data
       
     </span>
   </a>
@@ -3000,6 +3149,46 @@ object-src 'none'; base-uri 'self'; form-action 'self'
 </tbody>
 </table>
 <p>See the <a href="../../../compliance/08-regulatory-memo/">regulatory memo (CC-8)</a> — not legal advice.</p>
+<h2 id="server-side">Server-side protection of identity and payment data<a class="headerlink" href="#server-side" title="Permanent link">&para;</a></h2>
+<p>Added in Sprint 11 (CC-172 – CC-190). Details are on <a href="../../features/accounts-identity-payments/#security-controls">Accounts, identity &amp; payments</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SSNs protected (HIPAA §164.312(a)(2)(iv), GLBA Safeguards)</td>
+<td>AES-256-GCM field encryption with a versioned key id; last four only in every response; HMAC fingerprint for uniqueness; re-entering the password is required to change it</td>
+</tr>
+<tr>
+<td>No card data held by Circle Care (PCI DSS)</td>
+<td>Card and bank numbers go browser → vault; the API stores tokens and last four only; the CVC is never stored</td>
+</tr>
+<tr>
+<td>No real sensitive data in lower environments</td>
+<td><code>APP_ENV</code> other than <code>production</code> accepts only SSNs 900–999, routing <code>110000000</code>, accounts starting <code>000</code> and published test cards; blocked attempts are logged by field name only</td>
+</tr>
+<tr>
+<td>Safe production configuration</td>
+<td>The server refuses to start in production without encryption and HMAC keys, <code>DATABASE_URL</code>, and Stripe with a live key; staging needs stable keys; live keys are refused outside production</td>
+</tr>
+<tr>
+<td>Audit-ready (FDIC / legal requests)</td>
+<td>Masked views + <code>npm run audit:export</code> (masked CSVs, manifest with SHA-256, export itself audited); append-only <code>audit_events</code></td>
+</tr>
+<tr>
+<td>Sessions</td>
+<td>Hashed tokens, HttpOnly + SameSite=Strict (+ Secure in production) cookies, 30-minute idle and 12-hour absolute expiry, 5-attempt lockout, CSRF header check</td>
+</tr>
+<tr>
+<td>No PII in caches or logs</td>
+<td>The service worker skips <code>/api</code> and <code>/vault</code>; the API sends <code>Cache-Control: no-store</code>; request bodies are never logged</td>
+</tr>
+</tbody>
+</table>
 <h2 id="what-production-needs">What production needs<a class="headerlink" href="#what-production-needs" title="Permanent link">&para;</a></h2>
 <ol>
 <li>The same permission policy <strong>enforced in a server API</strong>, with field-level filtering of responses.</li>
