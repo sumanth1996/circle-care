@@ -48,23 +48,42 @@ Open the deployed URL in Safari (iOS) or Chrome (Android), then choose **Share �
 
 ## Run it
 
+Circle Care has two parts: the React website/app and a Node API with a PostgreSQL database (accounts, profiles, SSNs, payments). `npm run dev` runs both on one port.
+
 ### On Replit
 
-1. In Replit, choose **Create Repl → Import from GitHub** and paste this repository's URL.
-2. Press **Run**. Replit installs dependencies and starts the dev server (`.replit` is preconfigured).
-3. To publish, open **Deploy → Static**. The build command and `dist` output folder are already set in `.replit`.
+1. **Pull the latest code** (Shell): `git pull origin main`, then `npm install`.
+2. **Create the database (recommended):** open the **Database** tool and create a PostgreSQL database. Replit adds `DATABASE_URL` automatically. Without it, development uses an embedded database stored in `.data/`.
+3. **Add two Secrets** (needed for the deployed copy; optional for Run). Generate each in the Shell with `openssl rand -base64 32`:
+   - `DATA_ENCRYPTION_KEY` — encrypts SSNs and photos
+   - `DATA_HMAC_KEY` — a *different* value, used to detect duplicate SSNs
+4. Press **Run**. The app and API start on port 5000 in **development** mode: test data only.
+5. To publish, open **Deploy → Autoscale**. `.replit` already builds with `npm run build` and starts with `APP_ENV=staging npm start` (a real server and database, but still test data only). Staging needs the PostgreSQL database and both secrets; it won't start without them.
+
+> **Test data only outside production.** Development, test and staging (including Replit) reject real SSNs, bank accounts and cards. Use SSNs starting with 9 with middle digits 01–49 (e.g. `900-12-3456`), routing `110000000`, account `000123456789`, and the card `4242 4242 4242 4242` (any future expiry, any CVC). Production mode refuses to start until real encryption keys, a PostgreSQL database and Stripe are configured.
 
 ### Locally
 
 ```bash
 npm install
-npm test           # 217 unit tests: permission matrix, audit chain, rules engine
-npm run dev        # http://localhost:5000
-npm run build      # type-check + production build into dist/
-npm run preview    # serve the production build
+npm test             # 312 unit + API tests (vitest)
+npm run dev          # app + API on http://localhost:5000 (embedded Postgres in .data/)
+npm run build        # type-check (app + server) + production build into dist/
+npm start            # production-style server: dist/ + API on $PORT
+npm run db:migrate   # apply database migrations to DATABASE_URL
+npm run audit:export -- --out ./audit-export   # masked export for FDIC / legal audits
 ```
 
-Requires Node 20+.
+End-to-end tests (Playwright, Python):
+
+```bash
+npm run build && APP_ENV=test PORT=4180 npx tsx server/index.ts &
+E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/accounts.py   # accounts, identity, payments
+E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/e2e.py        # demo journeys
+E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/a11y.py       # axe accessibility audit
+```
+
+Requires Node 20.11+.
 
 ---
 
@@ -153,10 +172,13 @@ src/
     shared/    Privacy Center, Emergency card, SOS responder, Notes & documents, Alerts
   __tests__/   vitest suites
 public/        manifest, service worker, icons
-docs/          research, compliance, security and pilot drafts
+    account/   Role picker + sign-up steps, Sign in, My account (profile, photo, SSN, payments)
+server/        Express API: auth & sessions, profiles, SSN encryption, photo, payments, simulated vault,
+               audit log, config guards, migrations (PostgreSQL), masked audit export CLI
+docs/          research, compliance, security and pilot drafts + the product wiki
 ```
 
-Stack: React 19, TypeScript, Vite, React Router, lucide-react icons. No backend.
+Stack: React 19, TypeScript, Vite, React Router, lucide-react icons · Node + Express 5, PostgreSQL (`pg`; PGlite for local/tests), tsx.
 
 ## Credits
 

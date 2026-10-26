@@ -158,6 +158,20 @@ Circle Care is **designed to** the HIPAA Privacy, Security and Breach Notificati
 
 See the [regulatory memo (CC-8)](../../compliance/08-regulatory-memo.md) — not legal advice.
 
+## Server-side protection of identity and payment data {#server-side}
+
+Added in Sprint 11 (CC-172 – CC-190). Details are on [Accounts, identity & payments](../features/accounts-identity-payments.md#security-controls).
+
+| Requirement | Control |
+|---|---|
+| SSNs protected (HIPAA §164.312(a)(2)(iv), GLBA Safeguards) | AES-256-GCM field encryption with a versioned key id; last four only in every response; HMAC fingerprint for uniqueness; re-entering the password is required to change it |
+| No card data held by Circle Care (PCI DSS) | Card and bank numbers go browser → vault; the API stores tokens and last four only; the CVC is never stored |
+| No real sensitive data in lower environments | `APP_ENV` other than `production` accepts only SSNs 900–999, routing `110000000`, accounts starting `000` and published test cards; blocked attempts are logged by field name only |
+| Safe production configuration | The server refuses to start in production without encryption and HMAC keys, `DATABASE_URL`, and Stripe with a live key; staging needs stable keys; live keys are refused outside production |
+| Audit-ready (FDIC / legal requests) | Masked views + `npm run audit:export` (masked CSVs, manifest with SHA-256, export itself audited); append-only `audit_events` |
+| Sessions | Hashed tokens, HttpOnly + SameSite=Strict (+ Secure in production) cookies, 30-minute idle and 12-hour absolute expiry, 5-attempt lockout, CSRF header check |
+| No PII in caches or logs | The service worker skips `/api` and `/vault`; the API sends `Cache-Control: no-store`; request bodies are never logged |
+
 ## What production needs
 
 1. The same permission policy **enforced in a server API**, with field-level filtering of responses.

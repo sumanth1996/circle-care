@@ -9,7 +9,10 @@ channel = "stable-24_05"
 localPort = 5000
 externalPort = 80
 
+# Deployed copy runs as "staging": real server and database, but test data only
+# (no real SSNs, bank accounts or cards). Add DATA_ENCRYPTION_KEY and
+# DATA_HMAC_KEY in Secrets first, and create a PostgreSQL database.
 [deployment]
-deploymentTarget = "static"
+deploymentTarget = "autoscale"
 build = ["sh", "-c", "npm install && npm run build"]
-publicDir = "dist"
+run = ["sh", "-c", "APP_ENV=staging npm start"]

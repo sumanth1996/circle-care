@@ -19,6 +19,7 @@ Every feature area in the Circle Care prototype has its own page. All pages use 
 | F-11 | [Privacy Center](privacy-center.md) | Elder, guardian | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-20, 21, 26 – 33, 81, 87 |
 | F-12 | [Alerts & notifications](alerts-and-notifications.md) | All | <span class="cc-badge cc-badge--partial">Partially built</span> | CC-31, 35, 42, 50, 63 |
 | F-13 | [Pilot & feedback](pilot-and-feedback.md) | Prospects, internal team | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-74 – 77, CC-80 |
+| F-14 | [Accounts, identity & payments](accounts-identity-payments.md) | Everyone; payments for the legal guardian | <span class="cc-badge cc-badge--built">Built</span> | CC-172 – 190 |
 
 ### Status definitions
 

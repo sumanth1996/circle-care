@@ -1,0 +1,83 @@
+/* Accounts, identity and payments (CC-172 – CC-188). Light, Keynote-style, phone-first. */
+
+.acct-shell { min-height: 100dvh; padding: 24px 20px 64px; display: flex; flex-direction: column; align-items: center; gap: 24px; background: radial-gradient(1200px 600px at 50% -10%, #eef3ff 0%, rgba(238, 243, 255, 0) 60%), var(--canvas); }
+.acct-shell > * { width: min(640px, 100%); }
+.acct-shell.wide > * { width: min(1040px, 100%); }
+.acct-head { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; margin-top: 8px; }
+.acct-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.acct-topbar .lp-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ink); }
+.acct-card { display: flex; flex-direction: column; gap: 18px; }
+.acct-card.narrow { width: min(440px, 100%); }
+.acct-card h1:focus { outline: none; }
+.acct-foot { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+
+/* Role picker */
+.role-grid { display: grid; gap: 14px; }
+.role-card { display: flex; align-items: center; gap: 16px; text-align: left; border: 0; background: var(--paper); border-radius: var(--r-lg); padding: 20px 20px 20px 18px; min-height: 96px; box-shadow: var(--shadow-soft); cursor: pointer; font: inherit; color: inherit; transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease); }
+.role-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.role-card:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.role-icon { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--soft); color: var(--tone); flex: none; }
+.role-text { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.role-text b { font-size: 21px; letter-spacing: -0.015em; }
+.role-text span { color: var(--muted); font-size: 15px; }
+.role-chev { color: var(--faint); flex: none; }
+
+/* Step indicator */
+.steps { list-style: none; display: flex; gap: 6px; padding: 0; margin: 0; flex-wrap: wrap; }
+.steps li { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--muted); padding: 6px 12px 6px 6px; border-radius: 99px; background: rgba(255, 255, 255, 0.7); }
+.steps li span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--mist); font-size: 13px; }
+.steps li.now { color: var(--ink); background: #fff; box-shadow: var(--shadow-soft); }
+.steps li.now span { background: var(--blue); color: #fff; }
+.steps li.done span { background: var(--green); color: #fff; }
+
+/* Forms */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+.field.has-error .input { border-color: #d70015; }
+.field-error { font-size: 14px; color: #b3001b; font-weight: 500; }
+.form-error { display: flex; gap: 8px; align-items: flex-start; background: var(--red-soft); color: #8a0012; padding: 12px 14px; border-radius: 12px; font-size: 15px; }
+fieldset.field { border: 0; padding: 0; margin: 0; }
+fieldset.field legend { margin-bottom: 6px; }
+.input-with-btn { display: flex; gap: 8px; align-items: center; }
+.input-with-btn .input { flex: 1; }
+.input-with-btn .btn { min-height: 48px; }
+.input-with-badge { position: relative; }
+.input-with-badge .badge { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
+.check-row { gap: 10px; }
+.check-row input[type="checkbox"] { width: 22px; height: 22px; margin-top: 1px; flex: none; accent-color: var(--blue); }
+.pw-rules { list-style: none; padding: 0; margin: -6px 0 0; display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.pw-rules li { display: flex; align-items: center; gap: 6px; }
+.pw-rules li.ok { color: #1a7f37; }
+.center { text-align: center; }
+
+/* Test-environment banner (CC-182) */
+.test-banner { background: #fff8db; border: 1px solid #f2d675; color: #5c4400; border-radius: 14px; padding: 12px 14px; display: grid; gap: 6px; }
+.test-banner ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.test-banner code { background: rgba(255, 255, 255, 0.8); padding: 1px 6px; border-radius: 6px; font-size: 13px; }
+
+/* Photo (CC-179) */
+.me-avatar { border-radius: 50%; object-fit: cover; flex: none; background: var(--mist); }
+.me-avatar.initials { display: inline-grid; place-items: center; font-weight: 700; color: var(--ink-2); background: linear-gradient(135deg, #e8ecff, #f6e9ff); }
+.photo-field { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.photo-field.compact { gap: 16px; }
+.photo-field label.btn { cursor: pointer; }
+.photo-field label.btn:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* My account */
+.acct-hero { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.acct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 860px) { .acct-grid { grid-template-columns: 1fr; } }
+.acct-grid .panel { display: flex; flex-direction: column; gap: 14px; }
+.missing { background: #fff8db; }
+.missing ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.missing-inline { background: #fff8db; color: #5c4400; padding: 10px 12px; border-radius: 12px; font-size: 15px; }
+.kv { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; font-size: 17px; }
+.kv span { color: var(--ink-2); }
+.pm-h { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 600; margin: 6px 0 0; }
+.pm-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.pm-card { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff; flex-wrap: wrap; }
+.activity { list-style: none; padding: 0; margin: 0; display: grid; }
+.activity li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.activity li:last-child { border-bottom: 0; }
+.activity time { white-space: nowrap; }

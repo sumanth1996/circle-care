@@ -5,6 +5,7 @@ import { Photo, Sheet, useToast } from "../components/ui";
 import { Logo } from "../components/Logo";
 import type { Persona } from "../data/types";
 import { useStore } from "../data/store";
+import { useAccount } from "../data/account";
 import type { PhotoKey } from "../data/images";
 import "./welcome.css";
 
@@ -18,6 +19,7 @@ export default function Welcome() {
   const { state } = useStore();
   const nav = useNavigate();
   const [signup, setSignup] = useState(false);
+  const { me, available } = useAccount();
   const go = (p: Persona) => nav(state.signedIn[p] ? `/app/${p}` : `/app/sign-in/${p}`);
 
   return (
@@ -26,7 +28,12 @@ export default function Welcome() {
       <div className="welcome-head">
         <Logo size={64} />
         <h1 className="t-xl balance">Welcome to Circle Care</h1>
-        <p className="lede balance">This demo has one care circle with three people in it. Pick who you'd like to be — you can switch anytime.</p>
+        {available && (
+          <div className="row wrap" style={{ justifyContent: "center" }}>
+            {me ? <Link to="/app/account" className="btn lg">Go to my account</Link> : <><Link to="/app/join" className="btn lg">Create an account</Link><Link to="/app/login" className="btn lg plain">Sign in</Link></>}
+          </div>
+        )}
+        <p className="lede balance">{available ? "Or explore the demo: one care circle with three people in it. Pick who you'd like to be — you can switch anytime." : "This demo has one care circle with three people in it. Pick who you'd like to be — you can switch anytime."}</p>
       </div>
       <div className="who">
         {people.map((x) => (

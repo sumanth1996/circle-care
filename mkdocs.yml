@@ -87,6 +87,7 @@ nav:
       - Privacy Center: wiki/features/privacy-center.md
       - Alerts & notifications: wiki/features/alerts-and-notifications.md
       - Pilot & feedback: wiki/features/pilot-and-feedback.md
+      - Accounts, identity & payments: wiki/features/accounts-identity-payments.md
   - Architecture & Security:
       - System overview: wiki/architecture/system-overview.md
       - Data model: wiki/architecture/data-model.md
@@ -116,4 +117,6 @@ nav:
           - CC-78 Security test plan: security/78-security-test-plan.md
       - Pilot:
           - CC-74 Pilot plan: pilot/74-pilot-plan.md
-  - Contributing: wiki/how-to-contribute.md
+  - Contributing:
+      - How to contribute: wiki/how-to-contribute.md
+      - "Code review: Sprint 11": reviews/2026-10-25-sprint-11-accounts-identity-payments.md

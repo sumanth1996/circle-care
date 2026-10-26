@@ -4,12 +4,42 @@ Prototype versions are derived from the repository history (`git log`). All comm
 
 | Version | Theme | Commits | Tests at release |
 |---|---|---|---|
+| **v0.5** | Real accounts: sign-up by role, PostgreSQL, SSN encryption, guardian payments, audit export | Sprint 11 merge (CC-172 – CC-190) | 312 unit/API · 15 account e2e · 29 demo e2e · 28 screens axe-clean |
 | **v0.4** | California localisation and product documentation | `428fa2e` (+ this wiki) | 217 unit · 29 e2e · 24 screens axe-clean |
 | **v0.3** | Health & Calendar for the guardian | `1dc1731`, `dce35c2`, `6c139a3` | 217 unit · 29 e2e · 24 screens axe-clean |
 | **v0.2** | Full website, security stories, test suites, working docs | `d8dc28e`, `4e59e35`, `096dcca` | 180 unit · 25 e2e · 22 screens axe-clean |
 | **v0.1** | Initial prototype | `78c70c5`, `ccb1a95`, `e5e532f` | None |
 
 ---
+
+## v0.5 — Accounts, identity & payments (Sprint 11)
+
+**Stories:** CC-172 – CC-190 · **Team:** Dev Agent (developer), QA Agent (tester), Release Agent (build & deploy), Lead Architect Agent (approver), Sumanth (PO) · **Review:** [approved after one round](https://github.com/sumanth1996/circle-care/blob/main/docs/reviews/2026-10-25-sprint-11-accounts-identity-payments.md)
+
+### Added
+
+- **Server and database.** Express API with PostgreSQL (Replit PostgreSQL via `DATABASE_URL`; embedded Postgres for local development and tests) and versioned migrations.
+- **Real accounts.** Role picker (elder, caregiver, legal guardian), sign-up, sign-in, 30-minute idle / 12-hour sessions, and a 5-attempt lockout.
+- **Separate persona records.** Elders, caregivers and guardians each have their own table: first and last name, contact number, email.
+- **Profile photo.** Cropped and stripped of location data on the device, stored encrypted.
+- **Social Security number for every role.** AES-256-GCM encryption, last four digits only, duplicate detection, password needed to change it.
+- **Guardian payments.** A mandatory bank account for **no-fee ACH**, plus up to 5 credit or debit cards with one primary, through a Stripe-ready simulated vault (tokens and last four only).
+- **Lower-environment guard.** Development, test and staging accept only test SSNs, bank numbers and cards. Production refuses to start without keys, Postgres and Stripe.
+- **Audit.** Append-only audit log, *Security · recent activity* in My account, and `npm run audit:export` for masked FDIC and legal audit packages.
+- Wiki page [Accounts, identity & payments](../features/accounts-identity-payments.md), plus server sections in [Data model](../architecture/data-model.md#server-database) and [Security & privacy](../architecture/security-and-privacy.md#server-side).
+
+### Changed
+
+- The site header shows **Sign in** and **Get started**, or **My account** when signed in. The demo is still available.
+- The service worker never caches `/api` or `/vault` responses.
+- Replit now deploys as an **Autoscale** server (`APP_ENV=staging`) instead of a static site.
+- Caregiver header text contrast was fixed (it was flagged by axe at certain times of day).
+- The demo end-to-end suite pins the clock to a weekday afternoon so its results don't depend on when it runs.
+
+### Known issues
+
+- Payments don't move money yet; production needs the Stripe adapter.
+- There is no MFA, password reset or email verification for real accounts yet, and accounts aren't linked into a shared care circle.
 
 ## v0.4 — California localisation and documentation
 
