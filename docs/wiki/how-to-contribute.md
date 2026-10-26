@@ -126,6 +126,22 @@ Status badges: `cc-badge--built` (Built in prototype), `cc-badge--partial` (Part
 6. Merge; the maintainer publishes with `mkdocs gh-deploy`.
 7. Update *Last updated* on each feature page you changed and add a line to the [Release notes](product/release-notes.md) if behaviour changed.
 
+## Delivery roles & check-in approval
+
+Every story is delivered by a named team. Roles are recorded on the story in Notion (**Developer**, **Tester**, **Build & Deploy**, **Approver**, **Product Owner**) and in each commit message.
+
+| Role | Who | Responsibility |
+|---|---|---|
+| Product Owner | Sumanth (PO) | Writes and prioritises stories, accepts the increment |
+| Developer | Dev Agent (AI) | Builds the story and its unit/API tests |
+| Tester | QA Agent (AI) | Runs the unit, API, Playwright end-to-end and axe suites; records results on the story |
+| Build & Deploy | Release Agent (AI) | Builds, pushes to GitHub, publishes the wiki, and closes the story and tasks with a comment |
+| Approver | Lead Architect Agent (AI) | An independent review agent that reads the full diff before check-in. Code isn't merged until it approves; the verdict is recorded in the commit (`Reviewed-by` / `Approved-by`) and in `docs/reviews/`. |
+
+The roles are AI agents working for the Product Owner; they're labelled as agents everywhere so nobody mistakes them for people.
+
+**Definition of Done for a story:** acceptance criteria covered by automated tests, every suite green, axe clean, privacy review recorded for PHI/PII stories, approved by the Lead Architect Agent, merged to `main`, wiki updated, and the story and its tasks closed in Notion with a comment naming the commit.
+
 ## Document control
 
 | Field | Value |

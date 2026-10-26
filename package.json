@@ -1,30 +1,44 @@
 {
   "name": "circle-care",
-  "version": "0.1.0",
-  "description": "Circle Care — a private, consent-driven care circle for elders, caregivers and legal guardians.",
+  "version": "0.5.0",
+  "description": "Circle Care \u2014 a private, consent-driven care circle for elders, caregivers and legal guardians.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json && vite build",
+    "start": "tsx server/index.ts",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json",
+    "test": "vitest run",
+    "audit:export": "tsx server/cli/audit-export.ts",
+    "db:migrate": "tsx server/cli/migrate.ts"
   },
   "license": "MIT",
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.11",
+    "express": "^5.3.0",
     "lucide-react": "^1.59.0",
+    "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/supertest": "^7.2.1",
     "@vitejs/plugin-react": "^6.1.2",
     "axe-core": "^4.10.3",
+    "supertest": "^7.3.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
   },
   "private": true,
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  }
 }

@@ -210,6 +210,39 @@ erDiagram
 
 Vital-sign readings, activity, sleep, weight series, dose states, coverage gaps, streaks, adherence, North Star and the activity feed are all **derived** on demand (`src/lib/health.ts`, `src/data/selectors.ts`).
 
+## Server database (PostgreSQL) — accounts, identity & payments {#server-database}
+
+Since Sprint 11 (CC-189), real accounts live in PostgreSQL, separately from the browser-only demo state described above. The schema is in `server/migrations/001_init.sql` and is applied by versioned migrations.
+
+```mermaid
+erDiagram
+  users ||--o{ sessions : "signs in with"
+  users ||--o| elders : "is (role = elder)"
+  users ||--o| caregivers : "is (role = caregiver)"
+  users ||--o| guardians : "is (role = guardian)"
+  users ||--o| ssn_fingerprints : "one SSN per person"
+  users ||--o| photos : has
+  users ||--o| bank_accounts : "guardian: exactly one"
+  users ||--o{ payment_cards : "guardian: up to 5, one primary"
+  users ||--o{ vault_tokens : "created"
+  users ||--o{ audit_events : "subject of"
+```
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `users` | `id`, `email` (unique, lower-case), `password_hash` (scrypt), `role`, `failed_attempts`, `locked_until` | Sign-in identity |
+| `sessions` | `token_hash` (SHA-256), `user_id`, `last_seen_at`, `expires_at` | The raw token exists only in the cookie |
+| `elders` / `caregivers` / `guardians` | `user_id` (unique), `first_name`, `last_name`, `phone` (`+1XXXXXXXXXX`), `email`, `ssn_enc`, `ssn_last4` | **Separate table per persona**; `ssn_enc` is AES-256-GCM ciphertext |
+| `ssn_fingerprints` | `fingerprint` (HMAC-SHA256, PK), `user_id` (unique) | Duplicate-SSN detection without decrypting |
+| `photos` | `user_id`, `content_type`, `data_enc`, `size_bytes ≤ 2 MB` | Encrypted image |
+| `bank_accounts` | `vault_token`, `bank_name`, `account_type`, `account_last4`, `routing_last4`, `ach_fee_cents = 0` | One per user; `CHECK` stops full numbers |
+| `payment_cards` | `vault_token`, `brand`, `funding`, `last4`, `exp_month`, `exp_year`, `is_primary` | Unique index allows only one primary per user |
+| `vault_tokens` | `token`, `kind`, `owner_user_id`, `metadata` (last four only), `attached_at`, `revoked_at` | Simulated vault register; tokens expire after 15 min if unused |
+| `audit_events` | `at`, `actor_user_id`, `subject_user_id`, `action`, `detail` (masked JSON) | Append-only (trigger blocks UPDATE/DELETE) |
+| `audit_people_masked`, `audit_payment_methods_masked` | views | The only objects an auditor's role should be able to read |
+
+See [Accounts, identity & payments](../features/accounts-identity-payments.md).
+
 ## Related pages
 
 - [System overview](system-overview.md)

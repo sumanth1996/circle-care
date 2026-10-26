@@ -40,6 +40,10 @@ import Invite from "./pages/Invite";
 import Review from "./pages/internal/Review";
 import PilotDashboard from "./pages/internal/PilotDashboard";
 import { AccessGuard } from "./components/Extras";
+import { AccountProvider } from "./data/account";
+import Join from "./pages/account/Join";
+import Login from "./pages/account/Login";
+import MyAccount from "./pages/account/MyAccount";
 
 function ScrollTop() {
   const { pathname } = useLocation();
@@ -53,6 +57,7 @@ export default function App() {
       <ToastProvider>
         <HashRouter>
           <ScrollTop />
+          <AccountProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
@@ -61,6 +66,10 @@ export default function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/pilot" element={<Pilot />} />
             <Route path="/app" element={<Welcome />} />
+            <Route path="/app/join" element={<Join />} />
+            <Route path="/app/join/:role" element={<Join />} />
+            <Route path="/app/login" element={<Login />} />
+            <Route path="/app/account" element={<MyAccount />} />
             <Route path="/app/sign-in/:persona" element={<SignIn />} />
             <Route path="/app/invite/:memberId" element={<Invite />} />
             <Route path="/app/review" element={<Review />} />
@@ -104,6 +113,7 @@ export default function App() {
             <Route path="/app/sos" element={<SosRedirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </AccountProvider>
         </HashRouter>
       </ToastProvider>
     </StoreProvider>

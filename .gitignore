@@ -6,3 +6,7 @@ dist
 .env.*
 tests/e2e/out/
 site/
+
+# Local development database, dev keys and audit exports (never commit)
+.data/
+audit-export/
