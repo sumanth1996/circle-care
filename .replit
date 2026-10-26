@@ -7,10 +7,6 @@ channel = "stable-24_05"
 
 [[ports]]
 localPort = 5000
-externalPort = 5000
-
-[[ports]]
-localPort = 5173
 externalPort = 80
 
 # Deployed copy runs as "staging": real server and database, but test data only
