@@ -1,6 +1,7 @@
 import os
 from playwright.sync_api import sync_playwright
-B = "http://127.0.0.1:4173/#"
+B = os.environ.get("E2E_BASE", "http://127.0.0.1:4173") + "/#"
+ACCOUNTS = os.environ.get("E2E_BASE") is not None  # account pages need the real server
 AXE = os.path.join(os.path.dirname(__file__), "..", "..", "node_modules", "axe-core", "axe.min.js")
 pages = ["/", "/how-it-works", "/features", "/who-its-for", "/privacy", "/pilot", "/app", "/app/elder", "/app/elder/next", "/app/elder/privacy", "/app/elder/settings", "/app/guardian", "/app/guardian/meds", "/app/guardian/approvals", "/app/guardian/privacy", "/app/guardian/notes", "/app/guardian/settings", "/app/guardian/circle", "/app/guardian/digest", "/app/guardian/health", "/app/guardian/calendar", "/app/caregiver", "/app/pilot", "/app/review"]
 with sync_playwright() as p:
@@ -17,10 +18,18 @@ with sync_playwright() as p:
     d = pg.get_by_role("dialog", name="Getting started")
     if d.count(): d.get_by_role("button", name="Skip").click()
     out = []
+    if ACCOUNTS:
+        import time
+        pages += ["/app/join", "/app/join/guardian", "/app/login"]
+        pg.evaluate("""(email) => fetch('/api/auth/signup', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Requested-With': 'circle-care'},
+            body: JSON.stringify({role: 'guardian', firstName: 'Sarah', lastName: 'Lee', phone: '4155550142', email, password: 'blue-heron-sunrise-42', acceptTerms: true})})""", f"a11y.{int(time.time())}@example.com")
+        pages += ["/app/account"]
     pg.close()
     for path in pages:
         pg = ctx.new_page()
         pg.goto(B + path); pg.wait_for_timeout(900)
+        if path == "/app/account":
+            pg.get_by_role("button", name="Add a card").click(); pg.wait_for_timeout(200)
         try:
             pg.add_script_tag(path=AXE)
         except Exception as e:

@@ -2,7 +2,7 @@ import os
 from playwright.sync_api import sync_playwright, expect
 
 OUT = os.path.join(os.path.dirname(__file__), "out"); os.makedirs(OUT, exist_ok=True)
-B = "http://127.0.0.1:4173/#"
+B = os.environ.get("E2E_BASE", "http://127.0.0.1:4173") + "/#"
 errs = []
 results = []
 
@@ -18,6 +18,10 @@ with sync_playwright() as p:
     b = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
     ctx = b.new_context(viewport={"width": 390, "height": 844}, timezone_id="America/New_York")
     pg = ctx.new_page()
+    # The demo's shifts follow the clock, so pin a weekday afternoon to make the suite independent of when it runs.
+    if os.environ.get("E2E_REAL_TIME") != "1":
+        import datetime
+        pg.clock.set_system_time(datetime.datetime(2026, 10, 21, 16, 30, tzinfo=datetime.timezone(datetime.timedelta(hours=-4))))
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.on("console", lambda m: errs.append(m.text) if m.type == "error" and "unsplash" not in m.text and "Failed to load resource" not in m.text else None)
 

@@ -47,9 +47,9 @@ export default function CaregiverToday() {
 
       <section className={`shift-card ${onShift ? "on" : ""}`}>
         <div className="grow">
-          <p className="small" style={{ fontWeight: 600, opacity: 0.8 }}>{shift ? `Your shift · ${fmtTime(shift.start)}–${fmtTime(shift.end)}` : "No shift scheduled today"}</p>
+          <p className="small" style={{ fontWeight: 600 }}>{shift ? `Your shift · ${fmtTime(shift.start)}–${fmtTime(shift.end)}` : "No shift scheduled today"}</p>
           <p className="t-md" style={{ color: "inherit" }}>{done ? `Checked out at ${fmtTime(visit!.checkOut!)}` : onShift ? `On shift since ${fmtTime(visit!.checkIn!)}` : "Not checked in"}</p>
-          {onShift && <p className="small" style={{ opacity: 0.85 }}>{given} of {shiftDoses.length} doses given this shift</p>}
+          {onShift && <p className="small">{given} of {shiftDoses.length} doses given this shift</p>}
         </div>
         {!onShift && !done && shift && <button className="btn lg" onClick={() => setCheckInSheet(true)}><LogIn size={20} /> Check in</button>}
         {onShift && <button className="btn lg" style={{ background: "#fff", color: "var(--care)" }} onClick={() => nav("/app/caregiver/handoff")}><LogOut size={20} /> End shift</button>}

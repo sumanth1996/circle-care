@@ -28,9 +28,29 @@ const csp = (): Plugin => ({
   transformIndexHtml: (html) => html.replace(/(<meta charset="UTF-8" \/>)/, `$1\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />\n    <meta name="referrer" content="no-referrer" />`),
 });
 
+/**
+ * Development API (CC-190): mounts the Express API on Vite's own server so
+ * `npm run dev` serves the app and /api on one port. Production uses
+ * server/index.ts instead.
+ */
+const devApi = (): Plugin => ({
+  name: "circle-care-dev-api",
+  apply: "serve",
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      if (!req.url || !/^\/(api|vault)(\/|$)/.test(req.url)) return next();
+      server
+        .ssrLoadModule("/server/dev.ts")
+        .then((m) => m.getDevApp())
+        .then((app) => app(req as never, res as never, next))
+        .catch(next);
+    });
+  },
+});
+
 // Replit serves the dev server through a proxy, so listen on all hosts.
 export default defineConfig({
-  plugins: [react(), csp()],
+  plugins: [react(), csp(), devApi()],
   server: { host: "0.0.0.0", port: 5000, strictPort: true, allowedHosts: true },
   preview: { host: "0.0.0.0", port: 4173, allowedHosts: true },
 });

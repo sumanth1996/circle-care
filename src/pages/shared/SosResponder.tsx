@@ -41,7 +41,7 @@ export default function SosResponder() {
     <div className="page narrow stack" style={{ "--gap": "18px" } as React.CSSProperties}>
       <div className="panel stack" style={{ "--gap": "12px", background: "var(--red)", color: "#fff", borderRadius: 32 } as React.CSSProperties}>
         <div className="row"><Avatar m={elder} size={64} /><div><h1 className="t-lg" style={{ color: "#fff" }}>Maggie needs help</h1><p style={{ opacity: 0.9 }}>Pressed SOS at {fmtTime(sos.startedAt)} · {relative(sos.startedAt, clock(state))}</p></div></div>
-        <p className="row" style={{ "--gap": "8px" } as React.CSSProperties}><MapPin size={18} /> At home · 214 Maple Ave (demo address)</p>
+        <p className="row" style={{ "--gap": "8px" } as React.CSSProperties}><MapPin size={18} /> At home · 412 Elizabeth St, Noe Valley, San Francisco (demo address)</p>
       </div>
 
       {sos.status === "active" ? (

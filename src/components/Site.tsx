@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Logo } from "./Logo";
+import { useAccount } from "../data/account";
 import { photos } from "../data/images";
 import "../pages/landing.css";
 
@@ -16,6 +17,7 @@ const links = [
 /** Shared marketing-site chrome: translucent Apple-style nav (with a mobile menu) and footer. */
 export function SiteNav() {
   const [open, setOpen] = useState(false);
+  const { me, available } = useAccount();
   return (
     <nav className="lp-nav" aria-label="Main">
       <div className="lp-nav-inner">
@@ -23,13 +25,16 @@ export function SiteNav() {
         <div className="lp-links">
           {links.map((l) => <NavLink key={l.to} to={l.to}>{l.label}</NavLink>)}
         </div>
-        <Link to="/app" className="btn sm lp-open">Open the app</Link>
+        {available && !me && <Link to="/app/login" className="lp-signin">Sign in</Link>}
+        {me ? <Link to="/app/account" className="btn sm lp-open">My account</Link> : <Link to={available ? "/app/join" : "/app"} className="btn sm lp-open">{available ? "Get started" : "Open the app"}</Link>}
         <button className="lp-burger" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)}>{open ? <X size={22} /> : <Menu size={22} />}</button>
       </div>
       {open && (
         <div className="lp-menu">
           {links.map((l) => <NavLink key={l.to} to={l.to} onClick={() => setOpen(false)}>{l.label}</NavLink>)}
-          <Link to="/app" className="btn block" onClick={() => setOpen(false)}>Open the app</Link>
+          {available && !me && <NavLink to="/app/login" onClick={() => setOpen(false)}>Sign in</NavLink>}
+          <NavLink to="/app" onClick={() => setOpen(false)}>Try the demo</NavLink>
+          {me ? <Link to="/app/account" className="btn block" onClick={() => setOpen(false)}>My account</Link> : <Link to={available ? "/app/join" : "/app"} className="btn block" onClick={() => setOpen(false)}>{available ? "Get started" : "Open the app"}</Link>}
         </div>
       )}
     </nav>
@@ -45,7 +50,7 @@ export function SiteFooter() {
           {links.map((l) => <Link key={l.to} to={l.to}>{l.label}</Link>)}
           <Link to="/app">Open the app</Link>
         </div>
-        <p className="small"><b>Circle Care</b> is a product concept. The demo uses fictional people and runs entirely in your browser — no real health information is collected or sent anywhere.</p>
+        <p className="small"><b>Circle Care</b> is a product concept. The demo uses fictional people and runs entirely in your browser. Accounts are stored in Circle Care's database with Social Security numbers encrypted and payment details tokenized; test environments accept test data only.</p>
         <p className="tiny">
           Photos from Unsplash, used under the Unsplash License:{" "}
           {Object.values(photos).map((p, i, arr) => (
