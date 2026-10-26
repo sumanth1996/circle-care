@@ -58,15 +58,15 @@ Circle Care has two parts: the React website/app and a Node API with a PostgreSQ
    - `DATA_ENCRYPTION_KEY` — encrypts SSNs and photos
    - `DATA_HMAC_KEY` — a *different* value, used to detect duplicate SSNs
 4. Press **Run**. The app and API start on port 5000 in **development** mode: test data only.
-5. To publish, open **Deploy → Autoscale**. `.replit` already builds with `npm run build` and starts with `APP_ENV=staging npm start` (a real server and database, but still test data only).
+5. To publish, open **Deploy → Autoscale**. `.replit` already builds with `npm run build` and starts with `APP_ENV=staging npm start` (a real server and database, but still test data only). Staging needs the PostgreSQL database and both secrets; it won't start without them.
 
-> **Test data only outside production.** Development, test and staging (including Replit) reject real SSNs, bank accounts and cards. Use SSNs starting with 9 (e.g. `900-12-3456`), routing `110000000`, account `000123456789`, and the card `4242 4242 4242 4242` (any future expiry, any CVC). Production mode refuses to start until real encryption keys, a PostgreSQL database and Stripe are configured.
+> **Test data only outside production.** Development, test and staging (including Replit) reject real SSNs, bank accounts and cards. Use SSNs starting with 9 with middle digits 01–49 (e.g. `900-12-3456`), routing `110000000`, account `000123456789`, and the card `4242 4242 4242 4242` (any future expiry, any CVC). Production mode refuses to start until real encryption keys, a PostgreSQL database and Stripe are configured.
 
 ### Locally
 
 ```bash
 npm install
-npm test             # 300 unit + API tests (vitest)
+npm test             # 312 unit + API tests (vitest)
 npm run dev          # app + API on http://localhost:5000 (embedded Postgres in .data/)
 npm run build        # type-check (app + server) + production build into dist/
 npm start            # production-style server: dist/ + API on $PORT

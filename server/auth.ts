@@ -22,11 +22,11 @@ declare module "express-serve-static-core" {
 
 function setCookie(res: Response, cfg: Config, token: string) {
   const parts = [`${COOKIE}=${token}`, "Path=/", "HttpOnly", "SameSite=Strict", `Max-Age=${cfg.sessionAbsoluteHours * 3600}`];
-  if (cfg.isProd) parts.push("Secure");
+  if (cfg.isProd || cfg.env === "staging") parts.push("Secure");
   res.setHeader("Set-Cookie", parts.join("; "));
 }
 function clearCookie(res: Response, cfg: Config) {
-  res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${cfg.isProd ? "; Secure" : ""}`);
+  res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${cfg.isProd || cfg.env === "staging" ? "; Secure" : ""}`);
 }
 
 async function startSession(d: Deps, q: Queryable, res: Response, userId: string) {
@@ -72,6 +72,30 @@ export const requireUser: RequestHandler = (req, res, next) => {
   }
   next();
 };
+
+/**
+ * Counts a failed password atomically (CC-175). Parallel guesses can't race
+ * past the limit: the increment happens in one UPDATE, and the lock is set
+ * as soon as the stored count reaches 5. Returns true if the account is now locked.
+ */
+export async function recordFailure(d: Deps, userId: string, now: Date): Promise<boolean> {
+  const fresh = `(first_failed_at IS NULL OR first_failed_at < $2::timestamptz - interval '${LOCK_MINUTES} minutes' OR (locked_until IS NOT NULL AND locked_until <= $2::timestamptz))`;
+  const { rows } = await d.db.query<{ failed_attempts: number }>(
+    `UPDATE users SET failed_attempts = CASE WHEN ${fresh} THEN 1 ELSE failed_attempts + 1 END,
+                      first_failed_at = CASE WHEN ${fresh} THEN $2::timestamptz ELSE first_failed_at END,
+                      locked_until    = CASE WHEN ${fresh} THEN NULL ELSE locked_until END
+      WHERE id = $1 RETURNING failed_attempts`, [userId, now]);
+  const attempts = rows[0]?.failed_attempts ?? 0;
+  let locked = false;
+  if (attempts >= LOCK_AFTER) {
+    const r = await d.db.query("UPDATE users SET locked_until = $2::timestamptz + interval '15 minutes' WHERE id = $1 AND (locked_until IS NULL OR locked_until <= $2::timestamptz) RETURNING id", [userId, now]);
+    locked = true;
+    if (r.rows.length) await audit(d.db, { action: "auth.locked", actor: null, subject: userId, detail: { attempts }, at: now });
+  } else {
+    await audit(d.db, { action: "auth.failed", actor: null, subject: userId, detail: { attempts }, at: now });
+  }
+  return locked;
+}
 
 export function authRouter(d: Deps): Router {
   const r = Router();
@@ -127,14 +151,8 @@ export function authRouter(d: Deps): Router {
       throw new HttpError(429, `Too many attempts. Try again in ${LOCK_MINUTES} minutes.`);
     }
     if (!(await verifyPassword(password, u.password_hash))) {
-      const windowStart = now.getTime() - LOCK_MINUTES * 60_000;
-      const fresh = !u.first_failed_at || new Date(u.first_failed_at).getTime() < windowStart || (u.locked_until && new Date(u.locked_until).getTime() <= now.getTime());
-      const attempts = fresh ? 1 : u.failed_attempts + 1;
-      const lock = attempts >= LOCK_AFTER ? new Date(now.getTime() + LOCK_MINUTES * 60_000) : null;
-      await d.db.query("UPDATE users SET failed_attempts = $2, first_failed_at = $3, locked_until = $4 WHERE id = $1",
-        [u.id, attempts, fresh ? now : u.first_failed_at, lock]);
-      await audit(d.db, { action: lock ? "auth.locked" : "auth.failed", actor: null, subject: u.id, detail: { attempts }, at: now });
-      if (lock) throw new HttpError(429, `Too many attempts. Try again in ${LOCK_MINUTES} minutes.`);
+      const locked = await recordFailure(d, u.id, now);
+      if (locked) throw new HttpError(429, `Too many attempts. Try again in ${LOCK_MINUTES} minutes.`);
       throw wrong;
     }
     await d.db.tx(async (q) => {

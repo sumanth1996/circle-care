@@ -19,7 +19,7 @@ SHOT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "docs", "wiki", "
 RUN = str(int(time.time()))[-6:]
 import random
 def test_ssn():  # unique per run: SSNs can't be reused across accounts
-    return f"9{random.randint(10, 99)}-{random.randint(10, 99)}-{random.randint(1000, 9999)}"
+    return f"9{random.randint(10, 99)}-{random.randint(10, 49)}-{random.randint(1000, 9999)}"
 G_SSN, E_SSN = test_ssn(), test_ssn()
 errs, results = [], []
 

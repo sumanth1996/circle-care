@@ -125,7 +125,8 @@ Email and password. A wrong password and an unknown email give the same message.
 | Must be 9 digits, not all the same, not a known invalid number (e.g. 123-45-6789, 078-05-1120) | ✔ | ✔ |
 | Group `00` or serial `0000` | Rejected | Rejected |
 | Area `000`, `666` | Rejected | Rejected |
-| Area `900–999` | **Rejected** (never issued) | **Required** — the only numbers accepted |
+| Area `900–999` | **Rejected** (never issued as SSNs) | **Required** — the only numbers accepted |
+| `9XX` with middle digits 50–65, 70–88, 90–92 or 94–99 | Rejected | **Rejected** — the IRS issues these as real ITINs, so test numbers must use middle digits 01–49, 66–69, 89 or 93 |
 | Same SSN on two accounts | Rejected: "This number can't be used. Contact support." | Same |
 | Changing an existing SSN | Requires the account password | Same |
 
@@ -163,7 +164,7 @@ Email and password. A wrong password and an unknown email give the same message.
 |---|---|---|---|---|
 | `development` (default) | Local and Replit **Run** | **No** — test values only | Replit PostgreSQL if `DATABASE_URL` is set, otherwise embedded Postgres in `.data/` | Generated once into `.data/dev-keys.json` if not set |
 | `test` | Automated tests | No | In-memory Postgres | Random per run |
-| `staging` | Replit **Deploy** | No | `DATABASE_URL` | **Required** (stable across restarts) |
+| `staging` | Replit **Deploy** | No | `DATABASE_URL` **required** | **Required** (stable across restarts); cookies are `Secure` |
 | `production` | A real launch, when approved | Yes | `DATABASE_URL` **required** | **Required**, plus Stripe live key; the simulated vault is disabled |
 
 If anything required is missing in production, the server **does not start** and lists what's wrong. A live Stripe key is refused outside production. Every non-production screen that collects sensitive data shows the yellow **Test environment — use test data only** banner with the test values.
@@ -225,7 +226,7 @@ All requests that change data must send `X-Requested-With: circle-care`. Togethe
 |---|---|
 | Passwords | scrypt (N=16384, r=8, p=1), 16-byte salt, constant-time comparison. Unknown emails are checked against a dummy hash so timing doesn't reveal which accounts exist. |
 | Sessions | 32-byte random token in an `HttpOnly; SameSite=Strict` cookie (`Secure` in production). Only its SHA-256 is stored. Expires after 30 idle minutes and 12 hours absolute. |
-| Lockout | 5 failures in 15 minutes locks the account for 15 minutes. |
+| Lockout | 5 failures in 15 minutes locks the account for 15 minutes. Failures are counted with one atomic database update, so parallel guesses can't slip past the limit. Wrong passwords on the SSN-change step count too; reaching the limit there also signs the account out everywhere. |
 | Rate limits | Sign-up 10 per hour and sign-in 30 per 10 minutes per network; vault 30 per 10 minutes per user. |
 | Encryption | AES-256-GCM with a key id in every ciphertext (`v1.<keyId>.…`) for rotation (`DATA_ENCRYPTION_KEY_PREVIOUS`). Tampered data fails to decrypt. |
 | Headers | CSP with `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: no-referrer`, HSTS in production, `Cache-Control: no-store` on the API. |
@@ -242,8 +243,8 @@ All requests that change data must send `X-Requested-With: circle-care`. Togethe
 
 | Suite | What it proves |
 |---|---|
-| `server/__tests__/api.test.ts` (69 tests) | Every sign-up rule, sessions and expiry, CSRF, lockout, profile isolation, completeness, photo checks, SSN rules per environment, duplicate SSN, re-authentication, tamper detection, bank and card rules, token ownership, use-once and expiry, primary-card rules, append-only audit, schema constraints. **It also scans every API response in the suite and fails if a full SSN appears.** |
-| `server/__tests__/config-and-export.test.ts` (15 tests) | Production and staging start-up checks, live-key guard, Secure cookie, HSTS and vault disabled in production. The masked export's contents, manifest and hashes, and that no full number appears in any file. |
+| `server/__tests__/api.test.ts` (81 tests) | Every sign-up rule, sessions and expiry, CSRF, lockout, profile isolation, completeness, photo checks, SSN rules per environment, duplicate SSN, re-authentication, tamper detection, bank and card rules, token ownership, use-once and expiry, primary-card rules, append-only audit, schema constraints, and regression tests for every Lead Architect review finding (parallel-guess lockout, SSN step-up lockout, ITIN ranges, bank-name digits, malformed cookie). **It also scans every API response in the suite and fails if a full SSN appears.** |
+| `server/__tests__/config-and-export.test.ts` (14 tests) | Production and staging start-up checks, live-key guard, Secure cookie, HSTS and vault disabled in production. The masked export's contents, manifest and hashes, and that no full number appears in any file. |
 | `tests/e2e/accounts.py` (15 scenarios, Playwright) | The full guardian journey on a phone-sized screen, elder journey, duplicate email, wrong password, lockout, cards, activity, profile edit. Also checks that the SSN and account number never appear in the page. |
 | `tests/e2e/a11y.py` | axe audit including the four new screens |
 

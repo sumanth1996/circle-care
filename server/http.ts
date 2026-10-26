@@ -17,7 +17,9 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     res.status(err.status).json({ error: err.message, field: err.field, fields: err.fields });
     return;
   }
-  const e = err as { type?: string; status?: number };
+  const e = err as { type?: string; status?: number; code?: string };
+  // Unique-index race on real Postgres (two identical requests at once): a conflict, not a crash.
+  if (e?.code === "23505") { res.status(409).json({ error: "That was already saved. Please refresh and try again." }); return; }
   if (e?.type === "entity.too.large") { res.status(413).json({ error: "That file is too large. Photos must be 2 MB or smaller." }); return; }
   if (e?.type === "entity.parse.failed") { res.status(400).json({ error: "We couldn't read that request." }); return; }
   // Never log request bodies: they may contain SSNs or account numbers.
@@ -49,7 +51,9 @@ export function readCookie(req: Request, name: string): string | undefined {
   if (!raw) return undefined;
   for (const part of raw.split(";")) {
     const i = part.indexOf("=");
-    if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
+    if (i > 0 && part.slice(0, i).trim() === name) {
+      try { return decodeURIComponent(part.slice(i + 1).trim()); } catch { return undefined; }
+    }
   }
   return undefined;
 }

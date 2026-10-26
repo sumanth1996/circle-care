@@ -57,7 +57,7 @@ export async function signedUp(h: Harness, role: "elder" | "caregiver" | "guardi
 /** Guardian with SSN + bank account (a complete profile). */
 export async function completeGuardian(h: Harness) {
   const g = await signedUp(h, "guardian");
-  await g.ag.put("/api/me/ssn", { ssn: "900-55-" + String(1000 + n).slice(-4) });
+  await g.ag.put("/api/me/ssn", { ssn: "900-45-" + String(1000 + n).slice(-4) });
   const v = await g.ag.post("/vault/v1/bank-accounts", { bankName: "Bank of America", holderName: "Sarah Lee", routingNumber: "110000000", accountNumber: "000123456789", accountType: "checking" });
   await g.ag.post("/api/me/payment-methods/bank-account", { token: v.body.token });
   return g;

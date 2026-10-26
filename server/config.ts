@@ -76,10 +76,12 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     if (!e.DATABASE_URL) problems.push("DATABASE_URL is required in production; the embedded database is for development only.");
     if (e.PAYMENT_PROVIDER !== "stripe") problems.push('PAYMENT_PROVIDER must be "stripe" in production; the simulated vault is never available there.');
     if (e.PAYMENT_PROVIDER === "stripe" && !/^sk_live_/.test(e.STRIPE_SECRET_KEY ?? "")) problems.push("STRIPE_SECRET_KEY (a live secret key) is required in production.");
-  } else if (env === "staging" && (!enc || !hmac)) {
-    // Staging keeps data across restarts (e.g. Replit PostgreSQL), so its keys must be stable too.
-    problems.push("DATA_ENCRYPTION_KEY and DATA_HMAC_KEY are required in staging (add them as secrets; generate each with: openssl rand -base64 32).");
-  } else if (e.PAYMENT_PROVIDER === "stripe" && /^sk_live_/.test(e.STRIPE_SECRET_KEY ?? "")) {
+  } else if (env === "staging" && (!enc || !hmac || !e.DATABASE_URL)) {
+    // Staging keeps data across restarts (e.g. Replit PostgreSQL), so its keys and database must be real too.
+    if (!enc || !hmac) problems.push("DATA_ENCRYPTION_KEY and DATA_HMAC_KEY are required in staging (add them as secrets; generate each with: openssl rand -base64 32).");
+    if (!e.DATABASE_URL) problems.push("DATABASE_URL is required in staging (create a PostgreSQL database; the embedded one is lost on every restart).");
+  }
+  if (!isProd && /^sk_live_/.test(e.STRIPE_SECRET_KEY ?? "")) {
     problems.push("A live Stripe key can't be used outside production. Use a test key (sk_test_…).");
   }
   if (problems.length) throw new ConfigError(`Circle Care will not start:\n - ${problems.join("\n - ")}`);

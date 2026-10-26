@@ -157,6 +157,49 @@ describe("CC-175 lockout", () => {
   });
 });
 
+describe("Lead Architect review fixes", () => {
+  it("M1: parallel wrong passwords still lock the account", async () => {
+    const { body, id } = await signedUp(h, "guardian");
+    const a = h.agent();
+    await Promise.all(Array.from({ length: 20 }, () => a.post("/api/auth/signin", { email: body.email, password: "wrong-password-xx" })));
+    const u = (await h.db.query<{ failed_attempts: number; locked_until: Date | null }>("SELECT failed_attempts, locked_until FROM users WHERE id = $1", [id])).rows[0];
+    expect(u.failed_attempts).toBeGreaterThanOrEqual(5);
+    expect(u.locked_until).not.toBeNull();
+    expect((await a.post("/api/auth/signin", { email: body.email, password: body.password })).status).toBe(429);
+    h.clock.t += 16 * 60_000;
+  });
+  it("M2: wrong passwords on SSN change count toward lockout and end every session", async () => {
+    const { ag, body } = await signedUp(h, "guardian");
+    await ag.put("/api/me/ssn", { ssn: "900-48-1001" });
+    for (let i = 0; i < 4; i++) expect((await ag.put("/api/me/ssn", { ssn: "900-48-1002", password: "wrong-password-xx" })).status).toBe(403);
+    const fifth = await ag.put("/api/me/ssn", { ssn: "900-48-1002", password: "wrong-password-xx" });
+    expect(fifth.status).toBe(429);
+    expect((await ag.get("/api/me")).status).toBe(401);
+    expect((await h.agent().post("/api/auth/signin", { email: body.email, password: body.password })).status).toBe(429);
+    h.clock.t += 16 * 60_000;
+  });
+  it.each(["912-70-1234", "900-50-1234", "999-94-1234", "955-90-1234"])("M3: refuses real ITIN %s in test environments", async (ssn) => {
+    const { ag } = await signedUp(h, "elder");
+    const r = await ag.put("/api/me/ssn", { ssn });
+    expect(r.status).toBe(400);
+    expect(r.body.error).toContain("middle digits 01–49");
+  });
+  it.each(["900-12-3457", "966-66-1234", "901-89-1234", "902-93-1234"])("M3: still accepts test SSN %s", async (ssn) => {
+    const { ag } = await signedUp(h, "elder");
+    expect((await ag.put("/api/me/ssn", { ssn })).status).toBe(200);
+  });
+  it("M4: a bank name with a long digit run is a field error, not a crash", async () => {
+    const g = await signedUp(h, "guardian");
+    const r = await g.ag.post("/vault/v1/bank-accounts", { bankName: "Bank 123456789", holderName: "Sarah Lee", routingNumber: "110000000", accountNumber: "000123456789", accountType: "checking" });
+    expect(r.status).toBe(400);
+    expect(r.body.field).toBe("bankName");
+  });
+  it("a malformed session cookie is ignored, not a 500", async () => {
+    const r = await h.agent().raw.get("/api/me").set("Cookie", "cc_session=%E0%A4%A");
+    expect(r.status).toBe(401);
+  });
+});
+
 describe("CC-176 – CC-178 profiles", () => {
   it("updates only my own persona row and audits the field names", async () => {
     const { ag, id } = await signedUp(h, "elder");
@@ -270,8 +313,8 @@ describe("CC-180 / CC-181 / CC-182 Social Security numbers", () => {
   it("refuses an SSN already on another account", async () => {
     const a = await signedUp(h, "elder");
     const b = await signedUp(h, "caregiver");
-    expect((await a.ag.put("/api/me/ssn", { ssn: "900-77-7777" })).status).toBe(200);
-    const r = await b.ag.put("/api/me/ssn", { ssn: "900-77-7777" });
+    expect((await a.ag.put("/api/me/ssn", { ssn: "900-47-7777" })).status).toBe(200);
+    const r = await b.ag.put("/api/me/ssn", { ssn: "900-47-7777" });
     expect(r.status).toBe(409);
     expect(r.body.error).toBe("This number can't be used. Contact support.");
   });

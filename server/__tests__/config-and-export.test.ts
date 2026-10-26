@@ -38,7 +38,8 @@ describe("CC-183 production refuses to start without protection", () => {
   });
   it("staging needs stable keys but still accepts test data only", () => {
     expect(() => loadConfig({ APP_ENV: "staging" })).toThrow(/required in staging/);
-    const c = loadConfig({ APP_ENV: "staging", DATA_ENCRYPTION_KEY: k1, DATA_HMAC_KEY: k2 });
+    expect(() => loadConfig({ APP_ENV: "staging", DATA_ENCRYPTION_KEY: k1, DATA_HMAC_KEY: k2 })).toThrow(/DATABASE_URL is required in staging/);
+    const c = loadConfig({ APP_ENV: "staging", DATA_ENCRYPTION_KEY: k1, DATA_HMAC_KEY: k2, DATABASE_URL: "postgres://u:p@db.example.com/cc" });
     expect(c.testData).toBe(true);
     expect(c.paymentProvider).toBe("simulated");
   });

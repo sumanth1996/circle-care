@@ -3,7 +3,7 @@
 import express, { Router } from "express";
 import { checkSsn, normEmail, normName, normPhone, type Role } from "../src/lib/validation";
 import { audit, describe } from "./audit";
-import { PERSONA_TABLE, requireUser, type Deps } from "./auth";
+import { PERSONA_TABLE, recordFailure, requireUser, type Deps } from "./auth";
 import { decrypt, encrypt, fingerprint, verifyPassword } from "./crypto";
 import type { Queryable } from "./db";
 import { HttpError, route, str } from "./http";
@@ -96,7 +96,14 @@ export function accountRouter(d: Deps): Router {
     if (existing?.ssn_enc) {
       // Changing an SSN needs the password again (CC-180).
       const pw = (await d.db.query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [u.id])).rows[0];
-      if (!(await verifyPassword(str(req.body?.password), pw.password_hash))) throw new HttpError(403, "Enter your password to change your Social Security number.", "password");
+      if (!(await verifyPassword(str(req.body?.password), pw.password_hash))) {
+        // Wrong passwords here count toward the same lockout as sign-in; a lock ends every session (review M2).
+        if (await recordFailure(d, u.id, d.now())) {
+          await d.db.query("DELETE FROM sessions WHERE user_id = $1", [u.id]);
+          throw new HttpError(429, "Too many attempts. For your security we signed you out. Try again in 15 minutes.");
+        }
+        throw new HttpError(403, "That password isn't right. Enter your password to change your Social Security number.", "password");
+      }
       if (decrypt(d.cfg, existing.ssn_enc).toString("utf8") === digits) { res.json({ me: await loadMe(d.db, u.id) }); return; }
     }
     const fp = fingerprint(d.cfg, digits);

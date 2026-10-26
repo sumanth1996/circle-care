@@ -62,7 +62,7 @@ export function paymentsRouter(d: Deps): Router {
       await q.query(
         "INSERT INTO bank_accounts (user_id, vault_token, bank_name, holder_name, account_type, account_last4, routing_last4, ach_fee_cents, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $8)",
         [u.id, str(req.body?.token), m.bankName, m.holderName, m.accountType, m.accountLast4, m.routingLast4, now]);
-      await audit(q, { action: old ? "bank.replaced" : "bank.added", actor: u.id, detail: { last4: m.accountLast4, bank: m.bankName }, at: now });
+      await audit(q, { action: old ? "bank.replaced" : "bank.added", actor: u.id, detail: { last4: m.accountLast4 }, at: now });
     });
     res.status(201).json(await paymentMethods(d.db, u.id));
   }));

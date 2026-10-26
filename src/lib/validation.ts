@@ -77,6 +77,9 @@ export function checkSsn(s: string, testData: boolean): { digits?: string; error
   if (/^(\d)\1{8}$/.test(d) || KNOWN_INVALID.has(d)) return { error: "This isn't a valid Social Security number" };
   if (testData) {
     if (area < 900) return { error: "This is a test environment. Use a test SSN that starts with 9 (for example 900-12-3456)." };
+    // The IRS issues real ITINs as 9XX-50–65, 70–88, 90–92 and 94–99, so those are refused too (review M3).
+    const g = +group;
+    if ((g >= 50 && g <= 65) || (g >= 70 && g <= 88) || (g >= 90 && g <= 92) || g >= 94) return { error: "This is a test environment. Use a test SSN that starts with 9 and has middle digits 01–49 (for example 900-12-3456)." };
     if (group === "00" || serial === "0000") return { error: "This isn't a valid Social Security number" };
     return { digits: d };
   }
@@ -105,7 +108,7 @@ export function checkBank(b: BankInput, testData: boolean): { errors: Partial<Re
   const routing = (b.routingNumber ?? "").replace(/\D/g, "");
   const account = (b.accountNumber ?? "").replace(/\D/g, "");
   const bn = (b.bankName ?? "").trim();
-  if (!bn || bn.length > 80) errors.bankName = "Enter your bank's name";
+  if (!bn || bn.length > 80 || /\d{5,}/.test(bn)) errors.bankName = "Enter your bank's name";
   if (normName(b.holderName ?? "").error) errors.holderName = "Enter the name on the account";
   if (!["checking", "savings"].includes(b.accountType)) errors.accountType = "Choose checking or savings";
   if (!abaValid(routing)) errors.routingNumber = "Enter a valid 9-digit routing number";
