@@ -88,7 +88,7 @@ export async function recordFailure(d: Deps, userId: string, now: Date): Promise
   const attempts = rows[0]?.failed_attempts ?? 0;
   let locked = false;
   if (attempts >= LOCK_AFTER) {
-    const r = await d.db.query("UPDATE users SET locked_until = $2::timestamptz + interval '15 minutes' WHERE id = $1 AND (locked_until IS NULL OR locked_until <= $2::timestamptz) RETURNING id", [userId, now]);
+    const r = await d.db.query(`UPDATE users SET locked_until = $2::timestamptz + interval '${LOCK_MINUTES} minutes' WHERE id = $1 AND (locked_until IS NULL OR locked_until <= $2::timestamptz) RETURNING id`, [userId, now]);
     locked = true;
     if (r.rows.length) await audit(d.db, { action: "auth.locked", actor: null, subject: userId, detail: { attempts }, at: now });
   } else {
