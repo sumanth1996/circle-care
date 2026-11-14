@@ -259,7 +259,7 @@ const EVERYDAY_SENSES: RegExp[] = [
   // school and driving tests ("family history test results" still warns)
   /\b(?:school|math|maths|science|spelling|sat|driving|driver's|drivers|class|english|spanish|french|chemistry|physics|biology)\s+test\s+results?\b/g,
   // only this exact message ("Lily's covid test results from school" and "her TB test result for school" still warn)
-  /^\s*test\s+results?\s+from\s+\w+'s\s+school\s+(?:are|is)\s+in\b/g,
+  /^\s*test\s+results?\s+from\s+\w+'s\s+school\s+(?:are|is)\s+in\s*[.!]?\s*$/g,
   // a garden bug or an idiom
   /\bpill\s+bugs?\b/g,
   /\bchill\s+pills?\b/g,
@@ -274,10 +274,11 @@ const EVERYDAY_SENSES: RegExp[] = [
   /\bstrokes?\s+of\s+(?:luck|genius|brilliance|fate|inspiration|midnight|good\s+fortune|bad\s+luck|the\s+pen)\b/g,
 ];
 
-/** Cooking: "add 250 ml of milk", "add 30 ml of olive oil". Let through only when the message names no person and no
- *  medicine, so "crush the tablet and stir in 5 ml of water" and "add 5 ml of oil to her tea at night" still warn. */
-const COOKING_ML = /\b(?:add|adding|stir\s+in|mix\s+in|pour|pour\s+in|whisk\s+in|heat)\s+\d+\s?ml\s+of\s+(?:olive\s+|coconut\s+|vegetable\s+|whole\s+|skim\s+|almond\s+|oat\s+|warm\s+|cold\s+|hot\s+)?(?:milk|water|cream|oil|stock|broth|wine|juice|vinegar|sauce|batter|coffee|tea|beer|rum|vodka)\b/g;
-const PERSON_OR_MEDICINE = /\b(?:her|his|their|him|them|she|he|mom'?s?|dad'?s?|grandma'?s?|grandpa'?s?|maggie'?s?|tablets?|crush\w*|pills?|capsules?|meds?|medicines?|doses?|bedtime|night)\b/;
+/** Cooking: "add 250 ml of milk to the recipe", "add 30 ml of olive oil". Let through only when the amount ends the
+ *  message or goes into a dish, and the message names no person and no medicine, so "crush the tablet and stir in
+ *  5 ml of water", "add 5 ml of oil to her tea at night" and "add 5 ml of water to the antibiotic powder" still warn. */
+const COOKING_ML = /\b(?:add|adding|stir\s+in|mix\s+in|pour|pour\s+in|whisk\s+in|heat)\s+\d+\s?ml\s+of\s+(?:olive\s+|coconut\s+|vegetable\s+|whole\s+|skim\s+|almond\s+|oat\s+|warm\s+|cold\s+|hot\s+)?(?:milk|water|cream|oil|stock|broth|wine|juice|vinegar|sauce|batter|coffee|tea|beer|rum|vodka)\b(?=\s*(?:[.!,]|$|to\s+the\s+(?:recipe|bowl|pan|pot|soup|sauce|batter|dough|mix|mixture|stew|curry|dressing)\b))/g;
+const PERSON_OR_MEDICINE = /\b(?:her|his|their|him|them|she|he|mom'?s?|dad'?s?|grandma'?s?|grandpa'?s?|maggie'?s?|tablets?|crush\w*|pills?|capsules?|meds?|medicines?|doses?|antibiotics?|syrups?|drops|powder|liquid|solution|suspension|give|gives|gave|giving|bedtime|night)\b/;
 
 /** The star sign, matched on the original capitals: "Mom is a Cancer, birthday in July". Lower-case "a cancer"
  *  and "a cancer sign" still warn, and so does "a cancer survivor". */

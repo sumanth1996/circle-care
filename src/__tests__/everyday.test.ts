@@ -963,6 +963,11 @@ describe("fewer false alarms from the chat health-detail check (CC-192)", () => 
     "Add 5 ml of oil to her tea at night",
     "Mom is a Cancer, born in July, now in remission",
     "The eye doctor prescribed reading lenses",
+    "Test results from Lily's school are in: positive for covid",
+    "Test results from Lily's school are in, strep throat",
+    "Add 5 ml of water to the antibiotic powder",
+    "Mix in 10 ml of water with the syrup, give it at 8",
+    "Stir in 5 ml of juice with the drops",
   ];
 
   it("still warns when a health detail sits next to an everyday phrase", () => {
