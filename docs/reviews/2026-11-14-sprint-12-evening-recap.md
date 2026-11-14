@@ -41,3 +41,16 @@ The reviewer found no privacy leak or permission bypass. "Her day" goes through 
 | F4-12 | optional | The presenter toast hard-coded "7:05 PM" | Uses `fmtTime("19:05")` | UI change |
 
 Checks after round 1: `npm test` 437 passed · `npx tsc --noEmit -p .` clean · `npm run build` passed.
+
+## Round 2 — CHANGES REQUESTED
+
+F4-1, F4-2, F4-4, F4-5, F4-7 to F4-12 resolved; privacy and permissions still clean. Four findings:
+
+| # | Severity | Finding | Fix | Regression test |
+|---|---|---|---|---|
+| F4-13 | must | After F4-3, a late catch-up ignored the current time and could fire inside quiet hours (a first open at 22:30 with the default 22:00 to 07:00) | Skipped when quiet hours cover 7 PM or the current minute | *F4-13* (22:30 default; 21:00 with 20:00 to 07:00) |
+| F4-14 | should | `.btn.sm` (34px) outranked `.recap-tap`, so the chat chip and Review medicines stayed small | `.btn.sm.recap-tap` gets the 44px minimum too | CSS change |
+| F4-15 | should | A day read "A calm day for Maggie." while her check-in was still to come | Calm needs the check-in done; while her window is open the headline is "Maggie's check-in is still to come." | *F4-5* updated |
+| F4-16 | optional | New headline copy and the due-dose case for Review medicines weren't in the docs | Guardian dashboard page and release notes list every headline and when Review medicines shows | Docs |
+
+Checks after round 2: `npm test` 438 passed · `npx tsc --noEmit -p .` clean · `npm run build` passed.

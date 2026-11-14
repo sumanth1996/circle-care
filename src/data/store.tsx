@@ -216,8 +216,8 @@ export function evaluate(s: State) {
 
   // Evening recap (CC-191): one notification for Sarah at 7 PM, with no health details on the lock screen.
   // Skipped for the day when she turned it off or her quiet hours cover 7 PM. If the app first runs later that
-  // evening, it catches up until 11 PM (Review F4-3). The card on Home shows either way.
-  if (s.settings.recapNotify !== false && nowMin >= toMin(RECAP_NOTIFY_AT) && nowMin < toMin(RECAP_LAST_CALL) && !inQuietHours(s.settings.quietHours, toMin(RECAP_NOTIFY_AT))) {
+  // evening, it catches up until 11 PM, but never inside quiet hours (Review F4-3, F4-13). The card shows either way.
+  if (s.settings.recapNotify !== false && nowMin >= toMin(RECAP_NOTIFY_AT) && nowMin < toMin(RECAP_LAST_CALL) && !inQuietHours(s.settings.quietHours, toMin(RECAP_NOTIFY_AT)) && !inQuietHours(s.settings.quietHours, nowMin)) {
     pushAlert(s, { key: `recap-${today}`, to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: "Your evening recap is ready.", link: "/app/guardian#recap" });
   }
 

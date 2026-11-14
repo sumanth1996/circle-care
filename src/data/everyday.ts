@@ -268,7 +268,7 @@ export function inQuietHours(q: Settings["quietHours"], min: number) {
 }
 
 /** The recap card shows on Sarah's Home from 6 PM. Its one update is decided at 7 PM; if the app first runs later
- *  that evening it still goes out, until 11 PM, but never when quiet hours covered 7 PM. */
+ *  that evening it still goes out, until 11 PM, but never when quiet hours covered 7 PM or cover the moment it would go. */
 export const RECAP_CARD_FROM = "18:00";
 export const RECAP_NOTIFY_AT = "19:00";
 export const RECAP_LAST_CALL = "23:00";
@@ -303,7 +303,8 @@ export function recap(s: State) {
     .filter((sh) => sh.caregiverId && sh.accepted && member(s, sh.caregiverId)?.status === "active")
     .sort((a, b) => a.start.localeCompare(b.start))[0];
   const low = lowSupply(s);
-  const calm = needLook === 0 && due.length === 0 && !ciMissed && low.length === 0;
+  // Calm needs the check-in done (Review F4-15); while her window is open the headline says it's still to come.
+  const calm = needLook === 0 && due.length === 0 && !!ci && low.length === 0;
   return {
     calm,
     headline: calm
@@ -311,6 +312,7 @@ export function recap(s: State) {
       : needLook ? `${plural(needLook, "dose needs", "doses need")} a look.`
       : due.length ? `${plural(due.length, "dose is", "doses are")} due now.`
       : ciMissed ? "Maggie didn't check in today."
+      : !ci && !low.length ? "Maggie's check-in is still to come."
       : low.length === 1 ? "One refill to sort out." : `${low.length} refills to sort out.`,
     doses: { taken, total: doses.length, unconfirmed, skipped, refused, due, next: next?.time, any: all.length > 0 },
     tasks: { done: tasks.filter((t) => t.done).length, total: tasks.length },

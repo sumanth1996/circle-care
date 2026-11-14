@@ -4,7 +4,7 @@ Prototype versions are derived from the repository history (`git log`). All comm
 
 | Version | Theme | Commits | Tests at release |
 |---|---|---|---|
-| **v0.6** (in progress) | Everyday Care: refill tracker, daily check-ins, family chat, evening recap | Sprint 12, one pull request per feature | 344 unit/API after feature 1 · 387 after feature 2 · 414 after feature 3 · 437 after feature 4 |
+| **v0.6** (in progress) | Everyday Care: refill tracker, daily check-ins, family chat, evening recap | Sprint 12, one pull request per feature | 344 unit/API after feature 1 · 387 after feature 2 · 414 after feature 3 · 438 after feature 4 |
 | **v0.5** | Real accounts: sign-up by role, PostgreSQL, SSN encryption, guardian payments, audit export | Sprint 11 merge (CC-172 – CC-190) | 312 unit/API · 15 account e2e · 29 demo e2e · 28 screens axe-clean |
 | **v0.4** | California localisation and product documentation | `428fa2e` (+ this wiki) | 217 unit · 29 e2e · 24 screens axe-clean |
 | **v0.3** | Health & Calendar for the guardian | `1dc1731`, `dce35c2`, `6c139a3` | 217 unit · 29 e2e · 24 screens axe-clean |
@@ -55,12 +55,12 @@ Prototype versions are derived from the repository history (`git log`). All comm
 
 ### Feature 4 — Evening recap for Sarah (CC-191)
 
-- **Evening recap** card on Sarah's Home from 6 PM: one headline (*"A calm day for Maggie."*, or what needs a look), then **Medicines**, **Check-in**, **Visits**, **Her day** and **Tomorrow**.
+- **Evening recap** card on Sarah's Home from 6 PM: one headline (*"A calm day for Maggie."* only when every dose so far is confirmed, the check-in is done and no refill is open; otherwise what needs a look), then **Medicines**, **Check-in**, **Visits**, **Her day** and **Tomorrow**.
 - **Medicines** gives doses given so far, then names each dose not confirmed, skipped or refused with its time, and any dose due now. On a calm day it gives the next dose.
 - **Her day** shows Maggie's feeling, water and meals only while she shares them, and reads **Private** on a day she keeps to herself.
 - **Tomorrow** shows the first appointment and its prep note, or the first caregiver visit, or *Nothing booked*.
-- A low supply line links to Medicines and gives the refill date when it is on the Calendar, or says it isn't on the Calendar yet. **See the week** opens the weekly digest, and **Review medicines** shows on a day with a missed dose or a refill to sort out.
-- **One update at 7 PM**: the lock screen says only "Update from Circle Care" and the app says "Your evening recap is ready." Sarah can turn it off under **Settings · Evening recap**, and it is skipped for the evening when her quiet hours cover 7 PM. If the app first runs later that evening, the update still goes out until 11 PM. The card shows either way.
+- A low supply line links to Medicines and gives the refill date when it is on the Calendar, or says it isn't on the Calendar yet. **See the week** opens the weekly digest, and **Review medicines** shows on a day with a dose that needs a look, a dose due now or a refill to sort out.
+- **One update at 7 PM**: the lock screen says only "Update from Circle Care" and the app says "Your evening recap is ready." Sarah can turn it off under **Settings · Evening recap**, and it is skipped for the evening when her quiet hours cover 7 PM. If the app first runs later that evening, the update still goes out until 11 PM, outside quiet hours. The card shows either way.
 - Presenter control **Skip to 7 PM for the evening recap**.
 - Review: [docs/reviews/2026-11-14-sprint-12-evening-recap.md](../../reviews/2026-11-14-sprint-12-evening-recap.md).
 - Design: [Figma board](../../design/sprint-12/04-evening-recap-figma.png), approved by Sumanth on 2026-11-14.

@@ -69,6 +69,6 @@
 .recap-cell .s.warn { color: #9a5000; font-weight: 600; }
 .recap-week { gap: 2px; font-weight: 600; }
 /* 44px touch targets (Review F4-6). */
-.recap-tap { display: inline-flex; align-items: center; min-height: 44px; }
+.recap-tap, .btn.sm.recap-tap { display: inline-flex; align-items: center; min-height: 44px; }
 .recap-refill { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; }
 @media (max-width: 480px) { .recap { padding: 18px 16px; } }

@@ -1041,7 +1041,8 @@ describe("evening recap (CC-191)", () => {
     s.checkins = s.checkins.filter((c) => c.date !== todayOf(s));
     s.settings.checkinWindow = { start: "08:00", end: "20:00" };
     expect(recap(s).checkinMissed).toBe(false);
-    expect(recap(s).calm).toBe(true);
+    expect(recap(s).calm).toBe(false);
+    expect(recap(s).headline).toBe("Maggie's check-in is still to come.");
     s.settings.checkinWindow = { start: "08:00", end: "10:00" };
     expect(recap(s).checkinMissed).toBe(true);
     expect(recap(s).headline).toBe("Maggie didn't check in today.");
@@ -1097,6 +1098,18 @@ describe("evening recap (CC-191)", () => {
     setTime(s, "19:10");
     evaluate(s);
     expect(recapAlerts(s)).toHaveLength(1);
+  });
+
+  it("F4-13: a late catch-up never goes out inside quiet hours", () => {
+    const s = seed();
+    setTime(s, "22:30"); // default quiet hours 22:00 to 07:00
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    const t = seed();
+    t.settings.quietHours = { on: true, start: "20:00", end: "07:00" };
+    setTime(t, "21:00");
+    evaluate(t);
+    expect(recapAlerts(t)).toHaveLength(0);
   });
 
   it("refuses James too when he tries to change Sarah's update", () => {
