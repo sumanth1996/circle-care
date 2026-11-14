@@ -228,16 +228,72 @@ const HEALTH_WORDS = [
   "medicine", "medication", "meds", "dose", "dosage", "dosing", "pill", "insulin",
   "blood pressure", "blood sugar", "a1c", "glucose", "heart rate", "heart condition",
   "dementia", "cancer", "arthritis", "kidney disease", "kidney function",
-  "surgery", "symptom", "test result", "lab result",
+  "surgery", "symptom", "test result", "lab result", "biopsy", "biopsies", "remission",
 ];
+
+/**
+ * CC-192: everyday phrases that use a health word in another sense ("stroke the cat", "laughter is the best
+ * medicine", "a dose of sunshine", "add 250 ml of milk"). They are blanked out before the check runs, so only
+ * these exact senses are let through and every other use of the word still warns. Each pattern names its
+ * everyday words outright, with no free "any word" gaps, so it can't swallow a health word next to it
+ * ("in the car her cancer diagnosis" still warns). Missing a real health detail is worse than one extra
+ * warning, so a phrase only goes here when the CC-192 health and mixed sets still pass.
+ */
+const EVERYDAY_SENSES: RegExp[] = [
+  // medicine as an idiom or a gym ball ("Tylenol is the best medicine", "the best medicine for her cough" still warn)
+  /\b(?:laughter|laughing|a\s+good\s+laugh|love|music|sleep|time)\s+is\s+(?:still\s+|really\s+|always\s+)?the\s+best\s+medicine\b(?!\s+for\b)/g,
+  /\bmedicine\s+balls?\b/g,
+  /\btaste\s+of\s+(?:his|her|their|my|your|our|its)\s+own\s+medicine\b/g,
+  // "a dose of sunshine", "a healthy dose of fun"
+  /\bdoses?\s+of\s+(?:sunshine|sun|reality|fun|fresh\s+air|humou?r|laughter|nature|good\s+news|patience|kindness|love|cheer|joy|optimism|common\s+sense)\b/g,
+  // fixing a car, a laptop or the wifi, as the direct object only ("she was diagnosed in the car" still warns)
+  /\bdiagnos(?:e|es|ed|ing)\s+(?:the\s+|my\s+|our\s+|your\s+|why\s+the\s+|what'?s\s+wrong\s+with\s+the\s+)?(?:car|cars|engine|truck|van|laptop|wifi|wi-fi|router|printer|furnace|boiler|dishwasher|washer|dryer|fridge)\b/g,
+  /\b(?:car|engine|truck|van|laptop|router|printer|furnace|boiler)\s+needs?\s+a\s+diagnostic\b/g,
+  // a reading list or a race route ("prescribed reading glasses" and "prescribed course of prednisone" still warn)
+  /\bprescribed\s+reading\b(?!\s+(?:glasses|lenses|specs|spectacles))/g,
+  /\bprescribed\s+route\b/g,
+  // a pet's operation, only with the possessive ("walk the dog surgery is at 9" still warns)
+  /\b(?:dog|cat|puppy|kitten|pet|bird|horse|rabbit)'s\s+surgery\b/g,
+  // the star sign, "Cancer season" (the "Mom is a Cancer, birthday in July" case runs on the original capitals, below)
+  /\bcancer\s+season\b/g,
+  // school and driving tests ("family history test results" still warns)
+  /\b(?:school|math|maths|science|spelling|sat|driving|driver's|drivers|class|english|spanish|french|chemistry|physics|biology)\s+test\s+results?\b/g,
+  // only this exact message ("Lily's covid test results from school" and "her TB test result for school" still warn)
+  /^\s*test\s+results?\s+from\s+\w+'s\s+school\s+(?:are|is)\s+in\s*[.!]?\s*$/g,
+  // a garden bug or an idiom
+  /\bpill\s+bugs?\b/g,
+  /\bchill\s+pills?\b/g,
+  /\bbitter\s+pill\b/g,
+  /\bpoison\s+pills?\b/g,
+  // storage and housing units
+  /\d\s?units?\s+of\s+(?:the\s+|rental\s+)*(?:storage|housing|apartments?|condos?|furniture|space|lumber|wood)\b/g,
+  // "stroke the cat", "brush strokes", "swimming strokes", "paint it with 2 strokes", "a stroke of luck"
+  /\bstrok(?:e|es|ed|ing)\s+(?:the|her|his|my|your|our|its)\s+(?:cat|cats|dog|dogs|kitten|puppy|pet|fur|hair|beard)\b/g,
+  /\b(?:brush|swimming|swim|paint|breast|golf|tennis|oar|rowing)\s+strokes?\b/g,
+  /\b(?:paint|brush|draw|sweep)\s+(?:it|this|that)\s+with\s+(?:\d+|a\s+few|long|short|light|quick)\s+strokes\b/g,
+  /\bstrokes?\s+of\s+(?:luck|genius|brilliance|fate|inspiration|midnight|good\s+fortune|bad\s+luck|the\s+pen)\b/g,
+];
+
+/** Cooking: "add 250 ml of milk to the recipe", "add 30 ml of olive oil". Let through only when the amount ends the
+ *  message or goes into a dish, and the message names no person and no medicine, so "crush the tablet and stir in
+ *  5 ml of water", "add 5 ml of oil to her tea at night" and "add 5 ml of water to the antibiotic powder" still warn. */
+const COOKING_ML = /\b(?:add|adding|stir\s+in|mix\s+in|pour|pour\s+in|whisk\s+in|heat)\s+\d+\s?ml\s+of\s+(?:olive\s+|coconut\s+|vegetable\s+|whole\s+|skim\s+|almond\s+|oat\s+|warm\s+|cold\s+|hot\s+)?(?:milk|water|cream|oil|stock|broth|wine|juice|vinegar|sauce|batter|coffee|tea|beer|rum|vodka)\b(?=\s*(?:[.!]?\s*$|to\s+the\s+(?:recipe|bowl|pan|pot|soup|sauce|batter|dough|mix|mixture|stew|curry|dressing)\b))/g;
+const PERSON_OR_MEDICINE = /\b(?:her|his|their|him|them|she|he|mom'?s?|dad'?s?|grandma'?s?|grandpa'?s?|maggie'?s?|tablets?|crush\w*|pills?|capsules?|meds?|medicines?|doses?|antibiotics?|syrups?|drops|powder|liquid|solution|suspension|give|gives|gave|giving|bedtime|night)\b/;
+
+/** The star sign, matched on the original capitals: "Mom is a Cancer, birthday in July". Lower-case "a cancer"
+ *  and "a cancer sign" still warn, and so does "a cancer survivor". */
+const ZODIAC_CANCER = /\b(?:[Mm]om|[Dd]ad|[Ss]he|[Hh]e|I|[Gg]randma|[Gg]randpa|[Mm]aggie|[Ll]ily)(?:'s|'m|\s+is|\s+am)\s+a\s+Cancer\b(?!\s+(?:survivor|patient))(?=[^.?!]*\b(?:birthday|born|zodiac|star\s+sign|horoscope)\b)/g;
 
 /**
  * CC-164: the chat is for everyday family life. When a message names one of Maggie's medicines
  * (with or without its strength), a diagnosis or a dose, suggest Notes, which keep health details
  * on her record under her sharing choices. Returns what was spotted (shown as chips), or an empty list.
+ * CC-192: everyday senses of health words (see EVERYDAY_SENSES) no longer warn.
  */
 export function phiHint(s: State, text: string) {
-  const t = ` ${text.toLowerCase()} `;
+  let t = ` ${text.replace(/[\u2018\u2019]/g, "'")} `.replace(ZODIAC_CANCER, " ").toLowerCase();
+  if (!PERSON_OR_MEDICINE.test(t)) t = t.replace(COOKING_ML, " ");
+  for (const re of EVERYDAY_SENSES) t = t.replace(re, " ");
   const hits = new Set<string>();
   for (const m of s.meds) {
     // "Vitamin D3" also matches "vitamin d"; "Atorvastatin" also matches "atorvastatin20mg".
@@ -252,9 +308,10 @@ export function phiHint(s: State, text: string) {
     if (new RegExp(stem ? `\\b${word}` : `\\b${word}(s|es)?\\b`).test(t)) hits.add(stem ? `${word}…` : word);
   }
   if (/\d\s?(mg|mcg|ml|iu)\b/.test(t) || /\b(gave|give|gives|giving|took|take|takes|taking)\b[^.?!]*\d\s?units?\b/.test(t)) hits.add("a dose");
-  // Ambiguous on their own, so only in a health sense: "her BP", "BP 140/90", "had a stroke" (not "a stroke of luck").
+  // Ambiguous on its own, so only in a health sense: "her BP", "BP 140/90". Everyday senses of "stroke" are
+  // blanked out above, so any "stroke" left warns.
   if (/\b(her|his|my|mom'?s|dad'?s|grandma'?s)\s+bp\b|\bbp\s*(is\s*)?\d/.test(t)) hits.add("bp");
-  if (/\bstrokes?\b(?!\s+of\b)/.test(t)) hits.add("stroke");
+  if (/\bstrokes?\b/.test(t)) hits.add("stroke");
   return [...hits];
 }
 
