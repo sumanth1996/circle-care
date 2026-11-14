@@ -51,7 +51,7 @@ Prototype versions are derived from the repository history (`git log`). All comm
 - New `chat` resource in the permission matrix. A caregiver who is added sees messages from the time they joined, not the history before.
 - Review: [docs/reviews/2026-11-14-sprint-12-family-chat.md](../../reviews/2026-11-14-sprint-12-family-chat.md).
 - Design: [Figma board](../../design/sprint-12/03-family-chat-figma.png), approved by Sumanth on 2026-11-14.
-- Saved demo data moves to version 9.
+- Saved demo data moves to version 10.
 
 Coming next in this release: evening recap (CC-191).
 

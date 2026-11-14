@@ -23,10 +23,13 @@ type Recognition = {
   lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; abort: () => void;
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: ((e: RecError) => void) | null; onend: (() => void) | null;
 };
-function newRecognition(): Recognition | null {
-  if (typeof window === "undefined") return null;
+function recognitionClass(): (new () => Recognition) | undefined {
+  if (typeof window === "undefined") return undefined;
   const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-  const C = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition;
+}
+function newRecognition(): Recognition | null {
+  const C = recognitionClass();
   return C ? new C() : null;
 }
 /** Errors that mean voice can't work here at all; anything else (silence, a restart) just stops listening. */
@@ -38,11 +41,12 @@ const BLOCKED = ["not-allowed", "service-not-allowed", "audio-capture", "languag
  * came from speech, unedited, are marked "By voice".
  */
 function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial?: string; typing?: boolean; onSend: (text: string, spoken: boolean) => void; onClose: () => void }) {
+  const [supported] = useState(() => !!recognitionClass());
   const [text, setText] = useState(initial);
-  const [mode, setMode] = useState<"voice" | "type">(typing || !newRecognition() ? "type" : "voice");
+  const [mode, setMode] = useState<"voice" | "type">(typing || !supported ? "type" : "voice");
   const [spoken, setSpoken] = useState(false);
   const [listening, setListening] = useState(false);
-  const [note, setNote] = useState(typing || newRecognition() ? "" : "Voice isn't available on this device, so you can type your message.");
+  const [note, setNote] = useState(typing || supported ? "" : "Voice isn't available on this device, so you can type your message.");
   const rec = useRef<Recognition | null>(null);
 
   const stop = () => {
@@ -65,7 +69,7 @@ function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial
       if (e.error && BLOCKED.includes(e.error)) { setMode("type"); setNote("Voice isn't available right now, so you can type your message."); }
       else if (e.error === "no-speech") setNote("I didn't hear anything. Tap to talk again.");
     };
-    r.onend = () => setListening(false);
+    r.onend = () => { setListening(false); if (rec.current === r) rec.current = null; };
     setText(""); setSpoken(false); setNote("");
     setListening(true);
     try { r.start(); } catch { setListening(false); setMode("type"); }
@@ -89,13 +93,13 @@ function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial
               <button type="button" className="btn lg" disabled={!t || tooLong} onClick={() => { stop(); onSend(t, spoken && mode === "voice"); }}><Send size={24} /> Send</button>
               {mode === "voice"
                 ? <button type="button" className="btn secondary lg" onClick={start}><RotateCcw size={24} /> Try again</button>
-                : newRecognition() && <button type="button" className="btn secondary lg" onClick={() => { setMode("voice"); start(); }}><Mic size={24} /> Talk instead</button>}
+                : supported && <button type="button" className="btn secondary lg" onClick={() => { setMode("voice"); start(); }}><Mic size={24} /> Talk instead</button>}
             </div>
           </div>
         )}
         {mode === "voice" && (
           <>
-            <button type="button" className={`mic-big ${listening ? "on" : ""}`} onClick={() => (listening ? stop() : start())} aria-label={listening ? "Stop listening" : "Tap to talk"}>
+            <button type="button" className={`mic-big ${listening ? "on" : ""}`} onClick={() => (listening ? rec.current?.stop() : start())} aria-label={listening ? "Stop listening" : "Tap to talk"}>
               <Mic size={44} />
             </button>
             <p className="center muted" aria-live="polite">{listening ? "Listening. Speak now." : note || "Tap to talk"}</p>
@@ -140,7 +144,9 @@ function HealthHint({ text, spotted, canNote, onNote, onSend, onEdit }: { text: 
 
 /** Names of the other people who have read up to this message. */
 function readBy(state: State, m: ChatMessage) {
-  return chatMembers(state).filter((p) => p.id !== m.by && (state.chat.readAt[p.id] ?? "") >= m.at).map((p) => p.short);
+  return chatMembers(state)
+    .filter((p) => p.id !== m.by && (state.chat.joinedAt[p.id] ?? "") <= m.at && (state.chat.readAt[p.id] ?? "") >= m.at)
+    .map((p) => p.short);
 }
 
 export function ChatView({ large = false }: { large?: boolean }) {

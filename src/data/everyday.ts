@@ -226,8 +226,8 @@ const escapeRe = (x: string) => x.replace(/[.*+?^$|()[\]{}\\]/g, "\\$&");
 const HEALTH_WORDS = [
   "diagnos*", "prescri*", "alzheimer*", "parkinson*", "chemo*", "milligram*", "diabet*",
   "medicine", "medication", "meds", "dose", "dosage", "dosing", "pill", "insulin",
-  "blood pressure", "bp", "blood sugar", "a1c", "glucose", "heart rate", "heart condition",
-  "dementia", "cancer", "arthritis", "stroke", "kidney disease", "kidney function",
+  "blood pressure", "blood sugar", "a1c", "glucose", "heart rate", "heart condition",
+  "dementia", "cancer", "arthritis", "kidney disease", "kidney function",
   "surgery", "symptom", "test result", "lab result",
 ];
 
@@ -241,7 +241,9 @@ export function phiHint(s: State, text: string) {
   const hits = new Set<string>();
   for (const m of s.meds) {
     // "Vitamin D3" also matches "vitamin d"; "Atorvastatin" also matches "atorvastatin20mg".
-    const base = m.name.toLowerCase().replace(/\s*\d+$/, "");
+    const name = m.name.toLowerCase();
+    const stripped = name.replace(/\s*\d+$/, "");
+    const base = stripped.replace(/[^a-z]/g, "").length >= 3 ? stripped : name;
     if (new RegExp(`\\b${escapeRe(base)}(?![a-z])`).test(t)) hits.add(m.name);
   }
   for (const w of HEALTH_WORDS) {
@@ -249,6 +251,9 @@ export function phiHint(s: State, text: string) {
     const word = stem ? w.slice(0, -1) : w;
     if (new RegExp(stem ? `\\b${word}` : `\\b${word}(s|es)?\\b`).test(t)) hits.add(stem ? `${word}…` : word);
   }
-  if (/\d\s?(mg|mcg|ml|iu)\b/.test(t)) hits.add("a dose");
+  if (/\d\s?(mg|mcg|ml|iu)\b/.test(t) || /\b(gave|give|gives|giving|took|take|takes|taking)\b[^.?!]*\d\s?units?\b/.test(t)) hits.add("a dose");
+  // Ambiguous on their own, so only in a health sense: "her BP", "BP 140/90", "had a stroke" (not "a stroke of luck").
+  if (/\b(her|his|my|mom'?s|dad'?s|grandma'?s)\s+bp\b|\bbp\s*(is\s*)?\d/.test(t)) hits.add("bp");
+  if (/\bstrokes?\b(?!\s+of\b)/.test(t)) hits.add("stroke");
   return [...hits];
 }

@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, Dail
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 9;
+export const STATE_VERSION = 10;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";

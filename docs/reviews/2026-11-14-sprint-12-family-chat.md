@@ -28,4 +28,17 @@ The reviewer confirmed the permission core is sound: `can()` gates paid caregive
 | F3-11 | optional | "type instead" turned the microphone on | It opens the sheet in typing mode | UI change |
 | F3-12 | optional | Being switched off while the chat was open logged a "denied" entry she didn't cause; `leaveChat` had no direct test | The chat logs a read or a refusal once, when opened; `leaveChat` is exported and tested | *Review F3-12* |
 
+## Round 2 — CHANGES REQUESTED
+
+Ten of the twelve round 1 fixes confirmed (414 tests pass, typecheck clean). The F3-5 fix brought two regressions:
+
+| # | Severity | Finding | Fix | Regression test |
+|---|---|---|---|---|
+| F3-13 | must | `chat.joinedAt` is new, but saved demo data stayed at version 9, so data saved by the first build had no `joinedAt` and Sarah's app crashed | Saved demo data moves to version 10 (older data is replaced by the new seed) | Release notes updated |
+| F3-14 | should | "Read by Ana" could show on a message from before Ana joined | Read marks count only for people who could see the message | UI change |
+| F3-15 | optional | Health check: "Gave her 10 units" missed; "BP station", "stroke of luck" and a one-letter medicine name fired | Units count with a giving or taking verb; BP and stroke only in a health sense; strength stripped only when 3 letters remain | *Review F3-6* (extended) |
+| F3-16 | optional | A new speech recognizer was built on every render | Support is checked once | UI change |
+| F3-17 | optional | Tapping the microphone to stop lost the final words | It stops recognition and keeps the last result | UI change |
+| F3-18 | optional | The Vitamin D check sat inside an `if` | It asserts the seed has Vitamin D3 | Test change |
+
 Not covered by unit tests: the chat screens themselves (the repo has no component test library, and this build container has no browser for the e2e suite).

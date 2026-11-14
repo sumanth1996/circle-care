@@ -792,14 +792,19 @@ describe("family chat (CC-164, CC-165)", () => {
 
   it("Review F3-6: catches medicines without their strength and common health words, not everyday ones", () => {
     const s = seed();
-    const vitD = s.meds.find((m) => /\d$/.test(m.name));
-    if (vitD) expect(phiHint(s, `Did she have her ${vitD.name.replace(/\s*\d+$/, "").toLowerCase()} today?`)).toContain(vitD.name);
+    const vitD = s.meds.find((m) => /\d$/.test(m.name))!;
+    expect(vitD.name).toBe("Vitamin D3");
+    expect(phiHint(s, `Did she have her ${vitD.name.replace(/\s*\d+$/, "").toLowerCase()} today?`)).toContain(vitD.name);
     const any = s.meds[0].name;
     expect(phiHint(s, `${any.toLowerCase()}20mg from now on`)).toContain(any);
     for (const w of ["Picked up her meds", "The dosage changed", "1000 IU a day", "Her BP is fine", "Arthritis is worse", "Diabetic menu please"]) {
       expect(phiHint(s, w).length, w).toBeGreaterThan(0);
     }
-    for (const w of ["New tablet for video calls", "Kidney beans for the chili", "2 units of rental storage", "Our 5g is slow"]) {
+    for (const w of ["Gave her 10 units before dinner", "Her BP was 140/90", "Grandpa had a stroke years ago"]) {
+      expect(phiHint(s, w).length, w).toBeGreaterThan(0);
+    }
+    s.meds.push({ ...s.meds[0], id: "med-test", name: "D3" });
+    for (const w of ["New tablet for video calls", "Kidney beans for the chili", "2 units of rental storage", "Our 5g is slow", "Meet at the BP station", "What a stroke of luck", "I'd love to come"]) {
       expect(phiHint(s, w), w).toEqual([]);
     }
   });
