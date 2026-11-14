@@ -82,7 +82,12 @@ with sync_playwright() as p:
     def wait_for_save(before):
         """The app saves on a 250 ms timer, encrypted with a fresh IV each time, so the stored text always changes
         once a save lands. Reloading sooner would throw the change away; see the review record for that gap."""
-        pg.wait_for_function("prev => localStorage.getItem('circle-care-demo') !== prev", arg=before, timeout=5000)
+        # Polled from here, not with wait_for_function: the app's CSP (script-src 'self') blocks the eval it needs.
+        for _ in range(50):
+            if pg.evaluate("() => localStorage.getItem('circle-care-demo')") != before:
+                return
+            pg.wait_for_timeout(100)
+        raise AssertionError("the change was not saved within 5 seconds")
 
     def flip(name, on):
         """Turn a settings switch on or off the way a person would.
