@@ -11,7 +11,7 @@ import {
 } from "../../lib/health";
 import { addDays, fmtShortDay, fmtTime, ymd } from "../../lib/time";
 import { DailyWeek } from "../../components/guardianEveryday";
-import { feelingOf, dailyShared } from "../../data/everyday";
+import { sharedFeeling, dailyShared } from "../../data/everyday";
 import type { State } from "../../data/types";
 import "./health.css";
 
@@ -105,12 +105,11 @@ export default function Health() {
 
 /* ---------------- Summary ---------------- */
 
-/** CC-143: the face Maggie taps (if she shares it), else the older "I'm OK" check-in mood. */
+/** CC-143: the face Maggie taps (if she shares it), else an older check-in face mapped onto the same six feelings. */
 function moodOf(state: State, date: string) {
-  if (!dailyShared(state)) return moodFrom(date);
-  const f = feelingOf(state.dailyLogs.find((l) => l.date === date)?.feeling);
-  if (f) return { date, valence: f.valence, label: f.label, source: "check-in" as const };
-  return moodFrom(date, state.checkins.find((c) => c.date === date)?.mood);
+  const r = sharedFeeling(state, date);
+  if (r.state === "shared") return { date, valence: r.feeling.valence, label: r.feeling.label, source: "check-in" as const, shared: true };
+  return { ...moodFrom(date), shared: r.state !== "private" };
 }
 
 function Summary({ state, readings, events, weights, activity, today, onOpen }: {
@@ -153,7 +152,7 @@ function Summary({ state, readings, events, weights, activity, today, onOpen }: 
         <Highlight icon={PersonStanding} color={C.stand} name="Stand hours" value={activity.standHours} unit={`/ ${GOALS.standHours} hr`} caption="Hours she stood and moved" meter={{ value: activity.standHours, goal: GOALS.standHours }} onClick={() => onOpen("activity")} />
         <Highlight icon={Activity} color={C.walk} name="Walking" value={activity.walkMin} unit="min" caption={`Goal ${GOALS.walkMin} min`} meter={{ value: activity.walkMin, goal: GOALS.walkMin }} onClick={() => onOpen("activity")} />
         <Highlight icon={Moon} color={C.sleep} name="Sleep last night" value={minutesToHm(sleep.asleepMin)} unit="" caption={`In bed ${fmtTime(sleep.inBed)} – ${fmtTime(sleep.wake)} · woke ${sleep.awakenings}×`} onClick={() => onOpen("activity")} />
-        <Highlight icon={Smile} color={C.rest} name="State of mind" value={mood.source === "none" ? "—" : mood.label} unit="" caption={mood.source === "none" ? "No feeling added today" : "From Maggie's daily check-in"} onClick={() => onOpen("activity")} />
+        <Highlight icon={Smile} color={C.rest} name="State of mind" value={mood.source === "none" ? "—" : mood.label} unit="" caption={!mood.shared ? (dailyShared(state) ? "Maggie kept today private" : "Check-ins aren't shared") : mood.source === "none" ? "No feeling added today" : "From Maggie's daily check-in"} onClick={() => onOpen("activity")} />
         <Highlight icon={Scale} color={C.weight} name="Weight" value={lb(kg)} unit="lb" caption={`${kgChange > 0 ? "+" : ""}${kgChange} lb in 30 days`} spark={weights.map((w) => w.kg)} onClick={() => onOpen("vitals")} />
         <Highlight icon={Ruler} color={C.weight} name="Height · BMI" value={ftIn(state.health.heightCm)} unit={`· BMI ${bmi(kg, state.health.heightCm)}`} caption={`${state.health.heightCm} cm · age ${age}`} />
       </div>

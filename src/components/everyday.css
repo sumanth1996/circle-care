@@ -21,11 +21,12 @@
 .daily { border-radius: 30px; padding: 22px; display: grid; gap: 18px; background: linear-gradient(160deg, rgba(255, 249, 239, 0.95), rgba(239, 239, 253, 0.75)); }
 .daily-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .daily-head h2 { font-size: calc(var(--text-base) * 1.35); letter-spacing: -0.02em; }
-.daily-note, .daily-foot { color: var(--muted); font-size: calc(var(--text-base) * 0.75); }
+.daily-note { color: var(--muted); font-size: calc(var(--text-base) * 0.85); }
+.daily-foot { color: var(--ink-2); font-size: calc(var(--text-base) * 0.85); }
 .daily-row { display: grid; gap: 10px; }
 .daily-row h3 { font-size: calc(var(--text-base) * 0.95); font-weight: 700; }
 .faces { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-.face { display: grid; justify-items: center; gap: 4px; padding: 10px 2px; border: 0; border-radius: 20px; background: rgba(255, 255, 255, 0.7); cursor: pointer; color: var(--ink-2); font: inherit; font-size: calc(var(--text-base) * 0.68); font-weight: 600; min-height: 48px; transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease); }
+.face { display: grid; justify-items: center; gap: 4px; padding: 10px 2px; border: 0; border-radius: 20px; background: rgba(255, 255, 255, 0.7); cursor: pointer; color: var(--ink-2); font: inherit; font-size: calc(var(--text-base) * 0.85); font-weight: 600; min-height: 48px; transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease); }
 .face:active { transform: scale(0.95); }
 .face[aria-pressed="true"] { background: #fff; box-shadow: 0 0 0 3px var(--elder), 0 8px 18px rgba(184, 79, 0, 0.15); color: var(--ink); }
 .water { display: flex; align-items: center; gap: 14px; }
@@ -44,6 +45,7 @@
 
 /* ---------- Guardian: check-in week (CC-143) ---------- */
 .dweek { display: grid; grid-template-columns: 92px repeat(7, minmax(0, 1fr)); gap: 8px 6px; align-items: center; }
+.dweek > [role="row"] { display: contents; }
 .dweek .lab { font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .dweek .day { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); }
 .dweek .cell { display: grid; place-items: center; min-height: 34px; }

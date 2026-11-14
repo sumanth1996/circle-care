@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { seed, GUARDIAN, ELDER, CAREGIVER, FAMILY } from "../data/demo";
-import { evaluate } from "../data/store";
+import { evaluate, allowed } from "../data/store";
 import { can } from "../data/policy";
 import { todayOf, clock } from "../data/selectors";
-import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS } from "../data/everyday";
+import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling } from "../data/everyday";
 import { recordRefill, requestRefill, logDaily, setDailySharing } from "../data/everydayActions";
 import { verifyChain } from "../data/audit";
 import { addDays, ymd, toMin, minutesOfDay } from "../lib/time";
@@ -335,6 +335,14 @@ describe("guardian sees check-ins in Well-being (CC-143)", () => {
     expect(can(s, FAMILY, "read", "wellbeing")).toBe(false);
   });
 
+  it("a caregiver or family member asking to read check-ins is refused and audited", () => {
+    const s = seed();
+    for (const who of [FAMILY, CAREGIVER]) {
+      expect(allowed(s, who, "read", "wellbeing")).toBe(false);
+      expect(s.audit.at(-1)).toMatchObject({ actorId: who, action: "denied", resource: "read wellbeing" });
+    }
+  });
+
   it("only Maggie can change that choice", () => {
     const s = seed();
     setDailySharing(s, GUARDIAN, false);
@@ -343,7 +351,7 @@ describe("guardian sees check-ins in Well-being (CC-143)", () => {
   });
 
   it("2 days with no meals logged sends Sarah one gentle note", () => {
-    const s = seed();
+    const s = setTime(seed(), "12:00");
     expect(mealsGap(s)).toBe(false);
     for (const d of [1, 2]) {
       const date = ymd(addDays(clock(s), -d));
@@ -456,3 +464,119 @@ describe("check-in edge cases (CC-142 – CC-143)", () => {
     expect(mealsGap(s)).toBe(false);
   });
 });
+
+describe("Lead Architect review fixes (CC-142 – CC-143)", () => {
+  const clearDays = (s: State, days: number[]) => { for (const d of days) s.dailyLogs = s.dailyLogs.filter((l) => l.date !== ymd(addDays(clock(s), -d))); };
+  const meals = (s: State, d: number, m: State["dailyLogs"][number]["meals"]) => {
+    const date = ymd(addDays(clock(s), -d));
+    s.dailyLogs = [...s.dailyLogs.filter((l) => l.date !== date), { date, water: 2, meals: m, updatedAt: `${date}T12:00:00.000Z` }];
+  };
+
+  it("F2-1: turning check-in sharing on while all sharing is paused says it starts once she resumes", () => {
+    const s = seed();
+    setDailySharing(s, ELDER, false);
+    s.settings.sharingPaused = true;
+    setDailySharing(s, ELDER, true);
+    expect(dailyShared(s)).toBe(false);
+    expect(s.alerts.at(-1)!.detail).toBe("Maggie will share her daily check-ins with you once she resumes sharing.");
+  });
+
+  it("F2-2: a day logged while not sharing stays private after sharing is turned on", () => {
+    const s = seed();
+    s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+    setDailySharing(s, ELDER, false);
+    logDaily(s, ELDER, { feeling: "low" });
+    setDailySharing(s, ELDER, true);
+    logDaily(s, ELDER, { waterBy: 1 });
+    expect(dailyLogFor(s).private).toBe(true);
+    expect(sharedLogFor(s)).toMatchObject({ water: 0, meals: [] });
+    expect(sharedLogFor(s)!.feeling).toBeUndefined();
+    expect(sharedFeeling(s, todayOf(s))).toEqual({ state: "private" });
+    expect(sharedWeek(s)[6].feeling).toBeUndefined();
+  });
+
+  it("F2-2: a day logged while all sharing is paused stays private too", () => {
+    const s = seed();
+    s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+    s.settings.sharingPaused = true;
+    logDaily(s, ELDER, { meal: "lunch" });
+    s.settings.sharingPaused = false;
+    expect(sharedLogFor(s)!.meals).toEqual([]);
+    expect(dailyLogFor(s).meals).toEqual(["lunch"]);
+  });
+
+  it("F2-2: a day logged while shared stays visible", () => {
+    const s = seed();
+    s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+    logDaily(s, ELDER, { feeling: "great" });
+    expect(dailyLogFor(s).private).toBeUndefined();
+    expect(sharedFeeling(s, todayOf(s))).toMatchObject({ state: "shared", feeling: { key: "great" } });
+  });
+
+  it("F2-3: someone who never uses meal check-ins never gets Sarah a no-meals note", () => {
+    const s = setTime(seed(), "12:00");
+    s.dailyLogs = [];
+    expect(mealsGap(s)).toBe(false);
+    evaluate(s);
+    expect(s.alerts.some((a) => a.key?.startsWith("meals-"))).toBe(false);
+  });
+
+  it("F2-3: the no-meals note waits until 9 AM", () => {
+    const s = setTime(seed(), "00:05");
+    clearDays(s, [1, 2]);
+    meals(s, 3, ["lunch"]);
+    expect(mealsGap(s)).toBe(false);
+    setTime(s, "09:00");
+    expect(mealsGap(s)).toBe(true);
+  });
+
+  it("F2-3: a private day counts as unknown, so it never triggers the note", () => {
+    const s = setTime(seed(), "12:00");
+    clearDays(s, [1, 2]);
+    const date = ymd(addDays(clock(s), -1));
+    s.dailyLogs.push({ date, water: 0, meals: [], updatedAt: `${date}T12:00:00.000Z`, private: true });
+    expect(mealsGap(s)).toBe(false);
+  });
+
+  it("F2-9: water taps add to what's saved, so two quick taps are two glasses", () => {
+    const s = seed();
+    s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+    logDaily(s, ELDER, { waterBy: 1 });
+    logDaily(s, ELDER, { waterBy: 1 });
+    logDaily(s, ELDER, { waterBy: -5 });
+    expect(dailyLogFor(s).water).toBe(0);
+    for (let i = 0; i < 25; i++) logDaily(s, ELDER, { waterBy: 1 });
+    expect(dailyLogFor(s).water).toBe(20);
+  });
+
+  it("F2-10: an older check-in face maps onto the same six feelings, only while shared", () => {
+    const s = seed();
+    const date = ymd(addDays(clock(s), -2));
+    s.dailyLogs = s.dailyLogs.filter((l) => l.date !== date);
+    s.checkins = [...s.checkins.filter((c) => c.date !== date), { date, at: `${date}T08:30:00.000Z`, mood: "\u{1F60C}" }];
+    expect(sharedFeeling(s, date)).toMatchObject({ state: "shared", feeling: { label: "Calm" } });
+    setDailySharing(s, ELDER, false);
+    expect(sharedFeeling(s, date)).toEqual({ state: "private" });
+  });
+
+  it("the 7 PM reminder goes out at exactly 7:00 and not at 6:59", () => {
+    const s = seed();
+    s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+    setTime(s, "18:59");
+    evaluate(s);
+    expect(s.alerts.some((a) => a.key === `daily-elder-${todayOf(s)}`)).toBe(false);
+    setTime(s, "19:00");
+    evaluate(s);
+    expect(s.alerts.some((a) => a.key === `daily-elder-${todayOf(s)}`)).toBe(true);
+  });
+
+  it("nobody but Maggie and Sarah reads check-ins, paused or not", () => {
+    const s = seed();
+    for (const paused of [false, true]) {
+      s.settings.sharingPaused = paused;
+      for (const who of [FAMILY, CAREGIVER]) expect(can(s, who, "read", "wellbeing")).toBe(false);
+      expect(can(s, ELDER, "read", "wellbeing")).toBe(true);
+    }
+  });
+});
+

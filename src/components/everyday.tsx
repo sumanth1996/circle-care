@@ -66,12 +66,12 @@ export function DailyCheckins() {
       <div className="daily-row" role="group" aria-labelledby="water-h">
         <h3 id="water-h">Water</h3>
         <div className="water">
-          <button type="button" className="round" aria-label="One glass less" disabled={log.water === 0} onClick={() => actions.logDaily({ water: log.water - 1 })}><Minus size={26} /></button>
+          <button type="button" className="round" aria-label="One glass less" disabled={log.water === 0} onClick={() => actions.logDaily({ waterBy: -1 })}><Minus size={26} /></button>
           <div className="glasses" aria-live="polite" aria-label={`${log.water} of ${goal} glasses`}>
             <b>{log.water}</b> <span>of {goal} glasses</span>
             <span className="glass-dots" aria-hidden="true">{Array.from({ length: Math.max(goal, log.water) }, (_, i) => <GlassWater key={i} size={20} className={i < log.water ? "on" : ""} />)}</span>
           </div>
-          <button type="button" className="round add" aria-label="One more glass" disabled={log.water >= 20} onClick={() => { actions.logDaily({ water: log.water + 1 }); if (log.water + 1 === goal) saved("That's your goal for today"); }}><Plus size={26} /></button>
+          <button type="button" className="round add" aria-label="One more glass" disabled={log.water >= 20} onClick={() => { actions.logDaily({ waterBy: 1 }); if (log.water + 1 === goal) saved("That's your goal for today"); }}><Plus size={26} /></button>
         </div>
       </div>
 
@@ -89,7 +89,7 @@ export function DailyCheckins() {
           })}
         </div>
       </div>
-      <p className="daily-foot">{dailyShared(state) ? "Sarah can see this. Change it in My privacy." : "Only you can see this."}</p>
+      <p className="daily-foot">{!dailyShared(state) ? "Only you can see this." : log.private ? "Today stays private, because you started it while not sharing." : "Sarah can see this. Change it in My privacy."}</p>
     </section>
   );
 }

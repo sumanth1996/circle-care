@@ -1,8 +1,8 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { PackageCheck, PackagePlus, Truck, EyeOff, Utensils } from "lucide-react";
 import type { Medication, State } from "../data/types";
 import { useStore, useCan } from "../data/store";
-import { pillsLeft, daysLeft, supplyState, refillPlan, scheduledRefill, dailyWeek, feelingOf, MEALS, dailyShared } from "../data/everyday";
+import { pillsLeft, daysLeft, supplyState, refillPlan, scheduledRefill, sharedWeek, feelingOf, MEALS, dailyShared } from "../data/everyday";
 import { Face } from "./everyday";
 import { nameOf } from "../data/selectors";
 import { Sheet, useToast } from "./ui";
@@ -73,8 +73,11 @@ function BottleSheet({ med, onClose, onSave }: { med: Medication; onClose: () =>
 /* ---------------- CC-143: check-ins in Well-being ---------------- */
 
 export function DailyWeek({ state }: { state: State }) {
+  const { actions } = useStore();
   const shared = dailyShared(state);
-  const week = dailyWeek(state);
+  const week = sharedWeek(state);
+  // Opening Maggie's check-ins is written to the access log (once per 10 minutes).
+  useEffect(() => { if (shared) actions.logView("daily check-ins"); }, [actions, shared]);
   const goal = state.settings.dailyLog.waterGoal;
   if (!shared) {
     return (
@@ -93,16 +96,24 @@ export function DailyWeek({ state }: { state: State }) {
         <span className="metric-stats">{water} glasses a day on average · meals logged {fed} of 7 days</span>
       </div>
       <div className="dweek" role="table" aria-label="Feeling, water and meals for the last 7 days">
-        <span role="rowheader" />
-        {week.map((d) => <span key={d.date} className="day" role="columnheader">{new Date(`${d.date}T12:00:00`).toLocaleDateString([], { weekday: "short" })}</span>)}
-        <span className="lab" role="rowheader">Feeling</span>
-        {week.map((d) => { const f = feelingOf(d.feeling); return <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${f?.label ?? "not added"}`} title={f?.label}>{f ? <Face feeling={f.key} size={28} /> : <i className="none" />}</span>; })}
-        <span className="lab" role="rowheader">Water</span>
-        {week.map((d) => <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.water} glasses`}><span className="wbar"><i style={{ height: `${Math.min(100, (d.water / goal) * 100)}%` }} /></span><span className="num">{d.water}</span></span>)}
-        <span className="lab" role="rowheader">Meals</span>
-        {week.map((d) => <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.meals.length ? d.meals.join(", ") : "no meals logged"}`}><span className="mdots">{MEALS.map((m) => <i key={m.key} className={d.meals.includes(m.key) ? "on" : ""} />)}</span></span>)}
+        <div role="row">
+          <span role="columnheader"><span className="sr-only">Check-in</span></span>
+          {week.map((d) => <span key={d.date} className="day" role="columnheader">{new Date(`${d.date}T12:00:00`).toLocaleDateString([], { weekday: "short" })}</span>)}
+        </div>
+        <div role="row">
+          <span className="lab" role="rowheader">Feeling</span>
+          {week.map((d) => { const f = feelingOf(d.feeling); return <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${f?.label ?? "not added"}`} title={f?.label}>{f ? <Face feeling={f.key} size={28} /> : <i className="none" />}</span>; })}
+        </div>
+        <div role="row">
+          <span className="lab" role="rowheader">Water</span>
+          {week.map((d) => <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.water} ${d.water === 1 ? "glass" : "glasses"}`}><span className="wbar" aria-hidden="true"><i style={{ height: `${Math.min(100, (d.water / goal) * 100)}%` }} /></span><span className="num" aria-hidden="true">{d.water}</span></span>)}
+        </div>
+        <div role="row">
+          <span className="lab" role="rowheader">Meals</span>
+          {week.map((d) => <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.meals.length ? d.meals.join(", ") : "no meals logged"}`}><span className="mdots" aria-hidden="true">{MEALS.map((m) => <i key={m.key} className={d.meals.includes(m.key) ? "on" : ""} />)}</span></span>)}
+        </div>
       </div>
-      <p className="tiny">Maggie adds these herself when she wants to, so a blank day isn't a problem on its own. Two days with no meals logged sends you a gentle note. Water goal: {goal} glasses.</p>
+      <p className="tiny">Maggie adds these herself when she wants to, so a blank day isn't a problem on its own. Days she logged privately show as blank. If she usually logs meals and then logs none for 2 days, you get one gentle note. Water goal: {goal} glasses.</p>
     </section>
   );
 }

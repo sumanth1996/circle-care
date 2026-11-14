@@ -146,6 +146,8 @@ export interface DailyLog {
   water: number; // glasses
   meals: Meal[];
   updatedAt: string;
+  /** Logged while Maggie wasn't sharing: stays private for the whole day, even if she turns sharing on later (review F2-2). */
+  private?: boolean;
 }
 
 export interface Approval {

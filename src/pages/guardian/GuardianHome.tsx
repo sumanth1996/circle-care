@@ -8,7 +8,7 @@ import { clock, dosesFor, tasksFor, checkinToday, checkinMissed, caregiverOnShif
 import { Avatar, Ring } from "../../components/ui";
 import { fmtTime, greeting, fmtShortDay, relative } from "../../lib/time";
 import { PackageOpen } from "lucide-react";
-import { lowSupply, dailyLogFor, dailyShared, feelingOf } from "../../data/everyday";
+import { lowSupply, sharedLogFor, feelingOf } from "../../data/everyday";
 import "./guardian.css";
 
 /** CC-61 "today at a glance" dashboard. Sprint 12: low supply (CC-121). */
@@ -22,7 +22,7 @@ export default function GuardianHome() {
   const tasksDone = tasks.filter((t) => t.done).length;
   const ci = checkinToday(state);
   // CC-143: today's feeling, water and meals, only while Maggie shares them.
-  const log = dailyShared(state) ? dailyLogFor(state) : undefined;
+  const log = sharedLogFor(state);
   const feeling = feelingOf(log?.feeling);
   const cg = caregiverOnShift(state);
   const unread = alertsFor(state, "guardian").filter((a) => !a.read.includes("guardian")).length;
@@ -30,6 +30,7 @@ export default function GuardianHome() {
   const sos = activeSos(state);
 
   useEffect(() => { actions.logView("the dashboard"); }, [actions]);
+  useEffect(() => { if (log) actions.logView("daily check-ins"); }, [actions, !!log]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Health and calendar tiles (CC-84, CC-94).
   const health = (() => {
