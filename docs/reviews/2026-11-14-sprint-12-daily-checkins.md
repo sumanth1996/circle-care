@@ -49,3 +49,13 @@ F2-11, F2-12 and the demo clock confirmed. One finding:
 | # | Finding | Fix | Regression test |
 |---|---|---|---|
 | F2-13 | The general `settings` action let a guardian write `dailyLog` (and `vitals.shareWithGuardian`, already on main), turning Maggie's sharing on with no audit entry or notice | Settings logic moved to `applySettings` (shared by the store and tests). Any patch with `dailyLog`, or one that changes `vitals.shareWithGuardian`, is refused and audited for everyone; sharing changes go only through the elder-only `setDailySharing` and `setHealthSharing`. Sarah's own vitals thresholds still save. | *F2-13*; the resume-after-pause test now goes through `applySettings` |
+
+## Round 4 — CHANGES REQUESTED
+
+F2-13 confirmed. One finding:
+
+| # | Finding | Fix | Regression test |
+|---|---|---|---|
+| F2-14 | *Pause sharing* is on the elder list, but a guardian patch fell through to the general settings permission, so Sarah could undo Maggie's pause (already on main) | `applySettings` refuses and audits any `sharingPaused` change from anyone but Maggie, before the general check | *F2-13* extended |
+
+Carried forward as its own ticket: the emergency card can be written through `applySettings` by the guardian; check it against Maggie's approval of card changes.

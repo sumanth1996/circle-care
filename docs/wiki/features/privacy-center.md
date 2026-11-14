@@ -70,7 +70,7 @@
 | Pause sharing — who can change | Elder only (UI switch; guardian sees a badge) | `PrivacyCenter.tsx`, `ELDER_SETTINGS` |
 | Pause sharing — effect | Family and pro refused on everything except `sos`, `emergencyCard`, `circle`; guardian keeps access with a banner; caregiver app shows *"Maggie has paused sharing"* | `can()` |
 | Health sharing — who can change | Elder only (`setHealthSharing`) | CC-87 |
-| Check-in sharing — who can change | Elder only (`setDailySharing`). A general settings write that touches check-in or health sharing is refused and audited, whoever sends it. *Share daily check-ins with Sarah* covers feeling, water and meals; the guardian sees a *Shared* or *Private* badge. Pausing all sharing hides them too, and the badge reads *Paused*. Days she logged while not sharing stay private. | CC-143 |
+| Check-in sharing — who can change | Elder only (`setDailySharing`). A general settings write that touches check-in or health sharing is refused and audited, whoever sends it, and only Maggie can pause or resume all sharing. *Share daily check-ins with Sarah* covers feeling, water and meals; the guardian sees a *Shared* or *Private* badge. Pausing all sharing hides them too, and the badge reads *Paused*. Days she logged while not sharing stay private. | CC-143 |
 | Access log shown | Last 30 days, excluding Maggie's own actions, newest 12 | `PrivacyCenter.tsx` |
 | Integrity check | `verifyChain()` over the whole log; failure shows *"Access log may have been altered — Entry N of M doesn't match its seal."* | `audit.ts` |
 | Retention statement | *"Kept for 6 years, even after a circle is closed, as health privacy law requires."* (`RETENTION_YEARS = 6`) | `audit.ts` |

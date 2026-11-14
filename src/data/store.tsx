@@ -38,6 +38,8 @@ export function applySettings(s: State, who: string, patch: Partial<Settings>) {
   // setHealthSharing), which audit and notify. A general settings write never touches them. (Review F2-13.)
   if (patch.dailyLog !== undefined) { audit(s, who, "denied", "change check-in sharing"); return; }
   if (patch.vitals && patch.vitals.shareWithGuardian !== s.settings.vitals.shareWithGuardian) { audit(s, who, "denied", "change health sharing"); return; }
+  // Pausing all sharing is Maggie's alone, so nobody else can pause it or undo her pause. (Review F2-14.)
+  if (patch.sharingPaused !== undefined && who !== ELDER) { audit(s, who, "denied", "change paused sharing"); return; }
   const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
   if (!(elderOnly && who === ELDER) && !allowed(s, who, "write", "settings")) return;
   const wasPaused = s.settings.sharingPaused;

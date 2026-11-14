@@ -581,6 +581,14 @@ describe("Lead Architect review fixes (CC-142 – CC-143)", () => {
     applySettings(s, GUARDIAN, { vitals: { ...s.settings.vitals, shareWithGuardian: !vitalsBefore } });
     expect(s.settings.vitals.shareWithGuardian).toBe(vitalsBefore);
     expect(s.audit.at(-1)).toMatchObject({ actorId: GUARDIAN, action: "denied", resource: "change health sharing" });
+    // Nor can Sarah undo Maggie's pause, or pause for her. (Review F2-14.)
+    applySettings(s, ELDER, { sharingPaused: true });
+    applySettings(s, GUARDIAN, { sharingPaused: false });
+    expect(s.settings.sharingPaused).toBe(true);
+    expect(s.audit.at(-1)).toMatchObject({ actorId: GUARDIAN, action: "denied", resource: "change paused sharing" });
+    applySettings(s, ELDER, { sharingPaused: false });
+    applySettings(s, GUARDIAN, { sharingPaused: true });
+    expect(s.settings.sharingPaused).toBe(false);
     // Sarah's own vitals thresholds still save.
     applySettings(s, GUARDIAN, { vitals: { ...s.settings.vitals, intervalMin: 15 } });
     expect(s.settings.vitals.intervalMin).toBe(15);
