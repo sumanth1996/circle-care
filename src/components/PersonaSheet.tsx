@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { FastForward, Pill, Sun, Clock3, Siren, Lock, RotateCcw, Globe, Check, ShieldAlert, MessageSquareHeart, BarChart3, FileCheck2, Hourglass, HeartPulse, Droplets } from "lucide-react";
+import { FastForward, Pill, Sun, Clock3, Siren, Lock, RotateCcw, Globe, Check, ShieldAlert, MessageSquareHeart, BarChart3, FileCheck2, Hourglass, HeartPulse, Droplets, PackageOpen } from "lucide-react";
 import { useStore } from "../data/store";
 import { member, meId, clock } from "../data/selectors";
 import type { Persona } from "../data/types";
@@ -54,6 +54,7 @@ export default function PersonaSheet({ onClose }: { onClose: () => void }) {
           <button className="list-row has-icon" onClick={() => run("Ana's request is now 26 hours old", () => actions.simulate("old-request"))}><Hourglass size={22} color="var(--blue)" /><span className="grow">Simulate a request waiting a day</span></button>
           <button className="list-row has-icon" onClick={() => run("Maggie's watch sent a fast heart-rate reading", () => actions.simulate("heart-rate"))}><HeartPulse size={22} color="var(--red)" /><span className="grow">Simulate a sudden heart-rate change</span></button>
           <button className="list-row has-icon" onClick={() => run("Maggie's watch sent a low oxygen reading", () => actions.simulate("oxygen"))}><Droplets size={22} color="var(--blue)" /><span className="grow">Simulate a low blood-oxygen reading</span></button>
+          <button className="list-row has-icon" onClick={() => run("Metformin is down to 7 days", () => actions.simulate("low-supply"))}><PackageOpen size={22} color="#eb6834" /><span className="grow">Simulate low Metformin supply</span></button>
           <button className="list-row has-icon" onClick={() => run("James opened 9 records in a minute", () => actions.simulate("suspicious-access"))}><ShieldAlert size={22} color="var(--orange, #ff9f0a)" /><span className="grow">Simulate suspicious access</span></button>
           <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:lock")); }}><Lock size={22} color="var(--blue)" /><span className="grow">Lock the app now</span></button>
           <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:nps")); }}><MessageSquareHeart size={22} color="var(--blue)" /><span className="grow">Show the feedback survey</span></button>

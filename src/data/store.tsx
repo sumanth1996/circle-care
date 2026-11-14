@@ -6,6 +6,8 @@ import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
 import { hm, uid, ymd, toMin, minutesOfDay, fmtTime } from "../lib/time";
 import { readingsFor, detectEvents } from "../lib/health";
+import { lowSupply, autoRefillId } from "./everyday";
+import * as everyday from "./everydayActions";
 import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
 
 export const STATE_KEY = "circle-care-demo";
@@ -20,6 +22,13 @@ export function pushAlert(s: State, a: Omit<Alert, "id" | "at" | "read">, at?: s
 
 export function audit(s: State, actorId: string, action: AuditEvent["action"], resource: string) {
   append(s.audit, { id: uid("a"), at: clock(s).toISOString(), actorId, action, resource });
+}
+
+/** Permission check (CC-19) for actions that live outside the hook: refusals are audited and change nothing. */
+export function allowed(s: State, who: string, action: Action, resource: Resource) {
+  if (can(s, who, action, resource)) return true;
+  audit(s, who, "denied", `${action} ${resource}`);
+  return false;
 }
 
 /** The elder may change her own display, privacy and emergency-card preferences. */
@@ -136,6 +145,26 @@ export function evaluate(s: State) {
     }
   }
 
+  // Low medicine supply (CC-121): one alert per bottle, and an orange refill entry on the
+  // Calendar 3 days before it runs out. Asking for or picking up a refill stops repeats.
+  for (const { med, days, refillOn } of lowSupply(s)) {
+    const bottle = med.supply!.countedAt.slice(0, 16);
+    pushAlert(s, {
+      key: `supply-${med.id}-${bottle}`, to: ["guardian", "caregiver"], severity: "warning",
+      title: "You have a reminder from Circle Care",
+      detail: `${med.name}: ${days} ${days === 1 ? "day" : "days"} left. Request a refill from ${med.supply!.pharmacy ?? "the pharmacy"}.`, link: "/app/guardian/meds",
+    });
+    const id = autoRefillId(med);
+    const covered = s.appointments.some((a) => a.id === id || (a.kind === "refill" && a.status === "scheduled" && a.medIds.includes(med.id) && a.date >= today && a.date <= refillOn));
+    if (!covered) {
+      s.appointments.push({
+        id, date: refillOn, time: "10:00", durationMin: 15, kind: "refill", title: `Refill ${med.name}`,
+        provider: med.supply!.pharmacy ?? "Pharmacy", location: "Call or use the pharmacy app", medIds: [med.id],
+        prep: `About ${days} days of ${med.name} left. Added automatically 3 days before it runs out.`, status: "scheduled", createdBy: "system",
+      });
+    }
+  }
+
   // Time-bound access ends automatically (CC-25).
   for (const m of s.members) {
     if (m.expiresOn && m.status === "active" && m.expiresOn < today) {
@@ -220,7 +249,13 @@ function useStoreState(initial: State) {
         viewed.current = {};
       },
       skipAhead: (min: number) => update((s) => { s.clockOffsetMin += min; }),
-      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen") => update((s) => {
+      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen" | "low-supply") => update((s) => {
+        if (what === "low-supply") {
+          // CC-121 demo: Metformin down to 7 days (2 a day) on a fresh count.
+          const m = s.meds.find((x) => x.id === "med-metformin")!;
+          m.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 14, countedAt: clock(s).toISOString() };
+          return;
+        }
         if (what === "heart-rate" || what === "oxygen") {
           const now = clock(s);
           const latest = readingsFor(todayOf(s), now, s.settings.vitals.intervalMin, s.health.overrides).at(-1);
@@ -488,6 +523,8 @@ function useStoreState(initial: State) {
         const a = s.appointments.find((x) => x.id === id);
         if (a) { a.status = status; audit(s, actor(s), "updated", `appointment “${a.title}” (${status})`); }
       }),
+      recordRefill: (medId: string, count: number) => update((s) => everyday.recordRefill(s, actor(s), medId, count)),
+      requestRefill: (medId: string) => update((s) => everyday.requestRefill(s, actor(s), medId)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */
       setHealthSharing: (on: boolean) => update((s) => {
         if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "change health sharing"); return; }

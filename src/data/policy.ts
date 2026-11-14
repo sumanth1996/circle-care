@@ -8,7 +8,8 @@ import { todayOf } from "./selectors";
 
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
-  | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data";
+  | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
+  | "supply";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -35,6 +36,8 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   emergencyCard:   { read: ["elder", "guardian", "family", "pro"], write: ["elder"], propose: ["guardian"] },
   sos:             { read: ["elder", "guardian", "family", "pro"], write: ["elder"], respond: ["guardian", "family", "pro"] },
   data:            { export: ["elder", "guardian"], delete: ["elder", "guardian"] },
+  // Sprint 12 — Everyday Care (CC-120 – CC-121)
+  supply:          { read: ["elder", "guardian", "family", "pro"], write: ["elder", "guardian", "family", "pro@shift"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */
