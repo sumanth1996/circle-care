@@ -7,9 +7,11 @@ Runs against the production build, like e2e.py:
 Exits with 1 if any scenario fails or the page throws, so CI can gate on it.
 """
 import datetime
+import json
 import os
 import re
 import sys
+import time
 
 from playwright.sync_api import sync_playwright, expect
 
@@ -28,14 +30,14 @@ FAKE_SPEECH = """
 (() => {
   class FakeRecognition {
     constructor() { this.lang = ""; this.interimResults = false; this.continuous = false; this.onresult = null; this.onerror = null; this.onend = null; }
-    start() { setTimeout(() => { this.onresult && this.onresult({ results: [[{ transcript: %r }]] }); this.onend && this.onend(); }, 300); }
+    start() { setTimeout(() => { this.onresult && this.onresult({ results: [[{ transcript: %s }]] }); this.onend && this.onend(); }, 300); }
     stop() { this.onend && this.onend(); }
     abort() {}
   }
   Object.defineProperty(window, "SpeechRecognition", { value: FakeRecognition, configurable: true, writable: true });
   Object.defineProperty(window, "webkitSpeechRecognition", { value: FakeRecognition, configurable: true, writable: true });
 })();
-""" % SPOKEN
+""" % json.dumps(SPOKEN)
 
 
 def step(name, fn):
@@ -80,14 +82,24 @@ with sync_playwright() as p:
     recap = lambda: pg.locator("#recap")
 
     def wait_for_save(before):
-        """The app saves on a 250 ms timer, encrypted with a fresh IV each time, so the stored text always changes
-        once a save lands. Reloading sooner would throw the change away; see the review record for that gap."""
-        # Polled from here, not with wait_for_function: the app's CSP (script-src 'self') blocks the eval it needs.
-        for _ in range(50):
-            if pg.evaluate("() => localStorage.getItem('circle-care-demo')") != before:
+        """Wait until the app has saved and then stopped saving.
+
+        The demo store saves on a 250 ms timer, and a reload sooner throws the change away (backlog story CC-195).
+        Each save is encrypted with a fresh IV, so the stored text changes whenever a save lands. The 15 s tick also
+        saves, so the first change alone could be the tick's: wait until the text has stayed the same for 0.6 s,
+        longer than the timer, after it first changed.
+        Polled from here, not with wait_for_function: the app's CSP (script-src 'self') blocks the eval it needs.
+        """
+        read = lambda: pg.evaluate("() => localStorage.getItem('circle-care-demo')")
+        last, changed_at, start = before, None, time.monotonic()
+        while time.monotonic() - start < 8:
+            now = read()
+            if now != last:
+                last, changed_at = now, time.monotonic()
+            elif changed_at is not None and time.monotonic() - changed_at >= 0.6:
                 return
             pg.wait_for_timeout(100)
-        raise AssertionError("the change was not saved within 5 seconds")
+        raise AssertionError("the change was not saved within 8 seconds")
 
     def flip(name, on):
         """Turn a settings switch on or off the way a person would.
@@ -198,11 +210,15 @@ with sync_playwright() as p:
     step("CC-191 no recap card before 6 PM; after Skip to 7 PM it shows a headline and all five lines", recap_after_six)
 
     def recap_private():
+        # While Maggie shares, Her day shows her counts, so "Private" below can only come from turning sharing off.
+        signin("guardian")
+        cell = recap().locator(".recap-cell", has_text="Her day")
+        expect(cell.locator(".v")).not_to_have_text("Private")
+        expect(cell).to_contain_text("of 3 meals")
         signin("elder")
         pg.goto(B + "/app/elder/privacy")
         flip("Share daily check-ins with Sarah", False)
         signin("guardian")
-        cell = recap().locator(".recap-cell", has_text="Her day")
         expect(cell.locator(".v")).to_have_text("Private")
         expect(cell).to_contain_text("Maggie isn't sharing today")
         expect(cell).not_to_contain_text("glass")
@@ -210,6 +226,8 @@ with sync_playwright() as p:
         signin("elder")
         pg.goto(B + "/app/elder/privacy")
         flip("Share daily check-ins with Sarah", True)
+        signin("guardian")
+        expect(cell).to_contain_text("of 3 meals")
     step("CC-191 Her day shows as private, with no counts, while Maggie isn't sharing", recap_private)
 
     def recap_switch():

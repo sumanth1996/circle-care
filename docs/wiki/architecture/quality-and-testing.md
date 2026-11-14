@@ -6,6 +6,7 @@
 |---|---|---|---|
 | Unit | Vitest | The data layer is correct: permission matrix, rules engine, audit chain, SHA-256, health detection | `src/__tests__/*.test.ts` |
 | End-to-end | Python + Playwright (Chromium) | Real user journeys across the website and all three personas against the **production build** | `tests/e2e/e2e.py` |
+| Family chat and evening recap | Python + Playwright (Chromium) | Sprint 12 screens: chat, health-detail sheet, Maggie's large-text chat and voice reply, the recap card and its switch (CC-194) | `tests/e2e/everyday.py` |
 | Accessibility | axe-core injected by Playwright | No WCAG 2.1 A/AA violations on key screens | `tests/e2e/a11y.py` |
 | Type safety | TypeScript strict mode | `npm run build` fails on type errors | `tsconfig.json` |
 | Dependency audit | `npm audit` | Known vulnerable packages (0 on 2026-10-19, per the security test plan) | — |
@@ -20,6 +21,8 @@ The strategy favours **testing the rules where they live** (the data layer is pu
 | Unit tests | **217** in 5 files | All pass (`npm test`, ~1.2 s) |
 | E2E scenarios | **29** | All passing as recorded in commit `dce35c2` (re-run before each release) |
 | Accessibility | **24** screens | **0** axe-core violations (WCAG 2.1 A/AA) |
+
+Since Sprint 13 (CC-194) every pull request runs on GitHub Actions: 444 unit tests, 29 e2e scenarios, 7 chat and recap scenarios, and an axe audit of 26 screens plus the evening recap card, all green on [PR #7](https://github.com/sumanth1996/circle-care/pull/7).
 
 ### Unit tests by file
 
@@ -69,7 +72,7 @@ The e2e run uses a 390 × 844 phone viewport in the `America/New_York` time zone
 
 ### Accessibility screens (axe-core)
 
-`/`, `/how-it-works`, `/features`, `/who-its-for`, `/privacy`, `/pilot`, `/app`, `/app/elder`, `/app/elder/next`, `/app/elder/privacy`, `/app/elder/settings`, `/app/guardian`, `/app/guardian/meds`, `/app/guardian/approvals`, `/app/guardian/privacy`, `/app/guardian/notes`, `/app/guardian/settings`, `/app/guardian/circle`, `/app/guardian/digest`, `/app/guardian/health`, `/app/guardian/calendar`, `/app/caregiver`, `/app/pilot`, `/app/review` — at 1280 × 900, tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`.
+`/`, `/how-it-works`, `/features`, `/who-its-for`, `/privacy`, `/pilot`, `/app`, `/app/elder`, `/app/elder/next`, `/app/elder/privacy`, `/app/elder/settings`, `/app/guardian`, `/app/guardian/meds`, `/app/guardian/approvals`, `/app/guardian/privacy`, `/app/guardian/notes`, `/app/guardian/settings`, `/app/guardian/circle`, `/app/guardian/digest`, `/app/guardian/health`, `/app/guardian/calendar`, `/app/caregiver`, `/app/pilot`, `/app/review`, `/app/guardian/chat`, `/app/elder/chat`, and the `#recap` card after Skip to 7 PM (added in CC-194, with the clock pinned to 4:30 PM ET) — at 1280 × 900, tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`.
 
 Design-level accessibility commitments (WCAG 2.2 AA target): visible keyboard focus, labelled controls, *reduce motion* respected, 4.5:1 text contrast including on tinted backgrounds (CC-71), elder text up to ≈ 200% and touch targets ≥ 48 px.
 
@@ -86,8 +89,9 @@ npm run build
 # End-to-end and accessibility (needs Python 3 and Chromium)
 npm run build && npx vite preview --port 4173 &
 pip install playwright && python -m playwright install chromium
-python tests/e2e/e2e.py     # 29 scenarios
-python tests/e2e/a11y.py    # 24 screens
+python tests/e2e/e2e.py       # 29 scenarios
+python tests/e2e/everyday.py  # 7 chat and recap scenarios
+python tests/e2e/a11y.py      # 26 screens plus the recap card
 ```
 
 Set `CHROMIUM_PATH` to use a specific Chromium binary. Failure screenshots and the test export file go to `tests/e2e/out/` (git-ignored).
@@ -102,17 +106,13 @@ Set `CHROMIUM_PATH` to use a specific Chromium binary. Failure screenshots and t
 | E2E depends on the wall clock (e.g. Ana on shift) | Flaky results outside 08:00–14:00 or on Sundays | Inject a fixed demo clock for tests |
 | Hand-off, schedule, feed, emergency card and SOS screens not in the axe list | Unchecked accessibility | Add them to `a11y.py` |
 | No visual regression tests | Layout bugs (e.g. the digest chart in the screenshot) | Playwright screenshot comparisons |
-| No CI | Tests only run when someone remembers | See below |
+| The demo store can lose a change made in the last quarter second before the tab closes | A switch can come back after a quick reload; tests must wait for the save | Backlog story CC-195 |
 
-## CI recommendation
+## CI
 
-Add a pipeline (GitHub Actions or Replit deployments) that on every pull request:
+`.github/workflows/browser-tests.yml` (CC-194) runs on every pull request to `main`, on pushes to `main` and on demand: `npm ci`, `npm test`, `npm run build`, then `vite preview` and the three browser scripts, keeping `tests/e2e/out/` as an artifact for 7 days. Each script exits with 1 on a failure, so the check goes red.
 
-1. `npm ci`, `npm run build` (type-check + build), `npm test`.
-2. `npm audit --audit-level=high`.
-3. Start `vite preview`, run `tests/e2e/e2e.py` and `tests/e2e/a11y.py` with a fixed demo clock; upload `tests/e2e/out/` on failure.
-4. Build this wiki with `mkdocs build --strict` so broken links fail the build.
-5. Block merge on any failure.
+Still to add: `npm audit --audit-level=high`, `mkdocs build --strict` for this wiki, and branch protection so a red check blocks merging.
 
 ## Related pages
 

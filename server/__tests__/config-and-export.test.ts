@@ -17,7 +17,7 @@ const SLOW_DB = { timeout: 20_000 };
 
 const prod = { APP_ENV: "production", DATA_ENCRYPTION_KEY: k1, DATA_HMAC_KEY: k2, DATABASE_URL: "postgres://u:p@db.example.com/cc", PAYMENT_PROVIDER: "stripe", STRIPE_SECRET_KEY: "sk_live_abc" };
 
-describe("CC-183 production refuses to start without protection", SLOW_DB, () => {
+describe("CC-183 production refuses to start without protection", () => {
   it("accepts a complete production configuration", () => {
     const c = loadConfig(prod);
     expect(c.isProd).toBe(true);
@@ -51,7 +51,7 @@ describe("CC-183 production refuses to start without protection", SLOW_DB, () =>
   it("never allows a live Stripe key outside production", () => {
     expect(() => loadConfig({ APP_ENV: "staging", PAYMENT_PROVIDER: "stripe", STRIPE_SECRET_KEY: "sk_live_x", DATA_ENCRYPTION_KEY: k1, DATA_HMAC_KEY: k2 })).toThrow(/live Stripe key/);
   });
-  it("in production: Secure cookies, HSTS, and no simulated vault", async () => {
+  it("in production: Secure cookies, HSTS, and no simulated vault", SLOW_DB, async () => {
     const h = await harness();
     const app = createApp({ cfg: loadConfig(prod), db: h.db });
     const request = (await import("supertest")).default;
@@ -64,8 +64,8 @@ describe("CC-183 production refuses to start without protection", SLOW_DB, () =>
   });
 });
 
-describe("CC-184 masked audit export", SLOW_DB, () => {
-  it("writes masked files with a manifest, and nothing sensitive leaks", async () => {
+describe("CC-184 masked audit export", () => {
+  it("writes masked files with a manifest, and nothing sensitive leaks", SLOW_DB, async () => {
     const h = await harness();
     const g = await completeGuardian(h);
     const v = await g.ag.post("/vault/v1/cards", { holderName: "Sarah Lee", number: "4242424242424242", expMonth: 12, expYear: 30, cvc: "123", postalCode: "94114" });
@@ -98,7 +98,7 @@ describe("CC-184 masked audit export", SLOW_DB, () => {
     expect(ev.length).toBe(1);
     await h.db.close();
   });
-  it("can include full names for a legal hold", async () => {
+  it("can include full names for a legal hold", SLOW_DB, async () => {
     const h = await harness();
     await signedUp(h, "caregiver", { firstName: "Ana", lastName: "Reyes" });
     const out = mkdtempSync(join(tmpdir(), "cc-export-"));

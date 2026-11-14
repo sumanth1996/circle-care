@@ -47,14 +47,17 @@ with sync_playwright() as p:
         pg.close()
     # CC-194: the evening recap card on Sarah's Home, after the demo's Skip to 7 PM.
     pg = new_page()
-    pg.goto(B + "/app/guardian"); pg.wait_for_timeout(900)
-    pg.get_by_role("button", name="Demo mode", exact=False).click()
-    pg.get_by_role("button", name="Skip to 7 PM for the evening recap").click()
-    pg.goto(B + "/app/guardian"); pg.locator("#recap").wait_for(timeout=5000); pg.wait_for_timeout(600)
-    pg.add_script_tag(path=AXE)
-    r = pg.evaluate("axe.run('#recap', {runOnly: {type: 'tag', values: ['wcag2a','wcag2aa','wcag21a','wcag21aa']}}).then(r => r.violations.map(v => v.impact + ' ' + v.id + ' (' + v.nodes.length + '): ' + v.nodes.map(n => n.target.join(' ')).join(' | ')))")
-    out.append(f"/app/guardian (evening recap card): {'OK' if not r else ''}")
-    out += ["   " + x for x in r]
+    try:
+        pg.goto(B + "/app/guardian"); pg.wait_for_timeout(900)
+        pg.get_by_role("button", name="Demo mode", exact=False).click()
+        pg.get_by_role("button", name="Skip to 7 PM for the evening recap").click()
+        pg.goto(B + "/app/guardian"); pg.locator("#recap").wait_for(timeout=5000); pg.wait_for_timeout(600)
+        pg.add_script_tag(path=AXE)
+        r = pg.evaluate("axe.run('#recap', {runOnly: {type: 'tag', values: ['wcag2a','wcag2aa','wcag21a','wcag21aa']}}).then(r => r.violations.map(v => v.impact + ' ' + v.id + ' (' + v.nodes.length + '): ' + v.nodes.map(n => n.target.join(' ')).join(' | ')))")
+        out.append(f"/app/guardian (evening recap card): {'OK' if not r else ''}")
+        out += ["   " + x for x in r]
+    except Exception as e:
+        out.append(f"/app/guardian (evening recap card): ERR {str(e).splitlines()[0][:120]}")
     pg.close()
     print("\n".join(out))
     b.close()

@@ -379,4 +379,4 @@ with sync_playwright() as p:
 
 print("\n".join(results))
 print("errors:", errs[:10] if errs else "none")
-sys.exit(1 if any(r.startswith("FAIL") for r in results) else 0)
+sys.exit(1 if errs or any(r.startswith("FAIL") for r in results) else 0)

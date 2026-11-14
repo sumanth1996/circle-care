@@ -47,6 +47,7 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Serve the production build
+        id: serve
         run: |
           npx vite preview --port 4173 --strictPort > preview.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
@@ -56,12 +57,16 @@ jobs:
         run: python tests/e2e/e2e.py
 
       - name: Family chat and evening recap (everyday.py)
-        if: success() || failure()
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/everyday.py
 
       - name: Accessibility audit (a11y.py)
-        if: success() || failure()
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/a11y.py
+
+      - name: Preview server log
+        if: failure()
+        run: cat preview.log || true
 
       - name: Keep screenshots
         if: always()
