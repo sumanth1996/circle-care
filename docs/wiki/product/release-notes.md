@@ -4,6 +4,7 @@ Prototype versions are derived from the repository history (`git log`). All comm
 
 | Version | Theme | Commits | Tests at release |
 |---|---|---|---|
+| **v0.6** (in progress) | Everyday Care: refill tracker, daily check-ins, family chat, evening recap | Sprint 12, one pull request per feature | 344 unit/API after feature 1 |
 | **v0.5** | Real accounts: sign-up by role, PostgreSQL, SSN encryption, guardian payments, audit export | Sprint 11 merge (CC-172 – CC-190) | 312 unit/API · 15 account e2e · 29 demo e2e · 28 screens axe-clean |
 | **v0.4** | California localisation and product documentation | `428fa2e` (+ this wiki) | 217 unit · 29 e2e · 24 screens axe-clean |
 | **v0.3** | Health & Calendar for the guardian | `1dc1731`, `dce35c2`, `6c139a3` | 217 unit · 29 e2e · 24 screens axe-clean |
@@ -11,6 +12,22 @@ Prototype versions are derived from the repository history (`git log`). All comm
 | **v0.1** | Initial prototype | `78c70c5`, `ccb1a95`, `e5e532f` | None |
 
 ---
+
+## v0.6 — Everyday Care (Sprint 12, in progress)
+
+**Stories:** CC-120, CC-121, CC-142, CC-143, CC-164, CC-165, CC-191 · **Team:** Dev Agent (developer), QA Agent (tester), Release Agent (build & deploy), Lead Architect Agent (approver), Sumanth (PO) · **Design:** [mockups](../../design/sprint-12/README.md)
+
+### Feature 1 — Refill tracker and low-supply alerts (CC-120, CC-121)
+
+- **Pills on hand** for each medicine, counted when a bottle is opened and reduced by each dose marked taken.
+- **Days left** and the day it runs out, on Medications and the caregiver's Today.
+- **Low-supply alert** at a threshold Sarah picks (3 to 14 days), once per bottle, with a **Refill** entry added to the Calendar 3 days before it runs out.
+- **Request refill** and **New bottle** actions, logged on the medicine's history and in the access log.
+- New `supply` resource in the permission matrix: paid caregivers see and update counts only on shift.
+- Review: [approved after three rounds of changes](https://github.com/sumanth1996/circle-care/blob/main/docs/reviews/2026-11-14-sprint-12-refill-tracker.md).
+- Saved demo data moves to version 7 (older saved data is replaced with the new demo seed).
+
+Coming next in this release: daily check-ins (CC-142, CC-143), family chat (CC-164, CC-165), evening recap (CC-191).
 
 ## v0.5 — Accounts, identity & payments (Sprint 11)
 

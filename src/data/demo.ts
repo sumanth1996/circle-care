@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent } fro
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 6;
+export const STATE_VERSION = 7;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -16,29 +16,36 @@ export function seed(now = new Date()): State {
   const nowMin = minutesOfDay(now);
   const iso = (date: string, time: string) => atTime(date, time).toISOString();
 
+  // CC-120: each bottle was counted at midnight; doses taken since then come off the count.
+  // Atorvastatin starts with 6 days left so the low-supply alert and Calendar refill show (CC-121).
+  const counted = iso(today, "00:00");
   const meds: State["meds"] = [
     {
       id: "med-lisinopril", name: "Lisinopril", strength: "10 mg", dose: "1 tablet", times: ["08:00"],
       instructions: "Take with a full glass of water.", prescriber: "Dr. Hannah Brooks", purpose: "Blood pressure",
       critical: true, paused: false, pill: { color: "#F7C6A3", shape: "round" },
+      supply: { count: 12, countedAt: counted, perDose: 1, pharmacy: "Fog City Pharmacy" },
       history: [{ at: iso(ymd(addDays(now, -40)), "10:12"), by: GUARDIAN, change: "Added to schedule" }],
     },
     {
       id: "med-metformin", name: "Metformin", strength: "500 mg", dose: "1 tablet", times: ["08:00", "18:00"],
       instructions: "Take with food.", prescriber: "Dr. Hannah Brooks", purpose: "Blood sugar",
       critical: false, paused: false, pill: { color: "#FFFFFF", shape: "oval" },
+      supply: { count: 50, countedAt: counted, perDose: 1, pharmacy: "Fog City Pharmacy" },
       history: [{ at: iso(ymd(addDays(now, -40)), "10:14"), by: GUARDIAN, change: "Added to schedule" }],
     },
     {
       id: "med-vitd", name: "Vitamin D3", strength: "1,000 IU", dose: "1 softgel", times: ["12:30"],
       instructions: "Take with lunch.", prescriber: "Dr. Hannah Brooks", purpose: "Bone health",
       critical: false, paused: false, pill: { color: "#FFD966", shape: "capsule" },
+      supply: { count: 57, countedAt: counted, perDose: 1, pharmacy: "Fog City Pharmacy" },
       history: [{ at: iso(ymd(addDays(now, -3)), "16:05"), by: GUARDIAN, change: "Added to schedule (approved request from Ana)" }],
     },
     {
       id: "med-atorvastatin", name: "Atorvastatin", strength: "20 mg", dose: "1 tablet", times: ["21:00"],
       instructions: "Take at bedtime.", prescriber: "Dr. Hannah Brooks", purpose: "Cholesterol",
       critical: false, paused: false, pill: { color: "#D9E7FF", shape: "oval" },
+      supply: { count: 6, countedAt: counted, perDose: 1, pharmacy: "Fog City Pharmacy" },
       history: [{ at: iso(ymd(addDays(now, -40)), "10:15"), by: GUARDIAN, change: "Added to schedule" }],
     },
   ];
@@ -209,6 +216,7 @@ export function seed(now = new Date()): State {
       sessionLockMin: 15,
       elderLockMin: 0,
       toured: {},
+      refillAlertDays: 7,
       vitals: { intervalMin: 30, thresholds: { hrHigh: 110, hrLow: 50, hrJump: 25, spo2Low: 92, spo2Drop: 4 }, shareWithGuardian: true },
       emergencyCard: {
         allergies: "Penicillin",

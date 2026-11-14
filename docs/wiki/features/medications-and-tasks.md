@@ -7,8 +7,8 @@
 | **Feature ID / area** | F-04 · Medication schedule, dose confirmation and care tasks |
 | **Personas** | Sarah (manages the plan), Ana (gives and verifies doses, completes tasks), Maggie (takes, skips or refuses), James (family) |
 | **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> |
-| **Related stories** | CC-36 add medication · CC-37 edit / pause · CC-38 caregiver's schedule for today · CC-39 reminder · CC-40 taken / skipped / refused · CC-41 caregiver-verified doses · CC-42 missed-dose escalation timers · CC-43 high-priority medicines · CC-44 recurring care tasks · CC-45 complete tasks with notes · CC-64 change requests via approvals |
-| **Last updated** | 2026-10-19 |
+| **Related stories** | CC-36 add medication · CC-37 edit / pause · CC-38 caregiver's schedule for today · CC-39 reminder · CC-40 taken / skipped / refused · CC-41 caregiver-verified doses · CC-42 missed-dose escalation timers · CC-43 high-priority medicines · CC-44 recurring care tasks · CC-45 complete tasks with notes · CC-64 change requests via approvals · CC-120 pills on hand · CC-121 low-supply alerts and Calendar refills |
+| **Last updated** | 2026-11-14 |
 
 </div>
 
@@ -124,6 +124,28 @@ A task is **overdue** when it is not done more than 60 minutes after its time.
 | Request a change | At least one valid `HH:MM` time and a reason |
 | Add routine | Title required |
 
+### Refill tracker (CC-120 – CC-121, Sprint 12)
+
+Each medicine can carry a **supply**: the pill count from the last bottle, when it was counted, pills per dose and the pharmacy (demo: *Fog City Pharmacy*, fictional).
+
+| Rule | Detail |
+|---|---|
+| Pills on hand | Count at the last bottle, minus every dose marked **taken** since. Skipped and refused doses don't use a pill. Never below zero. |
+| Pills per dose | Read from the dose text: *2 tablets* uses 2, *1/2 tablet* or *½ tablet* uses 0.5. Changing the dose mid-bottle starts a fresh count from what is left, on the same bottle (no second alert). |
+| Days left | Today's doses that nobody has marked yet are set aside first, then whole days at the current schedule: remaining pills ÷ (times a day × pills per dose). The same bottle gives the same answer at 7 AM and at 8 PM. Paused medicines show *Paused* and never alert. |
+| Runs out | Today + days left: the last day with every dose covered. |
+| Low | Days left at or under the guardian's threshold (*Remind me when a medicine has N days left*, 3–14, default 7). |
+| Calendar refill | When low, an orange **Refill** entry is added at 10:00 three days before it runs out (today if that's already past). It isn't added if a refill for that medicine is already scheduled in the window; the screens then show that entry's date. One entry per bottle. Pausing the medicine cancels the automatic entry and resuming brings it back; an entry a person cancelled stays cancelled. |
+| Alert | One per bottle, to Sarah and the caregiver: *"Lisinopril: 6 days left. Request a refill from Fog City Pharmacy."* The lock-screen title stays *"You have a reminder from Circle Care"*. |
+| Who can act | **Request refill** and **New bottle** show only to people who may change counts, so a refused change never looks like it worked. |
+| Change requests | Approving an older change request keeps today's pill count. |
+| Request refill | Marks the bottle *requested* (who and when, on the medicine's history), stops repeats and tells the other of Sarah or the caregiver. |
+| New bottle | Enter the count (quick picks 30, 60, 90; 1–1000). Resets the count, logs *"New bottle: N on hand"* and closes the automatic Calendar entry for the old bottle. |
+
+Where it shows: a supply row on each **Medications** card (bar, days left, *runs out* date, **Request refill**, **New bottle**), **Pills on hand** on the caregiver's Today (low ones first) and a *Needs your attention* item on the guardian dashboard. Demo seed: Atorvastatin starts at 6 days, so the alert and Calendar refill show on first load; the presenter sheet's *Simulate low Metformin supply* sets Metformin to 7 days.
+
+Mockups: [Sprint 12 design](../../design/sprint-12/README.md).
+
 ## Permissions & privacy
 
 From `MATRIX` in `src/data/policy.ts`:
@@ -133,6 +155,7 @@ From `MATRIX` in `src/data/policy.ts`:
 | `meds` | elder, guardian, family, pro@shift | elder, guardian | family, pro@shift |
 | `doses` | elder, guardian, family, pro@shift | elder, guardian, family, pro@shift | — |
 | `tasks` | elder, guardian, family, pro@shift | elder, guardian, family, pro@shift | family, pro@shift |
+| `supply` | elder, guardian, family, pro@shift | elder, guardian, family, pro@shift | — |
 
 !!! note "Minimum necessary for paid caregivers"
     Off shift, Ana's Today screen shows only *"Check in to see today's care plan — To protect Maggie's privacy, caregivers see medicines and tasks only during their shifts."* Every refused action is written to the access log as `denied`.
@@ -145,6 +168,8 @@ From `MATRIX` in `src/data/policy.ts`:
 | Caregiver threshold | Caregiver | Warning (critical for high-priority) | You have a reminder from Circle Care | Lisinopril 10 mg (08:00) hasn't been confirmed yet. |
 | Guardian threshold | Guardian | Warning (critical for high-priority) | Circle Care needs your attention | Lisinopril (08:00) is 70 minutes overdue and still unconfirmed. This is a high-priority medication. |
 | Change requested | Guardian | Info | You have a new request in Circle Care | Ana asked to change Metformin. |
+| Medicine low (CC-121) | Guardian, caregiver | Warning | You have a reminder from Circle Care | Lisinopril: 6 days left. Request a refill from Fog City Pharmacy. |
+| Refill requested | Guardian or caregiver (the other one) | Info | Update from Circle Care | Sarah asked Fog City Pharmacy to refill Lisinopril. |
 | Request decided | Caregiver | Info | You have an update in Circle Care | Sarah approved your request: *title* |
 
 No lock-screen text names a medicine. Alerts are de-duplicated by key, so each dose slot escalates once per step per day.
@@ -181,7 +206,7 @@ No lock-screen text names a medicine. Alerts are de-duplicated by key, so each d
 | Type | Test |
 |---|---|
 | E2E | *Missed dose escalates to guardian, caregiver gives it, alert clears* · *CC-45 task note; CC-19 notes open once on shift* · *Guardian approves request; elder sees decision* |
-| Unit | `rules.test.ts` — *escalates a missed dose to the caregiver, then the guardian* (and the elder repeat) · *does not repeat the same alert*. `policy.test.ts` — every `meds`, `doses`, `tasks` cell for every role, on and off shift |
+| Unit | `rules.test.ts` — *escalates a missed dose to the caregiver, then the guardian* (and the elder repeat) · *does not repeat the same alert*. `policy.test.ts` — every `meds`, `doses`, `tasks`, `supply` cell for every role, on and off shift. `everyday.test.ts` — 24 tests for CC-120 and CC-121 (counts, days left morning and evening, pills per dose, threshold, one alert per bottle, Calendar entry and reuse, request and new bottle, pause, approvals keep the count, caregiver off shift refused and audited) |
 | Accessibility | `/app/guardian/meds`, `/app/caregiver`, `/app/elder/next` |
 
 ## Known limitations & production gaps
@@ -189,7 +214,7 @@ No lock-screen text names a medicine. Alerts are de-duplicated by key, so each d
 | In the prototype | In production (planned) |
 |---|---|
 | Medicines entered by hand | FHIR medication import and pharmacy refill integration ([R2](../roadmap.md)) |
-| No supply tracking | Refill tracker and low-supply alerts ([R3](../roadmap.md)) |
+| Pill counts entered by hand; refill requests are recorded, not sent | Pharmacy refill integration and barcode bottle scan ([R3](../roadmap.md)) |
 | No interaction or identity checks | Drug-interaction check and photo pill check — with clinical review ([R3](../roadmap.md)) |
 | Escalation runs only while a browser is open | Server-side scheduler and real delivery |
 | Times are local device time; no time-zone handling | Store times in the elder's time zone |

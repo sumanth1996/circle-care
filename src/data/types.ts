@@ -36,6 +36,23 @@ export interface Medication {
   paused: boolean;
   pill: { color: string; shape: "round" | "oval" | "capsule" };
   history: { at: string; by: string; change: string }[];
+  /** Pills on hand (CC-120). Counted when a bottle is opened; each taken dose since then is subtracted. */
+  supply?: MedSupply;
+}
+
+/** CC-120 – CC-121: how much of a medicine is left. */
+export interface MedSupply {
+  /** Pills (or softgels) counted at `countedAt`. */
+  count: number;
+  countedAt: string; // ISO
+  /** Pills used by one dose. */
+  perDose: number;
+  /** Which bottle this is. Only a new bottle changes it; editing the dose keeps it. */
+  bottleId?: string;
+  /** When someone asked the pharmacy for a refill for this bottle. */
+  requestedAt?: string;
+  requestedBy?: string;
+  pharmacy?: string;
 }
 
 export type DoseStatus = "taken" | "skipped" | "refused";
@@ -201,6 +218,8 @@ export interface Appointment {
   escortId?: string;
   prep?: string;
   status: "scheduled" | "done" | "cancelled";
+  /** CC-121: cancelled by Circle Care because the medicine was paused (not by a person). */
+  autoCancelled?: boolean;
   createdBy: string;
 }
 
@@ -232,6 +251,8 @@ export interface Settings {
     /** Maggie's choice to share health readings with her guardian. */
     shareWithGuardian: boolean;
   };
+  /** CC-121: warn when a medicine has this many days left (3–14). */
+  refillAlertDays: number;
   emergencyCard: {
     allergies: string;
     conditions: string;

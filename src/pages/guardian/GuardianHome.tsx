@@ -7,9 +7,11 @@ import { readingsFor, detectEvents } from "../../lib/health";
 import { clock, dosesFor, tasksFor, checkinToday, checkinMissed, caregiverOnShift, alertsFor, pendingApprovals, lateCheckins, coverageGaps, member, nameOf, feed, activeSos, northStar, checkinStreak, todayOf } from "../../data/selectors";
 import { Avatar, Ring } from "../../components/ui";
 import { fmtTime, greeting, fmtShortDay, relative } from "../../lib/time";
+import { PackageOpen } from "lucide-react";
+import { lowSupply } from "../../data/everyday";
 import "./guardian.css";
 
-/** CC-61 "today at a glance" dashboard. */
+/** CC-61 "today at a glance" dashboard. Sprint 12: low supply (CC-121). */
 export default function GuardianHome() {
   const { state, actions } = useStore();
   const now = clock(state);
@@ -43,6 +45,7 @@ export default function GuardianHome() {
   for (const s of lateCheckins(state)) attention.push({ key: `late-${s.id}`, icon: Clock3, color: "var(--elder)", title: `${nameOf(state, s.caregiverId)} hasn't arrived`, sub: `Shift started at ${fmtTime(s.start)}`, to: "/app/guardian/schedule" });
   // CC-59: hand-offs nobody has read yet.
   for (const h of state.handoffs.filter((h) => !h.acknowledgedAt && now.getTime() - new Date(h.at).getTime() < 3 * 86400000)) attention.push({ key: `ho-${h.id}`, icon: ClipboardList, color: "var(--care)", title: `${nameOf(state, h.by)}'s hand-off hasn't been read`, sub: `Sent ${relative(h.at, now)} · the next caregiver will see it when they check in`, to: "/app/guardian/feed" });
+  for (const l of lowSupply(state)) attention.push({ key: `supply-${l.med.id}`, icon: PackageOpen, color: "#eb6834", title: `${l.med.name}: ${l.days} ${l.days === 1 ? "day" : "days"} left`, sub: `${!l.calendarOn ? "Not on the Calendar yet" : `Refill on the Calendar for ${l.calendarOn === todayOf(state) ? "today" : fmtShortDay(l.calendarOn)}`} · tap to request it`, to: "/app/guardian/meds" });
   const pend = pendingApprovals(state);
   if (pend.length) attention.push({ key: "ap", icon: ClipboardList, color: "var(--guard)", title: `${pend.length} ${pend.length === 1 ? "request needs" : "requests need"} your approval`, sub: pend.map((p) => p.title).join(" · "), to: "/app/guardian/approvals" });
   const gaps = coverageGaps(state, 7);

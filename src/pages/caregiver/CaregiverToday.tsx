@@ -6,6 +6,8 @@ import { clock, dosesFor, tasksFor, todayVisit, member, nameOf, checkinToday, is
 import { Avatar, PillArt, Sheet, IconTile, taskIcons, useToast, Segmented } from "../../components/ui";
 import { fmtDay, fmtTime, toMin } from "../../lib/time";
 import type { Medication } from "../../data/types";
+import { SupplyRow } from "../../components/guardianEveryday";
+import { lowSupply } from "../../data/everyday";
 import "./caregiver.css";
 
 const stateBadge: Record<DoseSlot["state"], [string, string]> = {
@@ -111,6 +113,19 @@ export default function CaregiverToday() {
                   </div>
                 );
               })}
+            </div>
+          </section>
+
+          {/* CC-120: count pills when a new bottle arrives; low ones first. */}
+          <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>
+            <h2 className="section-title">Pills on hand{lowSupply(state).length ? ` · ${lowSupply(state).length} low` : ""}</h2>
+            <div className="grid-2">
+              {[...state.meds].filter((m) => !m.paused).sort((a, b) => Number(lowSupply(state).some((l) => l.med.id === b.id)) - Number(lowSupply(state).some((l) => l.med.id === a.id))).map((m) => (
+                <div key={m.id} className="panel stack" style={{ "--gap": "8px", padding: 16 } as React.CSSProperties}>
+                  <div className="row"><PillArt med={m} size={32} /><b className="grow">{m.name} {m.strength}</b></div>
+                  <SupplyRow med={m} state={state} />
+                </div>
+              ))}
             </div>
           </section>
 
