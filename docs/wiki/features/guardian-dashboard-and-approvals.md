@@ -39,7 +39,7 @@
 
 3. **Needs your attention** lists, in priority order: an active SOS · late or overdue doses · a missed check-in · a caregiver who hasn't arrived · hand-offs nobody has read (last 3 days) · pending approvals · uncovered shifts this week.
 4. **Latest activity** shows the six most recent events with **See all**.
-5. **Evening recap** (CC-191), from 6 PM: a headline (*"A calm day for Maggie."*, *"1 dose needs a look."*, *"Maggie didn't check in today."* or *"One refill to sort out."*) and five cells. **Medicines** gives doses given so far and names each unconfirmed one with its time, or the next dose on a calm day. **Check-in** gives the time and routines done. **Visits** lists today's caregiver visits. **Her day** shows Maggie's feeling, water and meals only while she shares them, otherwise **Private**. **Tomorrow** shows the first appointment and its prep note, else the first caregiver visit, else *Nothing booked*. Under it: a refill line for each low medicine, **Review medicines** on a day with a missed dose or refill, **See the week** (weekly digest) and a chat chip when there are new messages.
+5. **Evening recap** (CC-191), from 6 PM: a headline (*"A calm day for Maggie."*, *"1 dose needs a look."*, *"Maggie didn't check in today."* or *"One refill to sort out."*) and five cells. **Medicines** gives doses given so far, names each dose not confirmed, skipped or refused with its time and any dose due now, or gives the next dose on a calm day. **Check-in** gives the time, *Not yet* while the window is open or *Missed* after it, and routines done. **Visits** lists today's caregiver visits. **Her day** shows Maggie's feeling, water and meals only while she shares them, otherwise **Private**. **Tomorrow** shows the first appointment and its prep note, else the first caregiver visit, else *Nothing booked*. Under it: a refill line for each low medicine (with its Calendar date, or *Not on the Calendar yet*), **Review medicines** on a day with a missed dose or refill, **See the week** (weekly digest) and a chat chip when there are new messages.
 
 <figure markdown="span">
   ![Guardian home with headline 3 things need you, seven status tiles and a Needs your attention list](../assets/screens/guardian-home.webp){ loading=lazy }
@@ -102,7 +102,7 @@
 | How we reach you | Push notifications / Text messages / Email | On / On / Off | On, off |
 | | Quiet hours — *"Non-urgent alerts wait until morning"* | On, 22:00–07:00 | Any times |
 | | Emergencies break through silent mode — *"SOS and missed high-priority doses always alert you"* | On | On, off |
-| Evening recap | Update at 7 PM — *"One notification with no health details"* (skipped during quiet hours; the card shows either way) | On | On, off |
+| Evening recap | Update at 7 PM — *"One notification with no health details"* (skipped for the evening when quiet hours cover 7 PM; the card shows either way) | On | On, off |
 | Maggie's daily check-in | Window | 08:00–10:00 | Any times |
 | When a dose isn't confirmed | Alert the caregiver after | 30 minutes | 15, 30, 45 |
 | | Alert you after | 60 minutes | 45, 60, 90, 120 |

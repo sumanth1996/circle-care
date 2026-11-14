@@ -1,5 +1,5 @@
 import type { State, Medication, DailyLog, Feeling, Meal, Persona, ChatMessage, Settings } from "./types";
-import { clock, todayOf, dosesFor, tasksFor, checkinToday, member, shiftForDay } from "./selectors";
+import { clock, todayOf, dosesFor, tasksFor, checkinToday, checkinMissed, member, shiftForDay } from "./selectors";
 import { can } from "./policy";
 import { GUARDIAN, ELDER, CAREGIVER } from "./demo";
 import { ymd, addDays, toMin, minutesOfDay } from "../lib/time";
@@ -267,10 +267,15 @@ export function inQuietHours(q: Settings["quietHours"], min: number) {
   return a <= b ? min >= a && min < b : min >= a || min < b;
 }
 
-/** The recap card shows on Sarah's Home from 6 PM; its one notification goes out at 7 PM. */
+/** The recap card shows on Sarah's Home from 6 PM. Its one update is decided at 7 PM; if the app first runs later
+ *  that evening it still goes out, until 11 PM, but never when quiet hours covered 7 PM. */
 export const RECAP_CARD_FROM = "18:00";
 export const RECAP_NOTIFY_AT = "19:00";
+export const RECAP_LAST_CALL = "23:00";
 export const recapOpen = (s: State) => minutesOfDay(clock(s)) >= toMin(RECAP_CARD_FROM);
+
+export type RecapDose = { name: string; time: string };
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** One calm summary of Maggie's day for Sarah. Health details stay in the app, never on the lock screen. */
 export function recap(s: State) {
@@ -278,36 +283,47 @@ export function recap(s: State) {
   const today = todayOf(s);
   const all = dosesFor(s);
   const doses = all.filter((d) => d.state !== "upcoming");
+  const pick = (...st: string[]): RecapDose[] => doses.filter((d) => st.includes(d.state)).map((d) => ({ name: d.med.name, time: d.time }));
   const taken = doses.filter((d) => d.state === "taken").length;
-  const missed = doses.filter((d) => d.state === "late" || d.state === "escalated" || d.state === "skipped" || d.state === "refused");
+  const unconfirmed = pick("late", "escalated");
+  const skipped = pick("skipped");
+  const refused = pick("refused");
+  const due = pick("due");
+  const needLook = unconfirmed.length + skipped.length + refused.length;
   const next = all.find((d) => d.state === "upcoming");
   const tasks = tasksFor(s).filter((t) => toMin(t.task.time) <= minutesOfDay(now));
   const visits = s.visits.filter((v) => v.date === today && v.checkIn);
   const ci = checkinToday(s);
+  const ciMissed = checkinMissed(s);
   // Maggie's own feeling, water and meals: only while she shares them, and never on a day she kept private.
   const log = sharedLogFor(s);
   const tomorrow = ymd(addDays(now, 1));
   const appt = s.appointments.filter((a) => a.date === tomorrow && a.status === "scheduled").sort((a, b) => a.time.localeCompare(b.time))[0];
-  const shift = appt ? undefined : shiftForDay(s, tomorrow).filter((sh) => sh.caregiverId && sh.accepted).sort((a, b) => a.start.localeCompare(b.start))[0];
+  const shift = appt ? undefined : shiftForDay(s, tomorrow)
+    .filter((sh) => sh.caregiverId && sh.accepted && member(s, sh.caregiverId)?.status === "active")
+    .sort((a, b) => a.start.localeCompare(b.start))[0];
   const low = lowSupply(s);
-  const calm = missed.length === 0 && !!ci && low.length === 0;
+  const calm = needLook === 0 && due.length === 0 && !ciMissed && low.length === 0;
   return {
     calm,
     headline: calm
       ? "A calm day for Maggie."
-      : missed.length ? `${missed.length} ${missed.length === 1 ? "dose needs" : "doses need"} a look.`
-      : !ci ? "Maggie didn't check in today."
+      : needLook ? `${plural(needLook, "dose needs", "doses need")} a look.`
+      : due.length ? `${plural(due.length, "dose is", "doses are")} due now.`
+      : ciMissed ? "Maggie didn't check in today."
       : low.length === 1 ? "One refill to sort out." : `${low.length} refills to sort out.`,
-    doses: { taken, total: doses.length, missed: missed.map((d) => ({ name: d.med.name, time: d.time })), next: next?.time },
+    doses: { taken, total: doses.length, unconfirmed, skipped, refused, due, next: next?.time, any: all.length > 0 },
     tasks: { done: tasks.filter((t) => t.done).length, total: tasks.length },
     visits: visits.map((v) => ({ who: member(s, v.caregiverId)?.short ?? "Caregiver", from: v.checkIn!, to: v.checkOut })),
     checkin: ci?.at,
+    checkinMissed: ciMissed,
     log,
     tomorrow: appt
       ? { kind: "appointment" as const, time: appt.time, title: appt.title, note: appt.prep }
       : shift ? { kind: "visit" as const, time: shift.start, who: member(s, shift.caregiverId)?.short ?? "A caregiver", until: shift.end }
       : undefined,
-    low: low.map((l) => ({ name: l.med.name, days: l.days, on: l.calendarOn ?? l.refillOn })),
+    // Only a refill that is really on the Calendar gets a date (Review F4-4).
+    low: low.map((l) => ({ name: l.med.name, days: l.days, on: l.calendarOn })),
     newMessages: unreadChat(s, GUARDIAN),
   };
 }

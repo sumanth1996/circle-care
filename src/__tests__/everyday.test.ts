@@ -841,6 +841,14 @@ describe("evening recap (CC-191)", () => {
   /** Nothing booked tomorrow, so each test adds exactly what it needs. */
   const clearTomorrow = (s: State) => { s.appointments = s.appointments.filter((a) => a.date !== tomorrowOf(s)); return s; };
   const recapAlerts = (s: State) => s.alerts.filter((a) => a.key === `recap-${todayOf(s)}`);
+  /** Every dose up to `upTo` is logged with `status`; the check-in is done and no medicine is low. */
+  const quietDay = (s: State, upTo: string) => {
+    s.doses = s.doses.filter((d) => d.date !== todayOf(s));
+    for (const m of s.meds) for (const time of m.times) if (toMin(time) <= toMin(upTo)) s.doses.push({ id: `q-${m.id}-${time}`, medId: m.id, date: todayOf(s), time, status: "taken", by: ELDER, at: clock(s).toISOString(), verified: false });
+    for (const m of s.meds) m.supply = undefined;
+    if (!s.checkins.some((c) => c.date === todayOf(s))) s.checkins.push({ date: todayOf(s), at: clock(s).toISOString() });
+    return s;
+  };
 
   it("shows the card from 6 PM", () => {
     const s = seed();
@@ -857,7 +865,8 @@ describe("evening recap (CC-191)", () => {
     expect(r.doses.total).toBeGreaterThan(0);
     expect(r.doses.taken).toBeLessThanOrEqual(r.doses.total);
     expect(r.low.map((l) => l.name)).toContain("Atorvastatin");
-    expect(r.low.find((l) => l.name === "Atorvastatin")!.on >= todayOf(s)).toBe(true);
+    evaluate(s);
+    expect(recap(s).low.find((l) => l.name === "Atorvastatin")!.on! >= todayOf(s)).toBe(true);
     expect(r.calm).toBe(false);
     expect(r.headline.length).toBeGreaterThan(0);
   });
@@ -867,7 +876,7 @@ describe("evening recap (CC-191)", () => {
     setTime(s, "19:30");
     s.doses = s.doses.filter((d) => !(d.date === todayOf(s) && d.medId === "med-metformin" && d.time === "18:00"));
     const r = recap(s);
-    expect(r.doses.missed).toContainEqual({ name: "Metformin", time: "18:00" });
+    expect(r.doses.unconfirmed).toContainEqual({ name: "Metformin", time: "18:00" });
     expect(r.headline).toMatch(/needs? a look\.$/);
   });
 
@@ -883,7 +892,8 @@ describe("evening recap (CC-191)", () => {
       }
     }
     const r = recap(s);
-    expect(r.doses.missed).toEqual([]);
+    expect(r.doses.unconfirmed).toEqual([]);
+    expect(r.doses.due).toEqual([]);
     expect(r.doses.next).toBe("21:00");
   });
 
@@ -972,5 +982,136 @@ describe("evening recap (CC-191)", () => {
     expect(inQuietHours(q, toMin("19:00"))).toBe(false);
     expect(inQuietHours({ ...q, start: "12:00", end: "14:00" }, toMin("13:00"))).toBe(true);
     expect(inQuietHours({ ...q, on: false }, toMin("23:30"))).toBe(false);
+  });
+
+  it("F4-1: a dose due now is neither calm nor 'all confirmed', and shows on its own", () => {
+    const s = seed();
+    setTime(s, "18:10");
+    quietDay(s, "12:30");
+    let r = recap(s);
+    expect(r.doses.due).toEqual([{ name: "Metformin", time: "18:00" }]);
+    expect(r.doses.unconfirmed).toEqual([]);
+    expect(r.calm).toBe(false);
+    expect(r.headline).toBe("1 dose is due now.");
+    setTime(s, "20:50");
+    quietDay(s, "18:00");
+    r = recap(s);
+    expect(r.doses.due).toEqual([{ name: "Atorvastatin", time: "21:00" }]);
+    expect(r.doses.next).toBeUndefined();
+    expect(r.headline).toBe("1 dose is due now.");
+  });
+
+  it("calls a day calm only when nothing needs a look", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    const r = recap(s);
+    expect(r.calm).toBe(true);
+    expect(r.headline).toBe("A calm day for Maggie.");
+  });
+
+  it("F4-2: skipped and refused doses are named as such, not as unconfirmed", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    s.doses.find((d) => d.date === todayOf(s) && d.medId === "med-vitd")!.status = "skipped";
+    s.doses.find((d) => d.date === todayOf(s) && d.medId === "med-lisinopril")!.status = "refused";
+    const r = recap(s);
+    expect(r.doses.skipped).toEqual([{ name: "Vitamin D3", time: "12:30" }]);
+    expect(r.doses.refused).toEqual([{ name: "Lisinopril", time: "08:00" }]);
+    expect(r.doses.unconfirmed).toEqual([]);
+    expect(r.headline).toBe("2 doses need a look.");
+  });
+
+  it("leaves a paused medicine out", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    s.meds.find((m) => m.id === "med-vitd")!.paused = true;
+    s.doses = s.doses.filter((d) => d.medId !== "med-vitd");
+    const r = recap(s);
+    expect(r.doses.unconfirmed).toEqual([]);
+    expect(r.calm).toBe(true);
+  });
+
+  it("F4-5: says Maggie didn't check in only once her window has closed", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    s.checkins = s.checkins.filter((c) => c.date !== todayOf(s));
+    s.settings.checkinWindow = { start: "08:00", end: "20:00" };
+    expect(recap(s).checkinMissed).toBe(false);
+    expect(recap(s).calm).toBe(true);
+    s.settings.checkinWindow = { start: "08:00", end: "10:00" };
+    expect(recap(s).checkinMissed).toBe(true);
+    expect(recap(s).headline).toBe("Maggie didn't check in today.");
+  });
+
+  it("counts more than one refill", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    for (const id of ["med-metformin", "med-atorvastatin"]) {
+      s.meds.find((m) => m.id === id)!.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 6, countedAt: clock(s).toISOString() };
+    }
+    expect(recap(s).headline).toBe("2 refills to sort out.");
+  });
+
+  it("F4-4: gives a refill date only when the refill is really on the Calendar", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    const med = s.meds.find((m) => m.id === "med-metformin")!;
+    med.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 8, countedAt: clock(s).toISOString() };
+    s.appointments = s.appointments.filter((a) => !(a.kind === "refill" && a.medIds.includes(med.id)));
+    expect(recap(s).low.find((l) => l.name === "Metformin")!.on).toBeUndefined();
+    evaluate(s);
+    expect(recap(s).low.find((l) => l.name === "Metformin")!.on).toBeDefined();
+  });
+
+  it("keeps feeling, water and meals out while all sharing is paused, and still sends the update", () => {
+    const s = seed();
+    s.settings.sharingPaused = true;
+    setTime(s, "19:05");
+    expect(recap(s).log).toBeUndefined();
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(1);
+  });
+
+  it("sends nothing after 11 PM, and catches up when the app first runs later in the evening", () => {
+    const s = seed();
+    setTime(s, "23:05");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    setTime(s, "21:40");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(1);
+  });
+
+  it("F4-3: quiet hours over 7 PM skip the whole evening, even after they end", () => {
+    const s = seed();
+    s.settings.quietHours = { on: true, start: "19:00", end: "19:30" };
+    setTime(s, "19:35");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    s.settings.quietHours = { on: true, start: "19:30", end: "07:00" };
+    setTime(s, "19:10");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(1);
+  });
+
+  it("refuses James too when he tries to change Sarah's update", () => {
+    const s = seed();
+    applySettings(s, FAMILY, { recapNotify: false });
+    expect(s.settings.recapNotify).toBe(true);
+  });
+
+  it("leaves cancelled appointments and revoked caregivers out of tomorrow", () => {
+    const s = clearTomorrow(seed());
+    setTime(s, "19:00");
+    s.appointments.push({ id: "c1", date: tomorrowOf(s), time: "08:00", durationMin: 20, kind: "lab", title: "Cancelled test", provider: "Lab", location: "Lab", medIds: [], status: "cancelled", createdBy: GUARDIAN });
+    const day = addDays(clock(s), 1).getDay();
+    s.shifts = [{ id: "a", caregiverId: CAREGIVER, days: [day], start: "09:00", end: "12:00", accepted: true }];
+    s.members.find((m) => m.id === CAREGIVER)!.status = "revoked";
+    expect(recap(s).tomorrow).toBeUndefined();
   });
 });
