@@ -79,6 +79,18 @@ with sync_playwright() as p:
     log = lambda: pg.get_by_role("log", name="Messages")
     recap = lambda: pg.locator("#recap")
 
+    def flip(name, on):
+        """Turn a settings switch on or off the way a person would.
+
+        The switch is brought to the middle of the screen first: a forced click lets Playwright scroll it to the
+        bottom edge, under the fixed tab bar, and the tap then lands on the tab bar instead (first CI run).
+        Without force, Playwright also checks that the switch itself receives the tap.
+        """
+        sw = pg.get_by_role("switch", name=name)
+        sw.evaluate("e => e.scrollIntoView({ block: 'center' })")
+        sw.set_checked(on)
+        expect(sw).to_be_checked(checked=on)
+
     # ---------- Family chat ----------
     def sarah_sends():
         signin("guardian")
@@ -136,12 +148,12 @@ with sync_playwright() as p:
         pg.screenshot(path=f"{OUT}/everyday-maggie-chat.png")
         # Show chat on my home hides and shows the tile; the chat stays under Family.
         pg.goto(B + "/app/elder/settings")
-        pg.get_by_role("switch", name="Show chat on my home").uncheck(force=True)
+        flip("Show chat on my home", False)
         pg.goto(B + "/app/elder")
         expect(pg.locator("section.chat-tile")).to_have_count(0)
         expect(pg.get_by_role("link", name="Family", exact=True)).to_be_visible()
         pg.goto(B + "/app/elder/settings")
-        pg.get_by_role("switch", name="Show chat on my home").check(force=True)
+        flip("Show chat on my home", True)
         pg.goto(B + "/app/elder")
         expect(pg.locator("section.chat-tile")).to_be_visible()
     step("CC-165 Maggie's large-text chat: unread tile, voice reply read back before sending, home tile switch", maggie_chat)
@@ -178,7 +190,7 @@ with sync_playwright() as p:
     def recap_private():
         signin("elder")
         pg.goto(B + "/app/elder/privacy")
-        pg.get_by_role("switch", name="Share daily check-ins with Sarah").uncheck(force=True)
+        flip("Share daily check-ins with Sarah", False)
         signin("guardian")
         cell = recap().locator(".recap-cell", has_text="Her day")
         expect(cell.locator(".v")).to_have_text("Private")
@@ -187,21 +199,20 @@ with sync_playwright() as p:
         expect(cell).not_to_contain_text("meals")
         signin("elder")
         pg.goto(B + "/app/elder/privacy")
-        pg.get_by_role("switch", name="Share daily check-ins with Sarah").check(force=True)
+        flip("Share daily check-ins with Sarah", True)
     step("CC-191 Her day shows as private, with no counts, while Maggie isn't sharing", recap_private)
 
     def recap_switch():
         signin("guardian")
         pg.goto(B + "/app/guardian/settings")
-        sw = pg.get_by_role("switch", name="Evening recap update")
-        expect(sw).to_be_checked()
-        sw.uncheck(force=True)
+        expect(pg.get_by_role("switch", name="Evening recap update")).to_be_checked()
+        flip("Evening recap update", False)
         pg.reload()
         expect(pg.get_by_role("switch", name="Evening recap update")).not_to_be_checked()
         pg.goto(B + "/app/guardian")
         expect(recap()).to_contain_text("The 7 PM update is off")
         pg.goto(B + "/app/guardian/settings")
-        pg.get_by_role("switch", name="Evening recap update").check(force=True)
+        flip("Evening recap update", True)
     step("CC-191 turning off Update at 7 PM stays off after a reload", recap_switch)
 
     b.close()
