@@ -272,6 +272,8 @@ export interface Settings {
     /** Maggie's choice to share feeling, water and meals with her guardian. */
     shareWithGuardian: boolean;
     waterGoal: number;
+    /** When Sarah last gained access (sharing turned on or resumed). Unset means shared from the start. */
+    sharedSince?: string;
   };
   emergencyCard: {
     allergies: string;

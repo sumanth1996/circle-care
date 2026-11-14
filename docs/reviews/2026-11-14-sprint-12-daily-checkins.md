@@ -29,3 +29,15 @@ The reviewer confirmed tests and typecheck pass, writes are elder-only and refus
 | 12 | Missing tests | Added: reminder at exactly 7:00, sharing turned on while paused, private-day entries, mood fallback, caregiver and family reads while paused | 11 new tests |
 
 Not covered by unit tests: the exact on-screen wording in each sharing state (the repo has no component test library; the browser e2e suite can't run in this build container).
+
+## Round 2 — CHANGES REQUESTED
+
+Round 1 fixes confirmed (tests and typecheck pass). Two should-fix findings, both following from the round 1 privacy defaults, and three optional ones:
+
+| # | Finding | Fix | Regression test |
+|---|---|---|---|
+| F2-11 | A day Maggie never touched carries no `private` mark, so after turning sharing off and on again Sarah could get *"hasn't logged meals for 2 days"* about days she wasn't allowed to see | `settings.dailyLog.sharedSince` records when Sarah last gained access (sharing turned on, or resumed after a pause). The note needs both days to be fully shared since then. | *F2-11* (two tests) |
+| F2-12 | On a private day the dashboard tile showed *"0 glasses · 0 of 3 meals"* as fact, while Health said *"Maggie kept today private"*, which hinted she had logged something | A private day comes back marked `private` with no counts. Tile: *"Daily check-in not shared today"*. State of mind: *"Not shared today"*. The 7-day grid shows a dash and leaves private days out of the averages. | *F2-12* |
+| 3 | `display: contents` on the grid's rows can drop them from the accessibility tree in older Safari | Carried forward: newer Safari is fine; a real table layout is noted for the accessibility pass | — |
+| 4 | *Simulate 2 days with no meals* did nothing before 9 AM | The demo moves the clock to 9:00 when it's earlier | demo only |
+| 5 | Missing tests for finding 1 and on-screen wording | Finding 1 tests added; wording stays manual (see below) | — |

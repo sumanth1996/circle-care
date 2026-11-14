@@ -139,20 +139,26 @@ export const dailyShared = (s: State) => can(s, GUARDIAN, "read", "wellbeing");
 export function sharedLogFor(s: State, date = todayOf(s)): DailyLog | undefined {
   if (!dailyShared(s)) return undefined;
   const l = dailyLogFor(s, date);
-  return l.private ? { date, water: 0, meals: [], updatedAt: "" } : l;
+  return l.private ? NOT_SHARED(date) : l;
 }
 
+/** A day Sarah may not see: no counts at all, only the mark that it isn't shared. (Review F2-12.) */
+const NOT_SHARED = (date: string): DailyLog => ({ date, water: 0, meals: [], updatedAt: "", private: true });
+
 /** The guardian's seven days: private days read as blank. */
-export const sharedWeek = (s: State, endDate = todayOf(s)) => dailyWeek(s, endDate).map((l) => (l.private ? { date: l.date, water: 0, meals: [], updatedAt: "" } : l));
+export const sharedWeek = (s: State, endDate = todayOf(s)) => dailyWeek(s, endDate).map((l) => (l.private ? NOT_SHARED(l.date) : l));
 
 /**
  * CC-143: no meals logged yesterday or the day before, on days Sarah can see, from someone who does use
  * the meal check-ins (at least one meal in the five days before). Only from 9 AM, never overnight.
  * A private day counts as unknown, so it never triggers the note. (Review F2-3.)
+ * So does any day Sarah couldn't see because sharing was off or paused for part of it. (Review F2-11.)
  */
 export function mealsGap(s: State) {
   const now = clock(s);
   if (minutesOfDay(now) < toMin("09:00")) return false;
+  const since = s.settings.dailyLog.sharedSince;
+  if (since && new Date(since) > new Date(`${ymd(addDays(now, -2))}T00:00:00`)) return false;
   const day = (d: number) => dailyLogFor(s, ymd(addDays(now, -d)));
   const recent = [1, 2].map(day);
   if (recent.some((l) => l.private || l.meals.length > 0)) return false;

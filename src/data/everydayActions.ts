@@ -62,7 +62,9 @@ export function logDaily(s: State, by: string, patch: DailyPatch) {
 export function setDailySharing(s: State, by: string, on: boolean) {
   if (by !== ELDER) { audit(s, by, "denied", "change check-in sharing"); return; }
   if (s.settings.dailyLog.shareWithGuardian === on) return;
+  const was = dailyShared(s);
   s.settings.dailyLog.shareWithGuardian = on;
+  noteSharedSince(s, was);
   audit(s, ELDER, "updated", on ? "check-in sharing (on)" : "check-in sharing (off)");
   pushAlert(s, {
     to: ["guardian"], severity: "info", title: "Update from Circle Care",
@@ -70,4 +72,9 @@ export function setDailySharing(s: State, by: string, on: boolean) {
       : s.settings.sharingPaused ? "Maggie will share her daily check-ins with you once she resumes sharing."
       : "Maggie is sharing her daily check-ins with you again. Days she logged privately stay private.",
   });
+}
+
+/** CC-143: remember when Sarah gained access, so days she couldn't see never count against Maggie. */
+export function noteSharedSince(s: State, wasShared: boolean) {
+  if (!wasShared && dailyShared(s)) s.settings.dailyLog = { ...s.settings.dailyLog, sharedSince: clock(s).toISOString() };
 }

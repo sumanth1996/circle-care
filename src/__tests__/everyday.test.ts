@@ -4,7 +4,7 @@ import { evaluate, allowed } from "../data/store";
 import { can } from "../data/policy";
 import { todayOf, clock } from "../data/selectors";
 import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling } from "../data/everyday";
-import { recordRefill, requestRefill, logDaily, setDailySharing } from "../data/everydayActions";
+import { recordRefill, requestRefill, logDaily, setDailySharing, noteSharedSince } from "../data/everydayActions";
 import { verifyChain } from "../data/audit";
 import { addDays, ymd, toMin, minutesOfDay } from "../lib/time";
 import type { State } from "../data/types";
@@ -536,6 +536,48 @@ describe("Lead Architect review fixes (CC-142 – CC-143)", () => {
     const date = ymd(addDays(clock(s), -1));
     s.dailyLogs.push({ date, water: 0, meals: [], updatedAt: `${date}T12:00:00.000Z`, private: true });
     expect(mealsGap(s)).toBe(false);
+  });
+
+  it("F2-11: days Sarah couldn't see never trigger the no-meals note, even with nothing logged", () => {
+    const s = setTime(seed(), "10:00");
+    clearDays(s, [1, 2]);
+    meals(s, 3, ["lunch"]);
+    expect(mealsGap(s)).toBe(true);
+    setDailySharing(s, ELDER, false);
+    setDailySharing(s, ELDER, true);
+    expect(s.settings.dailyLog.sharedSince).toBe(clock(s).toISOString());
+    expect(mealsGap(s)).toBe(false);
+    evaluate(s);
+    expect(s.alerts.some((a) => a.key?.startsWith("meals-"))).toBe(false);
+    // Once two whole days have been shared since, the note can come again.
+    s.clockOffsetMin += 3 * 24 * 60;
+    clearDays(s, [1, 2]);
+    meals(s, 3, ["lunch"]);
+    expect(mealsGap(s)).toBe(true);
+  });
+
+  it("F2-11: resuming after a pause also counts as a fresh start", () => {
+    const s = setTime(seed(), "10:00");
+    clearDays(s, [1, 2]);
+    meals(s, 3, ["lunch"]);
+    s.settings.sharingPaused = true;
+    s.settings.sharingPaused = false;
+    noteSharedSince(s, false);
+    expect(mealsGap(s)).toBe(false);
+    const before = s.settings.dailyLog.sharedSince;
+    noteSharedSince(s, true);
+    expect(s.settings.dailyLog.sharedSince).toBe(before);
+  });
+
+  it("F2-12: Sarah sees a private day as not shared, never as zero glasses and zero meals", () => {
+    const s = seed();
+    s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+    setDailySharing(s, ELDER, false);
+    logDaily(s, ELDER, { waterBy: 3, meal: "breakfast" });
+    setDailySharing(s, ELDER, true);
+    expect(sharedLogFor(s)!.private).toBe(true);
+    expect(sharedWeek(s)[6].private).toBe(true);
+    expect(sharedWeek(s)[5].private).toBeUndefined();
   });
 
   it("F2-9: water taps add to what's saved, so two quick taps are two glasses", () => {

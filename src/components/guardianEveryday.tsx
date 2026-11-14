@@ -87,13 +87,15 @@ export function DailyWeek({ state }: { state: State }) {
       </section>
     );
   }
-  const fed = week.filter((d) => d.meals.length > 0).length;
-  const water = Math.round((week.reduce((a, d) => a + d.water, 0) / 7) * 10) / 10;
+  // Days Maggie kept private count for nothing either way, so the averages cover shared days only.
+  const seen = week.filter((d) => !d.private);
+  const fed = seen.filter((d) => d.meals.length > 0).length;
+  const water = seen.length ? Math.round((seen.reduce((a, d) => a + d.water, 0) / seen.length) * 10) / 10 : 0;
   return (
     <section id="wellbeing" className="panel stack" style={{ "--gap": "14px" } as CSSProperties} aria-labelledby="dw-h">
       <div className="metric-head">
         <h2 id="dw-h" className="hl-name"><Utensils size={18} color="#1baf7a" aria-hidden="true" /> Daily check-ins · 7 days</h2>
-        <span className="metric-stats">{water} glasses a day on average · meals logged {fed} of 7 days</span>
+        <span className="metric-stats">{seen.length ? `${water} glasses a day on average · meals logged ${fed} of ${seen.length} days` : "Not shared this week"}</span>
       </div>
       <div className="dweek" role="table" aria-label="Feeling, water and meals for the last 7 days">
         <div role="row">
@@ -102,18 +104,23 @@ export function DailyWeek({ state }: { state: State }) {
         </div>
         <div role="row">
           <span className="lab" role="rowheader">Feeling</span>
-          {week.map((d) => { const f = feelingOf(d.feeling); return <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${f?.label ?? "not added"}`} title={f?.label}>{f ? <Face feeling={f.key} size={28} /> : <i className="none" />}</span>; })}
+          {week.map((d) => { const f = feelingOf(d.feeling); if (d.private) return <NotShared key={d.date} date={d.date} />; return <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${f?.label ?? "not added"}`} title={f?.label}>{f ? <Face feeling={f.key} size={28} /> : <i className="none" />}</span>; })}
         </div>
         <div role="row">
           <span className="lab" role="rowheader">Water</span>
-          {week.map((d) => <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.water} ${d.water === 1 ? "glass" : "glasses"}`}><span className="wbar" aria-hidden="true"><i style={{ height: `${Math.min(100, (d.water / goal) * 100)}%` }} /></span><span className="num" aria-hidden="true">{d.water}</span></span>)}
+          {week.map((d) => d.private ? <NotShared key={d.date} date={d.date} /> : <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.water} ${d.water === 1 ? "glass" : "glasses"}`}><span className="wbar" aria-hidden="true"><i style={{ height: `${Math.min(100, (d.water / goal) * 100)}%` }} /></span><span className="num" aria-hidden="true">{d.water}</span></span>)}
         </div>
         <div role="row">
           <span className="lab" role="rowheader">Meals</span>
-          {week.map((d) => <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.meals.length ? d.meals.join(", ") : "no meals logged"}`}><span className="mdots" aria-hidden="true">{MEALS.map((m) => <i key={m.key} className={d.meals.includes(m.key) ? "on" : ""} />)}</span></span>)}
+          {week.map((d) => d.private ? <NotShared key={d.date} date={d.date} /> : <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.meals.length ? d.meals.join(", ") : "no meals logged"}`}><span className="mdots" aria-hidden="true">{MEALS.map((m) => <i key={m.key} className={d.meals.includes(m.key) ? "on" : ""} />)}</span></span>)}
         </div>
       </div>
-      <p className="tiny">Maggie adds these herself when she wants to, so a blank day isn't a problem on its own. Days she logged privately show as blank. If she usually logs meals and then logs none for 2 days, you get one gentle note. Water goal: {goal} glasses.</p>
+      <p className="tiny">Maggie adds these herself when she wants to, so a blank day isn't a problem on its own. Days she kept private show a dash and aren't counted. If she usually logs meals and then logs none for 2 days, you get one gentle note. Water goal: {goal} glasses.</p>
     </section>
   );
+}
+
+/** A day Maggie kept private: a dash, with no counts to read. */
+function NotShared({ date }: { date: string }) {
+  return <span className="cell" role="cell" aria-label={`${fmtShortDay(date)}: not shared`}><span className="ns" aria-hidden="true">–</span></span>;
 }

@@ -128,9 +128,9 @@ The **Summary** tab ends with a *Daily check-ins · 7 days* panel: one column pe
 |---|---|
 | Who sees it | Sarah only, and only while Maggie shares check-ins and hasn't paused all sharing (`wellbeing: read`). Family members and paid caregivers never see it. |
 | Not shared | The panel says Maggie isn't sharing them (or has paused sharing) and that her "I'm OK" check-in still reaches Sarah. The mood trend shows no faces. |
-| No meals for 2 days | When yesterday and the day before have no meals logged, she logged at least one meal in the five days before (so someone who never uses meal check-ins is never flagged), and neither day is private, Sarah gets one gentle note that day from 9 AM: *"Maggie hasn't logged meals for 2 days. A quick call might help."* Only while shared. |
+| No meals for 2 days | When yesterday and the day before have no meals logged, she logged at least one meal in the five days before (so someone who never uses meal check-ins is never flagged), neither day is private, and both days were fully shared (sharing wasn't off or paused at any point since the day before yesterday began), Sarah gets one gentle note that day from 9 AM: *"Maggie hasn't logged meals for 2 days. A quick call might help."* Only while shared. |
 | A blank day | Not a problem on its own: she adds these when she wants to. |
-| Private days | A day Maggie started while not sharing shows as blank, and State of mind says *"Maggie kept today private"*. |
+| Private days | A day Maggie started while not sharing shows a dash in the 7-day grid and isn't counted in the averages. The dashboard tile says *"Daily check-in not shared today"* and State of mind says *"Not shared today"*, with no counts. |
 | Access log | Opening the panel or the dashboard line writes *"viewed daily check-ins"* (once per 10 minutes). |
 
 ## Permissions & privacy

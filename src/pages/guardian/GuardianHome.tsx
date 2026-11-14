@@ -71,7 +71,8 @@ export default function GuardianHome() {
           <span className="row between"><span className="tile-k"><Sun size={16} /> Check-in</span>{ci ? <CheckCircle2 color="var(--green)" size={22} /> : null}</span>
           <span className="tile-v">{ci ? "I'm OK" : checkinMissed(state) ? "Missed" : "Not yet"}</span>
           <span className="tile-sub">{ci ? `at ${fmtTime(ci.at)} · ${checkinStreak(state)}-day streak` : `Window ${fmtTime(state.settings.checkinWindow.start)}–${fmtTime(state.settings.checkinWindow.end)}`}</span>
-          {log && <span className="tile-sub">{feeling ? `Feeling ${feeling.label.toLowerCase()} · ` : ""}{log.water} {log.water === 1 ? "glass" : "glasses"} · {log.meals.length} of 3 meals</span>}
+          {log && log.private && <span className="tile-sub">Daily check-in not shared today</span>}
+          {log && !log.private && <span className="tile-sub">{feeling ? `Feeling ${feeling.label.toLowerCase()} · ` : ""}{log.water} {log.water === 1 ? "glass" : "glasses"} · {log.meals.length} of 3 meals</span>}
         </Link>
         <Link to="/app/guardian/meds" className="tile-s">
           <span className="tile-k"><Pill size={16} /> Medicines</span>

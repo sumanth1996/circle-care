@@ -7,6 +7,7 @@ import { can, roleOf, type Action, type Resource } from "./policy";
 import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays } from "../lib/time";
 import { readingsFor, detectEvents } from "../lib/health";
 import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared } from "./everyday";
+import { noteSharedSince } from "./everydayActions";
 import * as everyday from "./everydayActions";
 import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
 
@@ -283,6 +284,9 @@ function useStoreState(initial: State) {
             s.dailyLogs = [...s.dailyLogs.filter((l) => l.date !== date), { ...(s.dailyLogs.find((l) => l.date === date) ?? { date, water: 0, updatedAt: at }), meals: [] }];
           }
           s.alerts = s.alerts.filter((a) => a.key !== `meals-${todayOf(s)}`);
+          // The note waits until 9 AM, so the demo moves the clock there when it's earlier.
+          const min = minutesOfDay(clock(s));
+          if (min < toMin("09:00")) s.clockOffsetMin += toMin("09:00") - min;
           return;
         }
         if (what === "nothing-logged") {
@@ -595,7 +599,9 @@ function useStoreState(initial: State) {
         const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
         if (!(elderOnly && who === ELDER) && !guard(s, "write", "settings")) return;
         const wasPaused = s.settings.sharingPaused;
+        const wasShared = dailyShared(s);
         s.settings = { ...s.settings, ...patch };
+        noteSharedSince(s, wasShared);
         if (patch.sharingPaused !== undefined && patch.sharingPaused !== wasPaused) {
           pushAlert(s, { to: ["guardian", "caregiver"], severity: "info", title: "Update from Circle Care", detail: patch.sharingPaused ? "Maggie paused sharing. Only emergency alerts are shared until she resumes." : "Maggie resumed sharing with the circle." });
           audit(s, who, "updated", patch.sharingPaused ? "sharing (paused)" : "sharing (resumed)");

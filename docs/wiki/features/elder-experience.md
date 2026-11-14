@@ -126,7 +126,7 @@ An optional card on the elder home, under the three big actions. Nothing is requ
 | Who can log | Maggie only (`wellbeing: write`). Anyone else is refused, logged as `denied`, and nothing changes. |
 | Evening reminder | At or after 7 PM, **once a day**, only if she added nothing that day: *"If you like, tap how you feel, your water and your meals. You can skip it."* |
 | Footer | *"Sarah can see this. Change it in My privacy."* while she shares, *"Only you can see this."* while she doesn't, and *"Today stays private, because you started it while not sharing."* on a private day |
-| Private days | A day she starts while not sharing (or while all sharing is paused) stays private for the whole day, even if she turns sharing on later. Sarah sees it as blank. |
+| Private days | A day she starts while not sharing (or while all sharing is paused) stays private for the whole day, even if she turns sharing on later. Sarah sees *"Not shared today"*, never zero counts. |
 | Storage | One `DailyLog` per day (`date`, `feeling`, `feelingAt`, `water`, `meals`, `updatedAt`), encrypted on the device with the rest of the state. Saved demo data moves to version 8. |
 
 Demo: the presenter sheet's *Simulate no check-ins by 7 PM* clears today's log and moves the clock to 7 PM so the reminder shows. Mockup: [daily check-ins](../../design/sprint-12/README.md).
