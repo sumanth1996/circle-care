@@ -925,6 +925,40 @@ describe("fewer false alarms from the chat health-detail check (CC-192)", () => 
     "Mom is a cancer survivor, born in July",
   ];
 
+  /** Health messages that sit next to, or look like, one of the everyday phrases. Each must still warn (Lead Architect review). */
+  const MIXED = [
+    "In the car her cancer diagnosis came up",
+    "Told Dad in the car about her diagnosis",
+    "She was diagnosed in the car on the way home",
+    "The printer has her diagnosis on it",
+    "Give her 5 ml with juice at bedtime",
+    "Give her 2 ml cbd oil at night",
+    "Take 10 ml in water twice a day",
+    "5 ml of cough syrup at night",
+    "Doctor prescribed course of prednisone",
+    "He prescribed reading glasses",
+    "The lump is a cancer, we found out in June",
+    "Is weight loss a cancer sign?",
+    "My stroke was three years ago",
+    "Possible stroke, calling 911",
+    "She has had two strokes",
+    "Her mini-stroke scared us",
+    "Recovering from stroke at Grandma's",
+    "She had 2 strokes last year",
+    "Family history test results came back positive",
+    "Walk the dog surgery is at 9",
+    "Tylenol is the best medicine she has",
+    "Laughter is the best medicine for her cough",
+    "A dose of sunshine and her dose of lisinopril",
+    "Test results from her doctor are in",
+  ];
+
+  it("still warns when a health detail sits next to an everyday phrase", () => {
+    const s = seed();
+    const missed = MIXED.filter((w) => phiHint(s, w).length === 0);
+    expect(missed).toEqual([]);
+  });
+
   it("has 40 everyday and 40 health sentences", () => {
     expect(EVERYDAY).toHaveLength(40);
     expect(HEALTH).toHaveLength(40);
