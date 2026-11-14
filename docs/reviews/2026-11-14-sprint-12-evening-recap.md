@@ -7,7 +7,7 @@
 | Developer · Tester · Build & Deploy | Dev Agent · QA Agent · Release Agent |
 | Product Owner | Sumanth (PO), go for feature 4 and Figma design approved on 2026-11-14 |
 | Date | 2026-11-14 |
-| Final verdict | Pending |
+| Final verdict | **APPROVED** (round 3) |
 
 ## What was built
 
@@ -54,3 +54,9 @@ F4-1, F4-2, F4-4, F4-5, F4-7 to F4-12 resolved; privacy and permissions still cl
 | F4-16 | optional | New headline copy and the due-dose case for Review medicines weren't in the docs | Guardian dashboard page and release notes list every headline and when Review medicines shows | Docs |
 
 Checks after round 2: `npm test` 438 passed · `npx tsc --noEmit -p .` clean · `npm run build` passed.
+
+## Round 3 — APPROVED
+
+F4-13 to F4-16 resolved; no new findings. The reviewer re-ran the edge-case probes: no update inside quiet hours (22:30 default, 21:00 with 20:00 to 07:00, re-enabled at 22:15, 19:00 to 19:30 checked at 19:35), the 19:05 update still goes out, due, unconfirmed, skipped and refused doses count correctly, paused medicines are left out, Her day stays hidden when not shared, paused or private, only Sarah can change `recapNotify`, and amber text measures 5.5 to 5.8:1.
+
+Checks: `npm test` 438 passed · `npx tsc --noEmit -p .` clean · `npm run build` passed.
