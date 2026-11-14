@@ -270,7 +270,7 @@ Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (elder, guardian an
 | `images.unsplash.com` | Stock photography on the website and avatars | Allowed by CSP `img-src`; credited in the footer; app works without it |
 | Google Fonts (Inter) | Typography | Allowed by CSP `style-src` / `font-src` |
 
-No analytics and no trackers. The only API calls go to Circle Care's own accounts server (`/api/*`, plus the simulated payment vault `/vault/v1/*` outside production; CSP `connect-src 'self'`); care data never leaves the browser.
+No analytics and no trackers. The only API calls go to Circle Care's own accounts server (`/api/*`, plus the simulated payment vault `/vault/v1/*` when the simulated payment provider is in use, never in production; CSP `connect-src 'self'`); care data never leaves the browser.
 
 ## Related pages
 
