@@ -17,7 +17,7 @@ This page describes how the Circle Care **prototype v0.5** is built. It is a sin
 | Offline / install | Web app manifest + service worker (`public/`) |
 | Charts | Dependency-free SVG components (`src/components/charts.tsx`) |
 | Speech | Web Speech API — synthesis for read-aloud; recognition only when on-device |
-| Accounts server (Sprint 11) | Express 5 + TypeScript in `server/`; PostgreSQL in staging and production, PGlite (Postgres in WASM) in development and tests |
+| Accounts server (Sprint 11) | Express 5 + TypeScript in `server/`; PostgreSQL through `DATABASE_URL`; PGlite (Postgres in WASM) when `DATABASE_URL` isn't set, in development and tests, never in production |
 | Hosting | Replit autoscale deployment (`.replit`): `npm run build`, then `npm start` serves the app and the API |
 
 ## Component diagram
@@ -56,7 +56,7 @@ flowchart TB
       IDB[("IndexedDB<br/>non-extractable key<br/>encrypted files")]
       SW["Service worker<br/>sw.js"]
     end
-    API["Accounts API server<br/>server/ · /api/*<br/>PostgreSQL"]
+    API["Accounts API server<br/>server/ · /api/*, /vault/*<br/>PostgreSQL"]
     Unsplash["images.unsplash.com<br/>(stock photos)"]
     Fonts["Google Fonts"]
 
@@ -184,7 +184,7 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 - **Actions** (`actions` in `useStoreState`) are the only way to change data. Each guarded action calls `guard(state, action, resource)` → `can()`; refusals change nothing and write a `denied` audit entry.
 - **Selectors** (`src/data/selectors.ts`) compute derived views — dose states, next item, late check-ins, coverage gaps, streaks, adherence, North Star, activity feed.
 - **Demo clock**: `clock(state)` = now + `clockOffsetMin` so presenters can skip ahead.
-- **Versioning**: `STATE_VERSION = 11`. A stored state with another version is discarded and reseeded. See [State versions](data-model.md#state-versions).
+- **Versioning**: `STATE_VERSION` (`src/data/demo.ts`) = 11. `loadState()` in `store.tsx` discards and reseeds a stored state with any other version. See [State versions](data-model.md#state-versions).
 - **Persistence**: saves are debounced by 250 ms and flushed on `pagehide`. See [Security & privacy](security-and-privacy.md#encryption-at-rest).
 - **Read logging**: `logView(resource)` writes a *viewed* entry at most once per resource every 10 minutes.
 
@@ -201,10 +201,10 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | 5 | Approval waiting > 24 h | CC-64 |
 | 6 | Suspicious access: ≥ 8 views in 5 min, ≥ 3 denials in 10 min | CC-35 |
 | 7 | Unusual vital signs (if shared) | CC-86, CC-88 |
-| 8 | Low medicine supply: one alert per bottle at `refillAlertDays`, and a refill entry on the Calendar 3 days before it runs out | CC-121 |
+| 8 | Low medicine supply: one alert per bottle to Sarah and Ana when days left reach `refillAlertDays`, until someone requests a refill; plus a refill entry on the Calendar 3 days before it runs out | CC-121 |
 | 9 | Cancel the automatic refill entry of a paused or removed medicine | CC-121 |
 | 10 | Daily check-in: one gentle reminder to Maggie at 7 PM, only if she logged nothing | CC-142 |
-| 11 | No meals logged for 2 days: one note to Sarah, only while Maggie shares check-ins | CC-143 |
+| 11 | No meals logged for 2 days: one note to Sarah, only while Maggie shares check-ins, from 9 AM, and only if she logged a meal in the 5 days before (private or unshared days never count) | CC-143 |
 | 12 | Evening recap: one update to Sarah at 7 PM (catches up until 11 PM), unless she turned it off or it falls in quiet hours | CC-191 |
 | 13 | Expire time-limited members (and take them out of the chat) | CC-25 |
 
@@ -216,12 +216,14 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 
 | Feature | Elder (Maggie) | Caregiver (Ana) | Guardian (Sarah) | Code |
 |---|---|---|---|---|
-| Refill tracker (CC-120, CC-121) | Nothing new on her screens | *Pills on hand* on Today during her shift, with New bottle and Request refill | Days left for each medicine in Medications; an alert and a Calendar refill entry when supply runs low | `SupplyRow` in `guardianEveryday.tsx` |
-| Daily check-ins (CC-142, CC-143) | *My day* card on Home: six drawn faces, water glasses, three meals, one tap each; her own sharing switch | No access | Today's check-in on Home and a 7-day view in Health, only while Maggie shares | `DailyCheckins` in `everyday.tsx`, `DailyWeek` in `guardianEveryday.tsx` |
-| Family chat (CC-164, CC-165) | Large-text chat at `/app/elder/chat` with one microphone and a read-back card before sending; a chat tile on Home she can hide | Chat tab only once added; sees messages from when she joined | Chat tab with an unread count; the header names who can read; a health-detail check offers Notes instead (CC-192) | `ChatView`, `ElderChatTile` in `chat.tsx` |
+| Refill tracker (CC-120, CC-121) | Nothing new on her screens | *Pills on hand* on Today during her shift, with New bottle and Request refill; the low-supply alert | Days left for each medicine in Medications; the low-supply alert and a Calendar refill entry | `SupplyRow` in `guardianEveryday.tsx` |
+| Daily check-ins (CC-142, CC-143) | *My day* card on Home: six drawn faces, water glasses, three meals, one tap each; her own sharing switch in My privacy (Privacy Center) | No access | Today's check-in on Home and a 7-day view in Health, only while Maggie shares | `DailyCheckins` in `everyday.tsx`, `DailyWeek` in `guardianEveryday.tsx` |
+| Family chat (CC-164, CC-165) | Large-text chat at `/app/elder/chat` with one microphone and a read-back card before sending; a chat tile on Home she can hide | Chat tab only once added; sees messages from when she joined | Chat tab with an unread count; the header names who can read | `ChatView`, `ElderChatTile` in `chat.tsx` |
 | Evening recap (CC-191) | Nothing changes; her check-in appears only while she shares | No access | *Evening recap* card on Home from 6 PM; one 7 PM update that says only "Update from Circle Care", which she can turn off in Settings | `EveningRecap` in `guardianEveryday.tsx`, `recap()` in `everyday.ts` |
 
-Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (paid caregivers only on shift), `wellbeing` (elder writes; guardian reads only while Maggie shares and sharing isn't paused) and `chat` (paid caregivers only once added; elder and guardian can add them). Lock screens never show medicine names or check-in details.
+Every chat message, typed or spoken, from anyone, passes a health-detail check that offers Notes instead (`phiHint`, CC-164; fewer false alarms since CC-192).
+
+Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (elder, guardian and family; paid caregivers only on shift), `wellbeing` (elder writes; guardian reads only while Maggie shares and sharing isn't paused) and `chat` (elder, guardian and family; paid caregivers only once added, and elder and guardian can add them; while Maggie pauses sharing, only she and Sarah can use it). Lock screens never show medicine names or check-in details.
 
 ## Cross-cutting UI
 
@@ -239,7 +241,7 @@ Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (paid caregivers on
 | Item | Detail |
 |---|---|
 | Manifest | `public/manifest.webmanifest` — name *Circle Care*, `start_url: /#/app`, `display: standalone`, background/theme `#FBFBFD`, 192/512 PNG icons (512 also maskable) and an SVG icon |
-| Service worker | `public/sw.js`, cache `circle-care-v1`. Pre-caches the app shell (`/`, `/index.html`, manifest, icons). **Network-first** for same-origin GET requests, falling back to cache and then to `/index.html` |
+| Service worker | `public/sw.js`, cache `circle-care-v2`. Pre-caches the app shell (`/`, `/index.html`, manifest, icons). **Network-first** for same-origin GET requests, falling back to cache and then to `/index.html`. `/api/*` and `/vault/*` are never cached (CC-181) |
 | Registration | `src/main.tsx`, production builds only |
 | Install | Safari → *Share → Add to Home Screen*; Chrome → *Install app* / *Add to Home Screen* |
 
@@ -247,8 +249,8 @@ Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (paid caregivers on
 
 | Command | What it does |
 |---|---|
-| `npm install` | Install dependencies (Node 20+) |
-| `npm run dev` | Vite dev server on port **5000**, all hosts (Replit preview); `/api` and `/vault` are served in-process by the accounts server on PGlite |
+| `npm install` | Install dependencies (Node 20.11+) |
+| `npm run dev` | Vite dev server on port **5000**, all hosts (Replit preview); `/api` and `/vault` are served in-process by the accounts server (PGlite unless `DATABASE_URL` is set) |
 | `npm test` | Vitest unit tests (app and server) |
 | `npm run typecheck` | Type-check the app and the server |
 | `npm run build` | Type-check the app and the server, then `vite build` into `dist/` with the CSP meta tag injected |
@@ -268,7 +270,7 @@ Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (paid caregivers on
 | `images.unsplash.com` | Stock photography on the website and avatars | Allowed by CSP `img-src`; credited in the footer; app works without it |
 | Google Fonts (Inter) | Typography | Allowed by CSP `style-src` / `font-src` |
 
-No analytics and no trackers. The only API calls go to Circle Care's own accounts server (`/api/*`, CSP `connect-src 'self'`); care data never leaves the browser.
+No analytics and no trackers. The only API calls go to Circle Care's own accounts server (`/api/*`, plus the simulated payment vault `/vault/v1/*` outside production; CSP `connect-src 'self'`); care data never leaves the browser.
 
 ## Related pages
 

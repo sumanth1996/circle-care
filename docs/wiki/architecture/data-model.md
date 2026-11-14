@@ -145,7 +145,7 @@ Maggie's optional one-tap check-in for one day. Sarah sees it only while Maggie 
 
 ### Chat and ChatMessage (CC-164, CC-165)
 
-The circle's one private family conversation. Elder, guardian and family are in it; a paid caregiver only once Maggie or Sarah adds them.
+The circle's one private family conversation. Elder, guardian and family are in it (family not while Maggie pauses sharing); a paid caregiver only once Maggie or Sarah adds them, and not while sharing is paused.
 
 | Entity | Field | Notes |
 |---|---|---|
@@ -185,7 +185,7 @@ The circle's one private family conversation. Elder, guardian and family are in 
 | `medIds` | medication ids |
 | `escortId?` | member id |
 | `status` | scheduled · done · cancelled |
-| `autoCancelled?` | boolean: cancelled by Circle Care because the medicine was paused, not by a person (CC-121) |
+| `autoCancelled?` | boolean: cancelled by Circle Care because the medicine was paused or removed, not by a person (CC-121) |
 | `createdBy` | member id, or `system` for automatic refill entries (`appt-auto-…`, CC-121) |
 
 ### AuditEvent
@@ -239,7 +239,7 @@ The circle's one private family conversation. Elder, guardian and family are in 
 
 | Field | Notes |
 |---|---|
-| `version` | `STATE_VERSION` = 11 (see below) |
+| `version` | `STATE_VERSION` = 11, defined in `src/data/demo.ts` (see below) |
 | `persona` | Current app persona or null |
 | `signedIn` | Per persona |
 | `clockOffsetMin` | Demo clock offset |
@@ -251,7 +251,7 @@ The circle's one private family conversation. Elder, guardian and family are in 
 
 ### State versions
 
-A saved state with a different `version` is discarded and the demo is reseeded (`src/data/store.tsx`).
+A saved state with a different `version` is discarded and the demo is reseeded by `loadState()` in `src/data/store.tsx`. The constant lives in `src/data/demo.ts`.
 
 | Version | Added in | What changed |
 |---|---|---|
@@ -277,7 +277,7 @@ A saved state with a different `version` is discarded and the demo is reseeded (
 
 Vital-sign readings, activity, sleep, weight series, dose states, coverage gaps, streaks, adherence, North Star and the activity feed are all **derived** on demand (`src/lib/health.ts`, `src/data/selectors.ts`).
 
-Since Sprint 12, `src/data/everyday.ts` also derives pills left, days left and the refill date (`pillsLeft`, `daysLeft`, `refillPlan`, `lowSupply`), Sarah's 7-day check-in view (`sharedWeek`), the no-meals note (`mealsGap`), who can read the chat and unread counts (`chatAudience`, `unreadChat`), the chat's health-detail check (`phiHint`, CC-192) and the evening recap (`recap`). Changes go through `src/data/everydayActions.ts`.
+Since Sprint 12, `src/data/everyday.ts` also derives pills left, days left and the refill date (`pillsLeft`, `daysLeft`, `refillPlan`, `lowSupply`), Sarah's 7-day check-in view (`sharedWeek`), the no-meals note (`mealsGap`), who can read the chat (`chatMembers`), who is notified of a new message (`chatAudience`), unread counts (`unreadChat`), the chat's health-detail check (`phiHint`, CC-164, tuned in CC-192) and the evening recap (`recap`). Changes go through `src/data/everydayActions.ts`.
 
 ## Server database (PostgreSQL) — accounts, identity & payments {#server-database}
 
