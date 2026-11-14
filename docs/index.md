@@ -129,7 +129,7 @@ Unfamiliar terms (care circle, POA, PHI, escalation chain, hand-off…) are defi
 
 | Link | Where |
 |---|---|
-| Live demo | Your Replit URL (published as a static deployment from this repo; see [System overview](wiki/architecture/system-overview.md#build-and-deploy)) |
+| Live demo | Your Replit URL (published as an autoscale deployment (staging) from this repo; see [System overview](wiki/architecture/system-overview.md#build-and-deploy)) |
 | Source code | [github.com/sumanth1996/circle-care](https://github.com/sumanth1996/circle-care) |
 | Roadmap, epics and user stories | Notion — *Circle Care — Product Hub* (private workspace; story IDs `CC-n` match this wiki) |
 | Demo MFA code | `482913` |

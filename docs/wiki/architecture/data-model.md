@@ -16,6 +16,9 @@ erDiagram
     STATE ||--o{ HANDOFF : handoffs
     STATE ||--o{ SOS_EVENT : sos
     STATE ||--o{ CHECKIN : checkins
+    STATE ||--o{ DAILY_LOG : dailyLogs
+    STATE ||--|| CHAT : chat
+    CHAT ||--o{ CHAT_MESSAGE : messages
     STATE ||--o{ APPROVAL : approvals
     STATE ||--o{ CARE_NOTE : notes
     STATE ||--o{ CARE_DOC : docs
@@ -24,6 +27,8 @@ erDiagram
     STATE ||--o{ ALERT : alerts
     STATE ||--|| SETTINGS : settings
     MEDICATION ||--o{ DOSE_LOG : "medId"
+    MEDICATION ||--o| MED_SUPPLY : supply
+    MEMBER ||--o{ CHAT_MESSAGE : "by"
     CARE_TASK ||--o{ TASK_LOG : "taskId"
     MEMBER ||--o{ SHIFT : "caregiverId"
     SHIFT ||--o{ VISIT : "shiftId"
@@ -43,6 +48,8 @@ erDiagram
 | `Role` | `elder`, `guardian`, `family`, `pro` (circle roles); plus `reviewer` for the actor `trust-safety` in policy |
 | `DoseStatus` | `taken`, `skipped`, `refused` |
 | `AppointmentKind` | `doctor`, `lab`, `refill`, `review` |
+| `Feeling` | `great`, `good`, `calm`, `okay`, `uneasy`, `low` (drawn faces, no emoji; CC-142) |
+| `Meal` | `breakfast`, `lunch`, `dinner` (CC-142) |
 | `AuditEvent.action` | `viewed`, `created`, `updated`, `removed`, `approved`, `declined`, `exported`, `signed in`, `signed out`, `denied` |
 | `Alert.severity` | `info`, `warning`, `critical` |
 
@@ -75,6 +82,20 @@ erDiagram
 | `paused` | boolean | Excluded from today's doses |
 | `pill` | `{ color, shape: round · oval · capsule }` | Drawn by `PillArt` |
 | `history` | `{ at, by, change }[]` | Change log |
+| `supply?` | `MedSupply` | Pills on hand (CC-120) |
+
+### MedSupply (CC-120, CC-121)
+
+Pills on hand for one bottle. The count is taken when a bottle is opened; every dose marked taken since then is subtracted, so days left are always computed, never stored.
+
+| Field | Type | Notes |
+|---|---|---|
+| `count` | number | Pills (or softgels) counted at `countedAt` |
+| `countedAt` | ISO time | When the bottle was counted |
+| `perDose` | number | Pills one dose uses, read from the dose text ("2 tablets", "1/2 tablet") |
+| `bottleId?` | string | Only a new bottle changes it; editing the dose keeps it |
+| `requestedAt?`, `requestedBy?` | ISO time, member id | When someone asked the pharmacy for a refill; stops repeat alerts |
+| `pharmacy?` | string | e.g. *Fog City Pharmacy* |
 
 ### DoseLog
 
@@ -109,6 +130,32 @@ erDiagram
 | `SosEvent` | `id`, `startedAt`, `status` (active · acknowledged · resolved), `step` (index into escalation chain), `responderId?`, `acknowledgedAt?`, `resolvedAt?`, `outcome?`, `via` (app · sms-fallback) |
 | `Checkin` | `date`, `at`, `mood?` (emoji) |
 
+### DailyLog (CC-142, CC-143)
+
+Maggie's optional one-tap check-in for one day. Sarah sees it only while Maggie shares it (`settings.dailyLog.shareWithGuardian`, resource `wellbeing`).
+
+| Field | Type | Notes |
+|---|---|---|
+| `date` | `YYYY-MM-DD` | One log per day |
+| `feeling?`, `feelingAt?` | `Feeling`, ISO time | |
+| `water` | number | Glasses |
+| `meals` | `Meal[]` | |
+| `updatedAt` | ISO time | |
+| `private?` | boolean | Logged while Maggie wasn't sharing: the whole day stays private, even if she turns sharing on later |
+
+### Chat and ChatMessage (CC-164, CC-165)
+
+The circle's one private family conversation. Elder, guardian and family are in it (family not while Maggie pauses sharing); a paid caregiver only once Maggie or Sarah adds them, and not while sharing is paused.
+
+| Entity | Field | Notes |
+|---|---|---|
+| `Chat` | `messages` | `ChatMessage[]` |
+| | `pros` | Member ids of the paid caregivers who were added |
+| | `readAt` | Member id → when they last read the chat (unread counts) |
+| | `joinedAt` | Member id → when an added caregiver joined; they see messages from then on, not the history |
+| `ChatMessage` | `id`, `by`, `at`, `text` | `text` is at most 1000 characters (`CHAT_MAX`); longer messages are refused, not cut |
+| | `via?` | `voice`: Maggie spoke it and read it back before sending |
+
 ### Approval
 
 | Field | Type | Notes |
@@ -138,7 +185,8 @@ erDiagram
 | `medIds` | medication ids |
 | `escortId?` | member id |
 | `status` | scheduled · done · cancelled |
-| `createdBy` | member id |
+| `autoCancelled?` | boolean: cancelled by Circle Care because the medicine was paused or removed, not by a person (CC-121) |
+| `createdBy` | member id, or `system` for automatic refill entries (`appt-auto-…`, CC-121) |
 
 ### AuditEvent
 
@@ -181,19 +229,38 @@ erDiagram
 | `toured` | `{}` | CC-75 |
 | `setupCallRequested?` | ISO | CC-75 |
 | `vitals` | `{ intervalMin: 30, thresholds: { hrHigh 110, hrLow 50, hrJump 25, spo2Low 92, spo2Drop 4 }, shareWithGuardian: true }` | CC-84 – 88 |
+| `refillAlertDays` | 7 | Warn when a medicine has this many days left, 3 to 14 (CC-121) |
+| `dailyLog` | `{ shareWithGuardian: true, waterGoal: 6, sharedSince? }` | Maggie's check-in sharing; `sharedSince` is when Sarah last gained access (CC-142, CC-143) |
+| `recapNotify` | true | Sarah's one 7 PM evening-recap update; the card on Home shows from 6 PM either way (CC-191) |
+| `elderChatOnHome` | true | Maggie can hide the family chat tile from her home; the chat stays under Family (CC-165) |
 | `emergencyCard` | allergies, conditions, directives, bloodType, approvedByElder, approvedAt | CC-53 |
 
 ### State (root)
 
 | Field | Notes |
 |---|---|
-| `version` | `STATE_VERSION` = 6 |
+| `version` | `STATE_VERSION` = 11, defined in `src/data/demo.ts` (see below) |
 | `persona` | Current app persona or null |
 | `signedIn` | Per persona |
 | `clockOffsetMin` | Demo clock offset |
 | `elderId` | `m-maggie` |
 | `health` | `{ heightCm: 163, birthYear: 1946, device: "Maggie's watch", overrides[] }` |
+| `dailyLogs` | `DailyLog[]` (CC-142) |
+| `chat` | `Chat` (CC-164) |
 | Collections | As above |
+
+### State versions
+
+A saved state with a different `version` is discarded and the demo is reseeded by `loadState()` in `src/data/store.tsx`. The constant lives in `src/data/demo.ts`.
+
+| Version | Added in | What changed |
+|---|---|---|
+| 6 | Oct 19, 2026 | San Francisco example places |
+| 7 | Sprint 12, refill tracker (CC-120, CC-121) | `Medication.supply`, `settings.refillAlertDays`, automatic refill appointments |
+| 8 | Sprint 12, daily check-ins (CC-142, CC-143) | `dailyLogs`, `settings.dailyLog` |
+| 9 | Sprint 12, family chat (CC-164, CC-165) | `chat`, `settings.elderChatOnHome` |
+| 10 | Sprint 12, family chat review | `chat.joinedAt` for added caregivers |
+| 11 | Sprint 12, evening recap (CC-191) | `settings.recapNotify` |
 
 ## Data outside the main state
 
@@ -209,6 +276,8 @@ erDiagram
 ## Computed, not stored
 
 Vital-sign readings, activity, sleep, weight series, dose states, coverage gaps, streaks, adherence, North Star and the activity feed are all **derived** on demand (`src/lib/health.ts`, `src/data/selectors.ts`).
+
+Since Sprint 12, `src/data/everyday.ts` also derives pills left, days left and the refill date (`pillsLeft`, `daysLeft`, `refillPlan`, `lowSupply`), Sarah's 7-day check-in view (`sharedWeek`), the no-meals note (`mealsGap`), who can read the chat (`chatMembers`), who is notified of a new message (`chatAudience`), unread counts (`unreadChat`), the chat's health-detail check (`phiHint`, CC-164, tuned in CC-192) and the evening recap (`recap`). Changes go through `src/data/everydayActions.ts`.
 
 ## Server database (PostgreSQL) — accounts, identity & payments {#server-database}
 
