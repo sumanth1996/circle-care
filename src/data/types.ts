@@ -294,6 +294,8 @@ export interface Settings {
     /** When Sarah last gained access (sharing turned on or resumed). Unset means shared from the start. */
     sharedSince?: string;
   };
+  /** CC-191: Sarah's one evening-recap notification at 7 PM. The card on Home shows from 6 PM either way. */
+  recapNotify: boolean;
   /** CC-165: Maggie can hide the family chat from her home screen. It stays under Family. */
   elderChatOnHome: boolean;
   emergencyCard: {

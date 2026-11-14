@@ -57,6 +57,7 @@
 | 13 | Unusual health reading | Detection rules, only if Maggie shares | Guardian | Warning (high/low) · Info (sudden) | Circle Care health notice |
 | 14 | Access expired | `expiresOn` < today | — (audit entry only) | — | — |
 | 15 | MFA lockout | 5 wrong codes | The person | Warning | Circle Care security notice |
+| 16 | Evening recap (CC-191) | Once a day from 19:00 to 23:00, unless Sarah turned it off or quiet hours cover the time. In-app text: *"Your evening recap is ready."* | Guardian | Info | Update from Circle Care |
 
 \* Critical when the medicine is high-priority.
 

@@ -6,7 +6,7 @@ import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
 import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays } from "../lib/time";
 import { readingsFor, detectEvents } from "../lib/health";
-import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared } from "./everyday";
+import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared, inQuietHours, RECAP_NOTIFY_AT } from "./everyday";
 import { noteSharedSince } from "./everydayActions";
 import * as everyday from "./everydayActions";
 import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
@@ -212,6 +212,12 @@ export function evaluate(s: State) {
   // No meals logged for two days (CC-143): a gentle note to Sarah, only while Maggie shares check-ins.
   if (dailyShared(s) && mealsGap(s)) {
     pushAlert(s, { key: `meals-${today}`, to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: "Maggie hasn't logged meals for 2 days. A quick call might help.", link: "/app/guardian/health#wellbeing" });
+  }
+
+  // Evening recap (CC-191): one notification for Sarah at 7 PM, with no health details on the lock screen.
+  // Skipped when she turned it off or her quiet hours cover the time; the card on Home shows either way.
+  if (s.settings.recapNotify !== false && nowMin >= toMin(RECAP_NOTIFY_AT) && nowMin < toMin("23:00") && !inQuietHours(s.settings.quietHours, nowMin)) {
+    pushAlert(s, { key: `recap-${today}`, to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: "Your evening recap is ready.", link: "/app/guardian#recap" });
   }
 
   // Time-bound access ends automatically (CC-25).

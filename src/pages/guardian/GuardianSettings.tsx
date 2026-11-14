@@ -4,7 +4,7 @@ import { Toggle, Sheet, useToast } from "../../components/ui";
 import { member, nameOf } from "../../data/selectors";
 import { fmtShortDay } from "../../lib/time";
 
-/** CC-63 alert channels & quiet hours · CC-52 check-in window · CC-42 dose escalation timers · CC-14 session lock · CC-50 critical alerts. */
+/** CC-191 evening recap · CC-63 alert channels & quiet hours · CC-52 check-in window · CC-42 dose escalation timers · CC-14 session lock · CC-50 critical alerts. */
 export default function GuardianSettings() {
   const { state, actions } = useStore();
   const s = state.settings;
@@ -32,6 +32,14 @@ export default function GuardianSettings() {
           )}
           <label className="list-row" style={row}><span className="grow">Emergencies break through silent mode<span className="list-sub" style={{ display: "block" }}>SOS and missed high-priority doses always alert you</span></span><Toggle checked={s.criticalBypass} onChange={(v) => actions.settings({ criticalBypass: v })} label="Critical alerts" /></label>
         </div>
+      </section>
+
+      <section id="recap" className="stack" style={{ "--gap": "8px" } as React.CSSProperties}>
+        <h2 className="section-title">Evening recap</h2>
+        <div className="list">
+          <label className="list-row" style={row}><span className="grow">Update at 7 PM<span className="list-sub" style={{ display: "block" }}>One notification with no health details</span></span><Toggle checked={s.recapNotify !== false} onChange={(v) => actions.settings({ recapNotify: v })} label="Evening recap update" /></label>
+        </div>
+        <p className="tiny">The recap card shows on Home from 6 PM either way. During quiet hours the update is skipped.</p>
       </section>
 
       <section className="stack" style={{ "--gap": "8px" } as React.CSSProperties}>

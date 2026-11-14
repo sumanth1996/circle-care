@@ -8,7 +8,8 @@ import { clock, dosesFor, tasksFor, checkinToday, checkinMissed, caregiverOnShif
 import { Avatar, Ring } from "../../components/ui";
 import { fmtTime, greeting, fmtShortDay, relative } from "../../lib/time";
 import { PackageOpen } from "lucide-react";
-import { lowSupply, sharedLogFor, feelingOf } from "../../data/everyday";
+import { lowSupply, sharedLogFor, feelingOf, recapOpen } from "../../data/everyday";
+import { EveningRecap } from "../../components/guardianEveryday";
 import "./guardian.css";
 
 /** CC-61 "today at a glance" dashboard. Sprint 12: low supply (CC-121). */
@@ -109,6 +110,8 @@ export default function GuardianHome() {
           <span className="tile-sub">Notifications never show health details</span>
         </Link>
       </div>
+
+      {recapOpen(state) && <EveningRecap state={state} />}
 
       {attention.length > 0 && (
         <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>
