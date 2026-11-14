@@ -1,8 +1,8 @@
-import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent } from "./types";
+import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, DailyLog, Feeling, Meal } from "./types";
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 7;
+export const STATE_VERSION = 8;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -81,6 +81,20 @@ export function seed(now = new Date()): State {
     checkins.push({ date: ymd(addDays(now, -d)), at: iso(ymd(addDays(now, -d)), "08:3" + (d % 10)), mood: ["😊", "🙂", "😊", "😌"][d % 4] });
   }
   if (nowMin > toMin("08:40")) checkins.push({ date: today, at: iso(today, "08:40"), mood: "😊" });
+
+  // CC-142: a week of Maggie's optional feeling, water and meal check-ins. Four days ago she logged no feeling.
+  const feelings: Feeling[] = ["good", "great", "calm", "good", "okay", "uneasy", "good", "calm"];
+  const dailyLogs: DailyLog[] = [];
+  for (let d = 7; d >= 1; d--) {
+    const date = ymd(addDays(now, -d));
+    if (d === 4) { dailyLogs.push({ date, water: 3, meals: ["breakfast", "lunch", "dinner"], updatedAt: iso(date, "19:10") }); continue; }
+    const meals: Meal[] = d === 3 ? ["breakfast", "dinner"] : ["breakfast", "lunch", "dinner"];
+    dailyLogs.push({ date, feeling: feelings[d], feelingAt: iso(date, "08:4" + d), water: 4 + (d % 4), meals, updatedAt: iso(date, "19:3" + d) });
+  }
+  if (nowMin > toMin("08:45")) {
+    const meals: Meal[] = (["breakfast", "lunch", "dinner"] as Meal[]).filter((_, i) => nowMin > toMin(["09:00", "13:00", "19:00"][i]));
+    dailyLogs.push({ date: today, feeling: "good", feelingAt: iso(today, "08:45"), water: Math.min(5, Math.max(1, Math.floor((nowMin - 480) / 110))), meals, updatedAt: iso(today, hm(now)) });
+  }
 
   const tasks: State["tasks"] = [
     { id: "t-breakfast", title: "Breakfast", icon: "coffee", time: "08:30", recurrence: "daily", assignee: "caregiver" },
@@ -164,6 +178,7 @@ export function seed(now = new Date()): State {
       { id: "sos-past", startedAt: iso(ymd(addDays(now, -6)), "16:20"), status: "resolved", step: 0, responderId: GUARDIAN, acknowledgedAt: iso(ymd(addDays(now, -6)), "16:21"), resolvedAt: iso(ymd(addDays(now, -6)), "16:40"), outcome: "Maggie felt dizzy after standing up. Sarah came over; she was fine after resting.", via: "app" },
     ],
     checkins,
+    dailyLogs,
     approvals: [
       {
         id: "ap-metformin", kind: "med-change", title: "Move evening Metformin to 6:30 PM",
@@ -217,6 +232,7 @@ export function seed(now = new Date()): State {
       elderLockMin: 0,
       toured: {},
       refillAlertDays: 7,
+      dailyLog: { shareWithGuardian: true, waterGoal: 6 },
       vitals: { intervalMin: 30, thresholds: { hrHigh: 110, hrLow: 50, hrJump: 25, spo2Low: 92, spo2Drop: 4 }, shareWithGuardian: true },
       emergencyCard: {
         allergies: "Penicillin",

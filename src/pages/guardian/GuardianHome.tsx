@@ -8,7 +8,7 @@ import { clock, dosesFor, tasksFor, checkinToday, checkinMissed, caregiverOnShif
 import { Avatar, Ring } from "../../components/ui";
 import { fmtTime, greeting, fmtShortDay, relative } from "../../lib/time";
 import { PackageOpen } from "lucide-react";
-import { lowSupply } from "../../data/everyday";
+import { lowSupply, dailyLogFor, dailyShared, feelingOf } from "../../data/everyday";
 import "./guardian.css";
 
 /** CC-61 "today at a glance" dashboard. Sprint 12: low supply (CC-121). */
@@ -21,6 +21,9 @@ export default function GuardianHome() {
   const tasks = tasksFor(state);
   const tasksDone = tasks.filter((t) => t.done).length;
   const ci = checkinToday(state);
+  // CC-143: today's feeling, water and meals, only while Maggie shares them.
+  const log = dailyShared(state) ? dailyLogFor(state) : undefined;
+  const feeling = feelingOf(log?.feeling);
   const cg = caregiverOnShift(state);
   const unread = alertsFor(state, "guardian").filter((a) => !a.read.includes("guardian")).length;
   const elder = member(state, state.elderId);
@@ -65,8 +68,9 @@ export default function GuardianHome() {
       <div className="tiles">
         <Link to="/app/guardian/feed" className="tile-s">
           <span className="row between"><span className="tile-k"><Sun size={16} /> Check-in</span>{ci ? <CheckCircle2 color="var(--green)" size={22} /> : null}</span>
-          <span className="tile-v">{ci ? `I'm OK ${ci.mood ?? ""}` : checkinMissed(state) ? "Missed" : "Not yet"}</span>
+          <span className="tile-v">{ci ? "I'm OK" : checkinMissed(state) ? "Missed" : "Not yet"}</span>
           <span className="tile-sub">{ci ? `at ${fmtTime(ci.at)} · ${checkinStreak(state)}-day streak` : `Window ${fmtTime(state.settings.checkinWindow.start)}–${fmtTime(state.settings.checkinWindow.end)}`}</span>
+          {log && <span className="tile-sub">{feeling ? `Feeling ${feeling.label.toLowerCase()} · ` : ""}{log.water} {log.water === 1 ? "glass" : "glasses"} · {log.meals.length} of 3 meals</span>}
         </Link>
         <Link to="/app/guardian/meds" className="tile-s">
           <span className="tile-k"><Pill size={16} /> Medicines</span>

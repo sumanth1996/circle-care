@@ -1,8 +1,10 @@
-import type { State, Medication } from "./types";
+import type { State, Medication, DailyLog, Feeling, Meal } from "./types";
 import { clock, todayOf } from "./selectors";
+import { can } from "./policy";
+import { GUARDIAN } from "./demo";
 import { ymd, addDays } from "../lib/time";
 
-// Sprint 12 "Everyday Care": the small things a family checks every day. This file starts with the refill tracker.
+// Sprint 12 "Everyday Care": the small things a family checks every day. This file has the refill tracker and the daily check-ins.
 // Pure functions so the rules engine, the screens and the tests share one answer.
 
 /* ---------------- CC-120 – CC-121: pills on hand and refills ---------------- */
@@ -95,3 +97,46 @@ export const bottleOf = (med: Medication) => med.supply?.bottleId ?? med.supply?
 
 /** Stable id of the Calendar entry a bottle creates, so the rule never adds it twice. */
 export const autoRefillId = (med: Medication) => `appt-auto-${med.id}-${bottleOf(med)}`;
+
+/* ---------------- CC-142 – CC-143: feeling, water and meals ---------------- */
+
+/** Six drawn faces, no emoji. Valence feeds the guardian's mood trend in Health. */
+export const FEELINGS: { key: Feeling; label: string; valence: number }[] = [
+  { key: "great", label: "Great", valence: 2 },
+  { key: "good", label: "Good", valence: 1 },
+  { key: "calm", label: "Calm", valence: 1 },
+  { key: "okay", label: "Okay", valence: 0 },
+  { key: "uneasy", label: "Not great", valence: -1 },
+  { key: "low", label: "Low", valence: -2 },
+];
+export const MEALS: { key: Meal; label: string }[] = [
+  { key: "breakfast", label: "Breakfast" },
+  { key: "lunch", label: "Lunch" },
+  { key: "dinner", label: "Dinner" },
+];
+export const feelingOf = (k?: Feeling) => FEELINGS.find((f) => f.key === k);
+
+/** The day's log, or an empty one when Maggie hasn't added anything. */
+export function dailyLogFor(s: State, date = todayOf(s)): DailyLog {
+  return s.dailyLogs.find((l) => l.date === date) ?? { date, water: 0, meals: [], updatedAt: "" };
+}
+
+/** True when Maggie has added anything today. */
+export const hasLoggedToday = (s: State) => {
+  const l = dailyLogFor(s);
+  return !!l.feeling || l.water > 0 || l.meals.length > 0;
+};
+
+/** Seven days ending on `endDate` (oldest first), for the guardian's Well-being view. */
+export function dailyWeek(s: State, endDate = todayOf(s)) {
+  return Array.from({ length: 7 }, (_, i) => dailyLogFor(s, ymd(addDays(new Date(`${endDate}T12:00:00`), i - 6))));
+}
+
+/** CC-143: the last two full days (yesterday and the day before) have no meals logged. */
+export function mealsGap(s: State) {
+  const now = clock(s);
+  return [1, 2].map((d) => dailyLogFor(s, ymd(addDays(now, -d)))).every((l) => l.meals.length === 0);
+}
+
+/** Can Sarah see the check-ins right now? Maggie decides (CC-143); the permission matrix is the one answer. */
+export const dailyShared = (s: State) => can(s, GUARDIAN, "read", "wellbeing");

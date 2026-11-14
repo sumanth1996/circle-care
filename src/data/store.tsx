@@ -4,9 +4,9 @@ import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo"
 import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, activeSos, member, todayVisit, tasksFor, checkinToday } from "./selectors";
 import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
-import { hm, uid, ymd, toMin, minutesOfDay, fmtTime } from "../lib/time";
+import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays } from "../lib/time";
 import { readingsFor, detectEvents } from "../lib/health";
-import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply } from "./everyday";
+import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared } from "./everyday";
 import * as everyday from "./everydayActions";
 import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
 
@@ -175,6 +175,15 @@ export function evaluate(s: State) {
     if (!med || med.paused) { a.status = "cancelled"; a.autoCancelled = true; }
   }
 
+  // Daily check-ins (CC-142): at most one gentle reminder a day, only if Maggie added nothing.
+  if (nowMin >= toMin("19:00") && !hasLoggedToday(s)) {
+    pushAlert(s, { key: `daily-elder-${today}`, to: ["elder"], severity: "info", title: "You have a reminder from Circle Care", detail: "If you like, tap how you feel, your water and your meals. You can skip it.", link: "/app/elder" });
+  }
+  // No meals logged for two days (CC-143): a gentle note to Sarah, only while Maggie shares check-ins.
+  if (dailyShared(s) && mealsGap(s)) {
+    pushAlert(s, { key: `meals-${today}`, to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: "Maggie hasn't logged meals for 2 days. A quick call might help.", link: "/app/guardian/health#wellbeing" });
+  }
+
   // Time-bound access ends automatically (CC-25).
   for (const m of s.members) {
     if (m.expiresOn && m.status === "active" && m.expiresOn < today) {
@@ -259,11 +268,29 @@ function useStoreState(initial: State) {
         viewed.current = {};
       },
       skipAhead: (min: number) => update((s) => { s.clockOffsetMin += min; }),
-      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen" | "low-supply") => update((s) => {
+      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen" | "low-supply" | "no-meals" | "nothing-logged") => update((s) => {
         if (what === "low-supply") {
           // CC-121 demo: Metformin down to 7 days (2 a day) on a fresh count.
           const m = s.meds.find((x) => x.id === "med-metformin")!;
           m.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 14, countedAt: clock(s).toISOString(), requestedAt: undefined };
+          return;
+        }
+        if (what === "no-meals") {
+          // CC-143 demo: no meals logged yesterday or the day before.
+          for (const d of [1, 2]) {
+            const date = ymd(addDays(clock(s), -d));
+            const at = clock(s).toISOString();
+            s.dailyLogs = [...s.dailyLogs.filter((l) => l.date !== date), { ...(s.dailyLogs.find((l) => l.date === date) ?? { date, water: 0, updatedAt: at }), meals: [] }];
+          }
+          s.alerts = s.alerts.filter((a) => a.key !== `meals-${todayOf(s)}`);
+          return;
+        }
+        if (what === "nothing-logged") {
+          // CC-142 demo: Maggie hasn't added anything today, and it's 7 PM.
+          s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+          s.alerts = s.alerts.filter((a) => a.key !== `daily-elder-${todayOf(s)}`);
+          const min = minutesOfDay(clock(s));
+          if (min < toMin("19:00")) s.clockOffsetMin += toMin("19:00") - min;
           return;
         }
         if (what === "heart-rate" || what === "oxygen") {
@@ -536,6 +563,8 @@ function useStoreState(initial: State) {
       }),
       recordRefill: (medId: string, count: number) => update((s) => everyday.recordRefill(s, actor(s), medId, count)),
       requestRefill: (medId: string) => update((s) => everyday.requestRefill(s, actor(s), medId)),
+      logDaily: (patch: everyday.DailyPatch) => update((s) => everyday.logDaily(s, actor(s), patch)),
+      setDailySharing: (on: boolean) => update((s) => everyday.setDailySharing(s, actor(s), on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */
       setHealthSharing: (on: boolean) => update((s) => {
         if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "change health sharing"); return; }

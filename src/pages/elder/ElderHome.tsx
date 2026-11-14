@@ -2,12 +2,14 @@ import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Phone, Volume2, Shield, Type, Bell, IdCard, Sun, CheckCircle2 } from "lucide-react";
 import { useStore } from "../../data/store";
+import { DailyCheckins } from "../../components/everyday";
 import { nextUp, clock, checkinToday, member, isOpen } from "../../data/selectors";
 import { Avatar, PillArt, taskIcons, IconTile, useSpeech, useToast } from "../../components/ui";
 import { fmtTime, fmtDay, greeting, toMin, minutesOfDay } from "../../lib/time";
 import "./elder.css";
 
-/** CC-68: elder home with exactly three big actions — What's next, SOS, Call my person. */
+/** CC-68: elder home with three big actions — What's next, SOS, Call my person.
+ *  CC-142: optional one-tap check-ins below them. */
 export default function ElderHome() {
   const { state, actions } = useStore();
   const { speak, supported } = useSpeech();
@@ -57,7 +59,7 @@ export default function ElderHome() {
         <div className="elder-checkin" role="region" aria-label="Daily check-in">
           <Sun size={40} color="var(--elder)" style={{ flex: "none" }} />
           <div className="grow"><b>How are you this morning?</b><p className="muted" style={{ fontSize: "0.85em" }}>Let Sarah know you're OK.</p></div>
-          <button className="btn lg" style={{ background: "var(--elder)" }} onClick={() => { actions.elderCheckin("😊"); toast("Sarah will see you're OK"); if (state.settings.readAloud) speak("Thank you. Sarah will see you're OK."); }}>I'm OK</button>
+          <button className="btn lg" style={{ background: "var(--elder)" }} onClick={() => { actions.elderCheckin(); toast("Sarah will see you're OK"); if (state.settings.readAloud) speak("Thank you. Sarah will see you're OK."); }}>I'm OK</button>
         </div>
       )}
       {!showCheckin && done && <p className="small muted" style={{ marginTop: -8 }}><CheckCircle2 size={16} color="var(--green)" style={{ verticalAlign: "-3px" }} /> You checked in at {fmtTime(done.at)}</p>}
@@ -83,6 +85,8 @@ export default function ElderHome() {
           <Phone size={32} />
         </Link>
       </div>
+
+      <DailyCheckins />
 
       <nav className="elder-links" aria-label="More">
         <Link to="/app/elder/decisions"><Bell size={20} /> Updates about me {newDecisions > 0 && <span className="new" aria-label={`${newDecisions} new`} />}</Link>

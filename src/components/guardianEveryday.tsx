@@ -1,8 +1,9 @@
 import { useState, type CSSProperties } from "react";
-import { PackageCheck, PackagePlus, Truck } from "lucide-react";
+import { PackageCheck, PackagePlus, Truck, EyeOff, Utensils } from "lucide-react";
 import type { Medication, State } from "../data/types";
 import { useStore, useCan } from "../data/store";
-import { pillsLeft, daysLeft, supplyState, refillPlan, scheduledRefill } from "../data/everyday";
+import { pillsLeft, daysLeft, supplyState, refillPlan, scheduledRefill, dailyWeek, feelingOf, MEALS, dailyShared } from "../data/everyday";
+import { Face } from "./everyday";
 import { nameOf } from "../data/selectors";
 import { Sheet, useToast } from "./ui";
 import { fmtShortDay } from "../lib/time";
@@ -66,5 +67,42 @@ function BottleSheet({ med, onClose, onSave }: { med: Medication; onClose: () =>
         <p className="hint center">The count goes down by one each time a dose is marked taken. Skipped doses don't count.</p>
       </form>
     </Sheet>
+  );
+}
+
+/* ---------------- CC-143: check-ins in Well-being ---------------- */
+
+export function DailyWeek({ state }: { state: State }) {
+  const shared = dailyShared(state);
+  const week = dailyWeek(state);
+  const goal = state.settings.dailyLog.waterGoal;
+  if (!shared) {
+    return (
+      <section id="wellbeing" className="panel stack" style={{ "--gap": "8px" } as CSSProperties} aria-labelledby="dw-h">
+        <h2 id="dw-h" className="hl-name"><EyeOff size={18} aria-hidden="true" /> Daily check-ins · 7 days</h2>
+        <p className="muted">{state.settings.sharingPaused ? "Maggie paused sharing, so her feeling, water and meal check-ins are private until she resumes." : "Maggie isn't sharing her feeling, water and meal check-ins right now."} Her “I'm OK” check-in still reaches you. She can change this in her Privacy Center.</p>
+      </section>
+    );
+  }
+  const fed = week.filter((d) => d.meals.length > 0).length;
+  const water = Math.round((week.reduce((a, d) => a + d.water, 0) / 7) * 10) / 10;
+  return (
+    <section id="wellbeing" className="panel stack" style={{ "--gap": "14px" } as CSSProperties} aria-labelledby="dw-h">
+      <div className="metric-head">
+        <h2 id="dw-h" className="hl-name"><Utensils size={18} color="#1baf7a" aria-hidden="true" /> Daily check-ins · 7 days</h2>
+        <span className="metric-stats">{water} glasses a day on average · meals logged {fed} of 7 days</span>
+      </div>
+      <div className="dweek" role="table" aria-label="Feeling, water and meals for the last 7 days">
+        <span role="rowheader" />
+        {week.map((d) => <span key={d.date} className="day" role="columnheader">{new Date(`${d.date}T12:00:00`).toLocaleDateString([], { weekday: "short" })}</span>)}
+        <span className="lab" role="rowheader">Feeling</span>
+        {week.map((d) => { const f = feelingOf(d.feeling); return <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${f?.label ?? "not added"}`} title={f?.label}>{f ? <Face feeling={f.key} size={28} /> : <i className="none" />}</span>; })}
+        <span className="lab" role="rowheader">Water</span>
+        {week.map((d) => <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.water} glasses`}><span className="wbar"><i style={{ height: `${Math.min(100, (d.water / goal) * 100)}%` }} /></span><span className="num">{d.water}</span></span>)}
+        <span className="lab" role="rowheader">Meals</span>
+        {week.map((d) => <span key={d.date} className="cell" role="cell" aria-label={`${fmtShortDay(d.date)}: ${d.meals.length ? d.meals.join(", ") : "no meals logged"}`}><span className="mdots">{MEALS.map((m) => <i key={m.key} className={d.meals.includes(m.key) ? "on" : ""} />)}</span></span>)}
+      </div>
+      <p className="tiny">Maggie adds these herself when she wants to, so a blank day isn't a problem on its own. Two days with no meals logged sends you a gentle note. Water goal: {goal} glasses.</p>
+    </section>
   );
 }

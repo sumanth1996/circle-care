@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse } from "lucide-react";
+import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse, Smile } from "lucide-react";
 import { useStore } from "../../data/store";
 import { clock, member, nameOf } from "../../data/selectors";
 import { Avatar, Sheet, Toggle, download, useToast } from "../../components/ui";
@@ -77,6 +77,14 @@ export default function PrivacyCenter() {
           <HeartPulse size={30} color="var(--red)" style={{ flex: "none" }} />
           <div className="grow"><b>Share health readings with Sarah</b><p className="muted small">Heart rate, blood oxygen, activity and sleep from {isElder ? "your" : "Maggie's"} watch. {state.settings.vitals.shareWithGuardian ? "Only Sarah can see them." : "Not shared right now."}</p></div>
           {isElder ? <Toggle checked={state.settings.vitals.shareWithGuardian} onChange={(v) => { actions.setHealthSharing(v); toast(v ? "Sharing health readings with Sarah" : "Health readings are private"); }} label="Share health readings with Sarah" /> : <span className={`badge ${state.settings.vitals.shareWithGuardian ? "green" : "orange"}`}>{state.settings.vitals.shareWithGuardian ? "Shared" : "Private"}</span>}
+        </div>
+      </section>
+
+      <section className="panel stack" style={{ "--gap": "12px" } as React.CSSProperties}>
+        <div className="row">
+          <Smile size={30} color="var(--elder)" style={{ flex: "none" }} />
+          <div className="grow"><b>Share daily check-ins with Sarah</b><p className="muted small">How {isElder ? "you feel" : "she feels"}, glasses of water and meals from {isElder ? "your" : "her"} home screen. {state.settings.dailyLog.shareWithGuardian ? "Only Sarah can see them." : "Not shared right now."}</p></div>
+          {isElder ? <Toggle checked={state.settings.dailyLog.shareWithGuardian} onChange={(v) => { actions.setDailySharing(v); toast(v ? "Sharing check-ins with Sarah" : "Check-ins are private"); }} label="Share daily check-ins with Sarah" /> : <span className={`badge ${state.settings.dailyLog.shareWithGuardian ? "green" : "orange"}`}>{state.settings.dailyLog.shareWithGuardian ? "Shared" : "Private"}</span>}
         </div>
       </section>
 

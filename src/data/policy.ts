@@ -9,7 +9,7 @@ import { todayOf } from "./selectors";
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
   | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
-  | "supply";
+  | "supply" | "wellbeing";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -36,8 +36,9 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   emergencyCard:   { read: ["elder", "guardian", "family", "pro"], write: ["elder"], propose: ["guardian"] },
   sos:             { read: ["elder", "guardian", "family", "pro"], write: ["elder"], respond: ["guardian", "family", "pro"] },
   data:            { export: ["elder", "guardian"], delete: ["elder", "guardian"] },
-  // Sprint 12 — Everyday Care (CC-120 – CC-121)
+  // Sprint 12 — Everyday Care (CC-120 – CC-121, CC-142 – CC-143)
   supply:          { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian", "family", "pro@shift"] },
+  wellbeing:       { read: ["elder", "guardian"], write: ["elder"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */
@@ -64,6 +65,9 @@ export function can(s: State, actorId: string, action: Action, resource: Resourc
   if (s.settings.sharingPaused && (role === "family" || role === "pro") && !ALWAYS_SHARED.includes(resource)) return false;
   // Health readings reach the guardian only while Maggie chooses to share them (CC-87).
   if (resource === "vitals" && role === "guardian" && action === "read" && !s.settings.vitals.shareWithGuardian) return false;
+  // Feeling, water and meals reach the guardian only while Maggie shares them (CC-143).
+  // Pausing all sharing hides them too: only emergency alerts are shared then.
+  if (resource === "wellbeing" && role === "guardian" && (!s.settings.dailyLog.shareWithGuardian || s.settings.sharingPaused)) return false;
   return true;
 }
 

@@ -1,7 +1,8 @@
-import type { State, Persona } from "./types";
+import type { State, Persona, Feeling, Meal } from "./types";
 import { audit, pushAlert, allowed } from "./store";
-import { clock, nameOf } from "./selectors";
-import { unitsPerDose } from "./everyday";
+import { clock, nameOf, todayOf } from "./selectors";
+import { unitsPerDose, dailyLogFor } from "./everyday";
+import { ELDER } from "./demo";
 
 // Sprint 12 "Everyday Care" state changes. Each one checks the permission matrix first
 // (refusals are audited and change nothing), so the store, the tests and a future API share them.
@@ -33,4 +34,34 @@ export function requestRefill(s: State, by: string, medId: string) {
   audit(s, by, "updated", `refill request for ${med.name}`);
   const to = (["guardian", "caregiver"] as Persona[]).filter((p) => p !== s.persona);
   pushAlert(s, { to, severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, by)} asked ${pharmacy} to refill ${med.name}.`, link: "/app/guardian/meds" });
+}
+
+export type DailyPatch = { feeling?: Feeling | null; water?: number; meal?: Meal };
+
+/** CC-142: Maggie's one-tap check-ins save as she taps. Tapping the same face again clears it. Skipping sends nothing. */
+export function logDaily(s: State, by: string, patch: DailyPatch) {
+  if (!allowed(s, by, "write", "wellbeing")) return;
+  const today = todayOf(s);
+  const at = clock(s).toISOString();
+  const cur = dailyLogFor(s, today);
+  const next = { ...cur, meals: [...cur.meals], updatedAt: at };
+  if (patch.feeling !== undefined) {
+    next.feeling = patch.feeling ?? undefined;
+    next.feelingAt = patch.feeling ? at : undefined;
+  }
+  if (patch.water !== undefined && Number.isFinite(patch.water)) next.water = Math.max(0, Math.min(20, Math.round(patch.water)));
+  if (patch.meal) next.meals = next.meals.includes(patch.meal) ? next.meals.filter((m) => m !== patch.meal) : [...next.meals, patch.meal];
+  s.dailyLogs = [...s.dailyLogs.filter((l) => l.date !== today), next];
+}
+
+/** CC-143: only Maggie decides whether Sarah sees her feeling, water and meals. */
+export function setDailySharing(s: State, by: string, on: boolean) {
+  if (by !== ELDER) { audit(s, by, "denied", "change check-in sharing"); return; }
+  if (s.settings.dailyLog.shareWithGuardian === on) return;
+  s.settings.dailyLog.shareWithGuardian = on;
+  audit(s, ELDER, "updated", on ? "check-in sharing (on)" : "check-in sharing (off)");
+  pushAlert(s, {
+    to: ["guardian"], severity: "info", title: "Update from Circle Care",
+    detail: on ? "Maggie is sharing her daily check-ins with you again." : "Maggie stopped sharing her feeling, water and meal check-ins. Her “I'm OK” check-in works as before.",
+  });
 }
