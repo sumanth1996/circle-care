@@ -2380,6 +2380,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2468,6 +2480,174 @@
     
   
     Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-12-refill-tracker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, refill tracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-12-daily-checkins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, daily check-ins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-12-family-chat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, family chat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-12-evening-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, evening recap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-13-chat-check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, chat check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-13-architecture-wiki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, architecture wiki
   
 
     
@@ -2883,8 +3063,40 @@ Status: Implemented in the prototype (<code>src/data/policy.ts</code>, enforced 
 <td>—</td>
 <td>—</td>
 </tr>
+<tr>
+<td><code>supply</code></td>
+<td>Pills on hand, refill requests (CC-120/121)</td>
+<td>R W</td>
+<td>R W</td>
+<td>R W</td>
+<td>R W</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wellbeing</code></td>
+<td>Daily check-ins: feeling, water, meals (CC-142/143)</td>
+<td>R W</td>
+<td>R ¹</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>chat</code></td>
+<td>Private family chat (CC-164/165)</td>
+<td>R W I</td>
+<td>R W I</td>
+<td>R W</td>
+<td>R W ²</td>
+<td>R W ²</td>
+<td>—</td>
+</tr>
 </tbody>
 </table>
+<p>¹ Only while Maggie shares check-ins (<code>settings.dailyLog.shareWithGuardian</code>) and hasn't paused all sharing.
+² Only once Maggie or Sarah adds that caregiver (<code>state.chat.pros</code>); switching them off, removing them from the circle or their time limit ending takes them out at once. Pausing sharing also takes family and caregivers out of the chat, like every other non-emergency resource.</p>
 <h2 id="rules-explained">Rules explained<a class="headerlink" href="#rules-explained" title="Permanent link">&para;</a></h2>
 <h3 id="proshift-minimum-necessary-for-paid-caregivers"><code>pro@shift</code> — minimum necessary for paid caregivers<a class="headerlink" href="#proshift-minimum-necessary-for-paid-caregivers" title="Permanent link">&para;</a></h3>
 <p>The matrix uses a special rule, <code>pro@shift</code>, for anything about the elder's health or daily care. A professional caregiver matches it only while checked in to a visit today (<code>onShift()</code>): <code>visit.caregiverId === actor &amp;&amp; visit.date === today &amp;&amp; checkIn &amp;&amp; !checkOut</code>. When the shift ends, access to medicines, doses, tasks, notes and documents ends with it. Off shift, a caregiver still sees what they need to do their job safely: the circle (who to call), their schedule, the emergency card, SOS — and they can propose schedule changes and swaps.</p>
@@ -2894,6 +3106,7 @@ Status: Implemented in the prototype (<code>src/data/policy.ts</code>, enforced 
 </code></pre></div>
 <p>So emergencies still work (SOS and the emergency card) and people still know who is in the circle. The <strong>guardian keeps access</strong> while sharing is paused because they hold legal authority; the public FAQ says the guardian "is told sharing is paused." The elder's own access is never affected.</p>
 <h3 id="refused-actions-are-logged">Refused actions are logged<a class="headerlink" href="#refused-actions-are-logged" title="Permanent link">&para;</a></h3>
+<p>Sprint 12 actions live in <code>src/data/everydayActions.ts</code> and use <code>allowed()</code> from the store, which does the same check and writes the same <code>denied</code> entry.</p>
 <p>Most change actions in the store go through <code>guard()</code> in <code>src/data/store.tsx</code> (recordDose, verifyDose, saveMed, requestMedChange, decide, task actions, sosAcknowledge, saveShift, requestSwap, reviewDoc, invite, revoke, settings, exported — exceptions listed under Coverage gaps): if <code>can()</code> returns false, nothing changes and an <code>audit</code> entry with action <code>"denied"</code> is written. Three denials by one person within 10 minutes raise a security notice to the guardian (CC-35). Read access in the UI is checked with <code>AccessGuard</code> / <code>useCan</code>, which call the same <code>can()</code>.</p>
 <h3 id="notable-design-choices-to-review">Notable design choices to review<a class="headerlink" href="#notable-design-choices-to-review" title="Permanent link">&para;</a></h3>
 <ol>

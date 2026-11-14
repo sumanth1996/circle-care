@@ -2410,6 +2410,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2498,6 +2510,174 @@
     
   
     Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-refill-tracker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, refill tracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-daily-checkins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, daily check-ins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-family-chat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, family chat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-evening-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, evening recap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-chat-check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, chat check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-architecture-wiki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, architecture wiki
   
 
     
@@ -2831,6 +3011,11 @@
 <td>CC-87</td>
 </tr>
 <tr>
+<td>Check-in sharing — who can change</td>
+<td>Elder only (<code>setDailySharing</code>). A general settings write that touches check-in or health sharing is refused and audited, whoever sends it, and only Maggie can pause or resume all sharing. <em>Share daily check-ins with Sarah</em> covers feeling, water and meals; the guardian sees a <em>Shared</em> or <em>Private</em> badge. Pausing all sharing hides them too, and the badge reads <em>Paused</em>. Days she logged while not sharing stay private.</td>
+<td>CC-143</td>
+</tr>
+<tr>
 <td>Access log shown</td>
 <td>Last 30 days, excluding Maggie's own actions, newest 12</td>
 <td><code>PrivacyCenter.tsx</code></td>
@@ -2847,7 +3032,7 @@
 </tr>
 <tr>
 <td>Export contents</td>
-<td>Members (without photos), medications, doses, tasks, check-ins, notes, document metadata, access log</td>
+<td>Members (without photos), medications, doses, tasks, check-ins, daily check-ins (CC-142; a guardian's copy includes only shared days, and none while not shared), notes, document metadata, access log</td>
 <td><code>doExport</code></td>
 </tr>
 <tr>
@@ -2914,6 +3099,13 @@
 <td>—</td>
 <td>—</td>
 </tr>
+<tr>
+<td><code>wellbeing</code> sharing switch (CC-143)</td>
+<td>✓ (only)</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
 </tbody>
 </table>
 <div class="admonition note">
@@ -2945,6 +3137,12 @@
 </tr>
 <tr>
 <td>Health sharing on / off</td>
+<td>Guardian</td>
+<td>Update from Circle Care</td>
+<td>See <a href="../health-insights/#notifications">Health insights</a></td>
+</tr>
+<tr>
+<td>Check-in sharing on / off (CC-143)</td>
 <td>Guardian</td>
 <td>Update from Circle Care</td>
 <td>See <a href="../health-insights/#notifications">Health insights</a></td>

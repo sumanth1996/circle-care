@@ -2283,6 +2283,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2371,6 +2383,174 @@
     
   
     Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-12-refill-tracker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, refill tracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-12-daily-checkins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, daily check-ins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-12-family-chat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, family chat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-12-evening-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, evening recap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-13-chat-check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, chat check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-14-sprint-13-architecture-wiki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, architecture wiki
   
 
     
@@ -2492,8 +2672,8 @@
 </tr>
 <tr>
 <td><a href="../features/elder-experience/">F-02 Elder experience</a></td>
-<td>CC-14, CC-39, CC-40, CC-48, CC-52, CC-65, CC-68, CC-69, CC-70, CC-71, CC-72, CC-73</td>
-<td><code>pages/elder/ElderHome.tsx</code>, <code>ElderNext.tsx</code>, <code>ElderCall.tsx</code>, <code>ElderDecisions.tsx</code>, <code>ElderSettings.tsx</code>, <code>lib/voice.ts</code>, <code>components/ui.tsx</code> (useSpeech, Avatar contrast)</td>
+<td>CC-14, CC-39, CC-40, CC-48, CC-52, CC-65, CC-68, CC-69, CC-70, CC-71, CC-72, CC-73, CC-142</td>
+<td><code>pages/elder/ElderHome.tsx</code>, <code>components/everyday.tsx</code> (DailyCheckins, Face), <code>ElderNext.tsx</code>, <code>ElderCall.tsx</code>, <code>ElderDecisions.tsx</code>, <code>ElderSettings.tsx</code>, <code>lib/voice.ts</code>, <code>components/ui.tsx</code> (useSpeech, Avatar contrast)</td>
 <td>U rules, health · E5, E9, E22 · A: 4 elder screens</td>
 </tr>
 <tr>
@@ -2504,9 +2684,9 @@
 </tr>
 <tr>
 <td><a href="../features/medications-and-tasks/">F-04 Medications &amp; tasks</a></td>
-<td>CC-36, CC-37, CC-38, CC-39, CC-40, CC-41, CC-42, CC-43, CC-44, CC-45, CC-64</td>
-<td><code>pages/guardian/Medications.tsx</code>, <code>pages/caregiver/CaregiverToday.tsx</code>, <code>pages/elder/ElderNext.tsx</code>, <code>data/selectors.ts</code> (dosesFor, doseThresholds, tasksFor), <code>data/store.tsx</code> (recordDose, verifyDose, saveMed, requestMedChange, completeTask, evaluate)</td>
-<td>U rules, policy · E7, E8, E9 · A: meds, caregiver, elder/next</td>
+<td>CC-36, CC-37, CC-38, CC-39, CC-40, CC-41, CC-42, CC-43, CC-44, CC-45, CC-64, CC-120, CC-121</td>
+<td><code>pages/guardian/Medications.tsx</code>, <code>pages/caregiver/CaregiverToday.tsx</code>, <code>pages/elder/ElderNext.tsx</code>, <code>data/selectors.ts</code> (dosesFor, doseThresholds, tasksFor), <code>data/store.tsx</code> (recordDose, verifyDose, saveMed, requestMedChange, completeTask, evaluate), <code>data/everyday.ts</code> + <code>everydayActions.ts</code> (supply, CC-120/121)</td>
+<td>U rules, policy, everyday · E7, E8, E9 · A: meds, caregiver, elder/next</td>
 </tr>
 <tr>
 <td><a href="../features/caregiver-shifts-and-handoffs/">F-05 Caregiver shifts &amp; hand-offs</a></td>
@@ -2516,14 +2696,14 @@
 </tr>
 <tr>
 <td><a href="../features/guardian-dashboard-and-approvals/">F-06 Guardian dashboard &amp; approvals</a></td>
-<td>CC-14, CC-42, CC-50, CC-52, CC-59, CC-61, CC-62, CC-63, CC-64, CC-65, CC-83</td>
+<td>CC-14, CC-42, CC-50, CC-52, CC-59, CC-61, CC-62, CC-63, CC-64, CC-65, CC-83, CC-191</td>
 <td><code>pages/guardian/GuardianHome.tsx</code>, <code>Approvals.tsx</code>, <code>Feed.tsx</code>, <code>Digest.tsx</code>, <code>GuardianSettings.tsx</code>, <code>data/selectors.ts</code> (feed, northStar, adherenceByDay, checkinStreak)</td>
 <td>U rules (CC-64), policy · E3, E9, E14, E18, E21 · A: guardian home, approvals, digest, settings</td>
 </tr>
 <tr>
 <td><a href="../features/health-insights/">F-07 Health insights</a></td>
-<td>CC-84, CC-85, CC-86, CC-87, CC-88, CC-89, <em>CC-90</em>, CC-91, CC-92, CC-93</td>
-<td><code>pages/guardian/Health.tsx</code>, <code>lib/health.ts</code>, <code>components/charts.tsx</code>, <code>data/store.tsx</code> (evaluate vitals, setHealthSharing, simulate), <code>data/policy.ts</code> (vitals)</td>
+<td>CC-84, CC-85, CC-86, CC-87, CC-88, CC-89, <em>CC-90</em>, CC-91, CC-92, CC-93, CC-143</td>
+<td><code>pages/guardian/Health.tsx</code>, <code>components/guardianEveryday.tsx</code> (DailyWeek), <code>lib/health.ts</code>, <code>components/charts.tsx</code>, <code>data/store.tsx</code> (evaluate vitals, setHealthSharing, simulate), <code>data/policy.ts</code> (vitals)</td>
 <td>U health (21) · E24, E25, E26 · A: health</td>
 </tr>
 <tr>
@@ -2552,7 +2732,7 @@
 </tr>
 <tr>
 <td><a href="../features/alerts-and-notifications/">F-12 Alerts &amp; notifications</a></td>
-<td>CC-25, CC-31, CC-35, CC-39, CC-42, CC-50, CC-52, CC-57, CC-63, CC-64, CC-86</td>
+<td>CC-25, CC-31, CC-35, CC-39, CC-42, CC-50, CC-52, CC-57, CC-63, CC-64, CC-86, CC-191</td>
 <td><code>data/store.tsx</code> (evaluate, pushAlert), <code>pages/shared/Alerts.tsx</code>, <code>components/AppShell.tsx</code> (banners), <code>data/types.ts</code> (Alert)</td>
 <td>U rules (7), health · E7, E17, E18, E25</td>
 </tr>
@@ -2909,6 +3089,21 @@
 <td>CC-94 – CC-98</td>
 <td>F-08</td>
 <td><code>Calendar.tsx</code>, <code>types.ts</code>, <code>store.tsx</code>, <code>GuardianHome.tsx</code>, <code>calendar.css</code></td>
+</tr>
+<tr>
+<td>CC-120, CC-121</td>
+<td>F-04, F-08, F-12</td>
+<td><code>everyday.ts</code>, <code>everydayActions.ts</code>, <code>store.tsx</code> (evaluate, simulate), <code>policy.ts</code> (supply), <code>guardianEveryday.tsx</code> (SupplyRow), <code>Medications.tsx</code>, <code>CaregiverToday.tsx</code>, <code>GuardianHome.tsx</code>, <code>everyday.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-142, CC-143</td>
+<td>F-02, F-06, F-07, F-11</td>
+<td><code>everyday.ts</code> (FEELINGS, dailyLogFor, dailyWeek, mealsGap, dailyShared), <code>everydayActions.ts</code> (logDaily, setDailySharing), <code>store.tsx</code> (evaluate, simulate), <code>policy.ts</code> (wellbeing), <code>everyday.tsx</code>, <code>guardianEveryday.tsx</code> (DailyWeek), <code>ElderHome.tsx</code>, <code>Health.tsx</code>, <code>GuardianHome.tsx</code>, <code>PrivacyCenter.tsx</code>, <code>everyday.test.ts</code></td>
+</tr>
+<tr>
+<td>CC-191</td>
+<td>F-06, F-12</td>
+<td><code>everyday.ts</code> (recap, recapOpen, inQuietHours), <code>store.tsx</code> (evaluate), <code>types.ts</code> (recapNotify), <code>guardianEveryday.tsx</code> (EveningRecap), <code>GuardianHome.tsx</code>, <code>GuardianSettings.tsx</code>, <code>PersonaSheet.tsx</code>, <code>everyday.test.ts</code></td>
 </tr>
 </tbody>
 </table>

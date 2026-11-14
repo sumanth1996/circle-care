@@ -1049,6 +1049,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#wellbeing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daily check-ins in Health (CC-143, Sprint 12)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2432,6 +2443,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2520,6 +2543,174 @@
     
   
     Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-refill-tracker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, refill tracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-daily-checkins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, daily check-ins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-family-chat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, family chat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-evening-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, evening recap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-chat-check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, chat check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-architecture-wiki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, architecture wiki
   
 
     
@@ -2649,6 +2840,17 @@
     <span class="md-ellipsis">
       
         Activity, sleep and mood (CC-89 – CC-92)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wellbeing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daily check-ins in Health (CC-143, Sprint 12)
       
     </span>
   </a>
@@ -3032,7 +3234,7 @@
 </tr>
 <tr>
 <td>Mood</td>
-<td>From the face Maggie picks at check-in — she can always skip it</td>
+<td>From the face Maggie taps in <em>My day</em> on her home (CC-142), while she shares check-ins. Older days fall back to the face on that day's "I'm OK" check-in. She can always skip it.</td>
 </tr>
 <tr>
 <td>Mindful minutes</td>
@@ -3086,6 +3288,42 @@
 </tr>
 </tbody>
 </table>
+<h3 id="wellbeing">Daily check-ins in Health (CC-143, Sprint 12)<a class="headerlink" href="#wellbeing" title="Permanent link">&para;</a></h3>
+<p>The <strong>Summary</strong> tab ends with a <em>Daily check-ins · 7 days</em> panel: one column per day, oldest first, with the face she tapped, a water bar against the goal and three meal dots. The header shows average glasses a day and how many of the 7 days have meals logged. The guardian home's <strong>Check-in</strong> tile adds today's line, for example <em>"Feeling good · 4 glasses · 2 of 3 meals"</em>. This panel shows even when Maggie isn't sharing watch readings, because it's a separate choice.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Who sees it</td>
+<td>Sarah only, and only while Maggie shares check-ins and hasn't paused all sharing (<code>wellbeing: read</code>). Family members and paid caregivers never see it.</td>
+</tr>
+<tr>
+<td>Not shared</td>
+<td>The panel says Maggie isn't sharing them (or has paused sharing) and that her "I'm OK" check-in still reaches Sarah. The mood trend shows no faces.</td>
+</tr>
+<tr>
+<td>No meals for 2 days</td>
+<td>When yesterday and the day before have no meals logged, she logged at least one meal in the five days before (so someone who never uses meal check-ins is never flagged), neither day is private, and both days were fully shared (sharing wasn't off or paused at any point since the day before yesterday began), Sarah gets one gentle note that day from 9 AM: <em>"Maggie hasn't logged meals for 2 days. A quick call might help."</em> Only while shared.</td>
+</tr>
+<tr>
+<td>A blank day</td>
+<td>Not a problem on its own: she adds these when she wants to.</td>
+</tr>
+<tr>
+<td>Private days</td>
+<td>A day Maggie started while not sharing shows a dash in the 7-day grid and isn't counted in the averages. The dashboard tile says <em>"Daily check-in not shared today"</em> and State of mind says <em>"Not shared today"</em>, with no counts.</td>
+</tr>
+<tr>
+<td>Access log</td>
+<td>Opening the panel or the dashboard line writes <em>"viewed daily check-ins"</em> (once per 10 minutes).</td>
+</tr>
+</tbody>
+</table>
 <h2 id="permissions-privacy">Permissions &amp; privacy<a class="headerlink" href="#permissions-privacy" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3101,6 +3339,11 @@
 <td>elder; guardian <strong>only while <code>shareWithGuardian</code> is on</strong></td>
 <td>guardian (thresholds)</td>
 </tr>
+<tr>
+<td><code>wellbeing</code> (CC-143)</td>
+<td>elder; guardian <strong>only while <code>dailyLog.shareWithGuardian</code> is on and sharing isn't paused</strong></td>
+<td>elder</td>
+</tr>
 </tbody>
 </table>
 <p>Family members and professional caregivers can <strong>never</strong> see health readings, on or off shift.</p>
@@ -3110,6 +3353,7 @@
 </div>
 <p>Opening Health writes <em>"viewed health readings"</em> to the access log. Alerts carry the reading in the in-app detail only.</p>
 <h2 id="notifications">Notifications<a class="headerlink" href="#notifications" title="Permanent link">&para;</a></h2>
+<p>Daily check-ins (CC-143): when Maggie turns check-in sharing off or on, Sarah gets <em>Update from Circle Care</em> with <em>"Maggie stopped sharing her feeling, water and meal check-ins. Her “I'm OK” check-in works as before."</em> or <em>"Maggie is sharing her daily check-ins with you again."</em> The no-meals note uses the same generic title.</p>
 <table>
 <thead>
 <tr>
@@ -3227,6 +3471,10 @@
 <tr>
 <td>Unit — <code>health.test.ts</code></td>
 <td>One reading per 30 minutes up to now · honours a different interval · whole day for past days · deterministic · applies presenter overrides · next-reading time · flags high and low HR · no low-HR flag while asleep · sudden change inside the normal range · ignores small changes · low oxygen and sudden drop · uses the guardian's thresholds · finds the built-in demo episodes · activity accounts for every hour · continuous night of sleep · mood mapping · BMI and resting HR · guardian and elder only · guardian loses access when sharing is off</td>
+</tr>
+<tr>
+<td>Unit — <code>everyday.test.ts</code> (CC-143)</td>
+<td>Sarah reads check-ins only while shared · only Maggie changes the choice · pausing all sharing hides them · one no-meals note after 2 days, none while not shared · generic lock-screen titles · seven-day view</td>
 </tr>
 <tr>
 <td>E2E</td>

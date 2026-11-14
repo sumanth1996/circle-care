@@ -1378,6 +1378,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#everyday-care-sprint-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Everyday care (Sprint 12)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cross-cutting-ui" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2427,6 +2438,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2515,6 +2538,174 @@
     
   
     Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-refill-tracker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, refill tracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-daily-checkins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, daily check-ins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-family-chat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, family chat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-evening-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, evening recap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-chat-check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, chat check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-architecture-wiki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, architecture wiki
   
 
     
@@ -2684,6 +2875,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#everyday-care-sprint-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Everyday care (Sprint 12)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cross-cutting-ui" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2759,7 +2961,7 @@
 
 
 <h1 id="system-overview">System overview<a class="headerlink" href="#system-overview" title="Permanent link">&para;</a></h1>
-<p>This page describes how the Circle Care <strong>prototype v0.4</strong> is built. It is a single-page web application with no backend: all data, rules and permission checks run in the browser. Where a production design differs, it is called out as <strong>In production (planned)</strong>.</p>
+<p>This page describes how the Circle Care <strong>prototype v0.5</strong> is built. It is a single-page web application. All care data, rules and permission checks run in the browser. Since Sprint 11, a small API server holds real accounts, identity and payment methods in PostgreSQL (<a href="../../features/accounts-identity-payments/">Accounts, identity &amp; payments</a>); it never receives care data. Where a production design differs, it is called out as <strong>In production (planned)</strong>.</p>
 <h2 id="at-a-glance">At a glance<a class="headerlink" href="#at-a-glance" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2786,6 +2988,10 @@
 <td><code>evaluate()</code> rules engine, run every 15 s and after every change</td>
 </tr>
 <tr>
+<td>Everyday care (Sprint 12)</td>
+<td><code>src/data/everyday.ts</code> (derived views) and <code>src/data/everydayActions.ts</code> (changes): refills, daily check-ins, family chat, evening recap</td>
+</tr>
+<tr>
 <td>Authorisation</td>
 <td><code>can()</code> and the <code>MATRIX</code> in <code>src/data/policy.ts</code></td>
 </tr>
@@ -2810,8 +3016,12 @@
 <td>Web Speech API — synthesis for read-aloud; recognition only when on-device</td>
 </tr>
 <tr>
+<td>Accounts server (Sprint 11)</td>
+<td>Express 5 + TypeScript in <code>server/</code>; PostgreSQL through <code>DATABASE_URL</code>; PGlite (Postgres in WASM) when <code>DATABASE_URL</code> isn't set, in development and tests, never in production</td>
+</tr>
+<tr>
 <td>Hosting</td>
-<td>Replit static deployment (<code>.replit</code>)</td>
+<td>Replit autoscale deployment (<code>.replit</code>): <code>npm run build</code>, then <code>npm start</code> serves the app and the API</td>
 </tr>
 </tbody>
 </table>
@@ -2825,7 +3035,8 @@
         Elder["Elder pages"]
         Care["Caregiver pages"]
         Guard["Guardian pages"]
-        Shared["Shared pages&lt;br/&gt;Privacy Center, Notes, Alerts,&lt;br/&gt;Emergency card, SOS responder"]
+        Shared["Shared pages&lt;br/&gt;Privacy Center, Notes, Alerts,&lt;br/&gt;Emergency card, SOS responder,&lt;br/&gt;Family chat"]
+        Account["Account pages&lt;br/&gt;Join, Login, My account"]
         Internal["Internal pages&lt;br/&gt;Review console, Pilot dashboard"]
       end
       subgraph Data["Data layer — src/data"]
@@ -2833,6 +3044,7 @@
         Rules["evaluate()&lt;br/&gt;rules engine"]
         Policy["policy.ts&lt;br/&gt;MATRIX · can()"]
         Sel["selectors.ts&lt;br/&gt;derived views"]
+        Every["everyday.ts · everydayActions.ts&lt;br/&gt;refills · check-ins · chat · recap"]
         Audit["audit.ts&lt;br/&gt;hash chain"]
         Seed["demo.ts&lt;br/&gt;seed data"]
       end
@@ -2847,6 +3059,7 @@
       IDB[("IndexedDB&lt;br/&gt;non-extractable key&lt;br/&gt;encrypted files")]
       SW["Service worker&lt;br/&gt;sw.js"]
     end
+    API["Accounts API server&lt;br/&gt;server/ · /api/*, /vault/*&lt;br/&gt;PostgreSQL"]
     Unsplash["images.unsplash.com&lt;br/&gt;(stock photos)"]
     Fonts["Google Fonts"]
 
@@ -2857,6 +3070,10 @@
     Rules --&gt; Sel
     Rules --&gt; Health
     UI --&gt; Sel
+    UI --&gt; Every
+    Store --&gt; Every
+    Rules --&gt; Every
+    Account --&gt;|"HTTPS, session cookie"| API
     Audit --&gt; Sha
     Store --&gt; Sec
     Sec --&gt; LS
@@ -2928,9 +3145,24 @@
 <td>Choose a person; sign-up</td>
 </tr>
 <tr>
+<td><code>/app/join</code>, <code>/app/join/:role</code></td>
+<td><code>account/Join</code></td>
+<td>Create a real account (CC-172, CC-173)</td>
+</tr>
+<tr>
+<td><code>/app/login</code></td>
+<td><code>account/Login</code></td>
+<td>Sign in to a real account (CC-174)</td>
+</tr>
+<tr>
+<td><code>/app/account</code></td>
+<td><code>account/MyAccount</code></td>
+<td>Profile, identity, photo, payment methods (CC-176 – CC-188)</td>
+</tr>
+<tr>
 <td><code>/app/sign-in/:persona</code></td>
 <td><code>SignIn</code></td>
-<td>Sign-in, MFA, consent</td>
+<td>Demo sign-in, MFA, consent</td>
 </tr>
 <tr>
 <td><code>/app/invite/:memberId</code></td>
@@ -2951,6 +3183,11 @@
 <td><code>/app/sos</code></td>
 <td><code>SosRedirect</code></td>
 <td>Redirects to the current persona's SOS page</td>
+</tr>
+<tr>
+<td><code>/app/chat</code></td>
+<td><code>SosRedirect to="chat"</code></td>
+<td>Redirects to the current persona's family chat</td>
 </tr>
 <tr>
 <td><code>*</code></td>
@@ -3000,6 +3237,10 @@
 <td><code>card</code></td>
 <td><code>shared/EmergencyCard</code></td>
 </tr>
+<tr>
+<td><code>chat</code></td>
+<td><code>ChatView large</code> (CC-165)</td>
+</tr>
 </tbody>
 </table>
 <h3 id="caregiver-appcaregiver">Caregiver — <code>/app/caregiver</code><a class="headerlink" href="#caregiver-appcaregiver" title="Permanent link">&para;</a></h3>
@@ -3038,6 +3279,10 @@
 <tr>
 <td><code>sos</code></td>
 <td><code>shared/SosResponder</code></td>
+</tr>
+<tr>
+<td><code>chat</code></td>
+<td><code>ChatView</code> (CC-164)</td>
 </tr>
 </tbody>
 </table>
@@ -3110,17 +3355,21 @@
 <td><code>sos</code></td>
 <td><code>shared/SosResponder</code></td>
 </tr>
+<tr>
+<td><code>chat</code></td>
+<td><code>ChatView</code> (CC-164)</td>
+</tr>
 </tbody>
 </table>
-<p><code>AppShell</code> redirects to <code>/app/sign-in/&lt;persona&gt;</code> when that persona is not signed in. On the guardian app, Home, Health, Calendar and Approvals are tabs on phones; the rest are under <strong>More</strong>.</p>
+<p><code>AppShell</code> redirects to <code>/app/sign-in/&lt;persona&gt;</code> when that persona is not signed in. On the guardian app, Home, Health, Calendar, Chat and Approvals are tabs on phones; the rest are under <strong>More</strong>. The caregiver app gets a Chat tab only once Maggie or Sarah adds the caregiver to the chat.</p>
 <h2 id="state-model">State model<a class="headerlink" href="#state-model" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>One state object</strong> (<code>State</code> in <code>src/data/types.ts</code>) holds the whole circle: members, medicines, doses, tasks, shifts, visits, hand-offs, SOS events, check-ins, approvals, notes, documents, appointments, health settings, audit log, alerts and settings. See <a href="../data-model/">Data model</a>.</li>
+<li><strong>One state object</strong> (<code>State</code> in <code>src/data/types.ts</code>) holds the whole circle: members, medicines (with pills on hand), doses, tasks, shifts, visits, hand-offs, SOS events, check-ins, daily check-ins, the family chat, approvals, notes, documents, appointments, health settings, audit log, alerts and settings. See <a href="../data-model/">Data model</a>.</li>
 <li><strong>Updates</strong> go through <code>update(fn)</code>: the state is deep-copied with <code>structuredClone</code>, the action mutates the draft, <code>evaluate()</code> runs, and React re-renders.</li>
 <li><strong>Actions</strong> (<code>actions</code> in <code>useStoreState</code>) are the only way to change data. Each guarded action calls <code>guard(state, action, resource)</code> → <code>can()</code>; refusals change nothing and write a <code>denied</code> audit entry.</li>
 <li><strong>Selectors</strong> (<code>src/data/selectors.ts</code>) compute derived views — dose states, next item, late check-ins, coverage gaps, streaks, adherence, North Star, activity feed.</li>
 <li><strong>Demo clock</strong>: <code>clock(state)</code> = now + <code>clockOffsetMin</code> so presenters can skip ahead.</li>
-<li><strong>Versioning</strong>: <code>STATE_VERSION = 6</code>. A stored state with another version is discarded and reseeded.</li>
+<li><strong>Versioning</strong>: <code>STATE_VERSION</code> (<code>src/data/demo.ts</code>) = 11. <code>loadState()</code> in <code>store.tsx</code> discards and reseeds a stored state with any other version. See <a href="../data-model/#state-versions">State versions</a>.</li>
 <li><strong>Persistence</strong>: saves are debounced by 250 ms and flushed on <code>pagehide</code>. See <a href="../security-and-privacy/#encryption-at-rest">Security &amp; privacy</a>.</li>
 <li><strong>Read logging</strong>: <code>logView(resource)</code> writes a <em>viewed</em> entry at most once per resource every 10 minutes.</li>
 </ul>
@@ -3172,13 +3421,82 @@
 </tr>
 <tr>
 <td>8</td>
-<td>Expire time-limited members</td>
+<td>Low medicine supply: one alert per bottle to Sarah and Ana when days left reach <code>refillAlertDays</code>, until someone requests a refill; plus a refill entry on the Calendar 3 days before it runs out</td>
+<td>CC-121</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Cancel the automatic refill entry of a paused or removed medicine</td>
+<td>CC-121</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Daily check-in: one gentle reminder to Maggie at 7 PM, only if she logged nothing</td>
+<td>CC-142</td>
+</tr>
+<tr>
+<td>11</td>
+<td>No meals logged for 2 days: one note to Sarah, only while Maggie shares check-ins, from 9 AM, and only if she logged a meal in the 5 days before (private or unshared days never count)</td>
+<td>CC-143</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Evening recap: one update to Sarah at 7 PM (catches up until 11 PM), unless she turned it off or it falls in quiet hours</td>
+<td>CC-191</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Expire time-limited members (and take them out of the chat)</td>
 <td>CC-25</td>
 </tr>
 </tbody>
 </table>
 <p><code>pushAlert()</code> ignores an alert whose <code>key</code> already exists, which makes the engine idempotent. Full catalogue: <a href="../../features/alerts-and-notifications/">Alerts &amp; notifications</a>.</p>
 <p><strong>In production (planned):</strong> the same rules run server-side on a scheduler, independent of any open browser, with delivery through a notification service.</p>
+<h2 id="everyday-care-sprint-12">Everyday care (Sprint 12)<a class="headerlink" href="#everyday-care-sprint-12" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Elder (Maggie)</th>
+<th>Caregiver (Ana)</th>
+<th>Guardian (Sarah)</th>
+<th>Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Refill tracker (CC-120, CC-121)</td>
+<td>Nothing new on her screens</td>
+<td><em>Pills on hand</em> on Today during her shift, with New bottle and Request refill; the low-supply alert</td>
+<td>Days left for each medicine in Medications; the low-supply alert and a Calendar refill entry</td>
+<td><code>SupplyRow</code> in <code>guardianEveryday.tsx</code></td>
+</tr>
+<tr>
+<td>Daily check-ins (CC-142, CC-143)</td>
+<td><em>My day</em> card on Home: six drawn faces, water glasses, three meals, one tap each; her own sharing switch in My privacy (Privacy Center)</td>
+<td>No access</td>
+<td>Today's check-in on Home and a 7-day view in Health, only while Maggie shares</td>
+<td><code>DailyCheckins</code> in <code>everyday.tsx</code>, <code>DailyWeek</code> in <code>guardianEveryday.tsx</code></td>
+</tr>
+<tr>
+<td>Family chat (CC-164, CC-165)</td>
+<td>Large-text chat at <code>/app/elder/chat</code> with one microphone and a read-back card before sending; a chat tile on Home she can hide</td>
+<td>Chat tab only once added; sees messages from when she joined</td>
+<td>Chat tab with an unread count; the header names who can read</td>
+<td><code>ChatView</code>, <code>ElderChatTile</code> in <code>chat.tsx</code></td>
+</tr>
+<tr>
+<td>Evening recap (CC-191)</td>
+<td>Nothing changes; her check-in appears only while she shares</td>
+<td>No access</td>
+<td><em>Evening recap</em> card on Home from 6 PM; one 7 PM update that says only "Update from Circle Care", which she can turn off in Settings</td>
+<td><code>EveningRecap</code> in <code>guardianEveryday.tsx</code>, <code>recap()</code> in <code>everyday.ts</code></td>
+</tr>
+</tbody>
+</table>
+<p>Every chat message, typed or spoken, from anyone, passes a health-detail check that offers Notes instead (<code>phiHint</code>, CC-164; fewer false alarms since CC-192).</p>
+<p>Permissions are in <code>MATRIX</code> (<code>src/data/policy.ts</code>): <code>supply</code> (elder, guardian and family; paid caregivers only on shift), <code>wellbeing</code> (elder writes; guardian reads only while Maggie shares and sharing isn't paused) and <code>chat</code> (elder, guardian and family; paid caregivers only once added, and elder and guardian can add them; while Maggie pauses sharing, only she and Sarah can use it). Lock screens never show medicine names or check-in details.</p>
 <h2 id="cross-cutting-ui">Cross-cutting UI<a class="headerlink" href="#cross-cutting-ui" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3236,7 +3554,7 @@
 </tr>
 <tr>
 <td>Service worker</td>
-<td><code>public/sw.js</code>, cache <code>circle-care-v1</code>. Pre-caches the app shell (<code>/</code>, <code>/index.html</code>, manifest, icons). <strong>Network-first</strong> for same-origin GET requests, falling back to cache and then to <code>/index.html</code></td>
+<td><code>public/sw.js</code>, cache <code>circle-care-v2</code>. Pre-caches the app shell (<code>/</code>, <code>/index.html</code>, manifest, icons). <strong>Network-first</strong> for same-origin GET requests, falling back to cache and then to <code>/index.html</code>. <code>/api/*</code> and <code>/vault/*</code> are never cached (CC-181)</td>
 </tr>
 <tr>
 <td>Registration</td>
@@ -3259,27 +3577,43 @@
 <tbody>
 <tr>
 <td><code>npm install</code></td>
-<td>Install dependencies (Node 20+)</td>
+<td>Install dependencies (Node 20.11+)</td>
 </tr>
 <tr>
 <td><code>npm run dev</code></td>
-<td>Vite dev server on port <strong>5000</strong>, all hosts (Replit preview)</td>
+<td>Vite dev server on port <strong>5000</strong>, all hosts (Replit preview); <code>/api</code> and <code>/vault</code> are served in-process by the accounts server (PGlite unless <code>DATABASE_URL</code> is set)</td>
 </tr>
 <tr>
 <td><code>npm test</code></td>
-<td>Vitest unit tests</td>
+<td>Vitest unit tests (app and server)</td>
+</tr>
+<tr>
+<td><code>npm run typecheck</code></td>
+<td>Type-check the app and the server</td>
 </tr>
 <tr>
 <td><code>npm run build</code></td>
-<td><code>tsc --noEmit</code> type-check, then <code>vite build</code> into <code>dist/</code> with the CSP meta tag injected</td>
+<td>Type-check the app and the server, then <code>vite build</code> into <code>dist/</code> with the CSP meta tag injected</td>
+</tr>
+<tr>
+<td><code>npm start</code></td>
+<td>Run the accounts server (<code>server/index.ts</code>), which also serves <code>dist/</code></td>
+</tr>
+<tr>
+<td><code>npm run db:migrate</code></td>
+<td>Apply database migrations (<code>server/migrations</code>)</td>
+</tr>
+<tr>
+<td><code>npm run audit:export</code></td>
+<td>Masked audit export (CC-184)</td>
 </tr>
 <tr>
 <td><code>npm run preview</code></td>
-<td>Serve <code>dist/</code> on port 4173</td>
+<td>Serve <code>dist/</code> on port 4173 (no API)</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Replit.</strong> <code>.replit</code> runs <code>npm install &amp;&amp; npm run dev</code> (Node 20, port 5000 → 80). The deployment target is <strong>static</strong>: build <code>npm install &amp;&amp; npm run build</code>, public directory <code>dist</code>. Import the GitHub repository into Replit, press <strong>Run</strong>, then <strong>Deploy → Static</strong>. The deployed URL is the live demo ("your Replit URL").</p>
+<p><strong>Replit.</strong> <code>.replit</code> runs <code>npm install &amp;&amp; npm run dev</code> (Node 20, port 5000 → 80). The deployment target is <strong>autoscale</strong>: build <code>npm install &amp;&amp; npm run build</code>, run <code>APP_ENV=staging npm start</code>. The deployed copy is <em>staging</em>: a real server and PostgreSQL database with test data only. It needs <code>DATA_ENCRYPTION_KEY</code> and <code>DATA_HMAC_KEY</code> in Secrets and a PostgreSQL database. See <a href="../../features/accounts-identity-payments/">Accounts, identity &amp; payments</a>.</p>
 <p><strong>This wiki</strong> is built separately with MkDocs (<code>mkdocs build</code>, <code>mkdocs gh-deploy</code>) — see <a href="../../how-to-contribute/">How to contribute</a>.</p>
 <h2 id="external-dependencies-at-runtime">External dependencies at runtime<a class="headerlink" href="#external-dependencies-at-runtime" title="Permanent link">&para;</a></h2>
 <table>
@@ -3303,7 +3637,7 @@
 </tr>
 </tbody>
 </table>
-<p>No analytics, no trackers and no API calls.</p>
+<p>No analytics and no trackers. The only API calls go to Circle Care's own accounts server (<code>/api/*</code>, plus the simulated payment vault <code>/vault/v1/*</code> when the simulated payment provider is in use, never in production; CSP <code>connect-src 'self'</code>); care data never leaves the browser.</p>
 <h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../data-model/">Data model</a></li>

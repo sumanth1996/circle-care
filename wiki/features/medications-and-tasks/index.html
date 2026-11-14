@@ -1026,6 +1026,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#refill-tracker-cc-120-cc-121-sprint-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refill tracker (CC-120 – CC-121, Sprint 12)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2493,6 +2504,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2581,6 +2604,174 @@
     
   
     Code review: Sprint 11
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-refill-tracker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, refill tracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-daily-checkins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, daily check-ins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-family-chat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, family chat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-12-evening-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 12, evening recap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-chat-check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, chat check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-architecture-wiki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, architecture wiki
   
 
     
@@ -2777,6 +2968,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#refill-tracker-cc-120-cc-121-sprint-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refill tracker (CC-120 – CC-121, Sprint 12)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2914,11 +3116,11 @@
 </tr>
 <tr>
 <td><strong>Related stories</strong></td>
-<td>CC-36 add medication · CC-37 edit / pause · CC-38 caregiver's schedule for today · CC-39 reminder · CC-40 taken / skipped / refused · CC-41 caregiver-verified doses · CC-42 missed-dose escalation timers · CC-43 high-priority medicines · CC-44 recurring care tasks · CC-45 complete tasks with notes · CC-64 change requests via approvals</td>
+<td>CC-36 add medication · CC-37 edit / pause · CC-38 caregiver's schedule for today · CC-39 reminder · CC-40 taken / skipped / refused · CC-41 caregiver-verified doses · CC-42 missed-dose escalation timers · CC-43 high-priority medicines · CC-44 recurring care tasks · CC-45 complete tasks with notes · CC-64 change requests via approvals · CC-120 pills on hand · CC-121 low-supply alerts and Calendar refills</td>
 </tr>
 <tr>
 <td><strong>Last updated</strong></td>
-<td>2026-10-19</td>
+<td>2026-11-14</td>
 </tr>
 </tbody>
 </table>
@@ -3205,6 +3407,64 @@
 </tr>
 </tbody>
 </table>
+<h3 id="refill-tracker-cc-120-cc-121-sprint-12">Refill tracker (CC-120 – CC-121, Sprint 12)<a class="headerlink" href="#refill-tracker-cc-120-cc-121-sprint-12" title="Permanent link">&para;</a></h3>
+<p>Each medicine can carry a <strong>supply</strong>: the pill count from the last bottle, when it was counted, pills per dose and the pharmacy (demo: <em>Fog City Pharmacy</em>, fictional).</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pills on hand</td>
+<td>Count at the last bottle, minus every dose marked <strong>taken</strong> since. Skipped and refused doses don't use a pill. Never below zero.</td>
+</tr>
+<tr>
+<td>Pills per dose</td>
+<td>Read from the dose text: <em>2 tablets</em> uses 2, <em>1/2 tablet</em> or <em>½ tablet</em> uses 0.5. Changing the dose mid-bottle starts a fresh count from what is left, on the same bottle (no second alert).</td>
+</tr>
+<tr>
+<td>Days left</td>
+<td>Today's doses that nobody has marked yet are set aside first, then whole days at the current schedule: remaining pills ÷ (times a day × pills per dose). The same bottle gives the same answer at 7 AM and at 8 PM. Paused medicines show <em>Paused</em> and never alert.</td>
+</tr>
+<tr>
+<td>Runs out</td>
+<td>Today + days left: the last day with every dose covered.</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Days left at or under the guardian's threshold (<em>Remind me when a medicine has N days left</em>, 3–14, default 7).</td>
+</tr>
+<tr>
+<td>Calendar refill</td>
+<td>When low, an orange <strong>Refill</strong> entry is added at 10:00 three days before it runs out (today if that's already past). It isn't added if a refill for that medicine is already scheduled in the window; the screens then show that entry's date. One entry per bottle. Pausing the medicine cancels the automatic entry and resuming brings it back; an entry a person cancelled stays cancelled.</td>
+</tr>
+<tr>
+<td>Alert</td>
+<td>One per bottle, to Sarah and the caregiver: <em>"Lisinopril: 6 days left. Request a refill from Fog City Pharmacy."</em> The lock-screen title stays <em>"You have a reminder from Circle Care"</em>.</td>
+</tr>
+<tr>
+<td>Who can act</td>
+<td><strong>Request refill</strong> and <strong>New bottle</strong> show only to people who may change counts, so a refused change never looks like it worked.</td>
+</tr>
+<tr>
+<td>Change requests</td>
+<td>Approving an older change request keeps today's pill count.</td>
+</tr>
+<tr>
+<td>Request refill</td>
+<td>Marks the bottle <em>requested</em> (who and when, on the medicine's history), stops repeats and tells the other of Sarah or the caregiver.</td>
+</tr>
+<tr>
+<td>New bottle</td>
+<td>Enter the count (quick picks 30, 60, 90; 1–1000). Resets the count, logs <em>"New bottle: N on hand"</em> and closes the automatic Calendar entry for the old bottle.</td>
+</tr>
+</tbody>
+</table>
+<p>Where it shows: a supply row on each <strong>Medications</strong> card (bar, days left, <em>runs out</em> date, <strong>Request refill</strong>, <strong>New bottle</strong>), <strong>Pills on hand</strong> on the caregiver's Today (low ones first) and a <em>Needs your attention</em> item on the guardian dashboard. Demo seed: Atorvastatin starts at 6 days, so the alert and Calendar refill show on first load; the presenter sheet's <em>Simulate low Metformin supply</em> sets Metformin to 7 days.</p>
+<p>Mockups: <a href="../../../design/sprint-12/">Sprint 12 design</a>.</p>
 <h2 id="permissions-privacy">Permissions &amp; privacy<a class="headerlink" href="#permissions-privacy" title="Permanent link">&para;</a></h2>
 <p>From <code>MATRIX</code> in <code>src/data/policy.ts</code>:</p>
 <table>
@@ -3234,6 +3494,12 @@
 <td>elder, guardian, family, pro@shift</td>
 <td>elder, guardian, family, pro@shift</td>
 <td>family, pro@shift</td>
+</tr>
+<tr>
+<td><code>supply</code></td>
+<td>elder, guardian, family, pro@shift</td>
+<td>elder, guardian, family, pro@shift</td>
+<td>—</td>
 </tr>
 </tbody>
 </table>
@@ -3280,6 +3546,20 @@
 <td>Info</td>
 <td>You have a new request in Circle Care</td>
 <td>Ana asked to change Metformin.</td>
+</tr>
+<tr>
+<td>Medicine low (CC-121)</td>
+<td>Guardian, caregiver</td>
+<td>Warning</td>
+<td>You have a reminder from Circle Care</td>
+<td>Lisinopril: 6 days left. Request a refill from Fog City Pharmacy.</td>
+</tr>
+<tr>
+<td>Refill requested</td>
+<td>Guardian or caregiver (the other one)</td>
+<td>Info</td>
+<td>Update from Circle Care</td>
+<td>Sarah asked Fog City Pharmacy to refill Lisinopril.</td>
 </tr>
 <tr>
 <td>Request decided</td>
@@ -3375,7 +3655,7 @@
 </tr>
 <tr>
 <td>Unit</td>
-<td><code>rules.test.ts</code> — <em>escalates a missed dose to the caregiver, then the guardian</em> (and the elder repeat) · <em>does not repeat the same alert</em>. <code>policy.test.ts</code> — every <code>meds</code>, <code>doses</code>, <code>tasks</code> cell for every role, on and off shift</td>
+<td><code>rules.test.ts</code> — <em>escalates a missed dose to the caregiver, then the guardian</em> (and the elder repeat) · <em>does not repeat the same alert</em>. <code>policy.test.ts</code> — every <code>meds</code>, <code>doses</code>, <code>tasks</code>, <code>supply</code> cell for every role, on and off shift. <code>everyday.test.ts</code> — 24 tests for CC-120 and CC-121 (counts, days left morning and evening, pills per dose, threshold, one alert per bottle, Calendar entry and reuse, request and new bottle, pause, approvals keep the count, caregiver off shift refused and audited)</td>
 </tr>
 <tr>
 <td>Accessibility</td>
@@ -3397,8 +3677,8 @@
 <td>FHIR medication import and pharmacy refill integration (<a href="../../roadmap/">R2</a>)</td>
 </tr>
 <tr>
-<td>No supply tracking</td>
-<td>Refill tracker and low-supply alerts (<a href="../../roadmap/">R3</a>)</td>
+<td>Pill counts entered by hand; refill requests are recorded, not sent</td>
+<td>Pharmacy refill integration and barcode bottle scan (<a href="../../roadmap/">R3</a>)</td>
 </tr>
 <tr>
 <td>No interaction or identity checks</td>
