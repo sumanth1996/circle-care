@@ -22,7 +22,7 @@ export default function Alerts() {
           {list.map((a) => {
             const Icon = a.severity === "critical" ? Siren : a.severity === "warning" ? AlertTriangle : Info;
             const color = a.severity === "critical" ? "var(--red)" : a.severity === "warning" ? "var(--elder)" : "var(--blue)";
-            const link = a.link === "/app/sos" ? `/app/${p}/sos` : a.link?.startsWith(`/app/${p}`) ? a.link : undefined;
+            const link = a.link === "/app/sos" || a.link === "/app/chat" ? `/app/${p}/${a.link.slice(5)}` : a.link?.startsWith(`/app/${p}`) ? a.link : undefined;
             return (
               <button key={a.id} className="list-row" style={{ alignItems: "flex-start" }} onClick={() => link && nav(link)}>
                 <Icon size={22} color={color} style={{ flex: "none", marginTop: 2 }} />

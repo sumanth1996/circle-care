@@ -43,8 +43,10 @@ Legend: R read · W write · P propose (needs approval) · A approve · I invite
 | `data` | Export / close circle | E D | E D | — | — | — | — |
 | `supply` | Pills on hand, refill requests (CC-120/121) | R W | R W | R W | R W | — | — |
 | `wellbeing` | Daily check-ins: feeling, water, meals (CC-142/143) | R W | R ¹ | — | — | — | — |
+| `chat` | Private family chat (CC-164/165) | R W I | R W I | R W | R W ² | R W ² | — |
 
 ¹ Only while Maggie shares check-ins (`settings.dailyLog.shareWithGuardian`) and hasn't paused all sharing.
+² Only once Maggie or Sarah adds that caregiver (`state.chat.pros`); switching them off, removing them from the circle or their time limit ending takes them out at once. Pausing sharing also takes family and caregivers out of the chat, like every other non-emergency resource.
 
 ## Rules explained
 

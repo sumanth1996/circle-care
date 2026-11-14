@@ -9,7 +9,7 @@ import { todayOf } from "./selectors";
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
   | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
-  | "supply" | "wellbeing";
+  | "supply" | "wellbeing" | "chat";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -39,6 +39,8 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   // Sprint 12 — Everyday Care (CC-120 – CC-121, CC-142 – CC-143)
   supply:          { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian", "family", "pro@shift"] },
   wellbeing:       { read: ["elder", "guardian"], write: ["elder"] },
+  // CC-164: paid caregivers are in the family chat only once Maggie or Sarah adds them (see can()).
+  chat:            { read: ["elder", "guardian", "family", "pro"], write: ["elder", "guardian", "family", "pro"], invite: ["elder", "guardian"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */
@@ -68,6 +70,8 @@ export function can(s: State, actorId: string, action: Action, resource: Resourc
   // Feeling, water and meals reach the guardian only while Maggie shares them (CC-143).
   // Pausing all sharing hides them too: only emergency alerts are shared then.
   if (resource === "wellbeing" && role === "guardian" && (!s.settings.dailyLog.shareWithGuardian || s.settings.sharingPaused)) return false;
+  // CC-164: a paid caregiver reads and writes in the family chat only after someone adds them.
+  if (resource === "chat" && role === "pro" && !s.chat.pros.includes(actorId)) return false;
   return true;
 }
 

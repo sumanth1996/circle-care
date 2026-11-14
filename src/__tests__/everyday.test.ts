@@ -1,13 +1,18 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { seed, GUARDIAN, ELDER, CAREGIVER, FAMILY } from "../data/demo";
-import { evaluate, allowed, applySettings } from "../data/store";
+import { evaluate, allowed, applySettings, leaveChat } from "../data/store";
 import { can } from "../data/policy";
 import { todayOf, clock } from "../data/selectors";
-import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling } from "../data/everyday";
-import { recordRefill, requestRefill, logDaily, setDailySharing, noteSharedSince } from "../data/everydayActions";
+import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling, chatMembers, inChat, unreadChat, phiHint, chatAudience, lastChatMessage, chatMessages, CHAT_MAX } from "../data/everyday";
+import { recordRefill, requestRefill, logDaily, setDailySharing, noteSharedSince, sendChat, readChat, setChatPro } from "../data/everydayActions";
 import { verifyChain } from "../data/audit";
 import { addDays, ymd, toMin, minutesOfDay } from "../lib/time";
 import type { State } from "../data/types";
+
+// Date stands still inside each test, so a saved timestamp can be compared with clock() exactly.
+// (Unfrozen, a comparison could straddle a millisecond and fail now and then. Review F3-8.)
+beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); });
+afterEach(() => { vi.useRealTimers(); });
 
 /** Moves the demo clock to a time of day today. */
 const setTime = (s: State, t: string) => { s.clockOffsetMin = toMin(t) - minutesOfDay(new Date()); return s; };
@@ -647,3 +652,186 @@ describe("Lead Architect review fixes (CC-142 – CC-143)", () => {
   });
 });
 
+
+describe("family chat (CC-164, CC-165)", () => {
+  it("includes the whole circle except paid caregivers until Maggie or Sarah adds one", () => {
+    const s = seed();
+    const ids = chatMembers(s).map((m) => m.id);
+    expect(ids).toEqual(expect.arrayContaining([ELDER, GUARDIAN, FAMILY]));
+    expect(ids).not.toContain(CAREGIVER);
+    expect(can(s, CAREGIVER, "read", "chat")).toBe(false);
+    setChatPro(s, GUARDIAN, CAREGIVER, true);
+    expect(can(s, CAREGIVER, "read", "chat")).toBe(true);
+    expect(can(s, CAREGIVER, "write", "chat")).toBe(true);
+    setChatPro(s, ELDER, CAREGIVER, false);
+    expect(can(s, CAREGIVER, "read", "chat")).toBe(false);
+    expect(s.chat.readAt[CAREGIVER]).toBeUndefined();
+    expect(verifyChain(s.audit).ok).toBe(true);
+  });
+
+  it("only Maggie or Sarah can add a caregiver, and other tries are refused and audited", () => {
+    const s = seed();
+    setChatPro(s, FAMILY, CAREGIVER, true);
+    expect(s.chat.pros).not.toContain(CAREGIVER);
+    expect(s.audit.at(-1)!.action).toBe("denied");
+    setChatPro(s, CAREGIVER, CAREGIVER, true);
+    expect(s.chat.pros).not.toContain(CAREGIVER);
+    expect(s.audit.at(-1)!.action).toBe("denied");
+  });
+
+  it("a caregiver who wasn't added can't send or read, and each try is audited", () => {
+    const s = seed();
+    const n = s.chat.messages.length;
+    const audits = s.audit.length;
+    expect(sendChat(s, CAREGIVER, "Hello everyone")).toBe(false);
+    readChat(s, CAREGIVER);
+    expect(s.chat.messages).toHaveLength(n);
+    expect(s.chat.readAt[CAREGIVER]).toBeUndefined();
+    const denied = s.audit.slice(audits);
+    expect(denied.map((a) => a.action)).toEqual(["denied", "denied"]);
+    expect(denied.map((a) => a.resource)).toEqual(["write chat", "read chat"]);
+  });
+
+  it("a member who leaves the circle loses access at once", () => {
+    const s = seed();
+    expect(inChat(s, FAMILY)).toBe(true);
+    s.members.find((m) => m.id === FAMILY)!.status = "revoked";
+    expect(inChat(s, FAMILY)).toBe(false);
+    expect(chatMembers(s).some((m) => m.id === FAMILY)).toBe(false);
+    expect(sendChat(s, FAMILY, "Still here?")).toBe(false);
+  });
+
+  it("a caregiver whose time-limited access ends is taken out of the chat too", () => {
+    const s = seed();
+    setChatPro(s, GUARDIAN, CAREGIVER, true);
+    const ana = s.members.find((m) => m.id === CAREGIVER)!;
+    ana.expiresOn = ymd(addDays(clock(s), -1));
+    evaluate(s);
+    expect(ana.status).toBe("revoked");
+    expect(s.chat.pros).not.toContain(CAREGIVER);
+    // Coming back to the circle does not bring the chat back without someone adding her again.
+    ana.status = "active";
+    delete ana.expiresOn;
+    expect(inChat(s, CAREGIVER)).toBe(false);
+  });
+
+  it("sending notifies everyone else with a generic lock-screen title", () => {
+    const s = seed();
+    s.persona = "elder";
+    expect(sendChat(s, ELDER, "  See you Saturday!  ", "voice")).toBe(true);
+    const m = s.chat.messages.at(-1)!;
+    expect(m.text).toBe("See you Saturday!");
+    expect(m.via).toBe("voice");
+    expect(s.chat.readAt[ELDER]).toBe(m.at);
+    const a = s.alerts.at(-1)!;
+    expect(a.title).toBe("New message in Circle Care");
+    expect(a.detail).not.toContain("Saturday");
+    expect(a.to).toEqual(["guardian"]);
+    expect(a.link).toBe("/app/chat");
+  });
+
+  it("tells Ana about new messages only once she's in the chat", () => {
+    const s = seed();
+    expect(chatAudience(s, GUARDIAN)).toEqual(["elder"]);
+    setChatPro(s, GUARDIAN, CAREGIVER, true);
+    expect(chatAudience(s, GUARDIAN).sort()).toEqual(["caregiver", "elder"]);
+  });
+
+  it("refuses empty messages and messages over 1000 characters instead of cutting them", () => {
+    const s = seed();
+    const n = s.chat.messages.length;
+    expect(sendChat(s, GUARDIAN, "   ")).toBe(false);
+    expect(sendChat(s, GUARDIAN, "a".repeat(CHAT_MAX + 1))).toBe(false);
+    expect(s.chat.messages).toHaveLength(n);
+    expect(sendChat(s, GUARDIAN, "a".repeat(CHAT_MAX))).toBe(true);
+    expect(s.chat.messages.at(-1)!.text).toHaveLength(CHAT_MAX);
+  });
+
+  it("counts unread messages per person, and opening the chat clears them", () => {
+    const s = seed();
+    setTime(s, "12:00");
+    expect(unreadChat(s, GUARDIAN)).toBe(1);
+    expect(unreadChat(s, FAMILY)).toBe(0);
+    expect(unreadChat(s, CAREGIVER)).toBe(0);
+    readChat(s, GUARDIAN);
+    expect(unreadChat(s, GUARDIAN)).toBe(0);
+    expect(lastChatMessage(s)!.by).toBe(FAMILY);
+  });
+
+  it("pausing sharing limits James and caregivers to emergencies, the chat included", () => {
+    const s = seed();
+    setChatPro(s, GUARDIAN, CAREGIVER, true);
+    applySettings(s, ELDER, { sharingPaused: true });
+    expect(inChat(s, FAMILY)).toBe(false);
+    expect(inChat(s, CAREGIVER)).toBe(false);
+    expect(inChat(s, GUARDIAN)).toBe(true);
+    applySettings(s, ELDER, { sharingPaused: false });
+    expect(inChat(s, FAMILY)).toBe(true);
+  });
+
+  it("only Maggie decides whether the chat shows on her home", () => {
+    const s = seed();
+    applySettings(s, GUARDIAN, { elderChatOnHome: false });
+    expect(s.settings.elderChatOnHome).toBe(true);
+    expect(s.audit.at(-1)!.action).toBe("denied");
+    applySettings(s, ELDER, { elderChatOnHome: false });
+    expect(s.settings.elderChatOnHome).toBe(false);
+  });
+
+  it("suggests Notes when a message names a medicine, a diagnosis or a dose", () => {
+    const s = seed();
+    const med = s.meds[0].name;
+    expect(phiHint(s, `Did Mom take her ${med.toLowerCase()} today?`)).toContain(med);
+    expect(phiHint(s, "Her blood pressure was high")).toContain("blood pressure");
+    expect(phiHint(s, "The doctor changed it to 20 mg")).toContain("a dose");
+    expect(phiHint(s, "New diagnosis from the clinic")).toContain("diagnos…");
+    expect(phiHint(s, "Giants game on Sunday, who's in?")).toEqual([]);
+    expect(phiHint(s, "Heartfelt thanks for dinner")).toEqual([]);
+    expect(phiHint(s, "I'll be there at 10 maybe")).toEqual([]);
+  });
+
+  it("Review F3-6: catches medicines without their strength and common health words, not everyday ones", () => {
+    const s = seed();
+    const vitD = s.meds.find((m) => /\d$/.test(m.name))!;
+    expect(vitD.name).toBe("Vitamin D3");
+    expect(phiHint(s, `Did she have her ${vitD.name.replace(/\s*\d+$/, "").toLowerCase()} today?`)).toContain(vitD.name);
+    const any = s.meds[0].name;
+    expect(phiHint(s, `${any.toLowerCase()}20mg from now on`)).toContain(any);
+    for (const w of ["Picked up her meds", "The dosage changed", "1000 IU a day", "Her BP is fine", "Arthritis is worse", "Diabetic menu please"]) {
+      expect(phiHint(s, w).length, w).toBeGreaterThan(0);
+    }
+    for (const w of ["Gave her 10 units before dinner", "Her BP was 140/90", "Grandpa had a stroke years ago"]) {
+      expect(phiHint(s, w).length, w).toBeGreaterThan(0);
+    }
+    s.meds.push({ ...s.meds[0], id: "med-test", name: "D3" });
+    for (const w of ["New tablet for video calls", "Kidney beans for the chili", "2 units of rental storage", "Our 5g is slow", "Meet at the BP station", "What a stroke of luck", "I'd love to come"]) {
+      expect(phiHint(s, w), w).toEqual([]);
+    }
+  });
+
+  it("Review F3-5: an added caregiver sees messages from when they joined, not the history", () => {
+    const s = setTime(seed(), "12:00");
+    setChatPro(s, GUARDIAN, CAREGIVER, true);
+    expect(s.chat.joinedAt[CAREGIVER]).toBe(clock(s).toISOString());
+    expect(chatMessages(s, CAREGIVER)).toEqual([]);
+    expect(unreadChat(s, CAREGIVER)).toBe(0);
+    s.clockOffsetMin += 1;
+    sendChat(s, GUARDIAN, "Ana, thanks for today");
+    expect(chatMessages(s, CAREGIVER).map((m) => m.text)).toEqual(["Ana, thanks for today"]);
+    expect(unreadChat(s, CAREGIVER)).toBe(1);
+    expect(chatMessages(s, GUARDIAN).length).toBeGreaterThan(1);
+    setChatPro(s, GUARDIAN, CAREGIVER, false);
+    expect(s.chat.joinedAt[CAREGIVER]).toBeUndefined();
+  });
+
+  it("Review F3-12: removing a member clears their chat place, read mark and join time", () => {
+    const s = seed();
+    setChatPro(s, GUARDIAN, CAREGIVER, true);
+    readChat(s, CAREGIVER);
+    leaveChat(s, CAREGIVER);
+    expect(s.chat.pros).not.toContain(CAREGIVER);
+    expect(s.chat.readAt[CAREGIVER]).toBeUndefined();
+    expect(s.chat.joinedAt[CAREGIVER]).toBeUndefined();
+    expect(inChat(s, CAREGIVER)).toBe(false);
+  });
+});

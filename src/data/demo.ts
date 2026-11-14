@@ -1,8 +1,8 @@
-import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, DailyLog, Feeling, Meal } from "./types";
+import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, DailyLog, Feeling, Meal, ChatMessage } from "./types";
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 8;
+export const STATE_VERSION = 10;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -96,6 +96,15 @@ export function seed(now = new Date()): State {
     dailyLogs.push({ date: today, feeling: "good", feelingAt: iso(today, "08:45"), water: Math.min(5, Math.max(1, Math.floor((nowMin - 480) / 110))), meals, updatedAt: iso(today, hm(now)) });
   }
 
+  // CC-164: the family chat. Ana (paid caregiver) isn't in it until Maggie or Sarah adds her.
+  const chatMessages: ChatMessage[] = [
+    { id: "msg-1", by: FAMILY, at: iso(ymd(addDays(now, -2)), "18:10"), text: "Found the photos from Ocean Beach on Sunday. Adding them to the family album tonight." },
+    { id: "msg-2", by: ELDER, at: iso(ymd(addDays(now, -2)), "18:32"), text: "Thank you James. The one with the kite is my favorite.", via: "voice" },
+    { id: "msg-3", by: GUARDIAN, at: iso(ymd(addDays(now, -1)), "12:05"), text: "I'm bringing dinner on Saturday. Mom, would you like the noodle soup from Clement Street?" },
+    { id: "msg-4", by: ELDER, at: iso(ymd(addDays(now, -1)), "12:40"), text: "Yes please. And the sesame bread.", via: "voice" },
+    { id: "msg-5", by: FAMILY, at: iso(today, "07:45"), text: "The Giants have a day game at Oracle Park next Sunday. Grandma, want to come with me?" },
+  ];
+
   const tasks: State["tasks"] = [
     { id: "t-breakfast", title: "Breakfast", icon: "coffee", time: "08:30", recurrence: "daily", assignee: "caregiver" },
     { id: "t-bath", title: "Help with shower", icon: "droplets", time: "09:30", recurrence: "weekdays", assignee: "caregiver" },
@@ -179,6 +188,7 @@ export function seed(now = new Date()): State {
     ],
     checkins,
     dailyLogs,
+    chat: { messages: chatMessages, pros: [], readAt: { [GUARDIAN]: iso(ymd(addDays(now, -1)), "13:00"), [ELDER]: iso(ymd(addDays(now, -1)), "12:41"), [FAMILY]: iso(today, "07:46") }, joinedAt: {} },
     approvals: [
       {
         id: "ap-metformin", kind: "med-change", title: "Move evening Metformin to 6:30 PM",
@@ -233,6 +243,7 @@ export function seed(now = new Date()): State {
       toured: {},
       refillAlertDays: 7,
       dailyLog: { shareWithGuardian: true, waterGoal: 6 },
+      elderChatOnHome: true,
       vitals: { intervalMin: 30, thresholds: { hrHigh: 110, hrLow: 50, hrJump: 25, spo2Low: 92, spo2Drop: 4 }, shareWithGuardian: true },
       emergencyCard: {
         allergies: "Penicillin",

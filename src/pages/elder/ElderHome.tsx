@@ -1,15 +1,16 @@
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
-import { Phone, Volume2, Shield, Type, Bell, IdCard, Sun, CheckCircle2 } from "lucide-react";
+import { Phone, Volume2, Shield, Type, Bell, IdCard, Sun, CheckCircle2, MessageCircleHeart } from "lucide-react";
 import { useStore } from "../../data/store";
 import { DailyCheckins } from "../../components/everyday";
+import { ElderChatTile } from "../../components/chat";
 import { nextUp, clock, checkinToday, member, isOpen } from "../../data/selectors";
 import { Avatar, PillArt, taskIcons, IconTile, useSpeech, useToast } from "../../components/ui";
 import { fmtTime, fmtDay, greeting, toMin, minutesOfDay } from "../../lib/time";
 import "./elder.css";
 
 /** CC-68: elder home with three big actions — What's next, SOS, Call my person.
- *  CC-142: optional one-tap check-ins below them. */
+ *  CC-142: optional one-tap check-ins below them. CC-165: the family chat tile, unless Maggie hides it. */
 export default function ElderHome() {
   const { state, actions } = useStore();
   const { speak, supported } = useSpeech();
@@ -86,9 +87,12 @@ export default function ElderHome() {
         </Link>
       </div>
 
+      <ElderChatTile />
+
       <DailyCheckins />
 
       <nav className="elder-links" aria-label="More">
+        <Link to="/app/elder/chat"><MessageCircleHeart size={20} /> Family</Link>
         <Link to="/app/elder/decisions"><Bell size={20} /> Updates about me {newDecisions > 0 && <span className="new" aria-label={`${newDecisions} new`} />}</Link>
         <Link to="/app/elder/privacy"><Shield size={20} /> My privacy</Link>
         <Link to="/app/elder/card"><IdCard size={20} /> Emergency card</Link>

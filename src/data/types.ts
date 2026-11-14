@@ -150,6 +150,25 @@ export interface DailyLog {
   private?: boolean;
 }
 
+/** CC-164 – CC-165: the circle's private family chat. */
+export interface ChatMessage {
+  id: string;
+  by: string;
+  at: string;
+  text: string;
+  /** CC-165: Maggie spoke it and read it back before sending. */
+  via?: "voice";
+}
+export interface Chat {
+  messages: ChatMessage[];
+  /** Paid caregivers join only when Maggie or Sarah adds them. */
+  pros: string[];
+  /** Last time each member read the chat. */
+  readAt: Record<string, string>;
+  /** When each added caregiver joined. They see messages from then on, not the history before. */
+  joinedAt: Record<string, string>;
+}
+
 export interface Approval {
   id: string;
   kind: "med-change" | "member" | "shift-swap";
@@ -275,6 +294,8 @@ export interface Settings {
     /** When Sarah last gained access (sharing turned on or resumed). Unset means shared from the start. */
     sharedSince?: string;
   };
+  /** CC-165: Maggie can hide the family chat from her home screen. It stays under Family. */
+  elderChatOnHome: boolean;
   emergencyCard: {
     allergies: string;
     conditions: string;
@@ -302,6 +323,7 @@ export interface State {
   sos: SosEvent[];
   checkins: Checkin[];
   dailyLogs: DailyLog[];
+  chat: Chat;
   approvals: Approval[];
   notes: CareNote[];
   docs: CareDoc[];
