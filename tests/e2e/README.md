@@ -4,7 +4,7 @@ Python + Playwright scripts that drive the production build like a person would.
 
 ```bash
 npm run build && npx vite preview --port 4173 &
-pip install playwright && python -m playwright install chromium
+pip install playwright==1.49.1 && python -m playwright install chromium
 python tests/e2e/e2e.py        # 29 scenarios across the website and all three personas
 python tests/e2e/everyday.py   # CC-194: family chat and evening recap (7 scenarios)
 python tests/e2e/a11y.py       # axe-core WCAG 2.1 A/AA audit of 26 screens plus the evening recap card

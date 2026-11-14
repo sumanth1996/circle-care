@@ -86,8 +86,8 @@ with sync_playwright() as p:
 
         The demo store saves on a 250 ms timer, and a reload sooner throws the change away (backlog story CC-195).
         Each save is encrypted with a fresh IV, so the stored text changes whenever a save lands. The 15 s tick also
-        saves, so the first change alone could be the tick's: wait until the text has stayed the same for 0.6 s,
-        longer than the timer, after it first changed.
+        saves, so the first change alone could be the tick's. Polling starts after the flip, so waiting until the text
+        has stayed the same for 0.6 s, longer than the timer, since it last changed covers the flip's own save.
         Polled from here, not with wait_for_function: the app's CSP (script-src 'self') blocks the eval it needs.
         """
         read = lambda: pg.evaluate("() => localStorage.getItem('circle-care-demo')")

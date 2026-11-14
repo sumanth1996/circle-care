@@ -14,17 +14,20 @@
 
 The strategy favours **testing the rules where they live** (the data layer is pure and easy to test) and **testing behaviour end to end** for anything a person sees. A separate [security test plan (CC-78)](../../security/78-security-test-plan.md) covers ASVS/MASVS and the external penetration test.
 
-## Current results (v0.4, 2026-10-19)
+## Current results (Sprint 13, 2026-11-14)
+
+Measured on GitHub Actions for [PR #7](https://github.com/sumanth1996/circle-care/pull/7) (CC-194), which runs on every pull request to `main`.
 
 | Suite | Count | Result |
 |---|---|---|
-| Unit tests | **217** in 5 files | All pass (`npm test`, ~1.2 s) |
-| E2E scenarios | **29** | All passing as recorded in commit `dce35c2` (re-run before each release) |
-| Accessibility | **24** screens | **0** axe-core violations (WCAG 2.1 A/AA) |
+| Unit tests | **444** in 8 files (client and server) | All pass (`npm test`) |
+| E2E scenarios | **29** | All pass, with no page or console errors |
+| Chat and recap scenarios | **7** | All pass |
+| Accessibility | **26** screens plus the evening recap card | **0** axe-core violations (WCAG 2.1 A/AA) |
 
-Since Sprint 13 (CC-194) every pull request runs on GitHub Actions: 444 unit tests, 29 e2e scenarios, 7 chat and recap scenarios, and an axe audit of 26 screens plus the evening recap card, all green on [PR #7](https://github.com/sumanth1996/circle-care/pull/7).
+### Unit tests by file (as of v0.4, 2026-10-19)
 
-### Unit tests by file
+The Sprint 7 to 12 test files (`everyday.test.ts` and the server suites in `server/__tests__/`) came later and aren't broken down here.
 
 | File | Tests | Covers |
 |---|---|---|
@@ -88,7 +91,7 @@ npm run build
 
 # End-to-end and accessibility (needs Python 3 and Chromium)
 npm run build && npx vite preview --port 4173 &
-pip install playwright && python -m playwright install chromium
+pip install playwright==1.49.1 && python -m playwright install chromium
 python tests/e2e/e2e.py       # 29 scenarios
 python tests/e2e/everyday.py  # 7 chat and recap scenarios
 python tests/e2e/a11y.py      # 26 screens plus the recap card
@@ -103,7 +106,6 @@ Set `CHROMIUM_PATH` to use a specific Chromium binary. Failure screenshots and t
 | No unit tests for late caregiver check-in, coverage gaps or SOS escalation timing | Regressions in time-based rules | Add `rules.test.ts` cases with a fixed clock |
 | No tests for `scrubHealth()` or `npsScore()` | Health terms leaking into research data | Table-driven unit tests |
 | No e2e for shift swaps, shift offers, emergency-card edits or invitation acceptance | Untested journeys | Add scenarios |
-| E2E depends on the wall clock (e.g. Ana on shift) | Flaky results outside 08:00–14:00 or on Sundays | Inject a fixed demo clock for tests |
 | Hand-off, schedule, feed, emergency card and SOS screens not in the axe list | Unchecked accessibility | Add them to `a11y.py` |
 | No visual regression tests | Layout bugs (e.g. the digest chart in the screenshot) | Playwright screenshot comparisons |
 | The demo store can lose a change made in the last quarter second before the tab closes | A switch can come back after a quick reload; tests must wait for the save | Backlog story CC-195 |
