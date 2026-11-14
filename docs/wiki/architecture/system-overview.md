@@ -1,6 +1,6 @@
 # System overview
 
-This page describes how the Circle Care **prototype v0.4** is built. It is a single-page web application with no backend: all data, rules and permission checks run in the browser. Where a production design differs, it is called out as **In production (planned)**.
+This page describes how the Circle Care **prototype v0.5** is built. It is a single-page web application. All care data, rules and permission checks run in the browser. Since Sprint 11, a small API server holds real accounts, identity and payment methods in PostgreSQL ([Accounts, identity & payments](../features/accounts-identity-payments.md)); it never receives care data. Where a production design differs, it is called out as **In production (planned)**.
 
 ## At a glance
 
@@ -10,13 +10,15 @@ This page describes how the Circle Care **prototype v0.4** is built. It is a sin
 | Routing | React Router 7 `HashRouter` (URLs like `/#/app/guardian`) so any static host works without rewrites |
 | State | One `State` object in a React context (`StoreProvider` in `src/data/store.tsx`), updated immutably via `structuredClone` |
 | Business rules | `evaluate()` rules engine, run every 15 s and after every change |
+| Everyday care (Sprint 12) | `src/data/everyday.ts` (derived views) and `src/data/everydayActions.ts` (changes): refills, daily check-ins, family chat, evening recap |
 | Authorisation | `can()` and the `MATRIX` in `src/data/policy.ts` |
 | Persistence | Browser `localStorage`, encrypted with AES-256-GCM; key and files in IndexedDB |
 | Audit | SHA-256 hash-chained log (`src/data/audit.ts`, `src/lib/sha256.ts`) |
 | Offline / install | Web app manifest + service worker (`public/`) |
 | Charts | Dependency-free SVG components (`src/components/charts.tsx`) |
 | Speech | Web Speech API — synthesis for read-aloud; recognition only when on-device |
-| Hosting | Replit static deployment (`.replit`) |
+| Accounts server (Sprint 11) | Express 5 + TypeScript in `server/`; PostgreSQL in staging and production, PGlite (Postgres in WASM) in development and tests |
+| Hosting | Replit autoscale deployment (`.replit`): `npm run build`, then `npm start` serves the app and the API |
 
 ## Component diagram
 
@@ -30,7 +32,8 @@ flowchart TB
         Elder["Elder pages"]
         Care["Caregiver pages"]
         Guard["Guardian pages"]
-        Shared["Shared pages<br/>Privacy Center, Notes, Alerts,<br/>Emergency card, SOS responder"]
+        Shared["Shared pages<br/>Privacy Center, Notes, Alerts,<br/>Emergency card, SOS responder,<br/>Family chat"]
+        Account["Account pages<br/>Join, Login, My account"]
         Internal["Internal pages<br/>Review console, Pilot dashboard"]
       end
       subgraph Data["Data layer — src/data"]
@@ -38,6 +41,7 @@ flowchart TB
         Rules["evaluate()<br/>rules engine"]
         Policy["policy.ts<br/>MATRIX · can()"]
         Sel["selectors.ts<br/>derived views"]
+        Every["everyday.ts · everydayActions.ts<br/>refills · check-ins · chat · recap"]
         Audit["audit.ts<br/>hash chain"]
         Seed["demo.ts<br/>seed data"]
       end
@@ -52,6 +56,7 @@ flowchart TB
       IDB[("IndexedDB<br/>non-extractable key<br/>encrypted files")]
       SW["Service worker<br/>sw.js"]
     end
+    API["Accounts API server<br/>server/ · /api/*<br/>PostgreSQL"]
     Unsplash["images.unsplash.com<br/>(stock photos)"]
     Fonts["Google Fonts"]
 
@@ -62,6 +67,10 @@ flowchart TB
     Rules --> Sel
     Rules --> Health
     UI --> Sel
+    UI --> Every
+    Store --> Every
+    Rules --> Every
+    Account -->|"HTTPS, session cookie"| API
     Audit --> Sha
     Store --> Sec
     Sec --> LS
@@ -107,11 +116,15 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | `/privacy` | `site/Privacy` | Privacy pillars, "never" list, FAQ |
 | `/pilot` | `site/Pilot` | Pilot recruitment |
 | `/app` | `Welcome` | Choose a person; sign-up |
-| `/app/sign-in/:persona` | `SignIn` | Sign-in, MFA, consent |
+| `/app/join`, `/app/join/:role` | `account/Join` | Create a real account (CC-172, CC-173) |
+| `/app/login` | `account/Login` | Sign in to a real account (CC-174) |
+| `/app/account` | `account/MyAccount` | Profile, identity, photo, payment methods (CC-176 – CC-188) |
+| `/app/sign-in/:persona` | `SignIn` | Demo sign-in, MFA, consent |
 | `/app/invite/:memberId` | `Invite` | Accept an invitation |
 | `/app/review` | `internal/Review` | Review team console |
 | `/app/pilot` | `internal/PilotDashboard` | Pilot dashboard |
 | `/app/sos` | `SosRedirect` | Redirects to the current persona's SOS page |
+| `/app/chat` | `SosRedirect to="chat"` | Redirects to the current persona's family chat |
 | `*` | — | Redirects to `/` |
 
 ### Elder — `/app/elder` (inside `AppShell persona="elder"`)
@@ -126,6 +139,7 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | `settings` | `elder/ElderSettings` |
 | `decisions` | `elder/ElderDecisions` |
 | `card` | `shared/EmergencyCard` |
+| `chat` | `ChatView large` (CC-165) |
 
 ### Caregiver — `/app/caregiver`
 
@@ -138,6 +152,7 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | `card` | `shared/EmergencyCard` |
 | `alerts` | `shared/Alerts` |
 | `sos` | `shared/SosResponder` |
+| `chat` | `ChatView` (CC-164) |
 
 ### Guardian — `/app/guardian`
 
@@ -158,17 +173,18 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | `settings` | `guardian/GuardianSettings` |
 | `alerts` | `shared/Alerts` |
 | `sos` | `shared/SosResponder` |
+| `chat` | `ChatView` (CC-164) |
 
-`AppShell` redirects to `/app/sign-in/<persona>` when that persona is not signed in. On the guardian app, Home, Health, Calendar and Approvals are tabs on phones; the rest are under **More**.
+`AppShell` redirects to `/app/sign-in/<persona>` when that persona is not signed in. On the guardian app, Home, Health, Calendar, Chat and Approvals are tabs on phones; the rest are under **More**. The caregiver app gets a Chat tab only once Maggie or Sarah adds the caregiver to the chat.
 
 ## State model
 
-- **One state object** (`State` in `src/data/types.ts`) holds the whole circle: members, medicines, doses, tasks, shifts, visits, hand-offs, SOS events, check-ins, approvals, notes, documents, appointments, health settings, audit log, alerts and settings. See [Data model](data-model.md).
+- **One state object** (`State` in `src/data/types.ts`) holds the whole circle: members, medicines (with pills on hand), doses, tasks, shifts, visits, hand-offs, SOS events, check-ins, daily check-ins, the family chat, approvals, notes, documents, appointments, health settings, audit log, alerts and settings. See [Data model](data-model.md).
 - **Updates** go through `update(fn)`: the state is deep-copied with `structuredClone`, the action mutates the draft, `evaluate()` runs, and React re-renders.
 - **Actions** (`actions` in `useStoreState`) are the only way to change data. Each guarded action calls `guard(state, action, resource)` → `can()`; refusals change nothing and write a `denied` audit entry.
 - **Selectors** (`src/data/selectors.ts`) compute derived views — dose states, next item, late check-ins, coverage gaps, streaks, adherence, North Star, activity feed.
 - **Demo clock**: `clock(state)` = now + `clockOffsetMin` so presenters can skip ahead.
-- **Versioning**: `STATE_VERSION = 6`. A stored state with another version is discarded and reseeded.
+- **Versioning**: `STATE_VERSION = 11`. A stored state with another version is discarded and reseeded. See [State versions](data-model.md#state-versions).
 - **Persistence**: saves are debounced by 250 ms and flushed on `pagehide`. See [Security & privacy](security-and-privacy.md#encryption-at-rest).
 - **Read logging**: `logView(resource)` writes a *viewed* entry at most once per resource every 10 minutes.
 
@@ -185,11 +201,27 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | 5 | Approval waiting > 24 h | CC-64 |
 | 6 | Suspicious access: ≥ 8 views in 5 min, ≥ 3 denials in 10 min | CC-35 |
 | 7 | Unusual vital signs (if shared) | CC-86, CC-88 |
-| 8 | Expire time-limited members | CC-25 |
+| 8 | Low medicine supply: one alert per bottle at `refillAlertDays`, and a refill entry on the Calendar 3 days before it runs out | CC-121 |
+| 9 | Cancel the automatic refill entry of a paused or removed medicine | CC-121 |
+| 10 | Daily check-in: one gentle reminder to Maggie at 7 PM, only if she logged nothing | CC-142 |
+| 11 | No meals logged for 2 days: one note to Sarah, only while Maggie shares check-ins | CC-143 |
+| 12 | Evening recap: one update to Sarah at 7 PM (catches up until 11 PM), unless she turned it off or it falls in quiet hours | CC-191 |
+| 13 | Expire time-limited members (and take them out of the chat) | CC-25 |
 
 `pushAlert()` ignores an alert whose `key` already exists, which makes the engine idempotent. Full catalogue: [Alerts & notifications](../features/alerts-and-notifications.md).
 
 **In production (planned):** the same rules run server-side on a scheduler, independent of any open browser, with delivery through a notification service.
+
+## Everyday care (Sprint 12)
+
+| Feature | Elder (Maggie) | Caregiver (Ana) | Guardian (Sarah) | Code |
+|---|---|---|---|---|
+| Refill tracker (CC-120, CC-121) | Nothing new on her screens | *Pills on hand* on Today during her shift, with New bottle and Request refill | Days left for each medicine in Medications; an alert and a Calendar refill entry when supply runs low | `SupplyRow` in `guardianEveryday.tsx` |
+| Daily check-ins (CC-142, CC-143) | *My day* card on Home: six drawn faces, water glasses, three meals, one tap each; her own sharing switch | No access | Today's check-in on Home and a 7-day view in Health, only while Maggie shares | `DailyCheckins` in `everyday.tsx`, `DailyWeek` in `guardianEveryday.tsx` |
+| Family chat (CC-164, CC-165) | Large-text chat at `/app/elder/chat` with one microphone and a read-back card before sending; a chat tile on Home she can hide | Chat tab only once added; sees messages from when she joined | Chat tab with an unread count; the header names who can read; a health-detail check offers Notes instead (CC-192) | `ChatView`, `ElderChatTile` in `chat.tsx` |
+| Evening recap (CC-191) | Nothing changes; her check-in appears only while she shares | No access | *Evening recap* card on Home from 6 PM; one 7 PM update that says only "Update from Circle Care", which she can turn off in Settings | `EveningRecap` in `guardianEveryday.tsx`, `recap()` in `everyday.ts` |
+
+Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (paid caregivers only on shift), `wellbeing` (elder writes; guardian reads only while Maggie shares and sharing isn't paused) and `chat` (paid caregivers only once added; elder and guardian can add them). Lock screens never show medicine names or check-in details.
 
 ## Cross-cutting UI
 
@@ -216,12 +248,16 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | Command | What it does |
 |---|---|
 | `npm install` | Install dependencies (Node 20+) |
-| `npm run dev` | Vite dev server on port **5000**, all hosts (Replit preview) |
-| `npm test` | Vitest unit tests |
-| `npm run build` | `tsc --noEmit` type-check, then `vite build` into `dist/` with the CSP meta tag injected |
-| `npm run preview` | Serve `dist/` on port 4173 |
+| `npm run dev` | Vite dev server on port **5000**, all hosts (Replit preview); `/api` and `/vault` are served in-process by the accounts server on PGlite |
+| `npm test` | Vitest unit tests (app and server) |
+| `npm run typecheck` | Type-check the app and the server |
+| `npm run build` | Type-check the app and the server, then `vite build` into `dist/` with the CSP meta tag injected |
+| `npm start` | Run the accounts server (`server/index.ts`), which also serves `dist/` |
+| `npm run db:migrate` | Apply database migrations (`server/migrations`) |
+| `npm run audit:export` | Masked audit export (CC-184) |
+| `npm run preview` | Serve `dist/` on port 4173 (no API) |
 
-**Replit.** `.replit` runs `npm install && npm run dev` (Node 20, port 5000 → 80). The deployment target is **static**: build `npm install && npm run build`, public directory `dist`. Import the GitHub repository into Replit, press **Run**, then **Deploy → Static**. The deployed URL is the live demo ("your Replit URL").
+**Replit.** `.replit` runs `npm install && npm run dev` (Node 20, port 5000 → 80). The deployment target is **autoscale**: build `npm install && npm run build`, run `APP_ENV=staging npm start`. The deployed copy is *staging*: a real server and PostgreSQL database with test data only. It needs `DATA_ENCRYPTION_KEY` and `DATA_HMAC_KEY` in Secrets and a PostgreSQL database. See [Accounts, identity & payments](../features/accounts-identity-payments.md).
 
 **This wiki** is built separately with MkDocs (`mkdocs build`, `mkdocs gh-deploy`) — see [How to contribute](../how-to-contribute.md).
 
@@ -232,7 +268,7 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | `images.unsplash.com` | Stock photography on the website and avatars | Allowed by CSP `img-src`; credited in the footer; app works without it |
 | Google Fonts (Inter) | Typography | Allowed by CSP `style-src` / `font-src` |
 
-No analytics, no trackers and no API calls.
+No analytics and no trackers. The only API calls go to Circle Care's own accounts server (`/api/*`, CSP `connect-src 'self'`); care data never leaves the browser.
 
 ## Related pages
 
