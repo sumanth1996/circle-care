@@ -42,6 +42,9 @@ Legend: R read · W write · P propose (needs approval) · A approve · I invite
 | `sos` | SOS events | R W | R S | R S | R S | R S | — |
 | `data` | Export / close circle | E D | E D | — | — | — | — |
 | `supply` | Pills on hand, refill requests (CC-120/121) | R W | R W | R W | R W | — | — |
+| `wellbeing` | Daily check-ins: feeling, water, meals (CC-142/143) | R W | R ¹ | — | — | — | — |
+
+¹ Only while Maggie shares check-ins (`settings.dailyLog.shareWithGuardian`) and hasn't paused all sharing.
 
 ## Rules explained
 

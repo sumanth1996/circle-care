@@ -136,6 +136,20 @@ export interface Checkin {
   mood?: string;
 }
 
+/** CC-142: Maggie's optional one-tap daily check-ins. No emoji: faces are drawn. */
+export type Feeling = "great" | "good" | "calm" | "okay" | "uneasy" | "low";
+export type Meal = "breakfast" | "lunch" | "dinner";
+export interface DailyLog {
+  date: string; // YYYY-MM-DD
+  feeling?: Feeling;
+  feelingAt?: string;
+  water: number; // glasses
+  meals: Meal[];
+  updatedAt: string;
+  /** Logged while Maggie wasn't sharing: stays private for the whole day, even if she turns sharing on later (review F2-2). */
+  private?: boolean;
+}
+
 export interface Approval {
   id: string;
   kind: "med-change" | "member" | "shift-swap";
@@ -253,6 +267,14 @@ export interface Settings {
   };
   /** CC-121: warn when a medicine has this many days left (3–14). */
   refillAlertDays: number;
+  /** CC-142 – CC-143: Maggie's daily check-ins. */
+  dailyLog: {
+    /** Maggie's choice to share feeling, water and meals with her guardian. */
+    shareWithGuardian: boolean;
+    waterGoal: number;
+    /** When Sarah last gained access (sharing turned on or resumed). Unset means shared from the start. */
+    sharedSince?: string;
+  };
   emergencyCard: {
     allergies: string;
     conditions: string;
@@ -279,6 +301,7 @@ export interface State {
   handoffs: Handoff[];
   sos: SosEvent[];
   checkins: Checkin[];
+  dailyLogs: DailyLog[];
   approvals: Approval[];
   notes: CareNote[];
   docs: CareDoc[];

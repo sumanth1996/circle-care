@@ -107,7 +107,7 @@ Defaults from `DEFAULT_THRESHOLDS`; Sarah can change them under **Settings → H
 | Hour blocks | Each hour is *Sleeping* (before 06:00, from 22:00), *Walking* (10:00 and 14:00 walks), *Standing* (7:00, 12:00, 18:00) or *Sitting or resting* |
 | Stand hour | An awake hour with standing or walking, or enough movement |
 | Sleep | In bed 22:15, up 06:30, cycling Core → Deep → Core → REM, with occasional awakenings |
-| Mood | From the face Maggie picks at check-in — she can always skip it |
+| Mood | From the face Maggie taps in *My day* on her home (CC-142), while she shares check-ins. Older days fall back to the face on that day's "I'm OK" check-in. She can always skip it. |
 | Mindful minutes | Simulated, 5–20 per day |
 
 | Check-in face | Mood label | Value |
@@ -120,11 +120,25 @@ Defaults from `DEFAULT_THRESHOLDS`; Sarah can change them under **Settings → H
 | 😢 | Unpleasant | −2 |
 | (none) | No check-in mood | not plotted |
 
+### Daily check-ins in Health (CC-143, Sprint 12) {#wellbeing}
+
+The **Summary** tab ends with a *Daily check-ins · 7 days* panel: one column per day, oldest first, with the face she tapped, a water bar against the goal and three meal dots. The header shows average glasses a day and how many of the 7 days have meals logged. The guardian home's **Check-in** tile adds today's line, for example *"Feeling good · 4 glasses · 2 of 3 meals"*. This panel shows even when Maggie isn't sharing watch readings, because it's a separate choice.
+
+| Rule | Value |
+|---|---|
+| Who sees it | Sarah only, and only while Maggie shares check-ins and hasn't paused all sharing (`wellbeing: read`). Family members and paid caregivers never see it. |
+| Not shared | The panel says Maggie isn't sharing them (or has paused sharing) and that her "I'm OK" check-in still reaches Sarah. The mood trend shows no faces. |
+| No meals for 2 days | When yesterday and the day before have no meals logged, she logged at least one meal in the five days before (so someone who never uses meal check-ins is never flagged), neither day is private, and both days were fully shared (sharing wasn't off or paused at any point since the day before yesterday began), Sarah gets one gentle note that day from 9 AM: *"Maggie hasn't logged meals for 2 days. A quick call might help."* Only while shared. |
+| A blank day | Not a problem on its own: she adds these when she wants to. |
+| Private days | A day Maggie started while not sharing shows a dash in the 7-day grid and isn't counted in the averages. The dashboard tile says *"Daily check-in not shared today"* and State of mind says *"Not shared today"*, with no counts. |
+| Access log | Opening the panel or the dashboard line writes *"viewed daily check-ins"* (once per 10 minutes). |
+
 ## Permissions & privacy
 
 | Resource | Read | Write |
 |---|---|---|
 | `vitals` | elder; guardian **only while `shareWithGuardian` is on** | guardian (thresholds) |
+| `wellbeing` (CC-143) | elder; guardian **only while `dailyLog.shareWithGuardian` is on and sharing isn't paused** | elder |
 
 Family members and professional caregivers can **never** see health readings, on or off shift.
 
@@ -134,6 +148,9 @@ Family members and professional caregivers can **never** see health readings, on
 Opening Health writes *"viewed health readings"* to the access log. Alerts carry the reading in the in-app detail only.
 
 ## Notifications
+
+Daily check-ins (CC-143): when Maggie turns check-in sharing off or on, Sarah gets *Update from Circle Care* with *"Maggie stopped sharing her feeling, water and meal check-ins. Her “I'm OK” check-in works as before."* or *"Maggie is sharing her daily check-ins with you again."* The no-meals note uses the same generic title.
+
 
 | Trigger | Recipient | Severity | Lock-screen text | In-app detail |
 |---|---|---|---|---|
@@ -174,6 +191,7 @@ Each reading raises at most one alert per metric (de-duplicated by `vital-<metri
 | Type | Test |
 |---|---|
 | Unit — `health.test.ts` | One reading per 30 minutes up to now · honours a different interval · whole day for past days · deterministic · applies presenter overrides · next-reading time · flags high and low HR · no low-HR flag while asleep · sudden change inside the normal range · ignores small changes · low oxygen and sudden drop · uses the guardian's thresholds · finds the built-in demo episodes · activity accounts for every hour · continuous night of sleep · mood mapping · BMI and resting HR · guardian and elder only · guardian loses access when sharing is off |
+| Unit — `everyday.test.ts` (CC-143) | Sarah reads check-ins only while shared · only Maggie changes the choice · pausing all sharing hides them · one no-meals note after 2 days, none while not shared · generic lock-screen titles · seven-day view |
 | E2E | *CC-84/85/86/89-92 guardian Health: summary, vitals, table, activity* · *CC-86 a sudden heart-rate change alerts the guardian* · *CC-87 Maggie controls whether Sarah sees health readings* |
 | Accessibility | `/app/guardian/health` |
 

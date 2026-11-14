@@ -1,8 +1,10 @@
-import type { State, Medication } from "./types";
+import type { State, Medication, DailyLog, Feeling, Meal } from "./types";
 import { clock, todayOf } from "./selectors";
-import { ymd, addDays } from "../lib/time";
+import { can } from "./policy";
+import { GUARDIAN } from "./demo";
+import { ymd, addDays, toMin, minutesOfDay } from "../lib/time";
 
-// Sprint 12 "Everyday Care": the small things a family checks every day. This file starts with the refill tracker.
+// Sprint 12 "Everyday Care": the small things a family checks every day. This file has the refill tracker and the daily check-ins.
 // Pure functions so the rules engine, the screens and the tests share one answer.
 
 /* ---------------- CC-120 – CC-121: pills on hand and refills ---------------- */
@@ -95,3 +97,82 @@ export const bottleOf = (med: Medication) => med.supply?.bottleId ?? med.supply?
 
 /** Stable id of the Calendar entry a bottle creates, so the rule never adds it twice. */
 export const autoRefillId = (med: Medication) => `appt-auto-${med.id}-${bottleOf(med)}`;
+
+/* ---------------- CC-142 – CC-143: feeling, water and meals ---------------- */
+
+/** Six drawn faces, no emoji. Valence feeds the guardian's mood trend in Health. */
+export const FEELINGS: { key: Feeling; label: string; valence: number }[] = [
+  { key: "great", label: "Great", valence: 2 },
+  { key: "good", label: "Good", valence: 1 },
+  { key: "calm", label: "Calm", valence: 1 },
+  { key: "okay", label: "Okay", valence: 0 },
+  { key: "uneasy", label: "Not great", valence: -1 },
+  { key: "low", label: "Low", valence: -2 },
+];
+export const MEALS: { key: Meal; label: string }[] = [
+  { key: "breakfast", label: "Breakfast" },
+  { key: "lunch", label: "Lunch" },
+  { key: "dinner", label: "Dinner" },
+];
+export const feelingOf = (k?: Feeling) => FEELINGS.find((f) => f.key === k);
+
+/** The day's log, or an empty one when Maggie hasn't added anything. */
+export function dailyLogFor(s: State, date = todayOf(s)): DailyLog {
+  return s.dailyLogs.find((l) => l.date === date) ?? { date, water: 0, meals: [], updatedAt: "" };
+}
+
+/** True when Maggie has added anything today. */
+export const hasLoggedToday = (s: State) => {
+  const l = dailyLogFor(s);
+  return !!l.feeling || l.water > 0 || l.meals.length > 0;
+};
+
+/** Seven days ending on `endDate` (oldest first), for the guardian's Well-being view. */
+export function dailyWeek(s: State, endDate = todayOf(s)) {
+  return Array.from({ length: 7 }, (_, i) => dailyLogFor(s, ymd(addDays(new Date(`${endDate}T12:00:00`), i - 6))));
+}
+
+/** Can Sarah see the check-ins right now? Maggie decides (CC-143); the permission matrix is the one answer. */
+export const dailyShared = (s: State) => can(s, GUARDIAN, "read", "wellbeing");
+
+/** What Sarah may see of one day: nothing while not shared, and nothing from a day Maggie logged privately. */
+export function sharedLogFor(s: State, date = todayOf(s)): DailyLog | undefined {
+  if (!dailyShared(s)) return undefined;
+  const l = dailyLogFor(s, date);
+  return l.private ? NOT_SHARED(date) : l;
+}
+
+/** A day Sarah may not see: no counts at all, only the mark that it isn't shared. (Review F2-12.) */
+const NOT_SHARED = (date: string): DailyLog => ({ date, water: 0, meals: [], updatedAt: "", private: true });
+
+/** The guardian's seven days: private days read as blank. */
+export const sharedWeek = (s: State, endDate = todayOf(s)) => dailyWeek(s, endDate).map((l) => (l.private ? NOT_SHARED(l.date) : l));
+
+/**
+ * CC-143: no meals logged yesterday or the day before, on days Sarah can see, from someone who does use
+ * the meal check-ins (at least one meal in the five days before). Only from 9 AM, never overnight.
+ * A private day counts as unknown, so it never triggers the note. (Review F2-3.)
+ * So does any day Sarah couldn't see because sharing was off or paused for part of it. (Review F2-11.)
+ */
+export function mealsGap(s: State) {
+  const now = clock(s);
+  if (minutesOfDay(now) < toMin("09:00")) return false;
+  const since = s.settings.dailyLog.sharedSince;
+  if (since && new Date(since) > new Date(`${ymd(addDays(now, -2))}T00:00:00`)) return false;
+  const day = (d: number) => dailyLogFor(s, ymd(addDays(now, -d)));
+  const recent = [1, 2].map(day);
+  if (recent.some((l) => l.private || l.meals.length > 0)) return false;
+  return [3, 4, 5, 6, 7].map(day).some((l) => !l.private && l.meals.length > 0);
+}
+
+/** Older "I'm OK" check-ins carried a face; map it onto the same six feelings so the trend reads one way. */
+const LEGACY_FACE: Record<string, Feeling> = { "\u{1F60A}": "great", "\u{1F642}": "good", "\u{1F60C}": "calm", "\u{1F610}": "okay", "\u{1F615}": "uneasy", "\u{1F622}": "low" };
+
+/** CC-143: Sarah's feeling for a day: the face Maggie tapped, else an older check-in face, only while shared. */
+export function sharedFeeling(s: State, date: string): { state: "shared"; feeling: (typeof FEELINGS)[number] } | { state: "none" | "private" } {
+  if (!dailyShared(s) || dailyLogFor(s, date).private) return { state: "private" };
+  const l = dailyLogFor(s, date);
+  const key = l.feeling ?? LEGACY_FACE[s.checkins.find((c) => c.date === date)?.mood ?? ""];
+  const f = feelingOf(key);
+  return f ? { state: "shared", feeling: f } : { state: "none" };
+}

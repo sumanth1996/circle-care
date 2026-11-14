@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse } from "lucide-react";
+import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse, Smile } from "lucide-react";
 import { useStore } from "../../data/store";
+import { dailyShared } from "../../data/everyday";
 import { clock, member, nameOf } from "../../data/selectors";
 import { Avatar, Sheet, Toggle, download, useToast } from "../../components/ui";
 import { fmtShortDay, fmtTime, relative, addDays } from "../../lib/time";
@@ -49,7 +50,7 @@ export default function PrivacyCenter() {
 
   // CC-32: the export is encrypted with a passphrase the person chooses (PBKDF2 → AES-256-GCM).
   const doExport = async () => {
-    const data = { exportedAt: new Date().toISOString(), note: "Circle Care demo export (fictional data).", circle: state.members.map(({ photo: _p, ...m }) => m), medications: state.meds, doses: state.doses, tasks: state.tasks, checkins: state.checkins, notes: state.notes, documents: state.docs, accessLog: state.audit };
+    const data = { exportedAt: new Date().toISOString(), note: "Circle Care demo export (fictional data).", circle: state.members.map(({ photo: _p, ...m }) => m), medications: state.meds, doses: state.doses, tasks: state.tasks, checkins: state.checkins, dailyCheckins: isElder || dailyShared(state) ? state.dailyLogs.filter((l) => isElder || !l.private) : [], notes: state.notes, documents: state.docs, accessLog: state.audit };
     const file = await encryptWithPassphrase(JSON.stringify(data, null, 2), pass);
     download(`circle-care-export-${new Date().toISOString().slice(0, 10)}.ccexport`, file);
     actions.exported();
@@ -77,6 +78,14 @@ export default function PrivacyCenter() {
           <HeartPulse size={30} color="var(--red)" style={{ flex: "none" }} />
           <div className="grow"><b>Share health readings with Sarah</b><p className="muted small">Heart rate, blood oxygen, activity and sleep from {isElder ? "your" : "Maggie's"} watch. {state.settings.vitals.shareWithGuardian ? "Only Sarah can see them." : "Not shared right now."}</p></div>
           {isElder ? <Toggle checked={state.settings.vitals.shareWithGuardian} onChange={(v) => { actions.setHealthSharing(v); toast(v ? "Sharing health readings with Sarah" : "Health readings are private"); }} label="Share health readings with Sarah" /> : <span className={`badge ${state.settings.vitals.shareWithGuardian ? "green" : "orange"}`}>{state.settings.vitals.shareWithGuardian ? "Shared" : "Private"}</span>}
+        </div>
+      </section>
+
+      <section className="panel stack" style={{ "--gap": "12px" } as React.CSSProperties}>
+        <div className="row">
+          <Smile size={30} color="var(--elder)" style={{ flex: "none" }} />
+          <div className="grow"><b>Share daily check-ins with Sarah</b><p className="muted small">How {isElder ? "you feel" : "she feels"}, glasses of water and meals from {isElder ? "your" : "her"} home screen. {!state.settings.dailyLog.shareWithGuardian ? "Not shared right now." : state.settings.sharingPaused ? "Private while sharing is paused." : "Only Sarah can see them. Days logged while not sharing stay private."}</p></div>
+          {isElder ? <Toggle checked={state.settings.dailyLog.shareWithGuardian} onChange={(v) => { actions.setDailySharing(v); toast(v ? "Sharing check-ins with Sarah" : "Check-ins are private"); }} label="Share daily check-ins with Sarah" /> : <span className={`badge ${dailyShared(state) ? "green" : "orange"}`}>{!state.settings.dailyLog.shareWithGuardian ? "Private" : state.settings.sharingPaused ? "Paused" : "Shared"}</span>}
         </div>
       </section>
 

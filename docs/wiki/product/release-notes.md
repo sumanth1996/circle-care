@@ -4,7 +4,7 @@ Prototype versions are derived from the repository history (`git log`). All comm
 
 | Version | Theme | Commits | Tests at release |
 |---|---|---|---|
-| **v0.6** (in progress) | Everyday Care: refill tracker, daily check-ins, family chat, evening recap | Sprint 12, one pull request per feature | 344 unit/API after feature 1 |
+| **v0.6** (in progress) | Everyday Care: refill tracker, daily check-ins, family chat, evening recap | Sprint 12, one pull request per feature | 344 unit/API after feature 1 · 387 after feature 2 |
 | **v0.5** | Real accounts: sign-up by role, PostgreSQL, SSN encryption, guardian payments, audit export | Sprint 11 merge (CC-172 – CC-190) | 312 unit/API · 15 account e2e · 29 demo e2e · 28 screens axe-clean |
 | **v0.4** | California localisation and product documentation | `428fa2e` (+ this wiki) | 217 unit · 29 e2e · 24 screens axe-clean |
 | **v0.3** | Health & Calendar for the guardian | `1dc1731`, `dce35c2`, `6c139a3` | 217 unit · 29 e2e · 24 screens axe-clean |
@@ -27,7 +27,19 @@ Prototype versions are derived from the repository history (`git log`). All comm
 - Review: [approved after three rounds of changes](https://github.com/sumanth1996/circle-care/blob/main/docs/reviews/2026-11-14-sprint-12-refill-tracker.md).
 - Saved demo data moves to version 7 (older saved data is replaced with the new demo seed).
 
-Coming next in this release: daily check-ins (CC-142, CC-143), family chat (CC-164, CC-165), evening recap (CC-191).
+### Feature 2 — One-tap daily check-ins (CC-142, CC-143)
+
+- **My day** card on Maggie's home: how she feels (six drawn faces, no emoji), glasses of water and meals. Every tap saves, and all of it is optional.
+- **One gentle reminder** at 7 PM, only on a day she added nothing.
+- **Daily check-ins · 7 days** in Sarah's Health summary, and today's line on her **Check-in** tile, only while Maggie shares them.
+- **No meals for 2 days** sends Sarah one gentle note.
+- **Share daily check-ins with Sarah** switch in Maggie's Privacy Center. Only she can change it; Sarah is told either way.
+- New `wellbeing` resource in the permission matrix: Maggie writes, Sarah reads only while shared, nobody else sees it.
+- The "I'm OK" check-in no longer stores an emoji mood.
+- Review: [docs/reviews/2026-11-14-sprint-12-daily-checkins.md](../../reviews/2026-11-14-sprint-12-daily-checkins.md).
+- Saved demo data moves to version 8.
+
+Coming next in this release: family chat (CC-164, CC-165), evening recap (CC-191).
 
 ## v0.5 — Accounts, identity & payments (Sprint 11)
 

@@ -4,9 +4,10 @@ import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo"
 import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, activeSos, member, todayVisit, tasksFor, checkinToday } from "./selectors";
 import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
-import { hm, uid, ymd, toMin, minutesOfDay, fmtTime } from "../lib/time";
+import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays } from "../lib/time";
 import { readingsFor, detectEvents } from "../lib/health";
-import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply } from "./everyday";
+import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared } from "./everyday";
+import { noteSharedSince } from "./everydayActions";
 import * as everyday from "./everydayActions";
 import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
 
@@ -29,6 +30,26 @@ export function allowed(s: State, who: string, action: Action, resource: Resourc
   if (can(s, who, action, resource)) return true;
   audit(s, who, "denied", `${action} ${resource}`);
   return false;
+}
+
+/** Settings changes (CC-19), shared by the store and the tests. Refusals change nothing and are audited. */
+export function applySettings(s: State, who: string, patch: Partial<Settings>) {
+  // Maggie's sharing choices change only through their own elder-only actions (setDailySharing,
+  // setHealthSharing), which audit and notify. A general settings write never touches them. (Review F2-13.)
+  if (patch.dailyLog !== undefined) { audit(s, who, "denied", "change check-in sharing"); return; }
+  if (patch.vitals && patch.vitals.shareWithGuardian !== s.settings.vitals.shareWithGuardian) { audit(s, who, "denied", "change health sharing"); return; }
+  // Pausing all sharing is Maggie's alone, so nobody else can pause it or undo her pause. (Review F2-14.)
+  if (patch.sharingPaused !== undefined && who !== ELDER) { audit(s, who, "denied", "change paused sharing"); return; }
+  const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
+  if (!(elderOnly && who === ELDER) && !allowed(s, who, "write", "settings")) return;
+  const wasPaused = s.settings.sharingPaused;
+  const wasShared = dailyShared(s);
+  s.settings = { ...s.settings, ...patch };
+  noteSharedSince(s, wasShared);
+  if (patch.sharingPaused !== undefined && patch.sharingPaused !== wasPaused) {
+    pushAlert(s, { to: ["guardian", "caregiver"], severity: "info", title: "Update from Circle Care", detail: patch.sharingPaused ? "Maggie paused sharing. Only emergency alerts are shared until she resumes." : "Maggie resumed sharing with the circle." });
+    audit(s, who, "updated", patch.sharingPaused ? "sharing (paused)" : "sharing (resumed)");
+  }
 }
 
 /** The elder may change her own display, privacy and emergency-card preferences. */
@@ -175,6 +196,15 @@ export function evaluate(s: State) {
     if (!med || med.paused) { a.status = "cancelled"; a.autoCancelled = true; }
   }
 
+  // Daily check-ins (CC-142): at most one gentle reminder a day, only if Maggie added nothing.
+  if (nowMin >= toMin("19:00") && !hasLoggedToday(s)) {
+    pushAlert(s, { key: `daily-elder-${today}`, to: ["elder"], severity: "info", title: "You have a reminder from Circle Care", detail: "If you like, tap how you feel, your water and your meals. You can skip it.", link: "/app/elder" });
+  }
+  // No meals logged for two days (CC-143): a gentle note to Sarah, only while Maggie shares check-ins.
+  if (dailyShared(s) && mealsGap(s)) {
+    pushAlert(s, { key: `meals-${today}`, to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: "Maggie hasn't logged meals for 2 days. A quick call might help.", link: "/app/guardian/health#wellbeing" });
+  }
+
   // Time-bound access ends automatically (CC-25).
   for (const m of s.members) {
     if (m.expiresOn && m.status === "active" && m.expiresOn < today) {
@@ -259,11 +289,32 @@ function useStoreState(initial: State) {
         viewed.current = {};
       },
       skipAhead: (min: number) => update((s) => { s.clockOffsetMin += min; }),
-      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen" | "low-supply") => update((s) => {
+      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen" | "low-supply" | "no-meals" | "nothing-logged") => update((s) => {
         if (what === "low-supply") {
           // CC-121 demo: Metformin down to 7 days (2 a day) on a fresh count.
           const m = s.meds.find((x) => x.id === "med-metformin")!;
           m.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 14, countedAt: clock(s).toISOString(), requestedAt: undefined };
+          return;
+        }
+        if (what === "no-meals") {
+          // CC-143 demo: no meals logged yesterday or the day before.
+          for (const d of [1, 2]) {
+            const date = ymd(addDays(clock(s), -d));
+            const at = clock(s).toISOString();
+            s.dailyLogs = [...s.dailyLogs.filter((l) => l.date !== date), { ...(s.dailyLogs.find((l) => l.date === date) ?? { date, water: 0, updatedAt: at }), meals: [] }];
+          }
+          s.alerts = s.alerts.filter((a) => a.key !== `meals-${todayOf(s)}`);
+          // The note waits until 9 AM, so the demo moves the clock there when it's earlier.
+          const min = minutesOfDay(clock(s));
+          if (min < toMin("09:00")) s.clockOffsetMin += toMin("09:00") - min;
+          return;
+        }
+        if (what === "nothing-logged") {
+          // CC-142 demo: Maggie hasn't added anything today, and it's 7 PM.
+          s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+          s.alerts = s.alerts.filter((a) => a.key !== `daily-elder-${todayOf(s)}`);
+          const min = minutesOfDay(clock(s));
+          if (min < toMin("19:00")) s.clockOffsetMin += toMin("19:00") - min;
           return;
         }
         if (what === "heart-rate" || what === "oxygen") {
@@ -536,6 +587,8 @@ function useStoreState(initial: State) {
       }),
       recordRefill: (medId: string, count: number) => update((s) => everyday.recordRefill(s, actor(s), medId, count)),
       requestRefill: (medId: string) => update((s) => everyday.requestRefill(s, actor(s), medId)),
+      logDaily: (patch: everyday.DailyPatch) => update((s) => everyday.logDaily(s, actor(s), patch)),
+      setDailySharing: (on: boolean) => update((s) => everyday.setDailySharing(s, actor(s), on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */
       setHealthSharing: (on: boolean) => update((s) => {
         if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "change health sharing"); return; }
@@ -561,17 +614,7 @@ function useStoreState(initial: State) {
         pushAlert(s, { to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, actor(s))} removed ${m.name} from the circle.` });
         audit(s, actor(s), "removed", `${m.name}'s access`);
       }),
-      settings: (patch: Partial<Settings>) => update((s) => {
-        const who = actor(s);
-        const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
-        if (!(elderOnly && who === ELDER) && !guard(s, "write", "settings")) return;
-        const wasPaused = s.settings.sharingPaused;
-        s.settings = { ...s.settings, ...patch };
-        if (patch.sharingPaused !== undefined && patch.sharingPaused !== wasPaused) {
-          pushAlert(s, { to: ["guardian", "caregiver"], severity: "info", title: "Update from Circle Care", detail: patch.sharingPaused ? "Maggie paused sharing. Only emergency alerts are shared until she resumes." : "Maggie resumed sharing with the circle." });
-          audit(s, who, "updated", patch.sharingPaused ? "sharing (paused)" : "sharing (resumed)");
-        }
-      }),
+      settings: (patch: Partial<Settings>) => update((s) => { applySettings(s, actor(s), patch); }),
       /** CC-22: consent by the elder, or by her guardian on her behalf with a documented reason. */
       acceptConsent: (onBehalfReason?: string) => update((s) => {
         const who = actor(s);

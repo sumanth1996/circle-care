@@ -191,7 +191,7 @@ export function feed(s: State) {
   }
   for (const h of s.handoffs) items.push({ at: h.at, kind: "handoff", by: h.by, text: h.skippedReason ? `Hand-off skipped — ${h.skippedReason}` : `Hand-off note: ${h.notes || h.summary}` });
   for (const n of s.notes) items.push({ at: n.at, kind: "note", by: n.by, text: n.text });
-  for (const c of s.checkins) items.push({ at: c.at, kind: "checkin", by: ELDER, tone: "good", text: `Checked in: “I'm OK” ${c.mood ?? ""}` });
+  for (const c of s.checkins) items.push({ at: c.at, kind: "checkin", by: ELDER, tone: "good", text: "Checked in: “I'm OK”" });
   for (const e of s.sos) items.push({ at: e.startedAt, kind: "sos", by: ELDER, tone: e.status === "resolved" ? "warn" : "bad", text: e.status === "resolved" ? `SOS resolved — ${e.outcome ?? ""}` : "SOS is active" });
   for (const a of s.approvals) if (a.decidedAt) items.push({ at: a.decidedAt, kind: "approval", by: GUARDIAN, text: `${a.status === "approved" ? "Approved" : "Declined"}: ${a.title}` });
   return items.filter((i) => i.at <= clock(s).toISOString()).sort((a, b) => b.at.localeCompare(a.at));
