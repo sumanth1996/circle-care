@@ -1,7 +1,8 @@
 import type { State, Persona, Feeling, Meal } from "./types";
 import { audit, pushAlert, allowed } from "./store";
 import { clock, nameOf, todayOf } from "./selectors";
-import { unitsPerDose, dailyLogFor, dailyShared } from "./everyday";
+import { unitsPerDose, dailyLogFor, dailyShared, chatAudience, inChat, CHAT_MAX } from "./everyday";
+import { uid } from "../lib/time";
 import { ELDER } from "./demo";
 
 // Sprint 12 "Everyday Care" state changes. Each one checks the permission matrix first
@@ -77,4 +78,39 @@ export function setDailySharing(s: State, by: string, on: boolean) {
 /** CC-143: remember when Sarah gained access, so days she couldn't see never count against Maggie. */
 export function noteSharedSince(s: State, wasShared: boolean) {
   if (!wasShared && dailyShared(s)) s.settings.dailyLog = { ...s.settings.dailyLog, sharedSince: clock(s).toISOString() };
+}
+
+/* ---------------- CC-164 – CC-165: family chat ---------------- */
+
+/**
+ * CC-164: one message to the family chat. Empty messages and ones over 1000 characters are refused,
+ * never cut. The lock screen only says "New message in Circle Care"; the words show inside the app.
+ * In production messages are encrypted in transit and at rest, like the rest of Maggie's record.
+ */
+export function sendChat(s: State, by: string, text: string, via?: "voice") {
+  const t = text.trim();
+  if (!t || t.length > CHAT_MAX) return false;
+  if (!allowed(s, by, "write", "chat")) return false;
+  const at = clock(s).toISOString();
+  s.chat.messages.push({ id: uid("msg"), by, at, text: t, ...(via ? { via } : {}) });
+  s.chat.readAt[by] = at;
+  const to = chatAudience(s, by);
+  if (to.length) pushAlert(s, { to, severity: "info", title: "New message in Circle Care", detail: `${nameOf(s, by)} wrote in the family chat.`, link: "/app/chat" });
+  return true;
+}
+
+/** Opening the chat marks it read. Someone who isn't in it is refused, and the refusal is audited. */
+export function readChat(s: State, by: string) {
+  if (!inChat(s, by)) { allowed(s, by, "read", "chat"); return; }
+  s.chat.readAt[by] = clock(s).toISOString();
+}
+
+/** CC-165: paid caregivers join only when Maggie or Sarah adds them. Switching off ends access at once. */
+export function setChatPro(s: State, by: string, memberId: string, on: boolean) {
+  if (!allowed(s, by, "invite", "chat")) return;
+  const m = s.members.find((x) => x.id === memberId && x.role === "pro" && x.status === "active");
+  if (!m || s.chat.pros.includes(memberId) === on) return;
+  s.chat.pros = on ? [...s.chat.pros, memberId] : s.chat.pros.filter((x) => x !== memberId);
+  if (!on) delete s.chat.readAt[memberId];
+  audit(s, by, on ? "created" : "removed", `${m.name}'s place in the family chat`);
 }

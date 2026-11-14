@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { NavLink, Navigate, Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import {
-  Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, HeartPulse, CalendarHeart, type LucideIcon,
+  Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, HeartPulse, CalendarHeart, MessageCircleHeart, type LucideIcon,
 } from "lucide-react";
 import { useStore } from "../data/store";
 import { activeSos, alertsFor, member, meId, nameOf, pendingApprovals, unreadCount, clock } from "../data/selectors";
@@ -11,6 +11,7 @@ import { Logo } from "./Logo";
 import PersonaSheet from "./PersonaSheet";
 import { PrivacyShield, WelcomeTour, NpsCard } from "./Extras";
 import { fmtTime } from "../lib/time";
+import { inChat, unreadChat } from "../data/everyday";
 import "./shell.css";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; badge?: number; tab?: boolean };
@@ -73,6 +74,7 @@ export default function AppShell({ persona }: { persona: Persona }) {
           { to: "/app/guardian", label: "Home", icon: Home, tab: true },
           { to: "/app/guardian/health", label: "Health", icon: HeartPulse, tab: true },
           { to: "/app/guardian/calendar", label: "Calendar", icon: CalendarHeart, tab: true },
+          { to: "/app/guardian/chat", label: "Chat", icon: MessageCircleHeart, badge: unreadChat(state, meId("guardian")), tab: true },
           { to: "/app/guardian/approvals", label: "Approvals", icon: CheckCircle2, badge: pendingApprovals(state).length, tab: true },
           { to: "/app/guardian/meds", label: "Medications", icon: Pill },
           { to: "/app/guardian/schedule", label: "Shift schedule", icon: CalendarDays },
@@ -90,6 +92,8 @@ export default function AppShell({ persona }: { persona: Persona }) {
             { to: "/app/caregiver/schedule", label: "Schedule", icon: CalendarDays, tab: true },
             { to: "/app/caregiver/notes", label: "Notes", icon: StickyNote, tab: true },
             { to: "/app/caregiver/card", label: "Emergency card", icon: IdCard, tab: true },
+            // CC-165: Ana gets a Chat tab only once Maggie or Sarah adds her.
+            ...(inChat(state, meId("caregiver")) ? [{ to: "/app/caregiver/chat", label: "Chat", icon: MessageCircleHeart, badge: unreadChat(state, meId("caregiver")), tab: true }] : []),
           ]
         : [];
 

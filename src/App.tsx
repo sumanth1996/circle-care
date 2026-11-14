@@ -37,6 +37,7 @@ import EmergencyCard from "./pages/shared/EmergencyCard";
 import SosResponder from "./pages/shared/SosResponder";
 import Alerts from "./pages/shared/Alerts";
 import Invite from "./pages/Invite";
+import { ChatView } from "./components/chat";
 import Review from "./pages/internal/Review";
 import PilotDashboard from "./pages/internal/PilotDashboard";
 import { AccessGuard } from "./components/Extras";
@@ -83,6 +84,7 @@ export default function App() {
               <Route path="settings" element={<ElderSettings />} />
               <Route path="decisions" element={<ElderDecisions />} />
               <Route path="card" element={<EmergencyCard />} />
+              <Route path="chat" element={<ChatView large />} />
             </Route>
             <Route path="/app/caregiver" element={<AppShell persona="caregiver" />}>
               <Route index element={<CaregiverToday />} />
@@ -92,6 +94,7 @@ export default function App() {
               <Route path="card" element={<EmergencyCard />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="sos" element={<SosResponder />} />
+              <Route path="chat" element={<ChatView />} />
             </Route>
             <Route path="/app/guardian" element={<AppShell persona="guardian" />}>
               <Route index element={<GuardianHome />} />
@@ -109,8 +112,10 @@ export default function App() {
               <Route path="settings" element={<GuardianSettings />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="sos" element={<SosResponder />} />
+              <Route path="chat" element={<ChatView />} />
             </Route>
             <Route path="/app/sos" element={<SosRedirect />} />
+            <Route path="/app/chat" element={<SosRedirect to="chat" />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </AccountProvider>
@@ -121,8 +126,9 @@ export default function App() {
 }
 
 import { useStore } from "./data/store";
-function SosRedirect() {
+/** Alert links like /app/sos and /app/chat open the same page for whoever is signed in. */
+function SosRedirect({ to = "sos" }: { to?: "sos" | "chat" }) {
   const { state } = useStore();
   const p = state.persona ?? "guardian";
-  return <Navigate to={p === "elder" ? "/app/elder/sos" : `/app/${p}/sos`} replace />;
+  return <Navigate to={`/app/${p}/${to}`} replace />;
 }

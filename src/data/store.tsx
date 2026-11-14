@@ -40,6 +40,8 @@ export function applySettings(s: State, who: string, patch: Partial<Settings>) {
   if (patch.vitals && patch.vitals.shareWithGuardian !== s.settings.vitals.shareWithGuardian) { audit(s, who, "denied", "change health sharing"); return; }
   // Pausing all sharing is Maggie's alone, so nobody else can pause it or undo her pause. (Review F2-14.)
   if (patch.sharingPaused !== undefined && who !== ELDER) { audit(s, who, "denied", "change paused sharing"); return; }
+  // What shows on Maggie's home is her choice (CC-165).
+  if (patch.elderChatOnHome !== undefined && who !== ELDER) { audit(s, who, "denied", "change Maggie's home screen"); return; }
   const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
   if (!(elderOnly && who === ELDER) && !allowed(s, who, "write", "settings")) return;
   const wasPaused = s.settings.sharingPaused;
@@ -52,8 +54,14 @@ export function applySettings(s: State, who: string, patch: Partial<Settings>) {
   }
 }
 
+/** CC-164: leaving the circle ends chat access at once; a caregiver must be added again if they come back. */
+function leaveChat(s: State, id: string) {
+  s.chat.pros = s.chat.pros.filter((x) => x !== id);
+  delete s.chat.readAt[id];
+}
+
 /** The elder may change her own display, privacy and emergency-card preferences. */
-const ELDER_SETTINGS: (keyof Settings)[] = ["textSize", "highContrast", "readAloud", "sharingPaused", "elderLockMin", "emergencyCard", "toured"];
+const ELDER_SETTINGS: (keyof Settings)[] = ["textSize", "highContrast", "readAloud", "sharingPaused", "elderLockMin", "emergencyCard", "toured", "elderChatOnHome"];
 
 /**
  * The rules engine. In production these run server-side on a scheduler;
@@ -209,6 +217,7 @@ export function evaluate(s: State) {
   for (const m of s.members) {
     if (m.expiresOn && m.status === "active" && m.expiresOn < today) {
       m.status = "revoked";
+      leaveChat(s, m.id);
       audit(s, "system", "removed", `${m.name}'s access (time limit ended)`);
     }
   }
@@ -589,6 +598,9 @@ function useStoreState(initial: State) {
       requestRefill: (medId: string) => update((s) => everyday.requestRefill(s, actor(s), medId)),
       logDaily: (patch: everyday.DailyPatch) => update((s) => everyday.logDaily(s, actor(s), patch)),
       setDailySharing: (on: boolean) => update((s) => everyday.setDailySharing(s, actor(s), on)),
+      sendChat: (text: string, via?: "voice") => update((s) => { everyday.sendChat(s, actor(s), text, via); }),
+      readChat: () => update((s) => everyday.readChat(s, actor(s))),
+      setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */
       setHealthSharing: (on: boolean) => update((s) => {
         if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "change health sharing"); return; }
@@ -611,6 +623,7 @@ function useStoreState(initial: State) {
         if (!m || m.role === "elder" || m.role === "guardian") return;
         m.status = "revoked";
         s.settings.escalation = s.settings.escalation.filter((x) => x !== id);
+        leaveChat(s, id);
         pushAlert(s, { to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, actor(s))} removed ${m.name} from the circle.` });
         audit(s, actor(s), "removed", `${m.name}'s access`);
       }),

@@ -1,10 +1,10 @@
-import type { State, Medication, DailyLog, Feeling, Meal } from "./types";
+import type { State, Medication, DailyLog, Feeling, Meal, Persona, ChatMessage } from "./types";
 import { clock, todayOf } from "./selectors";
 import { can } from "./policy";
-import { GUARDIAN } from "./demo";
+import { GUARDIAN, ELDER, CAREGIVER } from "./demo";
 import { ymd, addDays, toMin, minutesOfDay } from "../lib/time";
 
-// Sprint 12 "Everyday Care": the small things a family checks every day. This file has the refill tracker and the daily check-ins.
+// Sprint 12 "Everyday Care": the small things a family checks every day. This file has the refill tracker, the daily check-ins and the family chat.
 // Pure functions so the rules engine, the screens and the tests share one answer.
 
 /* ---------------- CC-120 – CC-121: pills on hand and refills ---------------- */
@@ -175,4 +175,68 @@ export function sharedFeeling(s: State, date: string): { state: "shared"; feelin
   const key = l.feeling ?? LEGACY_FACE[s.checkins.find((c) => c.date === date)?.mood ?? ""];
   const f = feelingOf(key);
   return f ? { state: "shared", feeling: f } : { state: "none" };
+}
+
+/* ---------------- CC-164 – CC-165: family chat ---------------- */
+
+/** CC-164: longest message the chat accepts. Longer ones are refused, not cut. */
+export const CHAT_MAX = 1000;
+
+/** Who can read the chat right now: the active circle, with paid caregivers only once added (policy decides). */
+export function chatMembers(s: State) {
+  return s.members.filter((m) => m.status === "active" && can(s, m.id, "read", "chat"));
+}
+
+export const inChat = (s: State, memberId: string) => can(s, memberId, "read", "chat");
+
+/** Messages already sent, oldest first (the demo seeds a few later today). */
+export function chatMessages(s: State): ChatMessage[] {
+  const now = clock(s).toISOString();
+  return s.chat.messages.filter((m) => m.at <= now);
+}
+
+export function unreadChat(s: State, memberId: string) {
+  if (!inChat(s, memberId)) return 0;
+  const since = s.chat.readAt[memberId] ?? "";
+  return chatMessages(s).filter((m) => m.by !== memberId && m.at > since).length;
+}
+
+export const lastChatMessage = (s: State): ChatMessage | undefined => chatMessages(s).at(-1);
+
+/** The demo personas to notify about a new message: everyone in the chat except the sender. */
+export function chatAudience(s: State, by: string): Persona[] {
+  const to = new Set<Persona>();
+  for (const m of chatMembers(s)) {
+    if (m.id === by) continue;
+    if (m.id === ELDER) to.add("elder");
+    else if (m.id === GUARDIAN) to.add("guardian");
+    else if (m.id === CAREGIVER) to.add("caregiver");
+  }
+  return [...to];
+}
+
+const escapeRe = (x: string) => x.replace(/[.*+?^$|()[\]{}\\]/g, "\\$&");
+
+/** Whole words (plurals allowed), plus a few stems that end in "*". */
+const HEALTH_WORDS = [
+  "diagnos*", "prescri*", "alzheimer*", "medicine", "medication", "dose", "pill", "tablet", "blood pressure", "blood sugar", "a1c", "glucose",
+  "diabetes", "dementia", "cancer", "heart rate", "heart condition", "kidney", "surgery", "symptom", "test result", "lab result", "insulin",
+];
+
+/**
+ * CC-164: the chat is for everyday family life. When a message names one of Maggie's medicines,
+ * a diagnosis or a dose, suggest Notes, which keep health details on her record under her sharing choices.
+ * Returns what was spotted (shown as chips), or an empty list.
+ */
+export function phiHint(s: State, text: string) {
+  const t = ` ${text.toLowerCase()} `;
+  const hits = new Set<string>();
+  for (const m of s.meds) if (new RegExp(`\\b${escapeRe(m.name.toLowerCase())}\\b`).test(t)) hits.add(m.name);
+  for (const w of HEALTH_WORDS) {
+    const stem = w.endsWith("*");
+    const word = stem ? w.slice(0, -1) : w;
+    if (new RegExp(stem ? `\\b${word}` : `\\b${word}(s|es)?\\b`).test(t)) hits.add(stem ? `${word}…` : word);
+  }
+  if (/\d\s?(mg|mcg|ml|units?)\b/.test(t)) hits.add("a dose");
+  return [...hits];
 }

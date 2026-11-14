@@ -26,10 +26,13 @@ describe("permission matrix (CC-18/19)", () => {
         });
       }
       it(`professional caregiver ${action} ${resource} follows shift rules`, () => {
+        // CC-164: in the family chat a caregiver has the matrix's rights only once Maggie or Sarah adds them.
+        const added = (s: State) => { if (resource === "chat") s.chat.pros = [CAREGIVER]; return s; };
         const expectOn = rules.includes("pro") || rules.includes("pro@shift");
         const expectOff = rules.includes("pro");
-        expect(can(onShift(seed()), CAREGIVER, action, resource)).toBe(expectOn);
-        expect(can(offShift(seed()), CAREGIVER, action, resource)).toBe(expectOff);
+        expect(can(added(onShift(seed())), CAREGIVER, action, resource)).toBe(expectOn);
+        expect(can(added(offShift(seed())), CAREGIVER, action, resource)).toBe(expectOff);
+        if (resource === "chat") expect(can(onShift(seed()), CAREGIVER, action, resource)).toBe(false);
       });
     }
   }
