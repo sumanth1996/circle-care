@@ -968,6 +968,8 @@ describe("fewer false alarms from the chat health-detail check (CC-192)", () => 
     "Add 5 ml of water to the antibiotic powder",
     "Mix in 10 ml of water with the syrup, give it at 8",
     "Stir in 5 ml of juice with the drops",
+    "Add 60 ml of water, then the amoxicillin",
+    "Pharmacy said add 60 ml of water, shake, keep in fridge",
   ];
 
   it("still warns when a health detail sits next to an everyday phrase", () => {

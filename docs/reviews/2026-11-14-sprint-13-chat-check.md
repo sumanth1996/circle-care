@@ -22,13 +22,13 @@ The family chat warns before a message with health details goes to the group. In
 
 ## Measured on a fixed test set
 
-40 everyday messages, 40 messages with health details, and 41 mixed messages where a health detail sits next to an everyday phrase. All are part of `src/__tests__/everyday.test.ts`.
+40 everyday messages, 40 messages with health details, and 43 mixed messages where a health detail sits next to an everyday phrase. All are part of `src/__tests__/everyday.test.ts`.
 
 | | Before (main at 5576da5) | After |
 |---|---|---|
 | Everyday messages that warned | 25 of 40 | **0 of 40** |
 | Health messages that warned | 40 of 40 | **40 of 40** |
-| Mixed messages that warned | 41 of 41 | **41 of 41** |
+| Mixed messages that warned | 43 of 43 | **43 of 43** |
 
 Acceptance criteria: every health message still warns, and no more than 2 of 40 everyday messages warn.
 
@@ -74,6 +74,14 @@ All round 2 examples were verified to warn, and the everyday cases stay silent. 
 
 Not blocking, for later: "Add 250 ml of milk for Grandma's soup" warns, which fits the design. Covid, strep, antibiotic and scan are not health words yet; that gap was already on main.
 
-## Round 4
+## Round 4 — CHANGES REQUESTED
+
+All round 3 examples were verified to warn, and the everyday cases stay silent.
+
+| # | Finding | Fix | Regression test |
+|---|---|---|---|
+| 14 | A comma after a cooking amount let a medicine named after it through ("Add 60 ml of water, then the amoxicillin") | The amount must end the message or go "to the recipe, bowl, pan" and the like | mixed set (2 cases) |
+
+## Round 5
 
 *Pending.*
