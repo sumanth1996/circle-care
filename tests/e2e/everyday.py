@@ -79,6 +79,11 @@ with sync_playwright() as p:
     log = lambda: pg.get_by_role("log", name="Messages")
     recap = lambda: pg.locator("#recap")
 
+    def wait_for_save(before):
+        """The app saves on a 250 ms timer, encrypted with a fresh IV each time, so the stored text always changes
+        once a save lands. Reloading sooner would throw the change away; see the review record for that gap."""
+        pg.wait_for_function("prev => localStorage.getItem('circle-care-demo') !== prev", arg=before, timeout=5000)
+
     def flip(name, on):
         """Turn a settings switch on or off the way a person would.
 
@@ -206,7 +211,9 @@ with sync_playwright() as p:
         signin("guardian")
         pg.goto(B + "/app/guardian/settings")
         expect(pg.get_by_role("switch", name="Evening recap update")).to_be_checked()
+        before = pg.evaluate("() => localStorage.getItem('circle-care-demo')")
         flip("Evening recap update", False)
+        wait_for_save(before)
         pg.reload()
         expect(pg.get_by_role("switch", name="Evening recap update")).not_to_be_checked()
         pg.goto(B + "/app/guardian")
