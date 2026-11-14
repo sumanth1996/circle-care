@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { seed, GUARDIAN, ELDER, CAREGIVER, FAMILY } from "../data/demo";
-import { evaluate, allowed } from "../data/store";
+import { evaluate, allowed, applySettings } from "../data/store";
 import { can } from "../data/policy";
 import { todayOf, clock } from "../data/selectors";
 import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling } from "../data/everyday";
@@ -560,13 +560,30 @@ describe("Lead Architect review fixes (CC-142 – CC-143)", () => {
     const s = setTime(seed(), "10:00");
     clearDays(s, [1, 2]);
     meals(s, 3, ["lunch"]);
-    s.settings.sharingPaused = true;
-    s.settings.sharingPaused = false;
-    noteSharedSince(s, false);
+    applySettings(s, ELDER, { sharingPaused: true });
+    applySettings(s, ELDER, { sharingPaused: false });
+    expect(s.settings.dailyLog.sharedSince).toBe(clock(s).toISOString());
     expect(mealsGap(s)).toBe(false);
     const before = s.settings.dailyLog.sharedSince;
     noteSharedSince(s, true);
     expect(s.settings.dailyLog.sharedSince).toBe(before);
+  });
+
+  it("F2-13: only Maggie changes her sharing choices; a general settings write is refused and audited", () => {
+    const s = seed();
+    setDailySharing(s, ELDER, false);
+    const vitalsBefore = s.settings.vitals.shareWithGuardian;
+    applySettings(s, GUARDIAN, { dailyLog: { ...s.settings.dailyLog, shareWithGuardian: true } });
+    expect(s.settings.dailyLog.shareWithGuardian).toBe(false);
+    expect(s.audit.at(-1)).toMatchObject({ actorId: GUARDIAN, action: "denied", resource: "change check-in sharing" });
+    applySettings(s, ELDER, { dailyLog: { ...s.settings.dailyLog, shareWithGuardian: true } });
+    expect(s.settings.dailyLog.shareWithGuardian).toBe(false);
+    applySettings(s, GUARDIAN, { vitals: { ...s.settings.vitals, shareWithGuardian: !vitalsBefore } });
+    expect(s.settings.vitals.shareWithGuardian).toBe(vitalsBefore);
+    expect(s.audit.at(-1)).toMatchObject({ actorId: GUARDIAN, action: "denied", resource: "change health sharing" });
+    // Sarah's own vitals thresholds still save.
+    applySettings(s, GUARDIAN, { vitals: { ...s.settings.vitals, intervalMin: 15 } });
+    expect(s.settings.vitals.intervalMin).toBe(15);
   });
 
   it("F2-12: Sarah sees a private day as not shared, never as zero glasses and zero meals", () => {

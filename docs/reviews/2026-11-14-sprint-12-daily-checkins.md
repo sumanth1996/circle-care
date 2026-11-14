@@ -41,3 +41,11 @@ Round 1 fixes confirmed (tests and typecheck pass). Two should-fix findings, bot
 | 3 | `display: contents` on the grid's rows can drop them from the accessibility tree in older Safari | Carried forward: newer Safari is fine; a real table layout is noted for the accessibility pass | — |
 | 4 | *Simulate 2 days with no meals* did nothing before 9 AM | The demo moves the clock to 9:00 when it's earlier | demo only |
 | 5 | Missing tests for finding 1 and on-screen wording | Finding 1 tests added; wording stays manual (see below) | — |
+
+## Round 3 — CHANGES REQUESTED
+
+F2-11, F2-12 and the demo clock confirmed. One finding:
+
+| # | Finding | Fix | Regression test |
+|---|---|---|---|
+| F2-13 | The general `settings` action let a guardian write `dailyLog` (and `vitals.shareWithGuardian`, already on main), turning Maggie's sharing on with no audit entry or notice | Settings logic moved to `applySettings` (shared by the store and tests). Any patch with `dailyLog`, or one that changes `vitals.shareWithGuardian`, is refused and audited for everyone; sharing changes go only through the elder-only `setDailySharing` and `setHealthSharing`. Sarah's own vitals thresholds still save. | *F2-13*; the resume-after-pause test now goes through `applySettings` |

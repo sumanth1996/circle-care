@@ -32,6 +32,24 @@ export function allowed(s: State, who: string, action: Action, resource: Resourc
   return false;
 }
 
+/** Settings changes (CC-19), shared by the store and the tests. Refusals change nothing and are audited. */
+export function applySettings(s: State, who: string, patch: Partial<Settings>) {
+  // Maggie's sharing choices change only through their own elder-only actions (setDailySharing,
+  // setHealthSharing), which audit and notify. A general settings write never touches them. (Review F2-13.)
+  if (patch.dailyLog !== undefined) { audit(s, who, "denied", "change check-in sharing"); return; }
+  if (patch.vitals && patch.vitals.shareWithGuardian !== s.settings.vitals.shareWithGuardian) { audit(s, who, "denied", "change health sharing"); return; }
+  const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
+  if (!(elderOnly && who === ELDER) && !allowed(s, who, "write", "settings")) return;
+  const wasPaused = s.settings.sharingPaused;
+  const wasShared = dailyShared(s);
+  s.settings = { ...s.settings, ...patch };
+  noteSharedSince(s, wasShared);
+  if (patch.sharingPaused !== undefined && patch.sharingPaused !== wasPaused) {
+    pushAlert(s, { to: ["guardian", "caregiver"], severity: "info", title: "Update from Circle Care", detail: patch.sharingPaused ? "Maggie paused sharing. Only emergency alerts are shared until she resumes." : "Maggie resumed sharing with the circle." });
+    audit(s, who, "updated", patch.sharingPaused ? "sharing (paused)" : "sharing (resumed)");
+  }
+}
+
 /** The elder may change her own display, privacy and emergency-card preferences. */
 const ELDER_SETTINGS: (keyof Settings)[] = ["textSize", "highContrast", "readAloud", "sharingPaused", "elderLockMin", "emergencyCard", "toured"];
 
@@ -594,19 +612,7 @@ function useStoreState(initial: State) {
         pushAlert(s, { to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, actor(s))} removed ${m.name} from the circle.` });
         audit(s, actor(s), "removed", `${m.name}'s access`);
       }),
-      settings: (patch: Partial<Settings>) => update((s) => {
-        const who = actor(s);
-        const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
-        if (!(elderOnly && who === ELDER) && !guard(s, "write", "settings")) return;
-        const wasPaused = s.settings.sharingPaused;
-        const wasShared = dailyShared(s);
-        s.settings = { ...s.settings, ...patch };
-        noteSharedSince(s, wasShared);
-        if (patch.sharingPaused !== undefined && patch.sharingPaused !== wasPaused) {
-          pushAlert(s, { to: ["guardian", "caregiver"], severity: "info", title: "Update from Circle Care", detail: patch.sharingPaused ? "Maggie paused sharing. Only emergency alerts are shared until she resumes." : "Maggie resumed sharing with the circle." });
-          audit(s, who, "updated", patch.sharingPaused ? "sharing (paused)" : "sharing (resumed)");
-        }
-      }),
+      settings: (patch: Partial<Settings>) => update((s) => { applySettings(s, actor(s), patch); }),
       /** CC-22: consent by the elder, or by her guardian on her behalf with a documented reason. */
       acceptConsent: (onBehalfReason?: string) => update((s) => {
         const who = actor(s);
