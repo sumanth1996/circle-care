@@ -10,9 +10,14 @@ import { completeGuardian, harness, signedUp } from "./helpers";
 
 const k1 = Buffer.alloc(32, 1).toString("base64");
 const k2 = Buffer.alloc(32, 2).toString("base64");
+// These tests start a fresh PGlite database and hash passwords with scrypt. Alone they take about 2 s, but the
+// first one also pays PGlite's cold start, and on a shared CI runner with the whole suite in parallel that went past
+// Vitest's 5 s default once (PR #7, run 3). 20 s keeps the check meaningful without failing on a slow runner.
+const SLOW_DB = { timeout: 20_000 };
+
 const prod = { APP_ENV: "production", DATA_ENCRYPTION_KEY: k1, DATA_HMAC_KEY: k2, DATABASE_URL: "postgres://u:p@db.example.com/cc", PAYMENT_PROVIDER: "stripe", STRIPE_SECRET_KEY: "sk_live_abc" };
 
-describe("CC-183 production refuses to start without protection", () => {
+describe("CC-183 production refuses to start without protection", SLOW_DB, () => {
   it("accepts a complete production configuration", () => {
     const c = loadConfig(prod);
     expect(c.isProd).toBe(true);
@@ -59,7 +64,7 @@ describe("CC-183 production refuses to start without protection", () => {
   });
 });
 
-describe("CC-184 masked audit export", () => {
+describe("CC-184 masked audit export", SLOW_DB, () => {
   it("writes masked files with a manifest, and nothing sensitive leaks", async () => {
     const h = await harness();
     const g = await completeGuardian(h);
