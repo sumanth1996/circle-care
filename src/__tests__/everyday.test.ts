@@ -951,6 +951,18 @@ describe("fewer false alarms from the chat health-detail check (CC-192)", () => 
     "Laughter is the best medicine for her cough",
     "A dose of sunshine and her dose of lisinopril",
     "Test results from her doctor are in",
+    "Lily's covid test results from school came back",
+    "Her TB test result for school is positive",
+    "His drug test results for college are back",
+    "Lily's allergy test results from school",
+    "What are the key stroke signs to watch for?",
+    "She's back stroke rehab went well",
+    "Her speech got worse in 2 strokes",
+    "She has lived with a few strokes",
+    "Crush the tablet and stir in 5 ml of water",
+    "Add 5 ml of oil to her tea at night",
+    "Mom is a Cancer, born in July, now in remission",
+    "The eye doctor prescribed reading lenses",
   ];
 
   it("still warns when a health detail sits next to an everyday phrase", () => {

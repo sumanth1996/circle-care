@@ -22,13 +22,13 @@ The family chat warns before a message with health details goes to the group. In
 
 ## Measured on a fixed test set
 
-40 everyday messages, 40 messages with health details, and 24 mixed messages where a health detail sits next to an everyday phrase. All are part of `src/__tests__/everyday.test.ts`.
+40 everyday messages, 40 messages with health details, and 36 mixed messages where a health detail sits next to an everyday phrase. All are part of `src/__tests__/everyday.test.ts`.
 
 | | Before (main at 5576da5) | After |
 |---|---|---|
 | Everyday messages that warned | 25 of 40 | **0 of 40** |
 | Health messages that warned | 40 of 40 | **40 of 40** |
-| Mixed messages that warned | 24 of 24 | **24 of 24** |
+| Mixed messages that warned | 36 of 36 | **36 of 36** |
 
 Acceptance criteria: every health message still warns, and no more than 2 of 40 everyday messages warn.
 
@@ -52,6 +52,17 @@ The reviewer confirmed these were sound: the global patterns reset between messa
 | 6 | "History test results", "dog surgery" without 's, and "Tylenol is the best medicine" got through | "History" dropped; pets need 's; the idiom needs laughter, love, music, sleep or time | same test (3 cases) |
 | 7 | The test set never put an everyday phrase next to a health word | Added the 24-message mixed set | same test |
 
-## Round 2
+## Round 2 — CHANGES REQUESTED
+
+All 19 round 1 examples were verified to warn, and all 40 everyday messages stay silent. Three new gaps, each confirmed by running the check:
+
+| # | Finding | Fix | Regression test |
+|---|---|---|---|
+| 8 | "Test results for school" let medical tests through ("Her TB test result for school is positive") | Only the exact message "test results from Lily's school are in" is let through | mixed set (4 cases) |
+| 9 | "Key stroke", "back stroke" and "in 2 strokes" let real stroke messages through | Those removed; counted strokes only in "paint it with 2 strokes" | mixed set (4 cases) |
+| 10 | A cooking verb let medicine in liquid through ("Crush the tablet and stir in 5 ml of water") | The cooking amount is let through only when the message names no person and no medicine | mixed set (2 cases) |
+| 11 | (minor) "remission", "biopsy" and "prescribed reading lenses" sent with no warning | Added as health words; reading lenses, specs and spectacles warn | mixed set (2 cases) |
+
+## Round 3
 
 *Pending.*

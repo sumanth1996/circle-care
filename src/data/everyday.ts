@@ -228,7 +228,7 @@ const HEALTH_WORDS = [
   "medicine", "medication", "meds", "dose", "dosage", "dosing", "pill", "insulin",
   "blood pressure", "blood sugar", "a1c", "glucose", "heart rate", "heart condition",
   "dementia", "cancer", "arthritis", "kidney disease", "kidney function",
-  "surgery", "symptom", "test result", "lab result",
+  "surgery", "symptom", "test result", "lab result", "biopsy", "biopsies", "remission",
 ];
 
 /**
@@ -250,7 +250,7 @@ const EVERYDAY_SENSES: RegExp[] = [
   /\bdiagnos(?:e|es|ed|ing)\s+(?:the\s+|my\s+|our\s+|your\s+|why\s+the\s+|what'?s\s+wrong\s+with\s+the\s+)?(?:car|cars|engine|truck|van|laptop|wifi|wi-fi|router|printer|furnace|boiler|dishwasher|washer|dryer|fridge)\b/g,
   /\b(?:car|engine|truck|van|laptop|router|printer|furnace|boiler)\s+needs?\s+a\s+diagnostic\b/g,
   // a reading list or a race route ("prescribed reading glasses" and "prescribed course of prednisone" still warn)
-  /\bprescribed\s+reading\b(?!\s+glasses)/g,
+  /\bprescribed\s+reading\b(?!\s+(?:glasses|lenses|specs|spectacles))/g,
   /\bprescribed\s+route\b/g,
   // a pet's operation, only with the possessive ("walk the dog surgery is at 9" still warns)
   /\b(?:dog|cat|puppy|kitten|pet|bird|horse|rabbit)'s\s+surgery\b/g,
@@ -258,22 +258,26 @@ const EVERYDAY_SENSES: RegExp[] = [
   /\bcancer\s+season\b/g,
   // school and driving tests ("family history test results" still warns)
   /\b(?:school|math|maths|science|spelling|sat|driving|driver's|drivers|class|english|spanish|french|chemistry|physics|biology)\s+test\s+results?\b/g,
-  /\btest\s+results?\s+(?:from|for|at)\s+(?:\w+'s\s+)?(?:school|class|college|university|driving)\b/g,
+  // only this exact message ("Lily's covid test results from school" and "her TB test result for school" still warn)
+  /^\s*test\s+results?\s+from\s+\w+'s\s+school\s+(?:are|is)\s+in\b/g,
   // a garden bug or an idiom
   /\bpill\s+bugs?\b/g,
   /\bchill\s+pills?\b/g,
   /\bbitter\s+pill\b/g,
   /\bpoison\s+pills?\b/g,
-  // cooking: "add 250 ml of milk", "add 30 ml of olive oil" ("give her 5 ml with juice", "5 ml of cough syrup" still warn)
-  /\b(?:add|adding|stir\s+in|mix\s+in|pour|pour\s+in|whisk\s+in|heat)\s+\d+\s?ml\s+of\s+(?:olive\s+|coconut\s+|vegetable\s+|whole\s+|skim\s+|almond\s+|oat\s+|warm\s+|cold\s+|hot\s+)?(?:milk|water|cream|oil|stock|broth|wine|juice|vinegar|sauce|batter|coffee|tea|beer|rum|vodka)\b/g,
   // storage and housing units
   /\d\s?units?\s+of\s+(?:the\s+|rental\s+)*(?:storage|housing|apartments?|condos?|furniture|space|lumber|wood)\b/g,
-  // "stroke the cat", "brush strokes", "swimming strokes", "with 2 strokes", "a stroke of luck"
+  // "stroke the cat", "brush strokes", "swimming strokes", "paint it with 2 strokes", "a stroke of luck"
   /\bstrok(?:e|es|ed|ing)\s+(?:the|her|his|my|your|our|its)\s+(?:cat|cats|dog|dogs|kitten|puppy|pet|fur|hair|beard)\b/g,
-  /\b(?:brush|swimming|swim|paint|pen|key|breast|back|golf|tennis|oar|rowing|bold|broad)\s+strokes?\b/g,
-  /\b(?:with|in)\s+(?:\d+|a\s+few|long|short|light|quick)\s+strokes\b/g,
+  /\b(?:brush|swimming|swim|paint|breast|golf|tennis|oar|rowing)\s+strokes?\b/g,
+  /\b(?:paint|brush|draw|sweep)\s+(?:it|this|that)\s+with\s+(?:\d+|a\s+few|long|short|light|quick)\s+strokes\b/g,
   /\bstrokes?\s+of\s+(?:luck|genius|brilliance|fate|inspiration|midnight|good\s+fortune|bad\s+luck|the\s+pen)\b/g,
 ];
+
+/** Cooking: "add 250 ml of milk", "add 30 ml of olive oil". Let through only when the message names no person and no
+ *  medicine, so "crush the tablet and stir in 5 ml of water" and "add 5 ml of oil to her tea at night" still warn. */
+const COOKING_ML = /\b(?:add|adding|stir\s+in|mix\s+in|pour|pour\s+in|whisk\s+in|heat)\s+\d+\s?ml\s+of\s+(?:olive\s+|coconut\s+|vegetable\s+|whole\s+|skim\s+|almond\s+|oat\s+|warm\s+|cold\s+|hot\s+)?(?:milk|water|cream|oil|stock|broth|wine|juice|vinegar|sauce|batter|coffee|tea|beer|rum|vodka)\b/g;
+const PERSON_OR_MEDICINE = /\b(?:her|his|their|him|them|she|he|mom'?s?|dad'?s?|grandma'?s?|grandpa'?s?|maggie'?s?|tablets?|crush\w*|pills?|capsules?|meds?|medicines?|doses?|bedtime|night)\b/;
 
 /** The star sign, matched on the original capitals: "Mom is a Cancer, birthday in July". Lower-case "a cancer"
  *  and "a cancer sign" still warn, and so does "a cancer survivor". */
@@ -287,6 +291,7 @@ const ZODIAC_CANCER = /\b(?:[Mm]om|[Dd]ad|[Ss]he|[Hh]e|I|[Gg]randma|[Gg]randpa|[
  */
 export function phiHint(s: State, text: string) {
   let t = ` ${text.replace(/[\u2018\u2019]/g, "'")} `.replace(ZODIAC_CANCER, " ").toLowerCase();
+  if (!PERSON_OR_MEDICINE.test(t)) t = t.replace(COOKING_ML, " ");
   for (const re of EVERYDAY_SENSES) t = t.replace(re, " ");
   const hits = new Set<string>();
   for (const m of s.meds) {
