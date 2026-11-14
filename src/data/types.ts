@@ -165,6 +165,8 @@ export interface Chat {
   pros: string[];
   /** Last time each member read the chat. */
   readAt: Record<string, string>;
+  /** When each added caregiver joined. They see messages from then on, not the history before. */
+  joinedAt: Record<string, string>;
 }
 
 export interface Approval {

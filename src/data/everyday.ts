@@ -189,19 +189,23 @@ export function chatMembers(s: State) {
 
 export const inChat = (s: State, memberId: string) => can(s, memberId, "read", "chat");
 
-/** Messages already sent, oldest first (the demo seeds a few later today). */
-export function chatMessages(s: State): ChatMessage[] {
+/**
+ * Messages already sent, oldest first (the demo seeds some later in the day). With a viewer, only
+ * what that person may see: an added caregiver sees messages from when they joined.
+ */
+export function chatMessages(s: State, viewer?: string): ChatMessage[] {
   const now = clock(s).toISOString();
-  return s.chat.messages.filter((m) => m.at <= now);
+  const from = viewer ? s.chat.joinedAt[viewer] ?? "" : "";
+  return s.chat.messages.filter((m) => m.at <= now && m.at >= from);
 }
 
 export function unreadChat(s: State, memberId: string) {
   if (!inChat(s, memberId)) return 0;
   const since = s.chat.readAt[memberId] ?? "";
-  return chatMessages(s).filter((m) => m.by !== memberId && m.at > since).length;
+  return chatMessages(s, memberId).filter((m) => m.by !== memberId && m.at > since).length;
 }
 
-export const lastChatMessage = (s: State): ChatMessage | undefined => chatMessages(s).at(-1);
+export const lastChatMessage = (s: State, viewer?: string): ChatMessage | undefined => chatMessages(s, viewer).at(-1);
 
 /** The demo personas to notify about a new message: everyone in the chat except the sender. */
 export function chatAudience(s: State, by: string): Persona[] {
@@ -217,26 +221,34 @@ export function chatAudience(s: State, by: string): Persona[] {
 
 const escapeRe = (x: string) => x.replace(/[.*+?^$|()[\]{}\\]/g, "\\$&");
 
-/** Whole words (plurals allowed), plus a few stems that end in "*". */
+/** Whole words (plurals allowed), plus stems that end in "*". Everyday words that also mean
+ *  other things ("tablet", "kidney beans", "units") are left out to keep false alarms rare. */
 const HEALTH_WORDS = [
-  "diagnos*", "prescri*", "alzheimer*", "medicine", "medication", "dose", "pill", "tablet", "blood pressure", "blood sugar", "a1c", "glucose",
-  "diabetes", "dementia", "cancer", "heart rate", "heart condition", "kidney", "surgery", "symptom", "test result", "lab result", "insulin",
+  "diagnos*", "prescri*", "alzheimer*", "parkinson*", "chemo*", "milligram*", "diabet*",
+  "medicine", "medication", "meds", "dose", "dosage", "dosing", "pill", "insulin",
+  "blood pressure", "bp", "blood sugar", "a1c", "glucose", "heart rate", "heart condition",
+  "dementia", "cancer", "arthritis", "stroke", "kidney disease", "kidney function",
+  "surgery", "symptom", "test result", "lab result",
 ];
 
 /**
- * CC-164: the chat is for everyday family life. When a message names one of Maggie's medicines,
- * a diagnosis or a dose, suggest Notes, which keep health details on her record under her sharing choices.
- * Returns what was spotted (shown as chips), or an empty list.
+ * CC-164: the chat is for everyday family life. When a message names one of Maggie's medicines
+ * (with or without its strength), a diagnosis or a dose, suggest Notes, which keep health details
+ * on her record under her sharing choices. Returns what was spotted (shown as chips), or an empty list.
  */
 export function phiHint(s: State, text: string) {
   const t = ` ${text.toLowerCase()} `;
   const hits = new Set<string>();
-  for (const m of s.meds) if (new RegExp(`\\b${escapeRe(m.name.toLowerCase())}\\b`).test(t)) hits.add(m.name);
+  for (const m of s.meds) {
+    // "Vitamin D3" also matches "vitamin d"; "Atorvastatin" also matches "atorvastatin20mg".
+    const base = m.name.toLowerCase().replace(/\s*\d+$/, "");
+    if (new RegExp(`\\b${escapeRe(base)}(?![a-z])`).test(t)) hits.add(m.name);
+  }
   for (const w of HEALTH_WORDS) {
     const stem = w.endsWith("*");
     const word = stem ? w.slice(0, -1) : w;
     if (new RegExp(stem ? `\\b${word}` : `\\b${word}(s|es)?\\b`).test(t)) hits.add(stem ? `${word}…` : word);
   }
-  if (/\d\s?(mg|mcg|ml|units?)\b/.test(t)) hits.add("a dose");
+  if (/\d\s?(mg|mcg|ml|iu)\b/.test(t)) hits.add("a dose");
   return [...hits];
 }

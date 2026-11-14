@@ -55,9 +55,10 @@ export function applySettings(s: State, who: string, patch: Partial<Settings>) {
 }
 
 /** CC-164: leaving the circle ends chat access at once; a caregiver must be added again if they come back. */
-function leaveChat(s: State, id: string) {
+export function leaveChat(s: State, id: string) {
   s.chat.pros = s.chat.pros.filter((x) => x !== id);
   delete s.chat.readAt[id];
+  delete s.chat.joinedAt[id];
 }
 
 /** The elder may change her own display, privacy and emergency-card preferences. */

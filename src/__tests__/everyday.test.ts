@@ -1,13 +1,18 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { seed, GUARDIAN, ELDER, CAREGIVER, FAMILY } from "../data/demo";
-import { evaluate, allowed, applySettings } from "../data/store";
+import { evaluate, allowed, applySettings, leaveChat } from "../data/store";
 import { can } from "../data/policy";
 import { todayOf, clock } from "../data/selectors";
-import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling, chatMembers, inChat, unreadChat, phiHint, chatAudience, lastChatMessage, CHAT_MAX } from "../data/everyday";
+import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling, chatMembers, inChat, unreadChat, phiHint, chatAudience, lastChatMessage, chatMessages, CHAT_MAX } from "../data/everyday";
 import { recordRefill, requestRefill, logDaily, setDailySharing, noteSharedSince, sendChat, readChat, setChatPro } from "../data/everydayActions";
 import { verifyChain } from "../data/audit";
 import { addDays, ymd, toMin, minutesOfDay } from "../lib/time";
 import type { State } from "../data/types";
+
+// Date stands still inside each test, so a saved timestamp can be compared with clock() exactly.
+// (Unfrozen, a comparison could straddle a millisecond and fail now and then. Review F3-8.)
+beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); });
+afterEach(() => { vi.useRealTimers(); });
 
 /** Moves the demo clock to a time of day today. */
 const setTime = (s: State, t: string) => { s.clockOffsetMin = toMin(t) - minutesOfDay(new Date()); return s; };
@@ -557,8 +562,6 @@ describe("Lead Architect review fixes (CC-142 – CC-143)", () => {
   });
 
   it("F2-11: resuming after a pause also counts as a fresh start", () => {
-    // Freeze the clock so the comparison below can't straddle a millisecond (this flaked about 1 run in 6).
-    vi.useFakeTimers({ toFake: ["Date"] });
     const s = setTime(seed(), "10:00");
     clearDays(s, [1, 2]);
     meals(s, 3, ["lunch"]);
@@ -569,7 +572,6 @@ describe("Lead Architect review fixes (CC-142 – CC-143)", () => {
     const before = s.settings.dailyLog.sharedSince;
     noteSharedSince(s, true);
     expect(s.settings.dailyLog.sharedSince).toBe(before);
-    vi.useRealTimers();
   });
 
   it("F2-13: only Maggie changes her sharing choices; a general settings write is refused and audited", () => {
@@ -786,5 +788,45 @@ describe("family chat (CC-164, CC-165)", () => {
     expect(phiHint(s, "Giants game on Sunday, who's in?")).toEqual([]);
     expect(phiHint(s, "Heartfelt thanks for dinner")).toEqual([]);
     expect(phiHint(s, "I'll be there at 10 maybe")).toEqual([]);
+  });
+
+  it("Review F3-6: catches medicines without their strength and common health words, not everyday ones", () => {
+    const s = seed();
+    const vitD = s.meds.find((m) => /\d$/.test(m.name));
+    if (vitD) expect(phiHint(s, `Did she have her ${vitD.name.replace(/\s*\d+$/, "").toLowerCase()} today?`)).toContain(vitD.name);
+    const any = s.meds[0].name;
+    expect(phiHint(s, `${any.toLowerCase()}20mg from now on`)).toContain(any);
+    for (const w of ["Picked up her meds", "The dosage changed", "1000 IU a day", "Her BP is fine", "Arthritis is worse", "Diabetic menu please"]) {
+      expect(phiHint(s, w).length, w).toBeGreaterThan(0);
+    }
+    for (const w of ["New tablet for video calls", "Kidney beans for the chili", "2 units of rental storage", "Our 5g is slow"]) {
+      expect(phiHint(s, w), w).toEqual([]);
+    }
+  });
+
+  it("Review F3-5: an added caregiver sees messages from when they joined, not the history", () => {
+    const s = setTime(seed(), "12:00");
+    setChatPro(s, GUARDIAN, CAREGIVER, true);
+    expect(s.chat.joinedAt[CAREGIVER]).toBe(clock(s).toISOString());
+    expect(chatMessages(s, CAREGIVER)).toEqual([]);
+    expect(unreadChat(s, CAREGIVER)).toBe(0);
+    s.clockOffsetMin += 1;
+    sendChat(s, GUARDIAN, "Ana, thanks for today");
+    expect(chatMessages(s, CAREGIVER).map((m) => m.text)).toEqual(["Ana, thanks for today"]);
+    expect(unreadChat(s, CAREGIVER)).toBe(1);
+    expect(chatMessages(s, GUARDIAN).length).toBeGreaterThan(1);
+    setChatPro(s, GUARDIAN, CAREGIVER, false);
+    expect(s.chat.joinedAt[CAREGIVER]).toBeUndefined();
+  });
+
+  it("Review F3-12: removing a member clears their chat place, read mark and join time", () => {
+    const s = seed();
+    setChatPro(s, GUARDIAN, CAREGIVER, true);
+    readChat(s, CAREGIVER);
+    leaveChat(s, CAREGIVER);
+    expect(s.chat.pros).not.toContain(CAREGIVER);
+    expect(s.chat.readAt[CAREGIVER]).toBeUndefined();
+    expect(s.chat.joinedAt[CAREGIVER]).toBeUndefined();
+    expect(inChat(s, CAREGIVER)).toBe(false);
   });
 });

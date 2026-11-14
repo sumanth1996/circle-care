@@ -4,7 +4,7 @@ Prototype versions are derived from the repository history (`git log`). All comm
 
 | Version | Theme | Commits | Tests at release |
 |---|---|---|---|
-| **v0.6** (in progress) | Everyday Care: refill tracker, daily check-ins, family chat, evening recap | Sprint 12, one pull request per feature | 344 unit/API after feature 1 · 387 after feature 2 · 411 after feature 3 |
+| **v0.6** (in progress) | Everyday Care: refill tracker, daily check-ins, family chat, evening recap | Sprint 12, one pull request per feature | 344 unit/API after feature 1 · 387 after feature 2 · 414 after feature 3 |
 | **v0.5** | Real accounts: sign-up by role, PostgreSQL, SSN encryption, guardian payments, audit export | Sprint 11 merge (CC-172 – CC-190) | 312 unit/API · 15 account e2e · 29 demo e2e · 28 screens axe-clean |
 | **v0.4** | California localisation and product documentation | `428fa2e` (+ this wiki) | 217 unit · 29 e2e · 24 screens axe-clean |
 | **v0.3** | Health & Calendar for the guardian | `1dc1731`, `dce35c2`, `6c139a3` | 217 unit · 29 e2e · 24 screens axe-clean |
@@ -48,11 +48,12 @@ Prototype versions are derived from the repository history (`git log`). All comm
 - **Maggie's view**: 22 point bubbles, one big microphone, and a **You said** card with Send and Try again, so nothing goes until she taps Send. She can type instead, and the typing box opens by itself where the device has no speech recognition. Her messages show **By voice**.
 - **Chat tile on Maggie's home** with the newest message and an **Open chat** button. **Show chat on my home** in her settings hides it; only she can change it, and the chat stays under **Family**.
 - **Paid caregivers** join only when Maggie or Sarah switches them on under **People**, and then get a Chat tab. Switching off, leaving the circle or a time limit ending removes access at once. Attempts from outside the chat are refused and logged.
-- New `chat` resource in the permission matrix.
+- New `chat` resource in the permission matrix. A caregiver who is added sees messages from the time they joined, not the history before.
+- Review: [docs/reviews/2026-11-14-sprint-12-family-chat.md](../../reviews/2026-11-14-sprint-12-family-chat.md).
 - Design: [Figma board](../../design/sprint-12/03-family-chat-figma.png), approved by Sumanth on 2026-11-14.
 - Saved demo data moves to version 9.
 
-Coming next in this release: family chat (CC-164, CC-165), evening recap (CC-191).
+Coming next in this release: evening recap (CC-191).
 
 ## v0.5 — Accounts, identity & payments (Sprint 11)
 

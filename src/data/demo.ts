@@ -188,7 +188,7 @@ export function seed(now = new Date()): State {
     ],
     checkins,
     dailyLogs,
-    chat: { messages: chatMessages, pros: [], readAt: { [GUARDIAN]: iso(ymd(addDays(now, -1)), "13:00"), [ELDER]: iso(ymd(addDays(now, -1)), "12:41"), [FAMILY]: iso(today, "07:46") } },
+    chat: { messages: chatMessages, pros: [], readAt: { [GUARDIAN]: iso(ymd(addDays(now, -1)), "13:00"), [ELDER]: iso(ymd(addDays(now, -1)), "12:41"), [FAMILY]: iso(today, "07:46") }, joinedAt: {} },
     approvals: [
       {
         id: "ap-metformin", kind: "med-change", title: "Move evening Metformin to 6:30 PM",

@@ -180,8 +180,10 @@ export default function AppShell({ persona }: { persona: Persona }) {
           <button className={`banner ${banner.severity === "critical" ? "critical" : ""}`} onClick={() => {
             setBanner(null);
             const l = banner.link ?? "";
-            if (persona === "elder") nav(l.startsWith("/app/elder") ? l : "/app/elder");
-            else if (l === "/app/sos") nav(`/app/${persona}/sos`);
+            // /app/sos and /app/chat open that page for whoever is signed in.
+            const shared = l === "/app/sos" || l === "/app/chat" ? `/app/${persona}/${l.slice(5)}` : "";
+            if (shared) nav(shared);
+            else if (persona === "elder") nav(l.startsWith("/app/elder") ? l : "/app/elder");
             else nav(l.startsWith(`/app/${persona}`) ? l : `/app/${persona}/alerts`);
           }}>
             <Logo size={34} />

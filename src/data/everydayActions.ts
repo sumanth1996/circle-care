@@ -110,7 +110,14 @@ export function setChatPro(s: State, by: string, memberId: string, on: boolean) 
   if (!allowed(s, by, "invite", "chat")) return;
   const m = s.members.find((x) => x.id === memberId && x.role === "pro" && x.status === "active");
   if (!m || s.chat.pros.includes(memberId) === on) return;
-  s.chat.pros = on ? [...s.chat.pros, memberId] : s.chat.pros.filter((x) => x !== memberId);
-  if (!on) delete s.chat.readAt[memberId];
+  if (on) {
+    s.chat.pros = [...s.chat.pros, memberId];
+    // A caregiver sees the chat from the moment they join, not what the family said before.
+    s.chat.joinedAt[memberId] = clock(s).toISOString();
+  } else {
+    s.chat.pros = s.chat.pros.filter((x) => x !== memberId);
+    delete s.chat.readAt[memberId];
+    delete s.chat.joinedAt[memberId];
+  }
   audit(s, by, on ? "created" : "removed", `${m.name}'s place in the family chat`);
 }
