@@ -836,6 +836,134 @@ describe("family chat (CC-164, CC-165)", () => {
   });
 });
 
+describe("fewer false alarms from the chat health-detail check (CC-192)", () => {
+  /** Everyday messages that must send without the health-detail sheet. The first 13 warned on main before CC-192. */
+  const EVERYDAY = [
+    "Stroke the cat for me",
+    "Paint it with 2 strokes",
+    "Mom loves her swimming strokes",
+    "Laughter is the best medicine",
+    "A dose of sunshine would help",
+    "The mechanic will diagnose the car",
+    "Test results from Lily's school are in",
+    "He prescribed reading for the summer",
+    "Add 250 ml of milk to the recipe",
+    "Pill bug in the garden",
+    "Mom is a Cancer, birthday in July",
+    "Dog's surgery went well",
+    "Take 2 units of the storage",
+    "What a stroke of luck",
+    "Giants game on Sunday, who's in?",
+    "Heartfelt thanks for dinner",
+    "I'll be there at 10 maybe",
+    "New tablet for video calls",
+    "Kidney beans for the chili",
+    "Meet at the BP station",
+    "Our 5g is slow",
+    "Dinner at 6 on Sunday?",
+    "Can someone pick up groceries?",
+    "She beat me at cards again",
+    "Lily's spelling test results are great",
+    "Bring the medicine ball to the gym",
+    "He got a taste of his own medicine",
+    "The car needs a diagnostic check",
+    "Grandma's brush strokes are lovely",
+    "Chill pill, everyone",
+    "A dose of fresh air will do us good",
+    "Can you diagnose why the wifi drops?",
+    "Add 30 ml of olive oil",
+    "Cancer season starts in June",
+    "The vet said the cat's surgery went fine",
+    "Movie at 7, popcorn on me",
+    "Who has the spare key?",
+    "The doctor's office called about parking",
+    "Chemistry homework due Friday",
+    "Prescribed route for the race is posted",
+  ];
+
+  /** Messages with health details that must still bring up the sheet. Includes every Sprint 12 case. */
+  const HEALTH = [
+    "Did Mom take her lisinopril this morning?",
+    "The metformin is making her stomach upset",
+    "She's out of vitamin d",
+    "Atorvastatin moved to bedtime",
+    "Doctor changed her dose to 20 mg",
+    "She takes 1000 IU every day",
+    "Gave her 10 units before dinner",
+    "Her blood pressure was 150 over 95",
+    "Her BP is 140/90",
+    "Blood sugar was high after lunch",
+    "Her A1C came back at 7.2",
+    "Glucose reading was 180",
+    "Grandpa had a stroke years ago",
+    "Mom's stroke rehab starts Monday",
+    "New diagnosis from the clinic today",
+    "They diagnosed her heart problem over the phone",
+    "The doctor prescribed an antibiotic",
+    "Her new prescription is ready",
+    "Early signs of dementia, the neurologist said",
+    "Alzheimer's runs in the family",
+    "Parkinson's tremor is worse",
+    "Chemo starts next week",
+    "Her arthritis is acting up",
+    "Kidney function test is Friday",
+    "The surgery is booked for Tuesday",
+    "She's recovering well after surgery",
+    "Her cancer screening is next month",
+    "Lab results came back normal",
+    "Her test results came back from the clinic",
+    "Did she take her pills?",
+    "She skipped a pill yesterday",
+    "Picked up her meds at the pharmacy",
+    "The dosage changed again",
+    "What's the best medicine for her cough?",
+    "Time for her medicine",
+    "New heart medication starts tomorrow",
+    "Insulin pen is in the fridge",
+    "Her heart rate was 110 at the clinic",
+    "Any symptoms since Tuesday?",
+    "Mom is a cancer survivor, born in July",
+  ];
+
+  it("has 40 everyday and 40 health sentences", () => {
+    expect(EVERYDAY).toHaveLength(40);
+    expect(HEALTH).toHaveLength(40);
+  });
+
+  it("catches every health sentence", () => {
+    const s = seed();
+    const missed = HEALTH.filter((w) => phiHint(s, w).length === 0);
+    expect(missed).toEqual([]);
+  });
+
+  it("lets everyday sentences through: no more than 2 of 40 warn", () => {
+    const s = seed();
+    const warned = EVERYDAY.filter((w) => phiHint(s, w).length > 0);
+    expect(warned.length, warned.join(" | ")).toBeLessThanOrEqual(2);
+  });
+
+  it("only lets the everyday sense through, not the health sense of the same word", () => {
+    const s = seed();
+    for (const [everyday, health] of [
+      ["Stroke the cat for me", "Her stroke was in May"],
+      ["A dose of sunshine would help", "A dose of her lisinopril"],
+      ["Add 250 ml of milk", "5 ml of cough syrup at night"],
+      ["Dog's surgery went well", "Her surgery went well"],
+      ["Test results from Lily's school are in", "Test results from her doctor are in"],
+      ["Pill bug in the garden", "Her pill box is empty"],
+    ]) {
+      expect(phiHint(s, everyday), everyday).toEqual([]);
+      expect(phiHint(s, health).length, health).toBeGreaterThan(0);
+    }
+  });
+
+  it("reads curly apostrophes like straight ones", () => {
+    const s = seed();
+    expect(phiHint(s, "Mom’s stroke rehab starts Monday")).toContain("stroke");
+    expect(phiHint(s, "Dog’s surgery went well")).toEqual([]);
+  });
+});
+
 describe("evening recap (CC-191)", () => {
   const tomorrowOf = (s: State) => ymd(addDays(clock(s), 1));
   /** Nothing booked tomorrow, so each test adds exactly what it needs. */
@@ -883,6 +1011,8 @@ describe("evening recap (CC-191)", () => {
   it("gives the next dose when everything so far is confirmed", () => {
     const s = seed();
     setTime(s, "19:30");
+    // The demo data logs today's doses up to the real time, so after 9 PM it holds a 21:00 log. Drop logs after 19:30.
+    s.doses = s.doses.filter((d) => d.date !== todayOf(s) || toMin(d.time) <= toMin("19:30"));
     for (const d of s.doses) if (d.date === todayOf(s)) d.status = "taken";
     for (const slot of ["08:00", "12:30", "18:00"]) {
       for (const m of s.meds.filter((x) => x.times.includes(slot) && !x.paused)) {
