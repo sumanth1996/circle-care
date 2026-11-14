@@ -7,7 +7,7 @@
 | Developer · Tester · Build & Deploy | Dev Agent · QA Agent · Release Agent |
 | Product Owner | Sumanth (PO), go for feature 3 and Figma design approved on 2026-11-14 |
 | Date | 2026-11-14 |
-| Final verdict | In review |
+| Final verdict | **APPROVED** (round 3) |
 
 ## Round 1 — CHANGES REQUESTED
 
@@ -40,5 +40,15 @@ Ten of the twelve round 1 fixes confirmed (414 tests pass, typecheck clean). The
 | F3-16 | optional | A new speech recognizer was built on every render | Support is checked once | UI change |
 | F3-17 | optional | Tapping the microphone to stop lost the final words | It stops recognition and keeps the last result | UI change |
 | F3-18 | optional | The Vitamin D check sat inside an `if` | It asserts the seed has Vitamin D3 | Test change |
+
+## Round 3 — APPROVED
+
+All six round 2 fixes confirmed. 414 of 414 tests passed on three full runs, and the typecheck is clean.
+
+> Approved after three review rounds. The private family chat meets CC-164 and CC-165: paid caregivers get in only when Maggie or Sarah adds them, and see messages only from when they joined. Refusals are audited, and lock-screen alerts carry no message text. Voice messages are marked only when the words came from speech. All 18 review findings (F3-1 to F3-18) are fixed.
+
+Left for later (optional, not blocking):
+- The health check still flags a few harmless phrases, like "stroke the cat" and "take 2 units at the storage place". It never blocks a message, since Send anyway is always offered.
+- The architecture wiki pages still list an older `STATE_VERSION` and don't describe `state.chat`. Both were already stale before this PR, so they're a wiki catch-up for after Sprint 12.
 
 Not covered by unit tests: the chat screens themselves (the repo has no component test library, and this build container has no browser for the e2e suite).
