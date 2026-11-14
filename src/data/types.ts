@@ -47,6 +47,8 @@ export interface MedSupply {
   countedAt: string; // ISO
   /** Pills used by one dose. */
   perDose: number;
+  /** Which bottle this is. Only a new bottle changes it; editing the dose keeps it. */
+  bottleId?: string;
   /** When someone asked the pharmacy for a refill for this bottle. */
   requestedAt?: string;
   requestedBy?: string;
@@ -216,6 +218,8 @@ export interface Appointment {
   escortId?: string;
   prep?: string;
   status: "scheduled" | "done" | "cancelled";
+  /** CC-121: cancelled by Circle Care because the medicine was paused (not by a person). */
+  autoCancelled?: boolean;
   createdBy: string;
 }
 

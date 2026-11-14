@@ -41,6 +41,7 @@ Legend: R read · W write · P propose (needs approval) · A approve · I invite
 | `emergencyCard` | Allergies, conditions, contacts | R W | R P | R | R | R | — |
 | `sos` | SOS events | R W | R S | R S | R S | R S | — |
 | `data` | Export / close circle | E D | E D | — | — | — | — |
+| `supply` | Pills on hand, refill requests (CC-120/121) | R W | R W | R W | R W | — | — |
 
 ## Rules explained
 
@@ -59,6 +60,8 @@ const ALWAYS_SHARED: Resource[] = ["sos", "emergencyCard", "circle"];
 So emergencies still work (SOS and the emergency card) and people still know who is in the circle. The **guardian keeps access** while sharing is paused because they hold legal authority; the public FAQ says the guardian "is told sharing is paused." The elder's own access is never affected.
 
 ### Refused actions are logged
+
+Sprint 12 actions live in `src/data/everydayActions.ts` and use `allowed()` from the store, which does the same check and writes the same `denied` entry.
 
 Most change actions in the store go through `guard()` in `src/data/store.tsx` (recordDose, verifyDose, saveMed, requestMedChange, decide, task actions, sosAcknowledge, saveShift, requestSwap, reviewDoc, invite, revoke, settings, exported — exceptions listed under Coverage gaps): if `can()` returns false, nothing changes and an `audit` entry with action `"denied"` is written. Three denials by one person within 10 minutes raise a security notice to the guardian (CC-35). Read access in the UI is checked with `AccessGuard` / `useCan`, which call the same `can()`.
 

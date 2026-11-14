@@ -156,6 +156,8 @@ Four features were added beyond the original backlog during the build:
 - Smart hand-off summary (`CC-82`)
 - Weekly family digest (`CC-83`)
 
+Sprint 12, *Everyday Care*, ships one pull request per feature. Feature 1 is the refill tracker and low-supply alerts (`CC-120`, `CC-121`). Mockups are in [docs/design/sprint-12](docs/design/sprint-12/README.md).
+
 ## Project structure
 
 ```

@@ -1,6 +1,7 @@
 import type { State, Persona } from "./types";
 import { audit, pushAlert, allowed } from "./store";
 import { clock, nameOf } from "./selectors";
+import { unitsPerDose } from "./everyday";
 
 // Sprint 12 "Everyday Care" state changes. Each one checks the permission matrix first
 // (refusals are audited and change nothing), so the store, the tests and a future API share them.
@@ -12,7 +13,7 @@ export function recordRefill(s: State, by: string, medId: string, count: number)
   if (!med || !Number.isFinite(count) || count <= 0 || count > 1000) return;
   const at = clock(s).toISOString();
   const n = Math.round(count);
-  med.supply = { perDose: med.supply?.perDose ?? 1, pharmacy: med.supply?.pharmacy, count: n, countedAt: at };
+  med.supply = { perDose: unitsPerDose(med), pharmacy: med.supply?.pharmacy, count: n, countedAt: at, bottleId: `b-${at}` };
   med.history.push({ at, by, change: `New bottle: ${n} on hand` });
   // The automatic refill entry for the old bottle is no longer needed.
   for (const a of s.appointments) if (a.id.startsWith(`appt-auto-${med.id}-`) && a.status === "scheduled") a.status = "done";

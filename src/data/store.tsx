@@ -6,7 +6,7 @@ import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
 import { hm, uid, ymd, toMin, minutesOfDay, fmtTime } from "../lib/time";
 import { readingsFor, detectEvents } from "../lib/health";
-import { lowSupply, autoRefillId } from "./everyday";
+import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply } from "./everyday";
 import * as everyday from "./everydayActions";
 import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
 
@@ -148,13 +148,16 @@ export function evaluate(s: State) {
   // Low medicine supply (CC-121): one alert per bottle, and an orange refill entry on the
   // Calendar 3 days before it runs out. Asking for or picking up a refill stops repeats.
   for (const { med, days, refillOn } of lowSupply(s)) {
-    const bottle = med.supply!.countedAt.slice(0, 16);
+    const bottle = bottleOf(med);
     pushAlert(s, {
       key: `supply-${med.id}-${bottle}`, to: ["guardian", "caregiver"], severity: "warning",
       title: "You have a reminder from Circle Care",
       detail: `${med.name}: ${days} ${days === 1 ? "day" : "days"} left. Request a refill from ${med.supply!.pharmacy ?? "the pharmacy"}.`, link: "/app/guardian/meds",
     });
     const id = autoRefillId(med);
+    const mine = s.appointments.find((a) => a.id === id);
+    // Resumed after a pause: bring back an entry Circle Care cancelled (never one a person cancelled).
+    if (mine?.status === "cancelled" && mine.autoCancelled) { mine.status = "scheduled"; mine.date = refillOn; mine.autoCancelled = undefined; }
     const covered = s.appointments.some((a) => a.id === id || (a.kind === "refill" && a.status === "scheduled" && a.medIds.includes(med.id) && a.date >= today && a.date <= refillOn));
     if (!covered) {
       s.appointments.push({
@@ -163,6 +166,13 @@ export function evaluate(s: State) {
         prep: `About ${days} days of ${med.name} left. Added automatically 3 days before it runs out.`, status: "scheduled", createdBy: "system",
       });
     }
+  }
+
+  // A paused or removed medicine doesn't need its automatic refill entry (CC-121).
+  for (const a of s.appointments) {
+    if (!a.id.startsWith("appt-auto-") || a.status !== "scheduled") continue;
+    const med = s.meds.find((m) => a.medIds.includes(m.id));
+    if (!med || med.paused) { a.status = "cancelled"; a.autoCancelled = true; }
   }
 
   // Time-bound access ends automatically (CC-25).
@@ -253,7 +263,7 @@ function useStoreState(initial: State) {
         if (what === "low-supply") {
           // CC-121 demo: Metformin down to 7 days (2 a day) on a fresh count.
           const m = s.meds.find((x) => x.id === "med-metformin")!;
-          m.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 14, countedAt: clock(s).toISOString() };
+          m.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 14, countedAt: clock(s).toISOString(), requestedAt: undefined };
           return;
         }
         if (what === "heart-rate" || what === "oxygen") {
@@ -328,7 +338,7 @@ function useStoreState(initial: State) {
           if (before.paused !== med.paused) changes.push(med.paused ? "paused" : "resumed");
           if (before.critical !== med.critical) changes.push(med.critical ? "marked high-priority" : "high-priority removed");
           if (before.instructions !== med.instructions) changes.push("instructions updated");
-          s.meds[i] = { ...med, history: [...before.history, { ...stamp, change: changes.join("; ") || "Details updated" }] };
+          s.meds[i] = { ...rebaseSupply(s, before, med), history: [...before.history, { ...stamp, change: changes.join("; ") || "Details updated" }] };
           audit(s, by, "updated", `medication ${med.name}`);
         }
         s.approvals.push({ id: uid("ap"), kind: "med-change", title: isNew ? `Added ${med.name}` : `Updated ${med.name}`, detail: "Changed directly by the guardian.", requestedBy: by, at: clock(s).toISOString(), status: "approved", decidedAt: clock(s).toISOString(), elderSeen: s.persona === "elder" });
@@ -357,7 +367,8 @@ function useStoreState(initial: State) {
           if (a.kind === "med-change" && p.med) {
             const med = p.med as Medication;
             const i = s.meds.findIndex((m) => m.id === med.id);
-            if (i >= 0) s.meds[i] = { ...med, history: [...s.meds[i].history, { at: a.decidedAt, by: GUARDIAN, change: `${a.title} (requested by ${nameOf(s, a.requestedBy)})` }] };
+            // Keep today's pill count: the request was made against an older copy of the medicine (CC-120).
+            if (i >= 0) s.meds[i] = { ...rebaseSupply(s, s.meds[i], withCurrentSupply(med, s.meds[i])), history: [...s.meds[i].history, { at: a.decidedAt, by: GUARDIAN, change: `${a.title} (requested by ${nameOf(s, a.requestedBy)})` }] };
           }
           if (a.kind === "med-change" && p.medId) {
             const med = s.meds.find((m) => m.id === p.medId);

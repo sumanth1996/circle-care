@@ -37,7 +37,7 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   sos:             { read: ["elder", "guardian", "family", "pro"], write: ["elder"], respond: ["guardian", "family", "pro"] },
   data:            { export: ["elder", "guardian"], delete: ["elder", "guardian"] },
   // Sprint 12 — Everyday Care (CC-120 – CC-121)
-  supply:          { read: ["elder", "guardian", "family", "pro"], write: ["elder", "guardian", "family", "pro@shift"] },
+  supply:          { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian", "family", "pro@shift"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */
