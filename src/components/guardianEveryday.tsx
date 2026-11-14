@@ -1,12 +1,13 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { PackageCheck, PackagePlus, Truck, EyeOff, Utensils } from "lucide-react";
+import { PackageCheck, PackagePlus, Truck, EyeOff, Utensils, Moon, MessageCircleHeart, Pill, Sun, UserRound, CalendarHeart, Droplets, ChevronRight } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import type { Medication, State } from "../data/types";
 import { useStore, useCan } from "../data/store";
-import { pillsLeft, daysLeft, supplyState, refillPlan, scheduledRefill, sharedWeek, feelingOf, MEALS, dailyShared } from "../data/everyday";
+import { pillsLeft, daysLeft, supplyState, refillPlan, scheduledRefill, sharedWeek, feelingOf, MEALS, dailyShared, recap } from "../data/everyday";
 import { Face } from "./everyday";
 import { nameOf } from "../data/selectors";
 import { Sheet, useToast } from "./ui";
-import { fmtShortDay } from "../lib/time";
+import { fmtShortDay, fmtTime } from "../lib/time";
 import "./everyday.css";
 
 /* ---------------- CC-120 – CC-121: supply on the medicine card ---------------- */
@@ -123,4 +124,94 @@ export function DailyWeek({ state }: { state: State }) {
 /** A day Maggie kept private: a dash, with no counts to read. */
 function NotShared({ date }: { date: string }) {
   return <span className="cell" role="cell" aria-label={`${fmtShortDay(date)}: not shared`}><span className="ns" aria-hidden="true">–</span></span>;
+}
+
+/* ---------------- CC-191: evening recap ---------------- */
+
+const doseList = (ds: { name: string; time: string }[]) => ds.map((d) => `${d.name}, ${fmtTime(d.time)}`).join("; ");
+
+/** Sarah's calm summary of Maggie's day, on Home from 6 PM. */
+export function EveningRecap({ state }: { state: State }) {
+  const r = recap(state);
+  const { hash } = useLocation();
+  // The 7 PM update opens Home at #recap: bring the card into view.
+  useEffect(() => { if (hash === "#recap") document.getElementById("recap")?.scrollIntoView?.({ block: "start", behavior: "smooth" }); }, [hash]);
+  const feeling = r.log && !r.log.private ? feelingOf(r.log.feeling) : undefined;
+  const t = r.tomorrow;
+  const d = r.doses;
+  const looks = [
+    d.unconfirmed.length ? `Not confirmed: ${doseList(d.unconfirmed)}` : "",
+    d.skipped.length ? `Skipped: ${doseList(d.skipped)}` : "",
+    d.refused.length ? `Refused: ${doseList(d.refused)}` : "",
+  ].filter(Boolean);
+  return (
+    <section id="recap" className="recap glass" aria-labelledby="recap-k recap-h">
+      <div className="row between wrap">
+        <div>
+          <p id="recap-k" className="page-kicker recap-kicker"><Moon size={15} aria-hidden="true" /> Evening recap</p>
+          <h2 id="recap-h" className="t-md">{r.headline}</h2>
+        </div>
+        {r.newMessages > 0 && <Link to="/app/guardian/chat" className="btn sm secondary recap-tap"><MessageCircleHeart size={16} aria-hidden="true" /> {r.newMessages} new in chat</Link>}
+      </div>
+      <div className="recap-grid">
+        <div className="recap-cell">
+          <span className="k"><Pill size={14} aria-hidden="true" /> Medicines</span>
+          {!d.any ? (
+            <><span className="v">None today</span><span className="s">No medicines scheduled</span></>
+          ) : (
+            <>
+              <span className="v">{d.total ? `${d.taken} of ${d.total}` : "None yet"}</span>
+              {looks.map((l) => <span key={l} className="s warn">{l}</span>)}
+              {d.due.length > 0 && <span className="s">Due now: {doseList(d.due)}</span>}
+              {!looks.length && !d.due.length && <span className="s">{d.total ? (d.next ? `All confirmed. Next at ${fmtTime(d.next)}` : "All confirmed today") : d.next ? `First at ${fmtTime(d.next)}` : ""}</span>}
+            </>
+          )}
+        </div>
+        <div className="recap-cell">
+          <span className="k"><Sun size={14} aria-hidden="true" /> Check-in</span>
+          <span className="v">{r.checkin ? fmtTime(r.checkin) : r.checkinMissed ? "Missed" : "Not yet"}</span>
+          <span className="s">{r.tasks.total ? `${r.tasks.done} of ${r.tasks.total} routines done` : "No routines today"}</span>
+        </div>
+        <div className="recap-cell">
+          <span className="k"><UserRound size={14} aria-hidden="true" /> Visits</span>
+          <span className="v">{r.visits.length ? r.visits.map((v) => v.who).join(", ") : "None today"}</span>
+          <span className="s">{r.visits.map((v) => `${fmtTime(v.from)} to ${v.to ? fmtTime(v.to) : "now"}`).join(" · ") || "No caregiver visit"}</span>
+        </div>
+        {r.log && !r.log.private ? (
+          <div className="recap-cell">
+            <span className="k">{feeling ? <Face feeling={feeling.key} size={16} /> : <Droplets size={14} aria-hidden="true" />} Her day</span>
+            <span className="v">{feeling?.label ?? "No feeling added"}</span>
+            <span className="s">{r.log.water} {r.log.water === 1 ? "glass" : "glasses"} · {r.log.meals.length} of 3 meals</span>
+          </div>
+        ) : (
+          <div className="recap-cell">
+            <span className="k"><EyeOff size={14} aria-hidden="true" /> Her day</span>
+            <span className="v">Private</span>
+            <span className="s">Maggie isn't sharing today</span>
+          </div>
+        )}
+        <div className="recap-cell">
+          <span className="k"><CalendarHeart size={14} aria-hidden="true" /> Tomorrow</span>
+          {t?.kind === "appointment" ? (
+            <><span className="v">{fmtTime(t.time)} · {t.title}</span>{t.note && <span className="s">{t.note}</span>}</>
+          ) : t?.kind === "visit" ? (
+            <><span className="v">{fmtTime(t.time)}</span><span className="s">{t.who} visits until {fmtTime(t.until)}</span></>
+          ) : (
+            <><span className="v">Nothing booked</span><span className="s">A free day</span></>
+          )}
+        </div>
+      </div>
+      {r.low.map((l) => (
+        <p key={l.name} className="small recap-refill">
+          <Link to="/app/guardian/meds" className="recap-tap">{l.name}: {l.days} {l.days === 1 ? "day" : "days"} left.</Link>{" "}
+          {l.on ? `A refill is on the Calendar for ${fmtShortDay(l.on)}.` : "Not on the Calendar yet."}
+        </p>
+      ))}
+      <div className="row between wrap">
+        {looks.length > 0 || d.due.length > 0 || r.low.length > 0 ? <Link to="/app/guardian/meds" className="btn sm recap-tap">Review medicines</Link> : <span />}
+        <Link to="/app/guardian/digest" className="small recap-week recap-tap">See the week <ChevronRight size={14} aria-hidden="true" /></Link>
+      </div>
+      <p className="tiny">{state.settings.recapNotify === false ? "The 7 PM update is off. You can turn it on in Settings." : "One update at 7 PM. Health details stay in the app."}</p>
+    </section>
+  );
 }

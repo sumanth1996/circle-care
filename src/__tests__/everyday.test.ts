@@ -3,7 +3,7 @@ import { seed, GUARDIAN, ELDER, CAREGIVER, FAMILY } from "../data/demo";
 import { evaluate, allowed, applySettings, leaveChat } from "../data/store";
 import { can } from "../data/policy";
 import { todayOf, clock } from "../data/selectors";
-import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling, chatMembers, inChat, unreadChat, phiHint, chatAudience, lastChatMessage, chatMessages, CHAT_MAX } from "../data/everyday";
+import { pillsLeft, daysLeft, refillPlan, supplyState, lowSupply, autoRefillId, unitsPerDose, scheduledRefill, withCurrentSupply, rebaseSupply, dailyLogFor, hasLoggedToday, mealsGap, dailyShared, dailyWeek, FEELINGS, sharedLogFor, sharedWeek, sharedFeeling, chatMembers, inChat, unreadChat, phiHint, chatAudience, lastChatMessage, chatMessages, CHAT_MAX, recap, recapOpen, inQuietHours } from "../data/everyday";
 import { recordRefill, requestRefill, logDaily, setDailySharing, noteSharedSince, sendChat, readChat, setChatPro } from "../data/everydayActions";
 import { verifyChain } from "../data/audit";
 import { addDays, ymd, toMin, minutesOfDay } from "../lib/time";
@@ -833,5 +833,298 @@ describe("family chat (CC-164, CC-165)", () => {
     expect(s.chat.readAt[CAREGIVER]).toBeUndefined();
     expect(s.chat.joinedAt[CAREGIVER]).toBeUndefined();
     expect(inChat(s, CAREGIVER)).toBe(false);
+  });
+});
+
+describe("evening recap (CC-191)", () => {
+  const tomorrowOf = (s: State) => ymd(addDays(clock(s), 1));
+  /** Nothing booked tomorrow, so each test adds exactly what it needs. */
+  const clearTomorrow = (s: State) => { s.appointments = s.appointments.filter((a) => a.date !== tomorrowOf(s)); return s; };
+  const recapAlerts = (s: State) => s.alerts.filter((a) => a.key === `recap-${todayOf(s)}`);
+  /** Every dose up to `upTo` is logged with `status`; the check-in is done and no medicine is low. */
+  const quietDay = (s: State, upTo: string) => {
+    s.doses = s.doses.filter((d) => d.date !== todayOf(s));
+    for (const m of s.meds) for (const time of m.times) if (toMin(time) <= toMin(upTo)) s.doses.push({ id: `q-${m.id}-${time}`, medId: m.id, date: todayOf(s), time, status: "taken", by: ELDER, at: clock(s).toISOString(), verified: false });
+    for (const m of s.meds) m.supply = undefined;
+    if (!s.checkins.some((c) => c.date === todayOf(s))) s.checkins.push({ date: todayOf(s), at: clock(s).toISOString() });
+    return s;
+  };
+
+  it("shows the card from 6 PM", () => {
+    const s = seed();
+    setTime(s, "17:59");
+    expect(recapOpen(s)).toBe(false);
+    setTime(s, "18:00");
+    expect(recapOpen(s)).toBe(true);
+  });
+
+  it("summarizes doses, check-in, visits and a refill to sort out", () => {
+    const s = seed();
+    setTime(s, "19:15");
+    const r = recap(s);
+    expect(r.doses.total).toBeGreaterThan(0);
+    expect(r.doses.taken).toBeLessThanOrEqual(r.doses.total);
+    expect(r.low.map((l) => l.name)).toContain("Atorvastatin");
+    evaluate(s);
+    expect(recap(s).low.find((l) => l.name === "Atorvastatin")!.on! >= todayOf(s)).toBe(true);
+    expect(r.calm).toBe(false);
+    expect(r.headline.length).toBeGreaterThan(0);
+  });
+
+  it("names each dose that isn't confirmed, with its time", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    s.doses = s.doses.filter((d) => !(d.date === todayOf(s) && d.medId === "med-metformin" && d.time === "18:00"));
+    const r = recap(s);
+    expect(r.doses.unconfirmed).toContainEqual({ name: "Metformin", time: "18:00" });
+    expect(r.headline).toMatch(/needs? a look\.$/);
+  });
+
+  it("gives the next dose when everything so far is confirmed", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    for (const d of s.doses) if (d.date === todayOf(s)) d.status = "taken";
+    for (const slot of ["08:00", "12:30", "18:00"]) {
+      for (const m of s.meds.filter((x) => x.times.includes(slot) && !x.paused)) {
+        if (!s.doses.some((d) => d.medId === m.id && d.date === todayOf(s) && d.time === slot)) {
+          s.doses.push({ id: `t-${m.id}-${slot}`, medId: m.id, date: todayOf(s), time: slot, status: "taken", by: ELDER, at: clock(s).toISOString(), verified: false });
+        }
+      }
+    }
+    const r = recap(s);
+    expect(r.doses.unconfirmed).toEqual([]);
+    expect(r.doses.due).toEqual([]);
+    expect(r.doses.next).toBe("21:00");
+  });
+
+  it("leaves out feeling, water and meals when Maggie doesn't share them, or keeps today private", () => {
+    const s = seed();
+    s.settings.dailyLog.shareWithGuardian = false;
+    expect(recap(s).log).toBeUndefined();
+    const t = seed();
+    setTime(t, "19:00");
+    setDailySharing(t, ELDER, false);
+    logDaily(t, ELDER, { feeling: "good", water: 3 });
+    setDailySharing(t, ELDER, true);
+    const log = recap(t).log!;
+    expect(log.private).toBe(true);
+    expect(log.feeling).toBeUndefined();
+    expect(log.water).toBe(0);
+  });
+
+  it("shows tomorrow's first appointment with its prep note", () => {
+    const s = clearTomorrow(seed());
+    setTime(s, "19:00");
+    const base = { durationMin: 20, provider: "Bay Area Lab", location: "Lab", medIds: [], status: "scheduled" as const, createdBy: GUARDIAN };
+    s.appointments.push({ ...base, id: "x2", date: tomorrowOf(s), time: "11:00", kind: "doctor", title: "Follow-up" });
+    s.appointments.push({ ...base, id: "x1", date: tomorrowOf(s), time: "08:15", kind: "lab", title: "Blood test", prep: "No food after midnight" });
+    expect(recap(s).tomorrow).toEqual({ kind: "appointment", time: "08:15", title: "Blood test", note: "No food after midnight" });
+  });
+
+  it("falls back to the first visit tomorrow, then to nothing booked", () => {
+    const s = clearTomorrow(seed());
+    setTime(s, "19:00");
+    const day = addDays(clock(s), 1).getDay();
+    s.shifts = [
+      { id: "a", caregiverId: CAREGIVER, days: [day], start: "13:00", end: "17:00", accepted: true },
+      { id: "b", caregiverId: FAMILY, days: [day], start: "10:00", end: "16:00", accepted: true },
+      { id: "c", caregiverId: null, days: [day], start: "07:00", end: "09:00", accepted: false },
+    ];
+    expect(recap(s).tomorrow).toEqual({ kind: "visit", time: "10:00", who: "James", until: "16:00" });
+    s.shifts = [];
+    expect(recap(s).tomorrow).toBeUndefined();
+  });
+
+  it("sends one update at 7 PM, with nothing about Maggie's health in it", () => {
+    const s = seed();
+    setTime(s, "18:50");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    setTime(s, "19:05");
+    evaluate(s); evaluate(s);
+    const r = recapAlerts(s);
+    expect(r).toHaveLength(1);
+    expect(r[0].title).toBe("Update from Circle Care");
+    expect(r[0].detail).toBe("Your evening recap is ready.");
+    expect(r[0].to).toEqual(["guardian"]);
+    expect(phiHint(s, `${r[0].title} ${r[0].detail}`)).toEqual([]);
+  });
+
+  it("skips the update when Sarah turns it off, and only Sarah can", () => {
+    const s = seed();
+    applySettings(s, ELDER, { recapNotify: false });
+    expect(s.settings.recapNotify).toBe(true);
+    applySettings(s, CAREGIVER, { recapNotify: false });
+    expect(s.settings.recapNotify).toBe(true);
+    applySettings(s, GUARDIAN, { recapNotify: false });
+    expect(s.settings.recapNotify).toBe(false);
+    setTime(s, "19:05");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    expect(recapOpen(s)).toBe(true);
+  });
+
+  it("skips the update during quiet hours", () => {
+    const s = seed();
+    s.settings.quietHours = { on: true, start: "18:30", end: "07:00" };
+    setTime(s, "19:05");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    s.settings.quietHours.on = false;
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(1);
+  });
+
+  it("reads quiet hours that run past midnight", () => {
+    const q = { on: true, start: "22:00", end: "07:00" };
+    expect(inQuietHours(q, toMin("23:30"))).toBe(true);
+    expect(inQuietHours(q, toMin("06:59"))).toBe(true);
+    expect(inQuietHours(q, toMin("19:00"))).toBe(false);
+    expect(inQuietHours({ ...q, start: "12:00", end: "14:00" }, toMin("13:00"))).toBe(true);
+    expect(inQuietHours({ ...q, on: false }, toMin("23:30"))).toBe(false);
+  });
+
+  it("F4-1: a dose due now is neither calm nor 'all confirmed', and shows on its own", () => {
+    const s = seed();
+    setTime(s, "18:10");
+    quietDay(s, "12:30");
+    let r = recap(s);
+    expect(r.doses.due).toEqual([{ name: "Metformin", time: "18:00" }]);
+    expect(r.doses.unconfirmed).toEqual([]);
+    expect(r.calm).toBe(false);
+    expect(r.headline).toBe("1 dose is due now.");
+    setTime(s, "20:50");
+    quietDay(s, "18:00");
+    r = recap(s);
+    expect(r.doses.due).toEqual([{ name: "Atorvastatin", time: "21:00" }]);
+    expect(r.doses.next).toBeUndefined();
+    expect(r.headline).toBe("1 dose is due now.");
+  });
+
+  it("calls a day calm only when nothing needs a look", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    const r = recap(s);
+    expect(r.calm).toBe(true);
+    expect(r.headline).toBe("A calm day for Maggie.");
+  });
+
+  it("F4-2: skipped and refused doses are named as such, not as unconfirmed", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    s.doses.find((d) => d.date === todayOf(s) && d.medId === "med-vitd")!.status = "skipped";
+    s.doses.find((d) => d.date === todayOf(s) && d.medId === "med-lisinopril")!.status = "refused";
+    const r = recap(s);
+    expect(r.doses.skipped).toEqual([{ name: "Vitamin D3", time: "12:30" }]);
+    expect(r.doses.refused).toEqual([{ name: "Lisinopril", time: "08:00" }]);
+    expect(r.doses.unconfirmed).toEqual([]);
+    expect(r.headline).toBe("2 doses need a look.");
+  });
+
+  it("leaves a paused medicine out", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    s.meds.find((m) => m.id === "med-vitd")!.paused = true;
+    s.doses = s.doses.filter((d) => d.medId !== "med-vitd");
+    const r = recap(s);
+    expect(r.doses.unconfirmed).toEqual([]);
+    expect(r.calm).toBe(true);
+  });
+
+  it("F4-5: says Maggie didn't check in only once her window has closed", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    s.checkins = s.checkins.filter((c) => c.date !== todayOf(s));
+    s.settings.checkinWindow = { start: "08:00", end: "20:00" };
+    expect(recap(s).checkinMissed).toBe(false);
+    expect(recap(s).calm).toBe(false);
+    expect(recap(s).headline).toBe("Maggie's check-in is still to come.");
+    s.settings.checkinWindow = { start: "08:00", end: "10:00" };
+    expect(recap(s).checkinMissed).toBe(true);
+    expect(recap(s).headline).toBe("Maggie didn't check in today.");
+  });
+
+  it("counts more than one refill", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    quietDay(s, "18:00");
+    for (const id of ["med-metformin", "med-atorvastatin"]) {
+      s.meds.find((m) => m.id === id)!.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 6, countedAt: clock(s).toISOString() };
+    }
+    expect(recap(s).headline).toBe("2 refills to sort out.");
+  });
+
+  it("F4-4: gives a refill date only when the refill is really on the Calendar", () => {
+    const s = seed();
+    setTime(s, "19:30");
+    const med = s.meds.find((m) => m.id === "med-metformin")!;
+    med.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 8, countedAt: clock(s).toISOString() };
+    s.appointments = s.appointments.filter((a) => !(a.kind === "refill" && a.medIds.includes(med.id)));
+    expect(recap(s).low.find((l) => l.name === "Metformin")!.on).toBeUndefined();
+    evaluate(s);
+    expect(recap(s).low.find((l) => l.name === "Metformin")!.on).toBeDefined();
+  });
+
+  it("keeps feeling, water and meals out while all sharing is paused, and still sends the update", () => {
+    const s = seed();
+    s.settings.sharingPaused = true;
+    setTime(s, "19:05");
+    expect(recap(s).log).toBeUndefined();
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(1);
+  });
+
+  it("sends nothing after 11 PM, and catches up when the app first runs later in the evening", () => {
+    const s = seed();
+    setTime(s, "23:05");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    setTime(s, "21:40");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(1);
+  });
+
+  it("F4-3: quiet hours over 7 PM skip the whole evening, even after they end", () => {
+    const s = seed();
+    s.settings.quietHours = { on: true, start: "19:00", end: "19:30" };
+    setTime(s, "19:35");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    s.settings.quietHours = { on: true, start: "19:30", end: "07:00" };
+    setTime(s, "19:10");
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(1);
+  });
+
+  it("F4-13: a late catch-up never goes out inside quiet hours", () => {
+    const s = seed();
+    setTime(s, "22:30"); // default quiet hours 22:00 to 07:00
+    evaluate(s);
+    expect(recapAlerts(s)).toHaveLength(0);
+    const t = seed();
+    t.settings.quietHours = { on: true, start: "20:00", end: "07:00" };
+    setTime(t, "21:00");
+    evaluate(t);
+    expect(recapAlerts(t)).toHaveLength(0);
+  });
+
+  it("refuses James too when he tries to change Sarah's update", () => {
+    const s = seed();
+    applySettings(s, FAMILY, { recapNotify: false });
+    expect(s.settings.recapNotify).toBe(true);
+  });
+
+  it("leaves cancelled appointments and revoked caregivers out of tomorrow", () => {
+    const s = clearTomorrow(seed());
+    setTime(s, "19:00");
+    s.appointments.push({ id: "c1", date: tomorrowOf(s), time: "08:00", durationMin: 20, kind: "lab", title: "Cancelled test", provider: "Lab", location: "Lab", medIds: [], status: "cancelled", createdBy: GUARDIAN });
+    const day = addDays(clock(s), 1).getDay();
+    s.shifts = [{ id: "a", caregiverId: CAREGIVER, days: [day], start: "09:00", end: "12:00", accepted: true }];
+    s.members.find((m) => m.id === CAREGIVER)!.status = "revoked";
+    expect(recap(s).tomorrow).toBeUndefined();
   });
 });
