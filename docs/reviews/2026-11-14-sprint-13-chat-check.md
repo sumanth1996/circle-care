@@ -7,7 +7,7 @@
 | Developer · Tester · Build & Deploy | Dev Agent · QA Agent · Release Agent |
 | Product Owner | Sumanth (PO), go to build Sprint 13 given 2026-11-14 |
 | Date | 2026-11-14 |
-| Final verdict | *Pending review* |
+| Final verdict | **APPROVED** (round 5, after four rounds of changes) |
 
 ## What changed
 
@@ -82,6 +82,8 @@ All round 3 examples were verified to warn, and the everyday cases stay silent.
 |---|---|---|---|
 | 14 | A comma after a cooking amount let a medicine named after it through ("Add 60 ml of water, then the amoxicillin") | The amount must end the message or go "to the recipe, bowl, pan" and the like | mixed set (2 cases) |
 
-## Round 5
+## Round 5 — APPROVED
 
-*Pending.*
+Both round 4 examples warn, and so do versions with a semicolon or a dash. "Add 250 ml of milk to the recipe" and "Add 30 ml of olive oil" stay silent with or without a full stop. The everyday, health and mixed sets and the full suite (444 tests) pass. Nothing found in any round still gets through where main warned.
+
+**Follow-up, not blocking:** covid, strep, antibiotic, pharmacy and scan are not health words yet. That gap was already on main before CC-192.
