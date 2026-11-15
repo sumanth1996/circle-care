@@ -7,7 +7,7 @@
 | Developer · Tester · Build & Deploy | Dev Agent · QA Agent · Release Agent |
 | Product Owner | Sumanth (PO), go to start CC-197 given 2026-11-15 |
 | Date | 2026-11-15 |
-| Final verdict | Round 1 and 2: changes requested · Round 3 pending |
+| Final verdict | **APPROVED** (round 3) |
 
 ## What changed
 
@@ -54,6 +54,10 @@ All four round 1 Musts were confirmed fixed against the code and the seed.
 | 5 | With the microphone blocked, *Answer with my voice* may still show | The elder guide says what tapping it shows, as expected behaviour |
 | 6 | "First *My day* tap" was too narrow; *Reset demo* also resets text size | "Any tap", and set the text size again |
 | 7 | The pharmacy-label check was loose; the shift test set checkOut by hand | The check matches the app's placeholder exactly; the test also checks that the hand-off action checks the caregiver out |
+
+## Round 3: approved
+
+All seven round 2 findings were confirmed fixed against the code. One optional wording nit (what the dose-voice button does where the browser can't keep speech on the device) was fixed before merge.
 
 ## Results
 
