@@ -90,8 +90,8 @@
 | `vitals` sharing switch | ✓ (only) | — | — | — |
 | `wellbeing` sharing switch (CC-143) | ✓ (only) | — | — | — |
 
-!!! note "The log holds no health details"
-    *"The log never stores health details — only who opened what, and when."* Entries store an actor id, an action and a resource name.
+!!! note "The log is protected like health information"
+    *"It records who opened what, and when. What was opened can name a medicine or a document, so the log is protected as health information."* Entries store an actor id, an action and a resource name, and the resource name can be a medicine, a document or an appointment, so the [data inventory](../../compliance/09-data-inventory.md) classifies the log as PHI (CC-9).
 
 ## Notifications
 

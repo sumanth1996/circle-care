@@ -11,6 +11,13 @@ import type { Resource } from "./policy";
  * PII: identifies a person but says nothing about health on its own.
  * Sensitive: financial or identity data (SSNs, bank and card details, credentials).
  * Operational: ids, timestamps, settings and flags needed to run the service.
+ *
+ * Two rules keep the tags consistent (the test checks both):
+ * - In a record that holds PHI, who did it (a member id) and when are PHI too,
+ *   because together they say who cared for Maggie, and when. The record's own
+ *   id, status flags and system fields stay Operational.
+ * - Medicine ids are readable ("med-lisinopril"), so a field holding one, or a
+ *   key built from one, is PHI. Production should use opaque ids.
  */
 export type DataClass = "PHI" | "PII" | "Sensitive" | "Operational";
 
@@ -37,7 +44,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     fields: {
       version: O, persona: O, signedIn: O, clockOffsetMin: O, elderId: O,
       "health.heightCm": P, "health.birthYear": I, "health.device": O,
-      "health.overrides.at": P, "health.overrides.hr": P, "health.overrides.spo2": P, "health.overrides.addedAt": O,
+      "health.overrides.at": P, "health.overrides.hr": P, "health.overrides.spo2": P, "health.overrides.addedAt": P,
     },
   },
   Member: {
@@ -50,7 +57,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   Medication: {
     resource: "meds",
     fields: {
-      id: O, name: P, strength: P, dose: P, times: P, instructions: P, prescriber: P, purpose: P,
+      id: P, name: P, strength: P, dose: P, times: P, instructions: P, prescriber: P, purpose: P,
       critical: P, paused: P, "pill.color": P, "pill.shape": P,
       "history.at": P, "history.by": P, "history.change": P,
     },
@@ -83,7 +90,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     resource: "handoffs",
     fields: {
       id: O, visitId: O, by: P, at: P, mood: P, meals: P, concerns: P, notes: P, summary: P,
-      acknowledgedBy: O, acknowledgedAt: O, skippedReason: P,
+      acknowledgedBy: P, acknowledgedAt: P, skippedReason: P,
     },
   },
   SosEvent: {
@@ -100,7 +107,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   ChatMessage: {
     resource: "chat",
-    fields: { id: O, by: I, at: O, text: P, via: O },
+    fields: { id: O, by: P, at: P, text: P, via: O },
   },
   Chat: {
     resource: "chat",
@@ -109,31 +116,31 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   Approval: {
     resource: "approvals",
     fields: {
-      id: O, kind: O, title: P, detail: P, requestedBy: O, at: O, status: O, decidedAt: O,
+      id: O, kind: O, title: P, detail: P, requestedBy: P, at: P, status: O, decidedAt: P,
       note: P, payload: P, elderSeen: O, elderQuestion: P,
     },
   },
   CareNote: {
     resource: ["notes", "notes.private"],
-    fields: { id: O, by: O, at: O, text: P, visibility: O },
+    fields: { id: O, by: P, at: P, text: P, visibility: O },
   },
   CareDoc: {
     resource: ["docs", "docs.legal"],
-    fields: { id: O, name: P, kind: P, by: O, at: O, size: O, status: O, rejectReason: I, fileId: O, mime: O },
+    fields: { id: O, name: P, kind: P, by: P, at: P, size: O, status: O, rejectReason: P, fileId: O, mime: O },
   },
   AuditEvent: {
     resource: "audit",
-    fields: { id: O, at: O, actorId: O, action: O, resource: O, prev: O, hash: O },
+    fields: { id: O, at: P, actorId: P, action: O, resource: P, prev: O, hash: O },
   },
   Alert: {
     resource: null,
-    fields: { id: O, key: O, at: O, to: O, title: O, detail: P, severity: O, read: O, link: O },
+    fields: { id: O, key: P, at: P, to: O, title: O, detail: P, severity: O, read: O, link: O },
   },
   Appointment: {
     resource: "appointments",
     fields: {
       id: O, date: P, time: P, durationMin: P, kind: P, title: P, provider: P, location: P, medIds: P,
-      escortId: I, prep: P, status: O, autoCancelled: O, createdBy: O,
+      escortId: P, prep: P, status: O, autoCancelled: O, createdBy: P,
     },
   },
   Settings: {
@@ -143,8 +150,8 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
       "doseEscalation.caregiverMin": O, "doseEscalation.guardianMin": O,
       "quietHours.on": O, "quietHours.start": O, "quietHours.end": O,
       "channels.push": O, "channels.sms": O, "channels.email": O, criticalBypass: O,
-      textSize: I, highContrast: I, readAloud: I, sharingPaused: O,
-      "consent.version": O, "consent.at": O, "consent.by": O, "consent.onBehalfReason": P,
+      textSize: O, highContrast: O, readAloud: O, sharingPaused: O,
+      "consent.version": O, "consent.at": P, "consent.by": P, "consent.onBehalfReason": P,
       sessionLockMin: O, elderLockMin: O, toured: O, setupCallRequested: O,
       "vitals.intervalMin": O,
       "vitals.thresholds.hrHigh": P, "vitals.thresholds.hrLow": P, "vitals.thresholds.hrJump": P,
@@ -153,20 +160,20 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
       "dailyLog.shareWithGuardian": O, "dailyLog.waterGoal": O, "dailyLog.sharedSince": O,
       recapNotify: O, elderChatOnHome: O,
       "emergencyCard.allergies": P, "emergencyCard.conditions": P, "emergencyCard.directives": P,
-      "emergencyCard.bloodType": P, "emergencyCard.approvedByElder": O, "emergencyCard.approvedAt": O,
+      "emergencyCard.bloodType": P, "emergencyCard.approvedByElder": O, "emergencyCard.approvedAt": P,
     },
   },
 };
 
 const persona = { id: O, user_id: O, first_name: I, last_name: I, phone: I, email: I, ssn_enc: S, ssn_last4: S, created_at: O, updated_at: O } as const;
 
-/** Postgres, one entry per table created in server/migrations (and schema_migrations in server/migrate.ts). */
+/** Postgres, one entry per table and view that the migrations create (read from the database itself by the test). */
 export const DB_CLASSIFICATION: Record<string, Record<string, DataClass>> = {
   users: {
     id: O, email: I, password_hash: S, role: O, failed_attempts: O, first_failed_at: O, locked_until: O,
     created_at: O, updated_at: O,
   },
-  sessions: { token_hash: O, user_id: O, created_at: O, last_seen_at: O, expires_at: O },
+  sessions: { token_hash: S, user_id: O, created_at: O, last_seen_at: O, expires_at: O },
   elders: { ...persona },
   caregivers: { ...persona },
   guardians: { ...persona },
@@ -181,6 +188,11 @@ export const DB_CLASSIFICATION: Record<string, Record<string, DataClass>> = {
     id: O, user_id: O, vault_token: S, holder_name: I, brand: S, funding: S, last4: S,
     exp_month: S, exp_year: S, is_primary: O, created_at: O,
   },
-  audit_events: { id: O, at: O, actor_user_id: O, subject_user_id: O, action: O, detail: O },
+  audit_events: { id: O, at: O, actor_user_id: O, subject_user_id: O, action: O, detail: S },
   schema_migrations: { version: O, applied_at: O },
+  // Masked views for auditors (CC-184).
+  audit_people_masked: { user_id: O, role: O, name_masked: I, email_masked: I, phone_masked: I, ssn_masked: S, created_at: O },
+  audit_payment_methods_masked: {
+    user_id: O, kind: O, label: S, detail: S, number_masked: S, routing_masked: S, is_primary: O, fee_cents: O, created_at: O,
+  },
 };

@@ -1,12 +1,15 @@
 // CC-9: every state field and every table column has a data class, and the
 // data inventory lists the same fields as src/data/classification.ts.
 
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CLASS_LABEL, DB_CLASSIFICATION, STATE_CLASSIFICATION, type DataClass } from "../data/classification";
 import { MATRIX } from "../data/policy";
+import { loadConfig } from "../../server/config";
+import { openDb } from "../../server/db";
+import { migrate } from "../../server/migrate";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -23,60 +26,127 @@ function inside(src: string, open: number, o = "{", c = "}"): string {
   throw new Error(`Unclosed ${o} at ${open}`);
 }
 
-/** Split at top level (outside the given brackets) on any of `seps`. */
-function splitTop(body: string, seps: string, open = "{[(<", close = "}])>"): string[] {
+/** Split at top level (outside brackets) on any of `seps`. */
+function splitTop(body: string, seps: string): string[] {
   const out: string[] = [];
   let depth = 0, cur = "";
   for (const ch of body) {
-    if (open.includes(ch)) depth++;
-    else if (close.includes(ch)) depth--;
+    if ("{[(<".includes(ch)) depth++;
+    else if ("}])>".includes(ch)) depth--;
     if (depth === 0 && seps.includes(ch)) { out.push(cur); cur = ""; } else cur += ch;
   }
   out.push(cur);
   return out.map((s) => s.trim()).filter(Boolean);
 }
 
+/** `{…}` alone, with nothing outside the braces. */
+const isObject = (t: string) => t.startsWith("{") && inside(t, 0).length + 2 === t.length;
+
 /**
- * Field paths of every exported interface. A field whose type is an inline
- * object is listed by its inner fields ("pill.color"). A field whose type is
- * another exported interface (or a list of them) is left to that interface.
+ * Field paths of every interface, and of every type alias for an object, in
+ * a TypeScript source. A field whose type is an inline object is listed by its
+ * inner fields ("pill.color"), through arrays, `Partial<…>` and
+ * `Record<K, …>` ("map.*.at"). A field whose type is another declared
+ * interface is left to that one, and so are fields inherited with `extends`.
+ *
+ * It refuses, rather than skips, anything it can't read: a declaration it
+ * didn't parse, a member it can't split, or an inline object inside a union,
+ * an intersection or another generic. A new shape then fails the test until
+ * this reader learns it, instead of passing with fields left out.
  */
 export function interfaceFields(ts: string): Record<string, string[]> {
-  const src = ts.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-  const names = [...src.matchAll(/export interface (\w+)\s*\{/g)].map((m) => m[1]);
-  const known = new Set(names);
+  const src = ts.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "").replace(/"(?:[^"\\]|\\.)*"/g, '""');
+  const decl = /\b(?:export\s+)?(?:declare\s+)?(interface|type)\s+(\w+)\s*(<)?/g;
+  type Decl = { kind: string; name: string; body: string | null; parents: string[] };
+  const decls: Decl[] = [];
+  for (const m of src.matchAll(decl)) {
+    let i = m.index! + m[0].length;
+    for (let d = m[3] ? 1 : 0; d; i++) { if (src[i] === "<") d++; else if (src[i] === ">") d--; }
+    if (m[1] === "interface") {
+      const brace = src.indexOf("{", i);
+      const head = src.slice(i, brace).trim();
+      const ext = head.match(/^extends\s+([\s\S]+)$/);
+      if (head && !ext) throw new Error(`Can't read the interface ${m[2]}: "${head}"`);
+      const parents = ext ? splitTop(ext[1], ",").map((p) => p.replace(/<[\s\S]*>$/, "").trim()) : [];
+      decls.push({ kind: "interface", name: m[2], body: inside(src, brace), parents });
+    } else {
+      const eq = src.slice(i).match(/^\s*=\s*/);
+      if (!eq) throw new Error(`Can't read the type ${m[2]}`);
+      const start = i + eq[0].length;
+      let depth = 0, j = start;
+      for (; j < src.length; j++) {
+        const ch = src[j];
+        if ("{[(<".includes(ch)) depth++;
+        else if ("}])>".includes(ch)) depth--;
+        else if (depth === 0 && (ch === ";" || (ch === "\n" && !/^\s*[|&]/.test(src.slice(j + 1))))) break;
+      }
+      const rhs = src.slice(start, j).trim().replace(/^[|&]\s*/, "");
+      const parts = splitTop(rhs, "&");
+      if (parts.length > 1 || isObject(rhs)) {
+        const objects = parts.filter(isObject);
+        if (objects.length + parts.filter((p) => /^\w+$/.test(p)).length !== parts.length) throw new Error(`Can't read the type ${m[2]}: "${rhs}"`);
+        decls.push({ kind: "type", name: m[2], body: objects.map((o) => inside(o, 0)).join(";\n"), parents: parts.filter((p) => !isObject(p)) });
+      } else if (rhs.includes("{")) {
+        throw new Error(`Can't read the type ${m[2]}: an object inside "${rhs}"`);
+      } else decls.push({ kind: "type", name: m[2], body: null, parents: [] });
+    }
+  }
+  // Every "interface X" and "type X =" in the file must have been read above.
+  const seen = (src.match(/\binterface\s+\w+/g) ?? []).length + (src.match(/\btype\s+\w+\s*(<[^=]*>)?\s*=/g) ?? []).length;
+  if (seen !== decls.length) throw new Error(`Read ${decls.length} of ${seen} declarations`);
+  const names = new Set<string>();
+  for (const d of decls) { if (names.has(d.name)) throw new Error(`${d.name} is declared twice`); names.add(d.name); }
+  const objects = new Set(decls.filter((d) => d.body !== null).map((d) => d.name));
+  for (const d of decls) for (const p of d.parents) if (!objects.has(p)) throw new Error(`${d.name} extends ${p}, which isn't declared here`);
+
+  const strip = (t: string): string => {
+    let x = t.trim();
+    while (x.startsWith("(") && inside(x, 0, "(", ")").length + 2 === x.length) x = x.slice(1, -1).trim();
+    const parts = splitTop(x, "|").filter((p) => p !== "null" && p !== "undefined");
+    return parts.length === 1 ? parts[0] : parts.join(" | ");
+  };
   const walk = (body: string, prefix: string): string[] =>
     splitTop(body, ";\n").flatMap((member) => {
-      const m = member.match(/^(\w+)\??\s*:\s*([\s\S]+)$/);
+      const m = member.match(/^(?:readonly\s+)?(\w+)\??\s*:\s*([\s\S]+)$/);
       if (!m) throw new Error(`Can't read the member "${member}"`);
       const [, name, type] = m;
-      const t = type.trim();
-      if (t.startsWith("{")) {
-        const inner = inside(t, 0);
-        if (/^\{[\s\S]*\}(\[\])?$/.test(t) && t.length - inner.length <= 4) return walk(inner, `${prefix}${name}.`);
+      let t = strip(type);
+      let path = `${prefix}${name}`;
+      for (;;) {
+        const arr = t.match(/^([\s\S]+)\[\]$/) ?? t.match(/^(?:Array|ReadonlyArray|Partial|Required|Readonly)<([\s\S]+)>$/);
+        if (arr) { t = strip(arr[1]); continue; }
+        const rec = t.match(/^Record<([\s\S]+)>$/);
+        if (rec) {
+          const [, value] = splitTop(rec[1], ",");
+          if (!value?.includes("{")) return [path];
+          t = strip(value); path += ".*"; continue;
+        }
+        break;
       }
-      const bare = t.replace(/\[\]$/, "").replace(/\s*\|\s*null$/, "");
-      return known.has(bare) ? [] : [prefix + name];
+      if (isObject(t)) return walk(inside(t, 0), `${path}.`);
+      if (t.includes("{")) throw new Error(`Can't read the member ${path}: an object inside "${t}"`);
+      const refs = splitTop(t, "|").map((p) => p.replace(/<[\s\S]*>$/, ""));
+      return refs.every((r) => objects.has(r)) ? [] : [path];
     });
   const out: Record<string, string[]> = {};
-  for (const m of src.matchAll(/export interface (\w+)\s*\{/g)) out[m[1]] = walk(inside(src, m.index! + m[0].length - 1), "");
+  for (const d of decls) if (d.body !== null) out[d.name] = walk(d.body, "");
   return out;
 }
 
-const SQL_CONSTRAINT = /^(PRIMARY KEY|UNIQUE|CHECK|FOREIGN KEY|CONSTRAINT|EXCLUDE)\b/i;
-
-/** Columns of every table created or altered in the given SQL. */
-export function tableColumns(sql: string): Record<string, string[]> {
-  const src = sql.replace(/--.*$/gm, "");
-  const out: Record<string, string[]> = {};
-  for (const m of src.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?(\w+)\s*\(/gi)) {
-    const cols = splitTop(inside(src, m.index! + m[0].length - 1, "(", ")"), ",", "(", ")")
-      .filter((c) => !SQL_CONSTRAINT.test(c))
-      .map((c) => c.split(/\s+/)[0]);
-    out[m[1]] = [...(out[m[1]] ?? []), ...cols];
+/** Columns of every table and view in the public schema, read from Postgres itself. */
+export async function databaseColumns(extraSql = ""): Promise<Record<string, string[]>> {
+  const db = await openDb(loadConfig({ APP_ENV: "test" }), { memory: true });
+  try {
+    await migrate(db);
+    if (extraSql) await db.exec(extraSql);
+    const { rows } = await db.query<{ t: string; c: string }>(
+      "SELECT table_name AS t, column_name AS c FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position");
+    const out: Record<string, string[]> = {};
+    for (const r of rows) (out[r.t] ??= []).push(r.c);
+    return out;
+  } finally {
+    await db.close();
   }
-  for (const m of src.matchAll(/ALTER TABLE (?:ONLY )?(\w+)\s+ADD COLUMN (?:IF NOT EXISTS )?(\w+)/gi)) out[m[1]] = [...(out[m[1]] ?? []), m[2]];
-  return out;
 }
 
 /** What is missing from, or stale in, a classification. */
@@ -93,12 +163,12 @@ export function gaps(found: Record<string, string[]>, classified: Record<string,
 }
 
 const stateFields = () => interfaceFields(read("src/data/types.ts"));
-const migrationsSql = () => {
-  const dir = join(ROOT, "server", "migrations");
-  return readdirSync(dir).filter((f) => f.endsWith(".sql")).sort().map((f) => readFileSync(join(dir, f), "utf8")).join("\n");
-};
-const dbColumns = () => tableColumns(migrationsSql() + "\n" + read("server/migrate.ts"));
 const stateFieldsOnly = Object.fromEntries(Object.entries(STATE_CLASSIFICATION).map(([k, v]) => [k, v.fields]));
+// A fresh in-memory Postgres per call: the first one pays PGlite's cold start (see config-and-export.test.ts).
+const SLOW_DB = { timeout: 20_000 };
+
+/** Member ids that aren't named `by`/`…By`. */
+const MEMBER_REFS = ["caregiverId", "responderId", "escortId", "actorId", "assignee"];
 
 /* ---------- The checks ---------- */
 
@@ -107,15 +177,10 @@ describe("data classification (CC-9)", () => {
     expect(gaps(stateFields(), stateFieldsOnly, "Interface")).toEqual([]);
   });
 
-  it("tags every column of every Postgres table", () => {
-    expect(gaps(dbColumns(), DB_CLASSIFICATION, "Table")).toEqual([]);
-  });
-
-  it("covers the 11 tables of the schema plus the migrations log", () => {
-    expect(Object.keys(dbColumns()).sort()).toEqual([
-      "audit_events", "bank_accounts", "caregivers", "elders", "guardians", "payment_cards",
-      "photos", "schema_migrations", "sessions", "ssn_fingerprints", "users", "vault_tokens",
-    ]);
+  it("tags every column of every Postgres table and view", SLOW_DB, async () => {
+    const cols = await databaseColumns();
+    expect(Object.keys(cols)).toContain("schema_migrations");
+    expect(gaps(cols, DB_CLASSIFICATION, "Table")).toEqual([]);
   });
 
   it("guards each state entity with a resource from the permission matrix", () => {
@@ -133,8 +198,12 @@ describe("data classification (CC-9)", () => {
     }
     expect(DB_CLASSIFICATION.ssn_fingerprints.fingerprint).toBe("Sensitive");
     expect(DB_CLASSIFICATION.users.password_hash).toBe("Sensitive");
+    expect(DB_CLASSIFICATION.sessions.token_hash).toBe("Sensitive");
     for (const c of ["vault_token", "account_last4", "routing_last4", "bank_name"]) expect(DB_CLASSIFICATION.bank_accounts[c]).toBe("Sensitive");
     for (const c of ["vault_token", "last4", "brand", "exp_month", "exp_year"]) expect(DB_CLASSIFICATION.payment_cards[c]).toBe("Sensitive");
+    // The server audit log records SSN, bank and card last fours (account.ts, payments.ts).
+    expect(DB_CLASSIFICATION.audit_events.detail).toBe("Sensitive");
+    expect(DB_CLASSIFICATION.audit_people_masked.ssn_masked).toBe("Sensitive");
   });
 
   it("treats free text that can carry health details as PHI", () => {
@@ -143,8 +212,39 @@ describe("data classification (CC-9)", () => {
     expect(f("CareNote", "text")).toBe("PHI");
     expect(f("DoseLog", "reason")).toBe("PHI");
     expect(f("Handoff", "notes")).toBe("PHI");
+    expect(f("CareDoc", "rejectReason")).toBe("PHI");
     expect(f("Alert", "detail")).toBe("PHI");
     expect(f("Alert", "title")).toBe("Operational");
+    // The access log names what was opened: medicines, documents, appointments (store.tsx).
+    expect(f("AuditEvent", "resource")).toBe("PHI");
+  });
+
+  it("treats medicine ids, and keys built from them, as PHI", () => {
+    const f = (e: string, k: string) => STATE_CLASSIFICATION[e].fields[k];
+    expect(f("Medication", "id")).toBe("PHI");
+    expect(f("DoseLog", "medId")).toBe("PHI");
+    expect(f("Appointment", "medIds")).toBe("PHI");
+    expect(f("Alert", "key")).toBe("PHI");
+  });
+
+  it("tags who and when as PHI in every record that holds PHI", () => {
+    const problems: string[] = [];
+    for (const [entity, { fields }] of Object.entries(STATE_CLASSIFICATION)) {
+      const groups = new Map<string, [string, DataClass][]>();
+      for (const [f, c] of Object.entries(fields)) {
+        const g = f.includes(".") ? f.split(".")[0] : "";
+        groups.set(g, [...(groups.get(g) ?? []), [f, c]]);
+      }
+      for (const list of groups.values()) {
+        if (!list.some(([, c]) => c === "PHI")) continue;
+        for (const [f, c] of list) {
+          const leaf = f.split(".").pop()!;
+          const whoOrWhen = /^(by|at)$|[a-z](By|At)$/.test(leaf) || MEMBER_REFS.includes(leaf);
+          if (whoOrWhen && c !== "PHI") problems.push(`${entity}.${f} is ${c}, but it says who or when in a record that holds PHI`);
+        }
+      }
+    }
+    expect(problems).toEqual([]);
   });
 });
 
@@ -154,14 +254,40 @@ describe("classification check itself", () => {
     expect(gaps(interfaceFields(ts), { Member: { id: "Operational" } }, "Interface")).toEqual(["Member.nickname has no data class"]);
   });
 
-  it("names a new column, including one added by ALTER TABLE", () => {
-    const sql = "CREATE TABLE users (\n  id uuid PRIMARY KEY, -- key\n  email text NOT NULL CHECK (email = lower(email)),\n  UNIQUE (email)\n);\nALTER TABLE users ADD COLUMN mfa_secret text;";
-    expect(gaps(tableColumns(sql), { users: { id: "Operational", email: "PII" } }, "Table")).toEqual(["users.mfa_secret has no data class"]);
+  it("reads inline objects as dotted fields and skips links to other interfaces", () => {
+    const ts = "export interface A { x: number }\nexport interface B {\n  a: A[];\n  b?: A | null;\n  pill: { color: string; shape: \"round\" | \"oval\" };\n  deep: {\n    t: { lo: number; hi: number } | null;\n    on: boolean;\n  };\n  list: Array<{ n: number }>;\n  some: Partial<{ p: string }>;\n  map: Record<string, { at: string }>;\n  flags: Record<string, boolean>;\n}";
+    expect(interfaceFields(ts).B).toEqual(["pill.color", "pill.shape", "deep.t.lo", "deep.t.hi", "deep.on", "list.n", "some.p", "map.*.at", "flags"]);
   });
 
-  it("reads inline objects as dotted fields and skips links to other interfaces", () => {
-    const ts = "export interface A { x: number }\nexport interface B {\n  a: A[];\n  pill: { color: string; shape: \"round\" | \"oval\" };\n  deep: {\n    t: { lo: number; hi: number };\n    on: boolean;\n  };\n  map: Record<string, { at: string }>;\n}";
-    expect(interfaceFields(ts).B).toEqual(["pill.color", "pill.shape", "deep.t.lo", "deep.t.hi", "deep.on", "map"]);
+  it("reads interfaces that extend others, generic ones, unexported ones and object types", () => {
+    const ts = "export interface A { x: number }\nexport interface B extends A { y: string }\ninterface C<T> { v: T; w: number }\nexport type D = { d: string };\nexport type E = A & { e: string };\nexport type Kind = \"a\" | \"b\";";
+    const f = interfaceFields(ts);
+    expect(f).toEqual({ A: ["x"], B: ["y"], C: ["v", "w"], D: ["d"], E: ["e"] });
+  });
+
+  it("refuses shapes it can't read instead of skipping them", () => {
+    expect(() => interfaceFields("export interface A { u: { a: string } | { b: string } }")).toThrow(/an object inside/);
+    expect(() => interfaceFields("export interface A { u: Map<string, { a: string }> }")).toThrow(/an object inside/);
+    expect(() => interfaceFields("export interface A { [k: string]: number }")).toThrow(/Can't read the member/);
+    expect(() => interfaceFields("export interface B extends Missing { y: string }")).toThrow(/isn't declared here/);
+    expect(() => interfaceFields("export type U = { a: string } | { b: string };")).toThrow(/Can't read the type/);
+  });
+
+  it("names columns that the database has, however the SQL was written", SLOW_DB, async () => {
+    const sql = [
+      'CREATE UNLOGGED TABLE "Odd" (a int);',
+      "CREATE TABLE\n  public.plain_two (b int);",
+      "ALTER TABLE IF EXISTS users ADD mfa_secret text, ADD COLUMN mfa_backup text;",
+      "ALTER TABLE sessions RENAME COLUMN user_id TO owner_id;",
+      "CREATE TABLE copied AS SELECT 1 AS c;",
+    ].join("\n");
+    const cols = await databaseColumns(sql);
+    const problems = gaps(cols, DB_CLASSIFICATION, "Table");
+    expect(problems).toEqual(expect.arrayContaining([
+      "Table Odd has no classification", "Table plain_two has no classification", "Table copied has no classification",
+      "users.mfa_secret has no data class", "users.mfa_backup has no data class",
+      "sessions.owner_id has no data class", "sessions.user_id is classified but no longer exists",
+    ]));
   });
 
   it("names a classified field that was removed", () => {
@@ -179,6 +305,7 @@ function inventoryRows(md: string) {
     if (!m) continue;
     const cells = m[2].split("|").map((c) => c.trim());
     if (cells.length < 5) continue;
+    if (rows[m[1]]) throw new Error(`The inventory has two rows for ${m[1]}`);
     const list = (c: string) => (c === "—" || c === "" ? [] : [...c.matchAll(/`([^`]+)`/g)].map((x) => x[1]));
     rows[m[1]] = { PHI: list(cells[0]), PII: list(cells[1]), Sensitive: list(cells[2]), Operational: list(cells[3]) };
   }
