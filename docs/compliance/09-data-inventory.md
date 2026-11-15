@@ -1,14 +1,15 @@
 # Data Inventory
 
 Notion story: CC-9 Data inventory and classification
-Status: DRAFT v3, reviewed against `main` on 2026-11-15 (demo state version 11, the 11 Postgres tables and 2 masked views in `server/migrations/001_init.sql`, and the `schema_migrations` log). v3 follows the Lead Architect review of the same day: the access logs are PHI and sensitive, not operational, and the field check reads the database itself. v1 was written on 2026-10-19, before Sprints 11 to 13 added accounts, SSNs, bank accounts, cards, profile photos, everyday care and the family chat. Retention and production storage still describe the **intended** design and need sign-off by the security officer and counsel (CC-8, CC-79). All people in the prototype are fictional.
+Status: DRAFT v4, reviewed against `main` on 2026-11-15 (demo state version 11, the 11 Postgres tables and 2 masked views in `server/migrations/001_init.sql`, and the `schema_migrations` log). v3 and v4 follow two Lead Architect review rounds the same day: the access logs are PHI and sensitive, not operational; readable ids are PHI; and the field check reads the database catalog and the live demo data as well as `types.ts`. v1 was written on 2026-10-19, before Sprints 11 to 13 added accounts, SSNs, bank accounts, cards, profile photos, everyday care and the family chat. Retention and production storage still describe the **intended** design and need sign-off by the security officer and counsel (CC-8, CC-79). All people in the prototype are fictional.
 
 ## How this inventory stays true
 
 The classes live in code, in [`src/data/classification.ts`](https://github.com/sumanth1996/circle-care/blob/main/src/data/classification.ts). A unit test, `src/__tests__/classification.test.ts`, fails, naming the field, when:
 
-- a state field in `src/data/types.ts` has no class, or a classified one no longer exists. The reader refuses any declaration or field shape it can't parse (an object inside a union, say) instead of skipping it;
-- a column has no class. The test runs every migration on an in-memory Postgres and lists the columns of every table and view from `information_schema`, so it sees what the database has, however the SQL was written;
+- a state field in `src/data/types.ts` has no class, or a classified one no longer exists. The reader refuses any declaration or field shape it can't parse (an object inside a union, say) instead of skipping it, and checks its own count of fields;
+- a field in the live demo data (`seed()`, after the alert rules run) has no class. This second check doesn't depend on reading `types.ts`;
+- a column has no class. The test runs every migration on an in-memory Postgres and lists, from Postgres's own catalog, the columns of every table, view, materialized view and foreign table in every schema, so it sees what the database has, however the SQL was written;
 - a record that holds PHI tags who or when as anything but PHI (see the rules below);
 - this document's field tables (below) list a field under a different class than the code, or list an entity twice.
 
@@ -18,15 +19,15 @@ So a new field can't reach `main` without a class here. Re-run the review, and u
 
 | Class | Meaning | Handling |
 |---|---|---|
-| **PHI** | Health information about Maggie, or something that reveals it (a medicine, a dose, a care task, a visit, a feeling). Legally PHI only where HIPAA applies (CC-8); treated as PHI everywhere by design, and as consumer health data under state laws. | Encrypted at rest and in transit; role-checked by `can()` (CC-18/19); never in lock-screen text, email, SMS, logs or analytics |
+| **PHI** | Health information about Maggie, or something that reveals it (a medicine, a dose, a care task, a visit, a feeling). Legally PHI only where HIPAA applies (CC-8); treated as PHI everywhere by design, and as consumer health data under state laws. | Encrypted at rest and in transit; role-checked by `can()` (CC-18/19); never in lock-screen text, email, SMS, server or debug logs, or analytics. The circle's access log can name medicines and documents, so it is protected as PHI |
 | **PII** | Identifies a person but says nothing about health on its own: names, phone, email, photo, relationship | Encrypted; owner or circle only; not in analytics |
-| **Sensitive financial or identity** | SSNs, bank and card details, payment tokens, password hashes | Numbers never stored in full (ciphertext, token or last four); never returned in full by the API; writes audit-logged with last four only; real values refused outside production (CC-182) |
+| **Sensitive financial or identity** | SSNs, bank and card details, payment tokens, password hashes | Never stored in plain text: SSNs only as ciphertext, bank and card numbers only as a vault token and last four; never returned in full by the API; writes audit-logged with last four only; real values refused outside production (CC-182) |
 | **Operational** | Ids, timestamps, settings and flags needed to run the service | May appear in security logs by id only |
 
 Two rules keep the tags consistent, and the test checks both:
 
-- **Who and when go with the record.** In a record that holds PHI, the member who did it and the time are PHI too, because together they say who cared for Maggie, and when. The record's own id, status flags and system fields stay operational.
-- **Medicine ids are readable.** Demo ids embed the drug name (`med-lisinopril`), so `Medication.id`, `DoseLog.medId`, `Appointment.medIds` and alert keys built from them are PHI. Production should use opaque ids.
+- **Who and when go with the record.** In a record that holds PHI, the member who did it and the time are PHI too, because together they say who cared for Maggie, and when. Each nested object counts as its own record, and a link to another record doesn't make it one, so the chat's read times stay operational though its messages are PHI. This rule doesn't by itself make an id, a status or a flag PHI. The test goes by field name (`by`, `at`, `…By`, `…At` and a short list of member references), so new who or when fields should follow that naming.
+- **Demo ids are readable.** They embed what they are about: `med-lisinopril`, `t-bath`, `ap-metformin`, `appt-auto-med-lisinopril-…` for an automatic refill, and `b-` plus the count time for a bottle. So `Medication.id`, `CareTask.id`, `Approval.id`, `Appointment.id`, `MedSupply.bottleId`, the fields that hold those ids and alert keys built from them are PHI. Production should use opaque ids.
 
 "Who can see" names the permission-matrix resource (`MATRIX` in `src/data/policy.ts`, rendered in the [permission matrix](../security/permission-matrix.md)) and the roles that may read it. `pro@shift` is a paid caregiver while checked in to a visit. When Maggie pauses sharing (CC-81), family and paid caregivers keep only `sos`, `emergencyCard` and `circle`.
 
@@ -73,9 +74,9 @@ Each row lists every field of one entity by class; inline objects use dots (`pil
 | `State` | `health.heightCm`, `health.overrides.at`, `health.overrides.hr`, `health.overrides.spo2`, `health.overrides.addedAt` | `health.birthYear` | — | `version`, `persona`, `signedIn`, `clockOffsetMin`, `elderId`, `health.device` | `health` goes with `vitals`: Maggie, Sarah (while Maggie shares) |
 | `Member` | — | `name`, `short`, `role`, `relation`, `phone`, `photo`, `verification` | — | `id`, `color`, `status`, `expiresOn`, `favorite`, `invitedAt` | `circle`: elder, guardian, family, pro. `relation` and `verification` can reveal legal authority |
 | `Medication` | `id`, `name`, `strength`, `dose`, `times`, `instructions`, `prescriber`, `purpose`, `critical`, `paused`, `pill.color`, `pill.shape`, `history.at`, `history.by`, `history.change` | — | — | — | `meds`: elder, guardian, family, pro@shift. Never on the lock screen (CC-31). `id` embeds the drug name |
-| `MedSupply` | `count`, `countedAt`, `perDose`, `requestedAt`, `requestedBy`, `pharmacy` | — | — | `bottleId` | `supply`: elder, guardian, family, pro@shift |
+| `MedSupply` | `count`, `countedAt`, `perDose`, `bottleId`, `requestedAt`, `requestedBy`, `pharmacy` | — | — | — | `supply`: elder, guardian, family, pro@shift |
 | `DoseLog` | `medId`, `date`, `time`, `status`, `by`, `at`, `verified`, `reason` | — | — | `id` | `doses`: elder, guardian, family, pro@shift. `reason` is free text |
-| `CareTask` | `title`, `icon`, `time`, `recurrence`, `assignee` | — | — | `id` | `tasks`: elder, guardian, family, pro@shift. Titles reveal care needs |
+| `CareTask` | `id`, `title`, `icon`, `time`, `recurrence`, `assignee` | — | — | — | `tasks`: elder, guardian, family, pro@shift. Titles reveal care needs |
 | `TaskLog` | `taskId`, `date`, `by`, `at`, `note` | — | — | — | `tasks`: elder, guardian, family, pro@shift |
 | `Shift` | `caregiverId`, `days`, `start`, `end` | — | — | `id`, `accepted` | `schedule`: elder, guardian, family, pro. Reveals that Maggie gets home care |
 | `Visit` | `caregiverId`, `date`, `checkIn`, `checkOut`, `manualReason` | — | — | `id`, `shiftId` | `schedule`: elder, guardian, family, pro. No location is stored |
@@ -85,12 +86,12 @@ Each row lists every field of one entity by class; inline objects use dots (`pil
 | `DailyLog` | `date`, `feeling`, `feelingAt`, `water`, `meals`, `updatedAt` | — | — | `private` | `wellbeing`: elder; guardian while Maggie shares |
 | `ChatMessage` | `by`, `at`, `text` | — | — | `id`, `via` | `chat`: elder, guardian, family, and pros once added |
 | `Chat` | — | — | — | `pros`, `readAt`, `joinedAt` | `chat`: elder, guardian, family, and pros once added |
-| `Approval` | `title`, `detail`, `requestedBy`, `at`, `decidedAt`, `note`, `payload`, `elderQuestion` | — | — | `id`, `kind`, `status`, `elderSeen` | `approvals`: elder, guardian. `payload` holds proposed medicine values |
+| `Approval` | `id`, `title`, `detail`, `requestedBy`, `at`, `decidedAt`, `note`, `payload`, `elderQuestion` | — | — | `kind`, `status`, `elderSeen` | `approvals`: elder, guardian. `payload` holds proposed medicine values |
 | `CareNote` | `by`, `at`, `text` | — | — | `id`, `visibility` | `notes`: elder, guardian, family, pro@shift; guardian-only notes (`notes.private`): guardian |
 | `CareDoc` | `name`, `kind`, `by`, `at`, `rejectReason` | — | — | `id`, `size`, `status`, `fileId`, `mime` | `docs`: elder, guardian, family, pro@shift; legal documents (`docs.legal`): elder, guardian. File names can hold diagnoses; `rejectReason` is the reviewer's free text |
 | `AuditEvent` | `at`, `actorId`, `resource` | — | — | `id`, `action`, `prev`, `hash` | `audit`: elder, guardian. `resource` names what was opened or changed, often a medicine, a document or an appointment, so the log is PHI. Hash-chained (CC-28) |
 | `Alert` | `key`, `at`, `detail` | — | — | `id`, `to`, `title`, `severity`, `read`, `link` | The personas in `to`. `title` is the lock-screen text and never holds health details; `key` embeds medicine ids and vitals metrics |
-| `Appointment` | `date`, `time`, `durationMin`, `kind`, `title`, `provider`, `location`, `medIds`, `escortId`, `prep`, `createdBy` | — | — | `id`, `status`, `autoCancelled` | `appointments`: elder, guardian, family, pro |
+| `Appointment` | `id`, `date`, `time`, `durationMin`, `kind`, `title`, `provider`, `location`, `medIds`, `escortId`, `prep`, `createdBy` | — | — | `status`, `autoCancelled` | `appointments`: elder, guardian, family, pro |
 | `Settings` | `consent.at`, `consent.by`, `consent.onBehalfReason`, `vitals.thresholds.hrHigh`, `vitals.thresholds.hrLow`, `vitals.thresholds.hrJump`, `vitals.thresholds.spo2Low`, `vitals.thresholds.spo2Drop`, `emergencyCard.allergies`, `emergencyCard.conditions`, `emergencyCard.directives`, `emergencyCard.bloodType`, `emergencyCard.approvedAt` | — | — | `checkinWindow.start`, `checkinWindow.end`, `escalation`, `escalationDelayMin`, `doseEscalation.caregiverMin`, `doseEscalation.guardianMin`, `quietHours.on`, `quietHours.start`, `quietHours.end`, `channels.push`, `channels.sms`, `channels.email`, `criticalBypass`, `textSize`, `highContrast`, `readAloud`, `sharingPaused`, `consent.version`, `sessionLockMin`, `elderLockMin`, `toured`, `setupCallRequested`, `vitals.intervalMin`, `vitals.shareWithGuardian`, `refillAlertDays`, `dailyLog.shareWithGuardian`, `dailyLog.waterGoal`, `dailyLog.sharedSince`, `recapNotify`, `elderChatOnHome`, `emergencyCard.approvedByElder` | `settings`: elder, guardian; `emergencyCard`: elder, guardian, family, pro. Accessibility settings are operational but can imply vision or hearing needs |
 
 ### Postgres (`server/migrations`)
@@ -100,7 +101,7 @@ The accounts API serves each person only their own rows (`requireUser`); payment
 | Entity | PHI | PII | Sensitive financial or identity | Operational | Notes |
 |---|---|---|---|---|---|
 | `users` | — | `email` | `password_hash` | `id`, `role`, `failed_attempts`, `first_failed_at`, `locked_until`, `created_at`, `updated_at` | scrypt hash with a per-user salt (CC-173) |
-| `sessions` | — | — | `token_hash` | `user_id`, `created_at`, `last_seen_at`, `expires_at` | SHA-256 of the cookie token, which works as a credential; the token itself is never stored. Expired rows stay until that cookie comes back, sign-out or lock-out |
+| `sessions` | — | — | `token_hash` | `user_id`, `created_at`, `last_seen_at`, `expires_at` | SHA-256 of the cookie token, which works as a credential; the token itself is never stored. Expired rows stay until that cookie comes back, on sign-out, or on a lock-out at the password check before an SSN change |
 | `elders` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
 | `caregivers` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
 | `guardians` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
@@ -119,7 +120,7 @@ The accounts API serves each person only their own rows (`requireUser`); payment
 - **Close the circle** (elder or guardian, `data.delete`): the prototype wipes circle state, destroys the device key and clears the file store (`wipeDevice`, CC-33), so any leftover copy is unreadable. Production: delete within 30 days (as `/privacy` promises), including backups on their normal rotation.
 - **Delete an account:** persona, session, photo, fingerprint, vault token, bank and card rows go with the `users` row (`ON DELETE CASCADE`). `audit_events` has no foreign key, so it keeps the masked history. There is no account-deletion endpoint yet, so today this happens only by deleting the row directly. Confirm the design with counsel.
 - **Audit logs:** at least 6 years (`RETENTION_YEARS = 6` in `src/data/audit.ts`). The circle's access log names medicines and documents (PHI) and the server log keeps last fours (sensitive), so both are protected like the data they describe. Confirm with counsel (CC-8 Q10).
-- **Sessions:** expire after 12 hours, but nothing purges expired rows yet: each is deleted only when its cookie comes back, on sign-out or on lock-out. A purge job is needed before production.
+- **Sessions:** expire after 12 hours, but nothing purges expired rows yet: each is deleted only when its cookie comes back, on sign-out, or on a lock-out at the password check before an SSN change (a sign-in lock-out leaves existing sessions in place). A purge job is needed before production.
 - **Member removed or time limit ends (CC-25):** access stops at once; what they wrote stays with the circle as part of Maggie's care record.
 
 ## Pilot data: separate, non-PHI store (`src/lib/pilot.ts`)
@@ -136,7 +137,7 @@ The accounts API serves each person only their own rows (`requireUser`); payment
 
 - [ ] Security officer and counsel confirm the classes, retention periods and the audit-log exception.
 - [ ] Decide whether `relation`, `verification` and the accessibility settings (operational here, though they can imply vision or hearing needs) are treated as PHI.
-- [ ] Use opaque medicine ids in production, so ids and alert keys stop naming drugs.
+- [ ] Use opaque ids in production, so ids and alert keys stop naming medicines, tasks and approvals.
 - [ ] Re-encode profile photos on the server too, so a photo sent straight to the API loses its location data.
 - [ ] Add a job that purges expired sessions.
 - [ ] Decide whether `health.birthYear` stays PII or becomes PHI once it sits next to health readings.

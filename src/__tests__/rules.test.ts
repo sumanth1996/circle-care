@@ -12,7 +12,7 @@ const seedAtNoon = () => { const s = seed(); s.clockOffsetMin += 12 * 60 - minut
 describe("rules engine", () => {
   // Known gap (review of CC-9, 2026-11-15): evaluate() looks only at today's doses and check-in window,
   // so a dose due at 23:30 that is missed is never escalated once the date rolls over. Backlog story:
-  // "Escalate doses and check-ins that cross midnight". The tests below pin the clock to noon for that reason.
+  // CC-199 "Escalate doses and check-ins that cross midnight". The tests below pin the clock to noon for that reason.
   it.todo("escalates a dose due just before midnight that is still missed after midnight");
   it.todo("escalates a check-in window that ends after midnight");
 

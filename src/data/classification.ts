@@ -14,10 +14,13 @@ import type { Resource } from "./policy";
  *
  * Two rules keep the tags consistent (the test checks both):
  * - In a record that holds PHI, who did it (a member id) and when are PHI too,
- *   because together they say who cared for Maggie, and when. The record's own
- *   id, status flags and system fields stay Operational.
- * - Medicine ids are readable ("med-lisinopril"), so a field holding one, or a
- *   key built from one, is PHI. Production should use opaque ids.
+ *   because together they say who cared for Maggie, and when. Each nested
+ *   object counts as its own record, and a link to another record doesn't make
+ *   it one (Chat's read times are Operational though its messages are PHI).
+ *   This rule doesn't by itself make an id, status or flag PHI.
+ * - Demo ids are readable ("med-lisinopril", "t-bath", "ap-metformin",
+ *   "appt-auto-med-lisinopril-…", "b-" + count time), so those ids, and keys
+ *   built from them, are PHI. Production should use opaque ids.
  */
 export type DataClass = "PHI" | "PII" | "Sensitive" | "Operational";
 
@@ -37,7 +40,7 @@ export interface EntityClassification {
 
 const P = "PHI", I = "PII", S = "Sensitive", O = "Operational";
 
-/** Demo state, one entry per exported interface in src/data/types.ts. */
+/** Demo state, one entry per interface (or object type) in src/data/types.ts. */
 export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   State: {
     resource: null,
@@ -64,7 +67,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   MedSupply: {
     resource: "supply",
-    fields: { count: P, countedAt: P, perDose: P, bottleId: O, requestedAt: P, requestedBy: P, pharmacy: P },
+    fields: { count: P, countedAt: P, perDose: P, bottleId: P, requestedAt: P, requestedBy: P, pharmacy: P },
   },
   DoseLog: {
     resource: "doses",
@@ -72,7 +75,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   CareTask: {
     resource: "tasks",
-    fields: { id: O, title: P, icon: P, time: P, recurrence: P, assignee: P },
+    fields: { id: P, title: P, icon: P, time: P, recurrence: P, assignee: P },
   },
   TaskLog: {
     resource: "tasks",
@@ -116,7 +119,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   Approval: {
     resource: "approvals",
     fields: {
-      id: O, kind: O, title: P, detail: P, requestedBy: P, at: P, status: O, decidedAt: P,
+      id: P, kind: O, title: P, detail: P, requestedBy: P, at: P, status: O, decidedAt: P,
       note: P, payload: P, elderSeen: O, elderQuestion: P,
     },
   },
@@ -139,7 +142,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   Appointment: {
     resource: "appointments",
     fields: {
-      id: O, date: P, time: P, durationMin: P, kind: P, title: P, provider: P, location: P, medIds: P,
+      id: P, date: P, time: P, durationMin: P, kind: P, title: P, provider: P, location: P, medIds: P,
       escortId: P, prep: P, status: O, autoCancelled: O, createdBy: P,
     },
   },
@@ -167,7 +170,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
 
 const persona = { id: O, user_id: O, first_name: I, last_name: I, phone: I, email: I, ssn_enc: S, ssn_last4: S, created_at: O, updated_at: O } as const;
 
-/** Postgres, one entry per table and view that the migrations create (read from the database itself by the test). */
+/** Postgres, one entry per table and view that the migrations create (the test reads them from the database catalog). */
 export const DB_CLASSIFICATION: Record<string, Record<string, DataClass>> = {
   users: {
     id: O, email: I, password_hash: S, role: O, failed_attempts: O, first_failed_at: O, locked_until: O,
