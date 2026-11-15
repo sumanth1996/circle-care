@@ -2422,6 +2422,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2678,6 +2682,62 @@
     
   
     Code review: Sprint 13, architecture wiki
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-browser-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, browser tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-data-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, data inventory
   
 
     
@@ -3027,7 +3087,7 @@
 </tr>
 <tr>
 <td>Retention statement</td>
-<td><em>"Kept for 6 years, even after a circle is closed, as health privacy law requires."</em> (<code>RETENTION_YEARS = 6</code>)</td>
+<td><em>"In the full product, the access log is kept for 6 years, even after a circle is closed, as health privacy law requires."</em> (<code>RETENTION_YEARS = 6</code>). In the demo, closing the circle wipes the log with everything else</td>
 <td><code>audit.ts</code></td>
 </tr>
 <tr>
@@ -3109,8 +3169,8 @@
 </tbody>
 </table>
 <div class="admonition note">
-<p class="admonition-title">The log holds no health details</p>
-<p><em>"The log never stores health details — only who opened what, and when."</em> Entries store an actor id, an action and a resource name.</p>
+<p class="admonition-title">The log is protected like health information</p>
+<p><em>"It records who opened or changed what, and when. It can name a medicine, a document or an appointment, so the log is protected as health information."</em> Entries store an actor id, an action and a resource name, and the resource name can be a medicine, a document or an appointment, so the <a href="../../../compliance/09-data-inventory/">data inventory</a> classifies the log as PHI (CC-9).</p>
 </div>
 <h2 id="notifications">Notifications<a class="headerlink" href="#notifications" title="Permanent link">&para;</a></h2>
 <table>

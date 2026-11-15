@@ -2532,6 +2532,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2788,6 +2792,62 @@
     
   
     Code review: Sprint 13, architecture wiki
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-browser-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, browser tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-data-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, data inventory
   
 
     
@@ -3125,7 +3185,7 @@
 
 
 <h1 id="data-model">Data model<a class="headerlink" href="#data-model" title="Permanent link">&para;</a></h1>
-<p>All entities are defined in <code>src/data/types.ts</code> and seeded in <code>src/data/demo.ts</code>. In the prototype the whole model lives in one <code>State</code> object in the browser. The <a href="../../../compliance/09-data-inventory/">data inventory (CC-9)</a> classifies every field (PHI, personal, operational) and proposes retention.</p>
+<p>All entities are defined in <code>src/data/types.ts</code> and seeded in <code>src/data/demo.ts</code>. In the prototype the whole model lives in one <code>State</code> object in the browser. The <a href="../../../compliance/09-data-inventory/">data inventory (CC-9)</a> classifies every state field and every Postgres column as PHI, PII, sensitive financial or identity, or operational, and proposes retention. The classes live in <code>src/data/classification.ts</code>, and a unit test fails when a new field has none.</p>
 <h2 id="entity-relationships">Entity relationships<a class="headerlink" href="#entity-relationships" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>erDiagram
     STATE ||--o{ MEMBER : members

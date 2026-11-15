@@ -2433,6 +2433,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2689,6 +2693,62 @@
     
   
     Code review: Sprint 13, architecture wiki
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-14-sprint-13-browser-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 13, browser tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-data-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, data inventory
   
 
     
@@ -3057,7 +3117,7 @@ prev(n)     = hash(n − 1)
 </code></pre></div>
 <ul>
 <li><code>verifyChain()</code> walks the log and reports the first entry whose <code>prev</code> or <code>hash</code> does not match — catching <strong>edits, deletions and reordering</strong>. The Privacy Center shows <em>"Access log is intact — All N entries check out"</em> or <em>"Entry N of M doesn't match its seal."</em></li>
-<li>Entries store identifiers and resource names only, never health values.</li>
+<li>Entries store ids, actions and resource names, never readings or note text. A resource name can be a medicine, a document or an appointment, so the log is PHI (<a href="../../../compliance/09-data-inventory/">data inventory</a>).</li>
 <li><code>RETENTION_YEARS = 6</code> documents the intended retention.</li>
 <li>SHA-256 is implemented in pure JavaScript so the chain can be computed synchronously; a unit test compares it with Node's <code>crypto</code> for edge-case inputs.</li>
 </ul>
