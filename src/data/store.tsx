@@ -9,7 +9,8 @@ import { readingsFor, detectEvents } from "../lib/health";
 import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared, inQuietHours, RECAP_NOTIFY_AT, RECAP_LAST_CALL } from "./everyday";
 import { noteSharedSince } from "./everydayActions";
 import * as everyday from "./everydayActions";
-import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
+import { cryptoAvailable, deviceKey, encryptForStorage, loadEncrypted, wipeDevice } from "../lib/secureStorage";
+import { createSaver, saveWhenPageGoes } from "./saver";
 
 export const STATE_KEY = "circle-care-demo";
 
@@ -231,23 +232,25 @@ export function evaluate(s: State) {
   }
 }
 
+/**
+ * The rules engine's 15 second tick (CC-195). It re-runs the time-based rules and keeps the same state object
+ * when nothing changed, so a quiet tick neither re-renders nor saves.
+ */
+export function tick(prev: State): State {
+  const draft = structuredClone(prev);
+  evaluate(draft);
+  return JSON.stringify(draft) === JSON.stringify(prev) ? prev : draft;
+}
+
 function useStoreState(initial: State) {
   const [state, setState] = useState<State>(initial);
   const viewed = useRef<Record<string, number>>({});
-  const saveTimer = useRef<number>(0);
   const latest = useRef(state);
   latest.current = state;
 
-  // Encrypted, debounced save (CC-26). Flushed when the page is hidden or closed.
-  useEffect(() => {
-    window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => { persist(state).catch(() => {}); }, 250);
-  }, [state]);
-  useEffect(() => {
-    const flush = () => { persist(latest.current).catch(() => {}); };
-    window.addEventListener("pagehide", flush);
-    return () => window.removeEventListener("pagehide", flush);
-  }, []);
+  // Encrypted save (CC-26), started as soon as the state changes (CC-195). Also saved when the page is hidden or closed.
+  useEffect(() => { persist(state).catch(() => {}); }, [state]);
+  useEffect(() => saveWhenPageGoes(() => { persist(latest.current).catch(() => {}); }), []);
 
   const update = useCallback((fn: Updater) => {
     setState((prev) => {
@@ -260,10 +263,10 @@ function useStoreState(initial: State) {
 
   // Tick the rules engine so time-based escalations fire while the app is open.
   useEffect(() => {
-    update(() => {});
-    const t = setInterval(() => update(() => {}), 15000);
+    setState(tick);
+    const t = setInterval(() => setState(tick), 15000);
     return () => clearInterval(t);
-  }, [update]);
+  }, []);
 
   const me = meId(state.persona);
 
@@ -654,13 +657,16 @@ function useStoreState(initial: State) {
   return { state, actions, me };
 }
 
-async function persist(state: State) {
-  if (cryptoAvailable()) await saveEncrypted(STATE_KEY, state);
-  else localStorage.setItem(STATE_KEY, JSON.stringify(state));
-}
+const saver = createSaver<State>(
+  (state) => (cryptoAvailable() ? encryptForStorage(state) : JSON.stringify(state)),
+  (encoded) => localStorage.setItem(STATE_KEY, encoded),
+);
+const persist = (state: State) => saver.save(state);
 
 async function loadState(): Promise<State> {
   try {
+    // Have the device key ready before the first save, so a save right after a change isn't held up by it (CC-195).
+    if (cryptoAvailable()) await deviceKey();
     const s = cryptoAvailable() ? await loadEncrypted<State>(STATE_KEY) : (JSON.parse(localStorage.getItem(STATE_KEY) ?? "null") as State | null);
     if (s && s.version === STATE_VERSION) return s;
   } catch {

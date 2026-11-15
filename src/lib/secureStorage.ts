@@ -83,10 +83,15 @@ export async function decryptBytes(iv: Uint8Array, ct: ArrayBuffer): Promise<Arr
   return crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as BufferSource }, key, ct);
 }
 
+/** Encrypts a JSON value into the stored form "enc:v1:<iv>:<ciphertext>" without writing it (CC-195). */
+export async function encryptForStorage(value: unknown): Promise<string> {
+  const { iv, ct } = await encryptBytes(new TextEncoder().encode(JSON.stringify(value)));
+  return `enc:v1:${b64(iv)}:${b64(ct)}`;
+}
+
 /** Saves a JSON value encrypted. Stored as "enc:v1:<iv>:<ciphertext>". */
 export async function saveEncrypted(storageKey: string, value: unknown) {
-  const { iv, ct } = await encryptBytes(new TextEncoder().encode(JSON.stringify(value)));
-  localStorage.setItem(storageKey, `enc:v1:${b64(iv)}:${b64(ct)}`);
+  localStorage.setItem(storageKey, await encryptForStorage(value));
 }
 
 /** Loads a value saved with saveEncrypted. Plain JSON from older versions is read and re-encrypted on next save. */

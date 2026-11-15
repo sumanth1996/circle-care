@@ -30,7 +30,7 @@ This page explains the security and privacy controls that are **real code in the
 `src/lib/secureStorage.ts` (CC-26, CC-27):
 
 1. On first use the app generates an **AES-GCM 256-bit key** with `crypto.subtle.generateKey(…, extractable = false, ["encrypt", "decrypt"])` and stores the `CryptoKey` object in IndexedDB (`circle-care-keys`). Because it is **non-extractable**, no JavaScript — including the app's own — can read or export the raw key bytes.
-2. Every save serialises the state to JSON and encrypts it with a **fresh random 12-byte IV**. The result is stored as `enc:v1:<base64 iv>:<base64 ciphertext>` in `localStorage["circle-care-demo"]`.
+2. Every save serialises the state to JSON and encrypts it with a **fresh random 12-byte IV**. The result is stored as `enc:v1:<base64 iv>:<base64 ciphertext>` in `localStorage["circle-care-demo"]`. A save starts as soon as the state changes and again when the page is hidden or closed (CC-195). Encryption is async, so a change made a few milliseconds before the tab closes can still be lost; real accounts are stored on the server.
 3. Loading decrypts with the same key. GCM authentication means a modified ciphertext or a missing key can't be read: the app starts a fresh demo instead, without telling anyone. A value without the `enc:v1:` prefix is still read as plain JSON (threat C2-T1).
 4. Documents are encrypted the same way in IndexedDB `circle-care-files`.
 5. If Web Crypto or IndexedDB is unavailable, the prototype falls back to plain `localStorage` (demo convenience only).
