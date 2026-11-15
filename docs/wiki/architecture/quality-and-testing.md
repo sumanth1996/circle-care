@@ -16,11 +16,11 @@ The strategy favours **testing the rules where they live** (the data layer is pu
 
 ## Current results (Sprint 14, 2026-11-15)
 
-Measured on GitHub Actions, which runs on every pull request to `main`. The unit-test count is from [PR #12](https://github.com/sumanth1996/circle-care/pull/12) (CC-196); the browser counts are from [PR #7](https://github.com/sumanth1996/circle-care/pull/7) (CC-194).
+Measured on GitHub Actions, which runs on every pull request to `main`. The unit-test count is from [PR #13](https://github.com/sumanth1996/circle-care/pull/13) (CC-197); the browser counts are from [PR #7](https://github.com/sumanth1996/circle-care/pull/7) (CC-194).
 
 | Suite | Count | Result |
 |---|---|---|
-| Unit tests | **494** in 13 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
+| Unit tests | **502** in 14 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
 | E2E scenarios | **29** | All pass, with no page or console errors |
 | Chat and recap scenarios | **7** | All pass |
 | Accessibility | **26** screens plus the evening recap card | **0** axe-core violations (WCAG 2.1 A/AA) |

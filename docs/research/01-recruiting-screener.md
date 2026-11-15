@@ -1,7 +1,7 @@
 # Recruiting Plan and Screener
 
-Notion story: CC-1 Recruit and screen interview participants
-Status: DRAFT / TEMPLATE. No participants have been recruited or contacted. Every step below needs a human to run it.
+Notion story: CC-1 Recruit and screen interview participants · CC-197 update the kit for the built features
+Status: DRAFT v2 / TEMPLATE, updated 2026-11-15 (CC-197). No participants have been recruited or contacted. Every step below needs a human to run it.
 
 > Circle Care is a CSPO-training concept product. This plan describes how discovery interviews *would* be run. Nothing here reports real research.
 
@@ -43,6 +43,8 @@ Where possible, recruit **linked triads** (an elder, their caregiver and their g
 ## 4. Screener
 
 Ask by phone or a short form. Read questions aloud for elders. Record answers in the tracker using a participant ID only.
+
+**What we keep from screening.** The participant ID, segment, state and the answers marked *record for mix*, in the tracker (§8). Record E4 as a number and E6 as a category (eyesight, hearing, hands), never the reason or a condition. Contact details for people who don't qualify are deleted the same day; for people who do, they go only in the ID key (§7). Read this at the end of the call: *"We keep your answers under a number, not your name. We don't need to know about your health, and if you tell us something we don't need, we won't write it down."*
 
 ### 4.1 All segments
 
@@ -90,14 +92,16 @@ Ask by phone or a short form. Read questions aloud for elders. Record answers in
 Plain language, 14pt+ print, read aloud for elders. Draft sections:
 
 1. Who we are and that Circle Care is a student/concept project, not a company selling anything.
-2. What we will ask about (daily routines, help, privacy) and how long it takes.
+2. What we will ask about (daily routines, help, privacy), that we will show a practice app, and how long it takes.
 3. Taking part is voluntary; you can skip any question or stop at any time and still receive the incentive.
 4. Recording: audio only, with separate opt-in; notes taken either way.
-5. **Please do not tell us specific diagnoses, medicine names or doctors' names.** If you do, we will remove them from notes.
-6. How data is stored, who sees it (only the research team), and when it is deleted (recordings within 30 days of transcription; de-identified notes within 12 months).
-7. Quotes may be used without names or identifying details.
-8. Contact for questions or withdrawal.
-9. Signature or recorded verbal consent with date.
+5. **Health details.** We don't ask about your health, and we record no health details beyond what you choose to tell us. *Please do not tell us specific diagnoses, medicine names or doctors' names.* If you do, we replace them in the notes with "[condition]" or "[med]" and delete them from the recording's transcript.
+6. **The practice app.** It shows made-up people (Maggie, Sarah, James and Ana), not you or anyone you know. Please don't type or say anything real into it. It runs on our research phone, not yours, and we reset it after every session, so nothing you tap stays on it. In the chat screen we ask you to type rather than speak (see the interview guides).
+7. **How notes are stored.** Notes use your participant number, never your name. They are kept in an encrypted folder that only the research team can open, and never pasted into tools that learn from what is typed into them. The list that links your name to your number is kept separately, in one locked file.
+8. **When things are deleted.** Recordings within 30 days of transcription. The name-to-number list once your incentive is paid and any follow-up is done. De-identified notes within 12 months. You can ask us to delete your notes and recording sooner, until they are de-identified and combined with others.
+9. Quotes may be used without names or identifying details.
+10. Contact for questions or withdrawal.
+11. Signature or recorded verbal consent with date.
 
 **Human action:** have the consent text reviewed (e.g., by an instructor or IRB-style reviewer) before first use. Elders who cannot consent for themselves are excluded; we do not take proxy consent for research.
 
@@ -114,6 +118,8 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 - In notes: replace names with role words ("my daughter", "the aide"); replace medicine names with "[med]"; replace conditions with "[condition]"; replace employer/agency names with "[agency]"; generalize location to state.
 - Never paste notes into tools that train on inputs.
 - Recordings: store encrypted, delete within 30 days after transcription.
+- Notes: one file per participant ID in the encrypted research folder. Delete the de-identified notes within 12 months, and log each deletion (date and ID only) in the tracker.
+- The practice app: run sessions on a research phone, never the participant's. After each session, open the presenter sheet and tap *Reset demo* so no taps, typed chat messages or check-ins carry over to the next person.
 
 ## 8. Scheduling tracker (template)
 
@@ -126,8 +132,14 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 
 ## 9. Human actions before starting
 
-- [ ] Name an owner for each channel.
-- [ ] Get consent text reviewed.
-- [ ] Secure incentive budget.
+None of these can be done by the product team's agents. Each needs a named person.
+
+- [ ] Recruiting: name an owner for each channel and start recruiting (CC-1).
+- [ ] Incentives: secure the incentive budget, and decide whether the longer sessions in the v2 guides (up to 70 minutes) change the amount.
+- [ ] Consent review: get the consent text in §5 reviewed before first use.
+- [ ] Safety protocol: write the protocol for disclosures of harm (see the elder guide).
+- [ ] Agency approvals: get written agency OK for caregivers who need it (C6).
+- [ ] Interpreter: decide the interpreter budget for caregivers who prefer another language.
 - [ ] Print large-type flyers.
-- [ ] Set up encrypted storage for recordings and the ID key.
+- [ ] Set up encrypted storage for recordings, notes and the ID key.
+- [ ] Set up a research phone with the prototype, at the elder's preferred text size, and check *Reset demo* works on it.

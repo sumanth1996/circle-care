@@ -9,10 +9,10 @@ Working drafts for the backlog stories that need real people, counsel or vendors
 
 | Story | Document | What it is | Needs human action |
 |---|---|---|---|
-| CC-1 | [Recruiting screener](../research/01-recruiting-screener.md) | Recruiting channels, screener per persona, quotas, consent outline, incentive, de-identification, tracker | Yes — recruit, review consent text, fund incentives |
-| CC-2 | [Interview guide — elders](../research/02-interview-guide-elders.md) | Elder interview guide with concept test and hypotheses | Yes — pilot the guide, run 6+ interviews, safety protocol |
-| CC-3 | [Interview guide — caregivers](../research/03-interview-guide-caregivers.md) | Workload and verification | Yes — agency permissions, 6+ interviews |
-| CC-4 | [Interview guide — guardians](../research/04-interview-guide-guardians.md) | Verification, autonomy, authority | Yes — 5+ interviews |
+| CC-1, CC-197 | [Recruiting screener](../research/01-recruiting-screener.md) | Recruiting channels, screener per persona, quotas, consent outline (how notes are kept and deleted), incentive, de-identification, tracker, human steps | Yes — recruit, review consent text, fund incentives |
+| CC-2, CC-197 | [Interview guide — elders](../research/02-interview-guide-elders.md) | Elder interview guide with concept tests (including My day, chat and the evening recap) and hypotheses | Yes — pilot the guide, run 6+ interviews, safety protocol |
+| CC-3, CC-197 | [Interview guide — caregivers](../research/03-interview-guide-caregivers.md) | Workload and verification, with concept tests of refills and the family chat | Yes — agency permissions, 6+ interviews |
+| CC-4, CC-197 | [Interview guide — guardians](../research/04-interview-guide-guardians.md) | Verification, autonomy, authority, with concept tests of the evening recap, refills, check-ins and chat | Yes — 5+ interviews |
 | CC-5 | [Journey maps](../research/05-journey-maps.md) | Hypothesis journeys per persona and synthesis process | Yes — replace hypotheses with evidence |
 | CC-6 | [Opportunity solution tree](../research/06-opportunity-solution-tree.md) | North Star, opportunities, solutions, assumption tests | Yes — run assumption tests, re-rank |
 | CC-7 | [Competitive teardown](../research/07-competitive-teardown.md) | Framework, comparison table, positioning gaps | Yes — verify every product fact |
