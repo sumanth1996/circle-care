@@ -16,7 +16,7 @@ Working drafts for the backlog stories that need real people, counsel or vendors
 | CC-5 | [Journey maps](../research/05-journey-maps.md) | Hypothesis journeys per persona and synthesis process | Yes — replace hypotheses with evidence |
 | CC-6 | [Opportunity solution tree](../research/06-opportunity-solution-tree.md) | North Star, opportunities, solutions, assumption tests | Yes — run assumption tests, re-rank |
 | CC-7 | [Competitive teardown](../research/07-competitive-teardown.md) | Framework, comparison table, positioning gaps | Yes — verify every product fact |
-| CC-8 | [Regulatory memo](../compliance/08-regulatory-memo.md) | HIPAA, FTC, state law, TCPA, ADA, guardianship applicability | Yes — counsel review |
+| CC-8, CC-196 | [Regulatory memo](../compliance/08-regulatory-memo.md) | HIPAA, FTC, state law, TCPA, ADA, guardianship applicability; v2 (2026-11-15) adds SSNs, bank accounts, cards, photos, chat and voice, check-ins, and 25 questions for counsel, checked against the data inventory by a unit test | Yes — counsel review (CC-8) |
 | CC-9 | [Data inventory](../compliance/09-data-inventory.md) | Every state field and Postgres column classified, checked by a unit test; reviewed against `main` on 2026-11-15 | Yes — security officer and counsel sign-off |
 | CC-10 | [Threat model](../security/10-threat-model.md) | STRIDE threat model of the built system, with each control traced to code | Yes — engineering security review and security officer |
 | CC-18 | [Permission matrix](../security/permission-matrix.md) | Readable rendering of `MATRIX` | Partly — open design questions, server enforcement |
