@@ -68,9 +68,9 @@ flowchart LR
   UI -- "images" --> IMG
   UI -- "HTTPS, cookie + X-Requested-With" --> API
   API --> AUTH
-  UI -- "1. card or bank numbers" --> VAULT
-  VAULT -- "2. token and last four" --> UI
-  UI -- "3. token" --> PAY
+  UI -- "Step 1: card or bank numbers" --> VAULT
+  VAULT -- "Step 2: token and last four" --> UI
+  UI -- "Step 3: token" --> PAY
   VAULT -- "vault_tokens" --> DB
   AUTH --> DB
   API --> DB
@@ -78,7 +78,7 @@ flowchart LR
   API --> AUD
   AUD --> DB
   CLI -- "masked views; base tables with --full-names" --> DB
-  WS -- "npm install, build, keys" --> STATIC
+  WS -- "npm install, build, keys" --> Host
   PR -- "PR code runs with a read-only token" --> CI
   PAGES -. "public read" .-> Internet(("Anyone"))
 ```
@@ -121,7 +121,7 @@ The demo store is a prototype: one browser holds every persona's view of a ficti
 | C2-I1 | I | A paid caregiver browses records off shift | `pro@shift` rule (`src/data/policy.ts:rules.includes("pro@shift") && onShift`). Check-in itself has no shift-window check, so a caregiver can check in at any time | Demo only | High | Medium | High | Dev Agent | CC-202 |
 | C2-T1 | T | Stored data on the device is altered | AES-GCM with a fresh IV per save and a non-extractable key (`src/lib/secureStorage.ts:name: "AES-GCM"`). A value without the `enc:v1:` prefix is still accepted as plain JSON (`src/lib/secureStorage.ts:!raw.startsWith("enc:v1:")`) | Partial | Medium | Low | Low | Dev Agent | |
 | C2-I2 | I | A lost or shared device exposes care data | Encryption at rest as above; inactivity lock (`src/components/AppShell.tsx:setLocked`); close circle wipes data and key (`src/lib/secureStorage.ts:export async function wipeDevice`). The unlock button checks nothing and a reload unlocks | Demo only | High | Medium | High | Dev Agent | CC-202 |
-| C2-R1 | R | Someone denies viewing or changing a record | Hash-chained access log (`src/data/audit.ts:export function verifyChain`). The chain has no key, so anyone holding the state can rebuild it, and views of the same resource within 10 minutes are logged once for all personas (`src/data/store.tsx:10 * 60000`) | Demo only | Medium | Medium | Medium | Dev Agent | CC-202 |
+| C2-R1 | R | Someone denies viewing or changing a record | Hash-chained access log (`src/data/audit.ts:export function verifyChain`). The chain has no key, so anyone holding the state can rebuild it, and views of the same resource within 10 minutes are logged once for all personas (`src/data/store.tsx:(viewed.current[resource] ?? 0) < 10 * 60000`) | Demo only | Medium | Medium | Medium | Dev Agent | CC-202 |
 | C2-I3 | I | An export file is leaked | Passphrase export with PBKDF2 (250,000 rounds) and AES-GCM (`src/lib/secureStorage.ts:250000`). The "Confirm with Face ID" step does nothing, the file is written before the permission check runs (`src/pages/shared/PrivacyCenter.tsx:actions.exported()`), and it includes guardian-only notes | Demo only | High | Medium | High | Dev Agent | CC-202 |
 | C2-T2 | T | A disguised file is uploaded as a care document | Signature check for PDF, PNG and JPEG with a 10 MB limit (`src/lib/secureStorage.ts:export function inspectUpload`). No malware scan; photo metadata is stripped only from profile photos, and only in the browser | Partial | Medium | Medium | Medium | Dev Agent | |
 | C2-I4 | I | A document is screenshotted or downloaded and shared | Viewer name shown over the document and every view logged (`src/pages/shared/Notes.tsx:watermark`). The overlay is visual only; the file itself is unchanged | Partial | Medium | Low | Low | PO | |
@@ -138,9 +138,9 @@ The demo store is a prototype: one browser holds every persona's view of a ficti
 | C3-E1 | E | One account reads or changes another's records (IDOR) | Every query is scoped to the signed-in user, and other users' card ids answer 404 (`server/payments.ts:AND user_id = $2`); payment and vault routes are guardian-only | In place | High | Low | Medium | Dev Agent | |
 | C3-T2 | T | Oversized or malformed input | JSON bodies limited to 32 KB (`server/app.ts:express.json({ limit: "32kb" })`), photos to 2 MB with a file-signature check (`server/account.ts:sniffImage`); SSN, bank and card validators (`src/lib/validation.ts:luhn`). Photo metadata is stripped in the browser only (`src/pages/account/parts.tsx:async function preparePhoto`); the server stores photo bytes as sent | Partial | Medium | Low | Low | Dev Agent | |
 | C3-I1 | I | An error or log line leaks a request body, SSN or stack trace | The error handler returns safe messages and logs only the message (`server/http.ts:err instanceof Error ? err.message : "unknown"`); the API returns only the SSN's last four, and the tests scan every response for a full SSN | In place | High | Low | Medium | Dev Agent | |
-| C3-S1 | S | Whoever holds an open session changes the account's contact email or phone | Profile changes need only the session and change the contact details in the persona table; the sign-in email can't be changed at all. Changing an SSN needs the password again (`server/account.ts:verifyPassword(str(req.body?.password)`) | Partial | Medium | Medium | Medium | Dev Agent | |
+| C3-S1 | S | Whoever holds an open session changes the account's contact email or phone | Profile changes need only the session and change the contact details in the persona table; the sign-in email can't be changed at all. Changing an SSN needs the password again (`server/account.ts:verifyPassword(str(req.body?.password)`), but nothing protects a contact change | Missing | Medium | Medium | Medium | Dev Agent | |
 | C3-I2 | I | `/api/health` tells an attacker the environment and database kind | It returns `env` and `db` (`server/app.ts:app.get("/api/health"`) | Partial | Low | Medium | Low | Dev Agent | |
-| C3-I3 | I | A signed-in account learns whether an SSN is already registered | A taken SSN answers 409 and is logged (`server/account.ts:action: "ssn.duplicate"`). Setting a first SSN needs no password and `PUT /ssn` has no rate limit, so one account can try many numbers | Partial | High | Low | Medium | Dev Agent | CC-204 |
+| C3-I3 | I | A signed-in account learns whether an SSN is already registered | A taken SSN answers 409 and is logged (`server/account.ts:action: "ssn.duplicate"`). Setting a first SSN needs no password and `PUT /ssn` has no rate limit, so any signed-in account holding someone's SSN can confirm it | Partial | High | Medium | High | Dev Agent | CC-204 |
 | C3-D1 | D | Someone registers a victim's SSN first, so the victim's own account is refused | One account per SSN by fingerprint (`server/account.ts:SELECT user_id FROM ssn_fingerprints`); the refused person is told to contact support, and no support process exists to release a number | Partial | Medium | Medium | Medium | PO | |
 | C3-D2 | D | Request floods slow or stop the API | Sign-in and sign-up are limited per address (`server/auth.ts:rateLimit({ windowMs: 600_000, max: 30 })`), but each try still runs scrypt; the limiter's map is never pruned (`server/http.ts:const hits = new Map`), and signed-in routes other than the vault have no limit | Partial | Medium | Medium | Medium | Dev Agent | CC-204 |
 
@@ -171,7 +171,7 @@ The demo store is a prototype: one browser holds every persona's view of a ficti
 | C6-I1 | I | A full card or bank number is stored | Only tokens, brand or bank name, type, expiry and last four are written, and the last-four columns can't hold more than four digits (`server/migrations/001_init.sql:CHECK (last4 ~ '^[0-9]{4}$')`). `vault_tokens.metadata` (jsonb) and `holder_name` have no such limit | Partial | High | Low | Medium | Dev Agent | |
 | C6-E1 | E | The simulated vault is reachable in production | It is mounted only outside production with the simulated provider (`server/app.ts:paymentProvider === "simulated"`); production needs a live Stripe key (`server/config.ts:sk_live_`) | In place | High | Low | Medium | Release Agent | |
 | C6-T1 | T | A vault token is reused or claimed by another account | Tokens are checked for owner, kind, a 15-minute age, single use and revocation under a row lock (`server/payments.ts:FOR UPDATE`) | In place | Medium | Low | Low | Dev Agent | |
-| C6-I2 | I | Card numbers pass through the app server | Outside production the simulated vault runs in the same process (`server/vault.ts:card_test_`), so full test numbers reach it. A real provider's hosted fields would keep them off the server, but that integration isn't built | Partial | High | Low | Medium | Dev Agent | |
+| C6-I2 | I | Card numbers pass through the app server | Outside production the simulated vault runs in the same process (`server/app.ts:app.use("/vault/v1", vaultRouter(d))`), so full test numbers reach it. A real provider's hosted fields would keep them off the server, but that integration isn't built | Partial | High | Low | Medium | Dev Agent | |
 
 ### C7 Audit log and export
 
@@ -205,7 +205,7 @@ The demo store is a prototype: one browser holds every persona's view of a ficti
 | C10-T1 | T | The deployed build differs from what was tested | The Replit build runs `npm install`, not `npm ci`, so the lockfile isn't enforced (`.replit:npm install && npm run build`), and the server runs through `tsx` (`package.json:tsx server/index.ts`) | Partial | Medium | Medium | Medium | Release Agent | |
 | C10-I2 | I | The deployed copy is opened over HTTP | It runs as staging, which sets `Secure` cookies but sends no HSTS (`.replit:APP_ENV=staging`) | Partial | Medium | Low | Low | Release Agent | |
 | C10-S1 | S | The dev server is reached from another site (DNS rebinding) | The dev and preview servers accept any host name (`vite.config.ts:allowedHosts: true`). The dev server is also what the Replit workspace serves publicly (C10-I3) | Partial | Medium | Low | Low | Dev Agent | |
-| C10-I3 | I | The Replit workspace's public dev server exposes the dev API | The workspace runs `npm run dev` (`.replit:run = "npm install && npm run dev"`) on port 5000 mapped to port 80 (`.replit:externalPort = 80`). The dev API sends no CSP (`server/app.ts:if (!opts.dev)`), its cookies have no `Secure`, and its development keys sit in `.data/` (`server/config.ts:join(process.cwd(), ".data")`). Only test data is accepted there | Missing | Medium | Medium | Medium | Release Agent | |
+| C10-I3 | I | The Replit workspace's public dev server exposes the dev API | The workspace runs `npm run dev` (`.replit:run = "npm install && npm run dev"`) on port 5000 mapped to port 80 (`.replit:externalPort = 80`). The dev API sends no CSP (`server/app.ts:if (!opts.dev)`), its cookies have no `Secure`, and its development keys sit in `.data/` (`server/config.ts:join(process.cwd(), ".data")`). Only test SSNs, bank accounts and cards are accepted there | Missing | Medium | Medium | Medium | Release Agent | |
 | C10-I4 | I | Someone with access to the Replit workspace reads the encryption keys and database URL | Keys come only from environment secrets (`server/config.ts:key32("DATA_ENCRYPTION_KEY"`); who can open the workspace and its Secrets is set in Replit and recorded nowhere | Missing | High | Low | Medium | Security officer | |
 | C10-D1 | D | Behind more than one proxy, every user shares one address and one sign-in limit | `trust proxy` is set to 1 (`server/app.ts:app.set("trust proxy", 1)`), which is right only behind exactly one proxy. Behind two, 30 sign-ins in 10 minutes from anyone would lock everyone out | Partial | Medium | Medium | Medium | Release Agent | CC-204 |
 
@@ -216,15 +216,15 @@ The demo store is a prototype: one browser holds every persona's view of a ficti
 | C4-S1 No second sign-in step on the server | High | Missing | CC-200 Second sign-in step on the server for guardians and caregivers | An authenticator app or passkey checked on the server before any session; hashed one-time recovery codes; the demo code never accepted in staging or production |
 | C4-S3 Sessions can't be ended everywhere; no password change or reset | High | Partial | CC-201 End every session when an account may be at risk | Sign out everywhere, password change and a 30-minute reset link each end every session; expired rows deleted daily |
 | C2-E1, C2-E2, C2-I1, C2-I2, C2-I3 Care data and permission checks run only in the browser | High | Demo only | CC-202 Move care-circle data and permission checks to the server | The API applies the permission matrix to every care record, checks invitations, shifts, unlocks and exports on the server, and separates the reviewer role |
-| C2-D1 Safety alerts never leave the device that raised them | High | Demo only | CC-205 Deliver safety alerts from the server to the people who need them | The server records and delivers alerts to each member's own devices, catches up after offline, and escalates without the elder's device |
+| C2-D1 Safety alerts never leave the device that raised them | High | Demo only | CC-205 Deliver safety alerts from the server to the people who need them | The server records and delivers alerts to each member's own devices, catches up after offline, escalates without the elder's device, and keeps settings and tells the person after a storage reset |
 | C5-I1 Database certificate not verified | High | Missing | CC-203 Verify the database server's certificate | Remote connections verify the provider's certificate; a bad certificate stops start-up in staging and production |
-| C4-S2 Rate limits per process, address from a forwarded header | High | Partial | CC-204 Shared rate limits for sign-in and account changes | One shared store for every instance, only the host proxy's address trusted, limits on SSN, profile, photo and payment routes, and expired buckets removed |
+| C4-S2, C3-I3 Rate limits per process, address from a forwarded header; no limit on SSN checks | High | Partial | CC-204 Shared rate limits for sign-in and account changes | One shared store for every instance, only the host proxy's address trusted, limits on SSN, profile, photo and payment routes, and expired buckets removed |
 
 Each story is in the Notion backlog as Needs refinement, with its full Given/When/Then criteria and a link back to its threat. None is in Sprint 14.
 
 Two stories are marked Done for the browser demo only, and the server versions are the new stories: CC-12 (MFA) is covered by CC-200, and CC-19 (access rules) by CC-202.
 
-Medium risks with no story yet, for the next refinement: contact changes without re-authentication (C3-S1), SSN squatting and its support process (C3-D1), account enumeration (C4-I1), deliberate lockout (C4-D1), database roles for the audit table (C5-E1), audit export access (C7-S1), IP or device in audit events (C7-R1), dependency checks (C8-T2), where security documents are published (C9-I1), deploy with `npm ci` (C10-T1), the public workspace dev server (C10-I3) and who can read the Replit Secrets (C10-I4).
+Medium risks with no story yet, for the next refinement: contact changes without re-authentication (C3-S1), one shared CSP list for the build and the server (C1-I1), SSN squatting and its support process (C3-D1), account enumeration (C4-I1), deliberate lockout (C4-D1), database roles for the audit table (C5-E1), audit export access (C7-S1), IP or device in audit events (C7-R1), dependency checks (C8-T2), where security documents are published (C9-I1), deploy with `npm ci` (C10-T1), the public workspace dev server (C10-I3) and who can read the Replit Secrets (C10-I4).
 
 ## 6. What changed since the October draft
 

@@ -99,7 +99,22 @@ describe("threat model (CC-10)", () => {
     expect(open.length).toBeGreaterThan(0);
     for (const r of open) {
       expect(r.story, `${r.id} needs a story`).toMatch(/^CC-\d+$/);
-      expect(DOC, `${r.id} in the High risks table`).toMatch(new RegExp(`^\\| [^|]*${r.id}[^|]*\\| High \\|[^|]*\\| ${r.story} `, "m"));
+      expect(DOC, `${r.id} in the High risks table with its status`).toMatch(new RegExp(`^\\| [^|]*${r.id}[^|]*\\| High \\| ${r.status} \\| ${r.story} `, "m"));
+    }
+  });
+
+  it("lists in the High risks table only threats that are High and not in place", () => {
+    const table = DOC.slice(DOC.indexOf("\n## 5. "), DOC.indexOf("\n## 6. "));
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const listed = [...table.matchAll(/\bC\d+-[STRIDE]\d+\b/g)].map((m) => m[0]);
+    const firstCells = table.split("\n").filter((l) => /^\| C\d/.test(l)).map((l) => l.split(" | ")[0]);
+    const inTable = listed.filter((id) => firstCells.some((c) => c.includes(id)));
+    expect(inTable.length).toBeGreaterThan(0);
+    for (const id of inTable) {
+      const r = byId.get(id);
+      expect(r, `${id} is not a threat in section 4`).toBeDefined();
+      expect(r!.risk, `${id} risk`).toBe("High");
+      expect(r!.status, `${id} status`).not.toBe("In place");
     }
   });
 
