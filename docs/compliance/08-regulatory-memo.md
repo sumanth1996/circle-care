@@ -16,7 +16,7 @@ Identify which laws likely apply to Circle Care, under which business models, so
 
 ### 2.1 Data added since the October draft
 
-Two business models, as in §3: **Consumer**, where a family uses Circle Care on its own, and **Agency**, where a home-care agency that is a HIPAA covered entity provides it to its clients. Each row matches a row of the data inventory's tables for these data types. Every cell is a working assumption for counsel to confirm.
+Two business models, as in §3: **Consumer**, where a family uses Circle Care on its own, and **Agency**, where a home-care agency that is a HIPAA covered entity provides it to its clients. Each row matches a row of the data inventory's tables for these data types, except voice replies and the account email and password, which come from the code and the Postgres accounts table. Every cell is a working assumption for counsel to confirm.
 
 | Data | Consumer model | Agency model | Working assumption | Questions |
 |---|---|---|---|---|
@@ -144,7 +144,7 @@ The public Privacy page already states this posture ("designed to the HIPAA stan
 | Q17 | What ACH authorization (Nacha rules, Regulation E) and card terms do we need, do state automatic-renewal laws apply to recurring charges, and is "no platform fee" a safe public claim? |
 | Q18 | Is a profile photo PHI in the agency model? Would any later face matching bring in state biometric laws, and what consent would that need? |
 | Q19 | Family chat: when an agency caregiver is in the chat, which messages are PHI under the BAA? What retention, deletion and legal-hold rules apply to chat, and may a caregiver keep seeing messages after leaving the circle? |
-| Q20 | Voice replies: is sending the elder's voice to a browser speech service a disclosure that needs a BAA (agency) or consent (consumer, MHMDA), or a breach under the HBNR? Should voice be off by default or processed on the device? |
+| Q20 | Voice replies: is sending a member's voice to a browser speech service a disclosure that needs a BAA (agency) or consent (consumer, MHMDA), or a breach under the HBNR? Should voice be off by default or processed on the device? |
 | Q21 | The elder can keep daily check-ins private from the guardian. Can a guardian with healthcare authority override that, and must the evening recap respect it? |
 | Q22 | Which state breach laws do SSNs, financial account numbers and an email with its password trigger, alongside HIPAA and the HBNR, and what notice timelines follow (CC-34)? |
 | Q23 | With card numbers entered in Stripe's own fields, is Circle Care's PCI DSS scope the smallest self-assessment (SAQ A), and what does it become if card numbers ever pass through our server, as the development vault does today (SAQ D)? |

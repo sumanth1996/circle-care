@@ -80,7 +80,7 @@ describe("regulatory memo draft (CC-196)", () => {
 
   it("flags the chat's on-device voice wording as untrue for as long as the code makes it so", () => {
     const promises = section(MEMO, "## 4. FTC Act §5 and the FTC Health Breach Notification Rule (HBNR)");
-    const says = CHAT.includes("Your words are turned into text on this device");
+    const says = /turned into text on (this|the|your) device/i.test(CHAT);
     const keepsOnDevice = /processLocally\s*=\s*true/.test(CHAT);
     const flagged = /A promise that isn't true today: the chat's voice sheet/.test(promises);
     expect(flagged, "memo §4 must flag the chat's voice promise exactly while it is untrue (CC-222)").toBe(says && !keepsOnDevice);
