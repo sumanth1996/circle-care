@@ -11,10 +11,10 @@ These drafts are also published in the **Circle Care Product Wiki** (MkDocs site
 
 | Story | Doc | What it is | Needs human action |
 |---|---|---|---|
-| CC-1 | [research/01-recruiting-screener.md](research/01-recruiting-screener.md) | Recruiting channels, screener per persona, quotas, consent outline, incentive, de-identification, tracker | Yes — recruit, get consent text reviewed, fund incentives |
-| CC-2 | [research/02-interview-guide-elders.md](research/02-interview-guide-elders.md) | Elder interview guide with prototype concept test and hypotheses | Yes — pilot the guide, run 6+ interviews, write safety protocol |
-| CC-3 | [research/03-interview-guide-caregivers.md](research/03-interview-guide-caregivers.md) | Caregiver interview guide (workload, verification) | Yes — get agency permissions, run 6+ interviews |
-| CC-4 | [research/04-interview-guide-guardians.md](research/04-interview-guide-guardians.md) | Guardian interview guide (verification, autonomy, authority) | Yes — run 5+ interviews |
+| CC-1, CC-197 | [research/01-recruiting-screener.md](research/01-recruiting-screener.md) | Recruiting channels, screener per persona, quotas, consent outline, incentive, de-identification, tracker | Yes — recruit, get consent text reviewed, fund incentives |
+| CC-2, CC-197 | [research/02-interview-guide-elders.md](research/02-interview-guide-elders.md) | Elder interview guide with prototype concept tests (including the features built since October) and hypotheses | Yes — pilot the guide, run 6+ interviews, write safety protocol |
+| CC-3, CC-197 | [research/03-interview-guide-caregivers.md](research/03-interview-guide-caregivers.md) | Caregiver interview guide (workload, verification, refills and chat) | Yes — get agency permissions, run 6+ interviews |
+| CC-4, CC-197 | [research/04-interview-guide-guardians.md](research/04-interview-guide-guardians.md) | Guardian interview guide (verification, autonomy, authority, evening recap) | Yes — run 5+ interviews |
 | CC-5 | [research/05-journey-maps.md](research/05-journey-maps.md) | Hypothesis journeys per persona + affinity-mapping synthesis process | Yes — replace hypotheses with evidence after interviews |
 | CC-6 | [research/06-opportunity-solution-tree.md](research/06-opportunity-solution-tree.md) | North Star, opportunities, solutions, assumption tests (mermaid) | Yes — run assumption tests, re-rank after research |
 | CC-7 | [research/07-competitive-teardown.md](research/07-competitive-teardown.md) | Teardown framework, comparison table, positioning gaps | Yes — verify every product fact before publishing |

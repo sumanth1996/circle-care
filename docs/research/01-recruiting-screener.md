@@ -1,7 +1,7 @@
 # Recruiting Plan and Screener
 
-Notion story: CC-1 Recruit and screen interview participants
-Status: DRAFT / TEMPLATE. No participants have been recruited or contacted. Every step below needs a human to run it.
+Notion story: CC-1 Recruit and screen interview participants · CC-197 update the kit for the built features
+Status: DRAFT v2 / TEMPLATE, updated 2026-11-15 (CC-197). No participants have been recruited or contacted. Every step below needs a human to run it.
 
 > Circle Care is a CSPO-training concept product. This plan describes how discovery interviews *would* be run. Nothing here reports real research.
 
@@ -44,13 +44,15 @@ Where possible, recruit **linked triads** (an elder, their caregiver and their g
 
 Ask by phone or a short form. Read questions aloud for elders. Record answers in the tracker using a participant ID only.
 
+**What we keep from screening.** The participant ID, segment, state and the answers marked *record for mix*, in the tracker (§8). Record E4 as a number and E6 as a category (eyesight, hearing, hands), never the reason or a condition. Contact details for people who don't qualify are deleted the same day; for people who do, they go only in the ID key (§7). Read this at the end of the call: *"We keep your answers under a number, not your name. We don't need to know about your health, and if you tell us something we don't need, we won't write it down."*
+
 ### 4.1 All segments
 
 1. Which best describes you? (Older adult who gets some help at home / Paid caregiver / Legal guardian or power of attorney for an older adult / Family member who helps / Other) — *route to segment*
 2. What state do you live in? — *aim for at least 3 states*
 3. Are you, or anyone in your household, employed by a company that makes health or caregiving apps? — *exclude if yes*
 4. Have you taken part in a paid research interview in the last 6 months? — *exclude if 2+*
-5. Are you comfortable with a 45–60 minute conversation by phone, video or in person? Which do you prefer?
+5. Are you comfortable with a conversation of up to 70 minutes, with breaks, by phone, video or in person? Which do you prefer?
 
 ### 4.2 Elders
 
@@ -90,20 +92,22 @@ Ask by phone or a short form. Read questions aloud for elders. Record answers in
 Plain language, 14pt+ print, read aloud for elders. Draft sections:
 
 1. Who we are and that Circle Care is a student/concept project, not a company selling anything.
-2. What we will ask about (daily routines, help, privacy) and how long it takes.
+2. What we will ask about (daily routines, help, privacy), that we will show a practice app, and how long it takes.
 3. Taking part is voluntary; you can skip any question or stop at any time and still receive the incentive.
 4. Recording: audio only, with separate opt-in; notes taken either way.
-5. **Please do not tell us specific diagnoses, medicine names or doctors' names.** If you do, we will remove them from notes.
-6. How data is stored, who sees it (only the research team), and when it is deleted (recordings within 30 days of transcription; de-identified notes within 12 months).
-7. Quotes may be used without names or identifying details.
-8. Contact for questions or withdrawal.
-9. Signature or recorded verbal consent with date.
+5. **Health details.** We ask about your daily routine and the help you get. We may ask how many medicines you take on a schedule and whether eyesight, hearing or your hands make phones harder, but never which conditions you have or what your medicines are. We record no health details beyond what you choose to tell us. *Please do not tell us specific diagnoses, medicine names or doctors' names.* If you do, we replace them in the notes and the transcript with "[condition]" or "[med]". If you are a caregiver or guardian, the same goes for the person you care for.
+6. **The practice app.** It shows made-up people (Maggie, Sarah, James, Ana and Ruth), not you or anyone you know. Please don't type or say anything real into it. It runs on our research phone, not yours. After every session we reset the practice app and clear the phone's browser data for it, so what you tapped or typed isn't kept. Its microphone is switched off for the chat, so you type, or tell us what to type.
+7. **How notes are stored.** Notes use your participant number, never your name. They are kept in an encrypted folder that only the research team can open, and never pasted into tools that learn from what is typed into them. Recordings are transcribed by the team, or by a tool that doesn't learn from what it is given, and names are taken out of the transcript. The list that links your name to your number is kept separately, in one locked file.
+8. **When things are deleted.** Recordings within 30 days of transcription; until then the recording still has your voice and anything you said. The name-to-number list once your incentive is paid and any follow-up is done. De-identified notes within 12 months. You can ask us to delete your notes and recording sooner, any time until the name-to-number list is deleted. After that we can no longer tell which notes are yours.
+9. Quotes may be used without names or identifying details.
+10. Contact for questions or withdrawal.
+11. Signature or recorded verbal consent with date.
 
 **Human action:** have the consent text reviewed (e.g., by an instructor or IRB-style reviewer) before first use. Elders who cannot consent for themselves are excluded; we do not take proxy consent for research.
 
 ## 6. Incentive
 
-- Proposed: $40 gift card for 45–60 minutes; $20 for a 15-minute follow-up.
+- Proposed: $40 gift card for the main session (up to 70 minutes); $20 for a 15-minute follow-up.
 - Offer the choice of a physical card mailed or e-card; some elders will not want an e-card.
 - Budget for minimum quotas: 17 × $40 = $680 (+ 20% buffer). **Funding not yet secured.**
 
@@ -114,6 +118,8 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 - In notes: replace names with role words ("my daughter", "the aide"); replace medicine names with "[med]"; replace conditions with "[condition]"; replace employer/agency names with "[agency]"; generalize location to state.
 - Never paste notes into tools that train on inputs.
 - Recordings: store encrypted, delete within 30 days after transcription.
+- Notes: one file per participant ID in the encrypted research folder. Delete the de-identified notes within 12 months, and log each deletion (date and ID only) in the tracker.
+- The practice app: run sessions on a research phone, never the participant's, in a guest browser profile, with keyboard learning and suggestions turned off and the microphone blocked for the prototype site. After each session, open the presenter sheet and tap *Reset demo* so no taps, typed chat messages or check-ins carry over, then clear the browser's site data and history for the prototype. *Reset demo* resets the practice app only: feedback answers, pilot sign-ups and browser history are cleared by the site-data step.
 
 ## 8. Scheduling tracker (template)
 
@@ -126,8 +132,14 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 
 ## 9. Human actions before starting
 
-- [ ] Name an owner for each channel.
-- [ ] Get consent text reviewed.
-- [ ] Secure incentive budget.
+None of these can be done by the product team's agents. Each needs a named person.
+
+- [ ] Recruiting: name an owner for each channel and start recruiting (CC-1).
+- [ ] Incentives: secure the incentive budget, and decide whether the longer sessions in the v2 guides (up to 70 minutes) change the amount.
+- [ ] Consent review: get the consent text in §5 reviewed before first use.
+- [ ] Safety protocol: write the protocol for disclosures of harm (see the elder guide).
+- [ ] Agency approvals: get written agency OK for caregivers who need it (C6).
+- [ ] Interpreter: decide the interpreter budget for caregivers who prefer another language.
 - [ ] Print large-type flyers.
-- [ ] Set up encrypted storage for recordings and the ID key.
+- [ ] Set up encrypted storage for recordings, notes and the ID key.
+- [ ] Set up a research phone: a guest browser profile, keyboard learning off, the microphone blocked for the prototype site, and a check that *Reset demo* and clearing site data work on it.

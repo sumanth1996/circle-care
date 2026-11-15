@@ -1,9 +1,9 @@
 # Interview Guide — Elders
 
-Notion story: CC-2 Interview guide: elders
-Status: DRAFT. Not yet piloted or used. No interviews have taken place.
+Notion story: CC-2 Interview guide: elders · CC-197 concept tests of the built features
+Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No interviews have taken place.
 
-> Participants come through the CC-1 screener. Only interview people who can give their own consent. Session length 45–60 minutes. Offer breaks.
+> Participants come through the CC-1 screener. Only interview people who can give their own consent. Session length up to 70 minutes: §1 to §6 take about 54, §6b 10 and the wrap-up 3. Offer breaks. If the session reaches 55 minutes before §6b, or the person tires, move §6b to the 15-minute follow-up.
 
 ## Goals
 
@@ -12,6 +12,7 @@ Status: DRAFT. Not yet piloted or used. No interviews have taken place.
 3. Understand what **independence, dignity and control** mean to this person in concrete terms — what they would and would not want others to know.
 4. Learn what they do when something goes wrong (a fall, feeling unwell, a missed visit).
 5. React to three prototype tasks: the three-button home, confirming a dose, and the Privacy Center.
+6. React to the everyday features built since October: the *My day* check-ins, the family chat, and what Sarah sees in her evening recap and refill alerts.
 
 ## Interviewer reminders
 
@@ -20,6 +21,10 @@ Status: DRAFT. Not yet piloted or used. No interviews have taken place.
 - Do not correct or teach. If they struggle with the prototype, that is data.
 - If they mention a diagnosis or medicine name, do not write it down; note "[condition]" / "[med]".
 - If they disclose risk of harm (neglect, abuse, an unsafe situation), pause the interview and follow the safety protocol agreed with the research lead **before** fieldwork starts (human action: write this protocol).
+- Run the concept tests on the research phone, never the participant's. After the session, tap *Reset demo* in the presenter sheet so nothing carries over to the next person.
+- Chat voice: before the session, block the microphone for the prototype site in the research phone's browser (screener §9), so the chat opens its typing box instead of listening. In Chrome and most browsers the chat's voice reply sends speech to an online service, though the screen says it stays on the device (CC-222), and one tap starts it listening to the whole room. Ask what they expect happens to their words if they spoke. Remove this line once CC-222 is done.
+- The dose voice in §6 T2 runs only on the device, so it is safe. Where the browser can't do that, tapping *Answer with my voice* says voice answers aren't available on this device; with the microphone blocked, tapping it shows *Voice isn't working right now. Please tap a button instead.* Both are expected: note them under T2's "tries voice?".
+- The demo's medicine names (Metformin, Lisinopril, Vitamin D3, Atorvastatin) belong to the made-up Maggie and are fine in prompts. Never note them as the participant's.
 
 ## 1. Warm-up (5 min)
 
@@ -76,6 +81,21 @@ After each task: "On a scale of 1 to 5, how easy was that?" and "What would you 
 
 Close the concept test with: "Who in your life would you want in a circle like this? Who would you leave out?"
 
+Before §6b, turn *Pause sharing* back off: T3 leaves it on. Any *My day* tap while sharing is paused makes that day private, so T5's footer and T8's *Her day* would show it as private. If that happens, tap *Reset demo*, sign in as Maggie again and set their text size again.
+
+## 6b. Concept test — everyday care built since October (10 min)
+
+Same phone, still as Maggie. For T8, switch to Sarah in the presenter sheet (*Demo mode*), so her screens show what the participant just did, then hand the phone back. If they turned check-in sharing off in T6, ask whether to turn it back on before T8. If they keep it off, *Her day* shows as private, and their reaction to that is part of the test.
+
+| Task | Prompt | Watch for | Success = |
+|---|---|---|---|
+| T5 My day | "This card is for how your day is going. Show me how you'd say you feel good and had two glasses of water." Then: "You've had breakfast too." | Finds the card under the three big buttons; expects a Submit button; reads the line saying Sarah can see this; un-ticks by mistake? | Records a feeling, water and a meal unaided |
+| T6 Keep it to yourself | "Say you'd rather Sarah didn't see how you feel for a while." | Finds *Share daily check-ins with Sarah* in My privacy. Then probe: "Sarah gets a note when you change this. How do you feel about that?" | Finds the switch and explains in own words what Sarah would see |
+| T7 Family chat | "Send Sarah a message asking her to visit on Sunday." (The microphone is blocked; if typing is hard for them, type what they dictate.) | Finds the chat tile and *Open chat*; reads who can see the chat; expects the aide to see it?; what they expect the microphone to do | Finds the chat, gets the message sent (typed or dictated), and names who can read it |
+| T8 What Sarah sees (optional) | As Sarah, after *Skip to 7 PM for the evening recap* (the card already shows after 6 PM): "Each evening Sarah sees this about your day. She and the aide also get a note when your pills are running low." | What feels fine, what feels like too much; notices *Her day* shows only what they share; reaction to the refill note | Says, in their own words, what they'd keep and what they'd change |
+
+After each task: "On a scale of 1 to 5, how easy was that?" For T8 ask instead: "How do you feel about Sarah seeing this?"
+
 ## 7. Wrap-up (3 min)
 
 - Is there anything about getting help at home that I should have asked and didn't?
@@ -95,6 +115,8 @@ Independence/dignity moments:
 Control preferences (who should / should not see what):
 Emergency behavior today:
 Task results:  T1 __/5  T2 __/5  T3 __/5  T4 __/5   Notes:
+Everyday care:  T5 __/5  T6 __/5  T7 __/5  T8 (feeling, quote):
+What they'd keep from Sarah's recap:
 Surprises / contradicts a hypothesis:
 Follow-up? Y/N
 ```
@@ -109,3 +131,7 @@ Follow-up? Y/N
 | H-E4 | Elders want the choice to skip or refuse a dose recorded without being nagged. | 4+ of 6 | Most want any non-taken dose escalated |
 | H-E5 | Emergency pendants are often not worn; a phone-based SOS with cancel is acceptable. | 3+ of 6 report not wearing or not having one and accept the phone flow | Most reject phone-based SOS |
 | H-E6 | Three large actions are understood without training. | T1 success for 5+ of 6 | T1 success for 3 or fewer |
+| H-E7 | A one-tap *My day* card with no Submit button is used without help, and some elders would use it on their own. | T5 success for most of those who did T5 (5+ of 6 if all did), and half or more say they'd use it some days | T5 success for half or fewer, or most say they'd never use it |
+| H-E8 | Elders want to decide, day by day, whether Sarah sees how they feel. | Half or more of those who did T6 name a time they'd keep it private | Most say Sarah should always or never see it |
+| H-E9 | Elders would use a family chat for short messages instead of some calls. | Half or more of those who did T7 | Most say they'd rather call |
+| H-E10 | Elders accept Sarah's evening recap and refill notes when they show only what the elder shares. | Two-thirds or more of those who saw T8 are comfortable with it | Most want the recap off or didn't expect Sarah to see it |
