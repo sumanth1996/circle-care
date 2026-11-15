@@ -1,13 +1,20 @@
+import datetime
 import os
+import sys
 from playwright.sync_api import sync_playwright
 B = os.environ.get("E2E_BASE", "http://127.0.0.1:4173") + "/#"
 ACCOUNTS = os.environ.get("E2E_BASE") is not None  # account pages need the real server
 AXE = os.path.join(os.path.dirname(__file__), "..", "..", "node_modules", "axe-core", "axe.min.js")
-pages = ["/", "/how-it-works", "/features", "/who-its-for", "/privacy", "/pilot", "/app", "/app/elder", "/app/elder/next", "/app/elder/privacy", "/app/elder/settings", "/app/guardian", "/app/guardian/meds", "/app/guardian/approvals", "/app/guardian/privacy", "/app/guardian/notes", "/app/guardian/settings", "/app/guardian/circle", "/app/guardian/digest", "/app/guardian/health", "/app/guardian/calendar", "/app/caregiver", "/app/pilot", "/app/review"]
+pages = ["/", "/how-it-works", "/features", "/who-its-for", "/privacy", "/pilot", "/app", "/app/elder", "/app/elder/next", "/app/elder/privacy", "/app/elder/settings", "/app/guardian", "/app/guardian/meds", "/app/guardian/approvals", "/app/guardian/privacy", "/app/guardian/notes", "/app/guardian/settings", "/app/guardian/circle", "/app/guardian/digest", "/app/guardian/health", "/app/guardian/calendar", "/app/caregiver", "/app/pilot", "/app/review",
+         "/app/guardian/chat", "/app/elder/chat"]  # CC-194: both chat sizes
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
     ctx = b.new_context(viewport={"width": 1280, "height": 900}, timezone_id="America/New_York", bypass_csp=True)
-    pg = ctx.new_page()
+    # CC-194: a Wednesday at 4:30 PM, so the shift and the recap look the same whenever the audit runs.
+    T0 = datetime.datetime(2026, 10, 21, 16, 30, tzinfo=datetime.timezone(datetime.timedelta(hours=-4)))
+    def new_page():
+        q = ctx.new_page(); q.clock.set_system_time(T0); return q
+    pg = new_page()
     pg.goto(B + "/app"); pg.wait_for_timeout(500)
     # sign in all three via UI
     for who in ["guardian", "caregiver"]:
@@ -26,7 +33,7 @@ with sync_playwright() as p:
         pages += ["/app/account"]
     pg.close()
     for path in pages:
-        pg = ctx.new_page()
+        pg = new_page()
         pg.goto(B + path); pg.wait_for_timeout(900)
         if path == "/app/account":
             pg.get_by_role("button", name="Add a card").click(); pg.wait_for_timeout(200)
@@ -38,5 +45,22 @@ with sync_playwright() as p:
         out.append(f"{path}: {'OK' if not r else ''}")
         out += ["   " + x for x in r]
         pg.close()
+    # CC-194: the evening recap card on Sarah's Home, after the demo's Skip to 7 PM.
+    pg = new_page()
+    try:
+        pg.goto(B + "/app/guardian"); pg.wait_for_timeout(900)
+        pg.get_by_role("button", name="Demo mode", exact=False).click()
+        pg.get_by_role("button", name="Skip to 7 PM for the evening recap").click()
+        pg.goto(B + "/app/guardian"); pg.locator("#recap").wait_for(timeout=5000); pg.wait_for_timeout(600)
+        pg.add_script_tag(path=AXE)
+        r = pg.evaluate("axe.run('#recap', {runOnly: {type: 'tag', values: ['wcag2a','wcag2aa','wcag21a','wcag21aa']}}).then(r => r.violations.map(v => v.impact + ' ' + v.id + ' (' + v.nodes.length + '): ' + v.nodes.map(n => n.target.join(' ')).join(' | ')))")
+        out.append(f"/app/guardian (evening recap card): {'OK' if not r else ''}")
+        out += ["   " + x for x in r]
+    except Exception as e:
+        out.append(f"/app/guardian (evening recap card): ERR {str(e).splitlines()[0][:120]}")
+    pg.close()
     print("\n".join(out))
     b.close()
+    bad = [x for x in out if x.startswith("   ") or ": ERR" in x]
+    print(f"\n{len(pages) + 1} screens audited, {len(bad)} problem line(s)")
+    sys.exit(1 if bad else 0)

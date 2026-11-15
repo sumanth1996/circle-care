@@ -1,0 +1,78 @@
+# CC-194: unit tests plus the browser and accessibility suites on every pull request to main.
+# GitHub's runners can install Chromium; the Claude build environment can't.
+name: Browser tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Install Playwright and Chromium
+        run: |
+          python -m pip install playwright==1.49.1
+          python -m playwright install --with-deps chromium
+
+      - name: Serve the production build
+        id: serve
+        run: |
+          npx vite preview --port 4173 --strictPort > preview.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
+          cat preview.log; exit 1
+
+      - name: End-to-end scenarios (e2e.py)
+        run: python tests/e2e/e2e.py
+
+      - name: Family chat and evening recap (everyday.py)
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: python tests/e2e/everyday.py
+
+      - name: Accessibility audit (a11y.py)
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: python tests/e2e/a11y.py
+
+      - name: Preview server log
+        if: failure()
+        run: cat preview.log || true
+
+      - name: Keep screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-screenshots
+          path: tests/e2e/out/
+          retention-days: 7
+          if-no-files-found: ignore
