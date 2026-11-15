@@ -2374,6 +2374,8 @@
       
         
       
+        
+      
     
     
     
@@ -2699,6 +2701,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2984,7 +3014,7 @@ Status: IN PROGRESS — internal checks done on the browser prototype (see §3).
 <td>Content Security Policy</td>
 <td>Added to production builds via a Vite plugin that injects a <code>&lt;meta&gt;</code> CSP and <code>no-referrer</code> (<code>vite.config.ts</code>): <code>default-src 'self'</code>, <code>script-src 'self'</code>, <code>object-src 'none'</code>, <code>base-uri 'self'</code>, <code>form-action 'self'</code>, <code>connect-src 'self'</code></td>
 <td><code>vite.config.ts</code></td>
-<td>Meta CSP cannot set <code>frame-ancestors</code>, so anti-framing needs an HTTP header (code comment corrected). <code>style-src 'unsafe-inline'</code> remains</td>
+<td>Meta CSP cannot set <code>frame-ancestors</code>, so the server sends the policy as an HTTP header with <code>frame-ancestors 'none'</code> (<code>server/app.ts</code>). <code>style-src 'unsafe-inline'</code> remains</td>
 </tr>
 <tr>
 <td>Dependency audit</td>
@@ -3137,7 +3167,7 @@ Status: IN PROGRESS — internal checks done on the browser prototype (see §3).
 <ul>
 <li>[ ] Commission the external pen test once a staging environment exists (not yet commissioned).</li>
 <li>[ ] Commit axe-core and Playwright test files.</li>
-<li>[ ] Add CSP as an HTTP header with <code>frame-ancestors 'none'</code>.</li>
+<li>[x] Add CSP as an HTTP header with <code>frame-ancestors 'none'</code> (<code>server/app.ts</code>).</li>
 <li>[ ] Add CI security checks.</li>
 </ul>
 

@@ -2396,6 +2396,8 @@
       
         
       
+        
+      
     
     
     
@@ -2721,6 +2723,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2892,7 +2922,7 @@
 
 <h1 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">&para;</a></h1>
 <p>Notion story: CC-18 Define role permissions (matrix)
-Status: Implemented in the prototype (<code>src/data/policy.ts</code>, enforced through <code>can()</code> — CC-19) and covered by <code>src/__tests__/policy.test.ts</code>. Production server-side enforcement is <strong>not built</strong> (no backend exists yet).</p>
+Status: Implemented in the prototype (<code>src/data/policy.ts</code>, enforced through <code>can()</code> — CC-19) and covered by <code>src/__tests__/policy.test.ts</code>. Production server-side enforcement is <strong>not built</strong>: the accounts server exists, but care-circle data has no API yet (CC-202).</p>
 <p>This page is a readable rendering of the <code>MATRIX</code> constant as of 2026-10-19. If the code changes, the code wins — regenerate this table.</p>
 <h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">&para;</a></h2>
 <table>
@@ -3176,7 +3206,7 @@ Status: Implemented in the prototype (<code>src/data/policy.ts</code>, enforced 
 <li><strong>Approvals are proposable by an off-shift pro</strong> (<code>"pro"</code> listed explicitly), unlike meds/tasks.</li>
 </ol>
 <h2 id="coverage-gaps-prototype">Coverage gaps (prototype)<a class="headerlink" href="#coverage-gaps-prototype" title="Permanent link">&para;</a></h2>
-<p>Closed on 2026-10-19. Every data-changing store action is now checked:</p>
+<p>Closed on 2026-10-19 for the actions below. The CC-10 threat model (2026-11-15) found three that are still open: <code>acceptInvite</code> has no check, <code>invite</code> accepts any role from the caller, and the review queue at <code>/app/review</code> has no route guard. The demo controls (<code>skipAhead</code>, <code>simulate</code>, <code>resetDemo</code>, persona switching) are unguarded on purpose. All of these move to the server in CC-202.</p>
 <table>
 <thead>
 <tr>

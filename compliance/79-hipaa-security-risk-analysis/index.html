@@ -2357,6 +2357,8 @@
       
         
       
+        
+      
     
     
     
@@ -2669,6 +2671,34 @@
     
   
     Code review: Sprint 14, data inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, threat model
   
 
     
@@ -3089,11 +3119,11 @@ Status: Draft — requires review by a designated security officer. No security 
 <td>R15</td>
 <td>XSS / injected script</td>
 <td>A1</td>
-<td>P: CSP on production build (meta tag)</td>
+<td>P: CSP on production build (meta tag) and as an HTTP header from the server with <code>frame-ancestors 'none'</code></td>
 <td>2</td>
 <td>4</td>
 <td>8 Med</td>
-<td>CSP as header incl. <code>frame-ancestors</code>; remove <code>'unsafe-inline'</code> styles if feasible</td>
+<td>Remove <code>'unsafe-inline'</code> styles if feasible; one shared CSP list</td>
 <td>TBD</td>
 </tr>
 <tr>
@@ -3205,7 +3235,7 @@ Status: Draft — requires review by a designated security officer. No security 
 </tr>
 <tr>
 <td>Transmission security</td>
-<td>Planned TLS; no backend yet</td>
+<td>Accounts API over HTTPS with <code>Secure</code> cookies; database TLS without a certificate check (CC-203); care data has no backend yet</td>
 </tr>
 </tbody>
 </table>

@@ -2437,6 +2437,8 @@
       
         
       
+        
+      
     
     
     
@@ -2762,6 +2764,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2990,7 +3020,7 @@
 <p>This page explains the security and privacy controls that are <strong>real code in the prototype</strong>, how they work, and what a production system still needs. Detailed working documents: <a href="../../../security/10-threat-model/">threat model (CC-10)</a>, <a href="../../../security/permission-matrix/">permission matrix (CC-18)</a>, <a href="../../../security/78-security-test-plan/">security test plan (CC-78)</a>, <a href="../../../security/34-incident-response-runbook/">incident response runbook (CC-34)</a>, <a href="../../../compliance/79-hipaa-security-risk-analysis/">HIPAA risk analysis (CC-79)</a>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Prototype, not a compliant system</p>
-<p>The prototype demonstrates privacy-by-design with fictional data in one browser. It has not been security-reviewed or penetration-tested, has no backend, and must not be used with real health information.</p>
+<p>The prototype demonstrates privacy-by-design with fictional data in one browser. Care-circle data lives only in the browser. The accounts server accepts real names, emails and phone numbers, but outside production it refuses real SSNs, bank accounts and cards. It has not been security-reviewed or penetration-tested and must not be used with real health information.</p>
 </div>
 <h2 id="control-summary">Control summary<a class="headerlink" href="#control-summary" title="Permanent link">&para;</a></h2>
 <table>
@@ -3011,31 +3041,31 @@
 </tr>
 <tr>
 <td>Encryption in transit</td>
-<td>N/A (no network calls)</td>
+<td>Care data: N/A (stays in the browser). Accounts API: HTTPS with <code>Secure</code> cookies; the database connection uses TLS without certificate checks (CC-203)</td>
 <td>TLS 1.2+ everywhere; certificate pinning in native apps</td>
 <td>CC-26</td>
 </tr>
 <tr>
 <td>Authentication</td>
-<td>Simulated password + 6-digit MFA, 5-attempt lockout, simulated biometrics</td>
+<td>Browser demo: simulated password, 6-digit MFA with a fixed code, simulated biometrics. Accounts server: scrypt passwords, 5-failure lockout, per-address sign-in limit, no second factor yet (CC-200)</td>
 <td>Real MFA / passkeys, server rate limiting, device binding</td>
 <td>CC-11 – 13</td>
 </tr>
 <tr>
 <td>Session management</td>
-<td>Inactivity lock (15 min; elder optional), sign out everywhere (local)</td>
+<td>Browser: inactivity lock (15 min; elder optional), sign out everywhere (local). Server: hashed session tokens, 30-minute idle and 12-hour limits, sign-out of the current session; no sign out everywhere yet (CC-201)</td>
 <td>Server sessions with revocation, push-token revocation</td>
 <td>CC-14, CC-27</td>
 </tr>
 <tr>
 <td>Authorisation</td>
-<td>One matrix, one <code>can()</code> check on every data-changing action</td>
+<td>One matrix and one <code>can()</code> check, called by most data-changing actions in the browser (gaps in the threat model, CC-10)</td>
 <td>Identical policy enforced in the API</td>
 <td>CC-18, CC-19</td>
 </tr>
 <tr>
 <td>Audit</td>
-<td>SHA-256 hash-chained log with integrity check</td>
+<td>Browser: SHA-256 hash-chained log with integrity check. Server: <code>audit_events</code> table where a trigger blocks changes and deletes, and a masked export command</td>
 <td>Server-side append-only log, externally anchored, 6-year retention</td>
 <td>CC-28, CC-29</td>
 </tr>
@@ -3077,8 +3107,8 @@
 </tr>
 <tr>
 <td>Browser hardening</td>
-<td>CSP <code>&lt;meta&gt;</code> tag on production builds; <code>no-referrer</code></td>
-<td>CSP and <code>frame-ancestors</code> as HTTP headers; HSTS</td>
+<td>CSP <code>&lt;meta&gt;</code> tag on production builds; CSP, <code>frame-ancestors 'none'</code>, <code>X-Frame-Options: DENY</code> and <code>no-referrer</code> as HTTP headers from the server; HSTS in production only</td>
+<td>HSTS on every deployed copy; one shared CSP list</td>
 <td>CC-78</td>
 </tr>
 <tr>
@@ -3100,7 +3130,7 @@
 <ol>
 <li>On first use the app generates an <strong>AES-GCM 256-bit key</strong> with <code>crypto.subtle.generateKey(…, extractable = false, ["encrypt", "decrypt"])</code> and stores the <code>CryptoKey</code> object in IndexedDB (<code>circle-care-keys</code>). Because it is <strong>non-extractable</strong>, no JavaScript — including the app's own — can read or export the raw key bytes.</li>
 <li>Every save serialises the state to JSON and encrypts it with a <strong>fresh random 12-byte IV</strong>. The result is stored as <code>enc:v1:&lt;base64 iv&gt;:&lt;base64 ciphertext&gt;</code> in <code>localStorage["circle-care-demo"]</code>.</li>
-<li>Loading decrypts with the same key. GCM authentication means a modified ciphertext or a missing key fails closed: the app starts a fresh demo instead of reading tampered data.</li>
+<li>Loading decrypts with the same key. GCM authentication means a modified ciphertext or a missing key can't be read: the app starts a fresh demo instead, without telling anyone. A value without the <code>enc:v1:</code> prefix is still read as plain JSON (threat C2-T1).</li>
 <li>Documents are encrypted the same way in IndexedDB <code>circle-care-files</code>.</li>
 <li>If Web Crypto or IndexedDB is unavailable, the prototype falls back to plain <code>localStorage</code> (demo convenience only).</li>
 </ol>
@@ -3156,7 +3186,7 @@ prev(n)     = hash(n − 1)
 </tr>
 <tr>
 <td>Enforcement</td>
-<td>Every data-changing store action calls <code>guard()</code>; refusals change nothing and write a <code>denied</code> audit entry. Read access in the UI uses <code>AccessGuard</code> / <code>useCan</code>, which call the same <code>can()</code></td>
+<td>Data-changing store actions call <code>guard()</code>, except <code>acceptInvite</code>, <code>invite</code>'s role and the demo controls (see the threat model); refusals change nothing and write a <code>denied</code> audit entry. Read access in the UI uses <code>AccessGuard</code> / <code>useCan</code>, which call the same <code>can()</code></td>
 </tr>
 </tbody>
 </table>
@@ -3330,7 +3360,7 @@ img-src 'self' data: blob: https://images.unsplash.com;
 frame-src blob:; worker-src 'self'; connect-src 'self';
 object-src 'none'; base-uri 'self'; form-action 'self'
 </code></pre></div>
-<p>plus <code>&lt;meta name="referrer" content="no-referrer"&gt;</code>. A <code>&lt;meta&gt;</code> CSP cannot set <code>frame-ancestors</code>, so <strong>clickjacking protection needs an HTTP header from the host</strong> (production backlog, CC-78).</p>
+<p>plus <code>&lt;meta name="referrer" content="no-referrer"&gt;</code>. A <code>&lt;meta&gt;</code> CSP cannot set <code>frame-ancestors</code>, so the server also sends the policy as an HTTP header with <code>frame-ancestors 'none'</code>, plus <code>X-Frame-Options: DENY</code> (<code>server/app.ts</code>). The two CSP lists are kept separately and must be changed together.</p>
 <h2 id="privacy-shield-and-session-lock">Privacy shield and session lock<a class="headerlink" href="#privacy-shield-and-session-lock" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Privacy shield</strong> (<code>PrivacyShield</code> in <code>Extras.tsx</code>): when the page becomes hidden (<code>visibilitychange</code>, <code>pagehide</code>), a blank cover with the logo replaces the screen so the app-switcher snapshot shows no health data.</li>
@@ -3440,7 +3470,7 @@ object-src 'none'; base-uri 'self'; form-action 'self'
 <li><strong>Breach response</strong> — <a href="../../../security/34-incident-response-runbook/">incident response runbook</a> with assigned roles and a tabletop exercise.</li>
 <li>A third-party <strong>penetration test</strong> (OWASP ASVS L2 / MASVS) — <a href="../../../security/78-security-test-plan/">security test plan</a>.</li>
 <li>A designated <strong>security officer</strong> owning the <a href="../../../compliance/79-hipaa-security-risk-analysis/">risk analysis</a>.</li>
-<li>HTTP security headers (<code>frame-ancestors</code>, HSTS) from the host.</li>
+<li>HSTS on every deployed copy. The server already sends the CSP, <code>frame-ancestors</code> and the other headers; the staging deploy sends no HSTS.</li>
 </ol>
 <h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
 <ul>

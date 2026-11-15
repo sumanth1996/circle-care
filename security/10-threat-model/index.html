@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#threat-model-stride-mvp-architecture" class="md-skip">
+        <a href="#threat-model-stride-circle-care-as-built" class="md-skip">
           Skip to content
         </a>
       
@@ -2063,7 +2063,7 @@
   <a href="#2-data-flow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Data flow diagram
+        2. Data-flow diagram
       
     </span>
   </a>
@@ -2071,22 +2071,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-threats" class="md-nav__link">
+  <a href="#3-how-risks-are-rated" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Threats
+        3. How risks are rated
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. Threats">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-threats-by-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Threats by component
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Threats by component">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#spoofing" class="md-nav__link">
+  <a href="#c1-web-app" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spoofing
+        C1 Web app
       
     </span>
   </a>
@@ -2094,10 +2105,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tampering" class="md-nav__link">
+  <a href="#c2-demo-store-browser" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tampering
+        C2 Demo store (browser)
       
     </span>
   </a>
@@ -2105,10 +2116,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#repudiation" class="md-nav__link">
+  <a href="#c3-express-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Repudiation
+        C3 Express API
       
     </span>
   </a>
@@ -2116,10 +2127,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#information-disclosure" class="md-nav__link">
+  <a href="#c4-sign-in-sessions-and-mfa" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Information disclosure
+        C4 Sign-in, sessions and MFA
       
     </span>
   </a>
@@ -2127,10 +2138,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#denial-of-service" class="md-nav__link">
+  <a href="#c5-postgres" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Denial of service
+        C5 Postgres
       
     </span>
   </a>
@@ -2138,10 +2149,54 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#elevation-of-privilege" class="md-nav__link">
+  <a href="#c6-payment-vault" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Elevation of privilege
+        C6 Payment vault
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c7-audit-log-and-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C7 Audit log and export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c8-github-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C8 GitHub Actions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c9-github-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C9 GitHub Pages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c10-hosting-and-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C10 Hosting and config
       
     </span>
   </a>
@@ -2154,10 +2209,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-prototype-vs-production-summary" class="md-nav__link">
+  <a href="#5-high-risks-and-their-stories" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Prototype vs. production summary
+        5. High risks and their stories
       
     </span>
   </a>
@@ -2165,10 +2220,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-human-actions" class="md-nav__link">
+  <a href="#6-what-changed-since-the-october-draft" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Human actions
+        6. What changed since the October draft
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-human-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Human actions
       
     </span>
   </a>
@@ -2386,6 +2452,8 @@
   
     
     
+      
+        
       
         
       
@@ -2732,6 +2800,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2780,7 +2876,7 @@
   <a href="#2-data-flow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Data flow diagram
+        2. Data-flow diagram
       
     </span>
   </a>
@@ -2788,22 +2884,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-threats" class="md-nav__link">
+  <a href="#3-how-risks-are-rated" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Threats
+        3. How risks are rated
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. Threats">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-threats-by-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Threats by component
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Threats by component">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#spoofing" class="md-nav__link">
+  <a href="#c1-web-app" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spoofing
+        C1 Web app
       
     </span>
   </a>
@@ -2811,10 +2918,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tampering" class="md-nav__link">
+  <a href="#c2-demo-store-browser" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tampering
+        C2 Demo store (browser)
       
     </span>
   </a>
@@ -2822,10 +2929,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#repudiation" class="md-nav__link">
+  <a href="#c3-express-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Repudiation
+        C3 Express API
       
     </span>
   </a>
@@ -2833,10 +2940,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#information-disclosure" class="md-nav__link">
+  <a href="#c4-sign-in-sessions-and-mfa" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Information disclosure
+        C4 Sign-in, sessions and MFA
       
     </span>
   </a>
@@ -2844,10 +2951,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#denial-of-service" class="md-nav__link">
+  <a href="#c5-postgres" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Denial of service
+        C5 Postgres
       
     </span>
   </a>
@@ -2855,10 +2962,54 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#elevation-of-privilege" class="md-nav__link">
+  <a href="#c6-payment-vault" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Elevation of privilege
+        C6 Payment vault
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c7-audit-log-and-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C7 Audit log and export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c8-github-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C8 GitHub Actions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c9-github-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C9 GitHub Pages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c10-hosting-and-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C10 Hosting and config
       
     </span>
   </a>
@@ -2871,10 +3022,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-prototype-vs-production-summary" class="md-nav__link">
+  <a href="#5-high-risks-and-their-stories" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Prototype vs. production summary
+        5. High risks and their stories
       
     </span>
   </a>
@@ -2882,10 +3033,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-human-actions" class="md-nav__link">
+  <a href="#6-what-changed-since-the-october-draft" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Human actions
+        6. What changed since the October draft
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-human-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Human actions
       
     </span>
   </a>
@@ -2912,380 +3074,1096 @@
   
 
 
-<h1 id="threat-model-stride-mvp-architecture">Threat Model (STRIDE) — MVP Architecture<a class="headerlink" href="#threat-model-stride-mvp-architecture" title="Permanent link">&para;</a></h1>
-<p>Notion story: CC-10 Threat model the MVP architecture
-Status: DRAFT v1 — written by the product owner on 2026-10-19 against the <strong>planned</strong> MVP architecture. The prototype has no backend; production components below are not built. Needs review by an engineer with security experience and the designated security officer (CC-79).</p>
+<h1 id="threat-model-stride-circle-care-as-built">Threat Model (STRIDE): Circle Care as built<a class="headerlink" href="#threat-model-stride-circle-care-as-built" title="Permanent link">&para;</a></h1>
+<p>Notion story: CC-10 Threat model for MVP architecture
+Status: DRAFT v3, reviewed against <code>main</code> (cc3e577) on 2026-11-15. It replaces the October 19 draft, which was written against a planned architecture and said the prototype had no backend. v3 adds availability threats and the Lead Architect's corrections.</p>
+<div class="admonition warning">
+<p class="admonition-title">Still needs human security review</p>
+<p>This model was written and checked by the build team's agents. Before any real data is used, it still needs review by <strong>an engineer with security experience</strong> and sign-off by the <strong>designated security officer</strong> (CC-79). It is not a penetration test (CC-78).</p>
+</div>
+<p>All care data in Circle Care today is fictional (the browser demo). The accounts server accepts real names, emails and phone numbers, but outside production it refuses real SSNs, bank accounts and cards (CC-182). Risks below are rated for a <strong>production launch with real people</strong>, which is what the gaps would cost then.</p>
 <h2 id="1-scope">1. Scope<a class="headerlink" href="#1-scope" title="Permanent link">&para;</a></h2>
-<p>In scope: mobile/web clients (elder, caregiver, guardian), API, authentication and MFA, primary database, object storage for documents, notification providers (push, SMS, email), the internal review console for legal documents, pilot/research store.
-Out of scope for v1: integrations with EHRs/pharmacies, wearables, payment.</p>
-<h2 id="2-data-flow-diagram">2. Data flow diagram<a class="headerlink" href="#2-data-flow-diagram" title="Permanent link">&para;</a></h2>
+<p>In scope, as built on <code>main</code>:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Component</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>Web app</td>
+<td>React PWA (<code>src/</code>), service worker (<code>public/sw.js</code>), production CSP, served by the host as static files (<code>server/index.ts</code>)</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>Demo store</td>
+<td>Care-circle data, alerts, permission checks, access log, files and export, all in the browser (<code>src/data/store.tsx</code>, <code>src/lib/secureStorage.ts</code>)</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>Express API</td>
+<td>Accounts, profile, SSN and photo routes (<code>server/app.ts</code>, <code>server/account.ts</code>)</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>Sign-in, sessions and MFA</td>
+<td>Passwords, lockout, session cookies (<code>server/auth.ts</code>); the MFA step exists only in the browser demo</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>Postgres</td>
+<td>Persona tables, sessions, payment tokens, audit table (<code>server/migrations/001_init.sql</code>, <code>server/db.ts</code>)</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>Payment vault</td>
+<td>Simulated vault outside production and the payment-method routes (<code>server/vault.ts</code>, <code>server/payments.ts</code>)</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>Audit log and export</td>
+<td>Server audit events, masked views and the export command (<code>server/audit.ts</code>, <code>server/cli/audit-export.ts</code>)</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>GitHub Actions</td>
+<td>The Browser tests workflow on every pull request (<code>.github/workflows/browser-tests.yml</code>)</td>
+</tr>
+<tr>
+<td>C9</td>
+<td>GitHub Pages</td>
+<td>This wiki, published by hand with <code>mkdocs gh-deploy</code></td>
+</tr>
+<tr>
+<td>C10</td>
+<td>Hosting and config</td>
+<td>Replit workspace and autoscale deploy running <code>APP_ENV=staging</code> (<code>.replit</code>), environment keys (<code>server/config.ts</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Out of scope: integrations not built (pharmacy, EHR, wearables), a real Stripe integration (production mode answers 503 for new payment methods), native apps. Real push, SMS and email providers aren't built, but <strong>alert delivery is in scope</strong>: today an alert never leaves the device that raised it (C2-D1).</p>
+<h2 id="2-data-flow-diagram">2. Data-flow diagram<a class="headerlink" href="#2-data-flow-diagram" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart LR
-  subgraph Devices["Untrusted: user devices"]
-    E["Elder app (PWA / mobile)"]
-    C["Caregiver app"]
-    G["Guardian app"]
+  subgraph Device["Untrusted: the person's browser"]
+    UI["C1 Web app (PWA)"]
+    STORE[("C2 Demo store&lt;br/&gt;localStorage + IndexedDB&lt;br/&gt;fictional care data and alerts")]
+    UI &lt;--&gt; STORE
   end
-  subgraph Internal["Internal staff"]
-    R["Review console (legal docs)"]
+  subgraph Third["Trust boundary: third parties"]
+    FONTS["Google Fonts"]
+    IMG["Unsplash images"]
   end
-  subgraph Cloud["Trust boundary: Circle Care cloud"]
-    AUTH["Auth + MFA service"]
-    API["API + policy engine (can())"]
-    RULES["Rules / escalation worker"]
-    DB[("Database: circle data + audit chain")]
-    OBJ[("Object storage: documents")]
-    RES[("Pilot / research store (no PHI)")]
+  subgraph Host["Trust boundary: Replit host (C10)"]
+    STATIC["Static app files"]
+    API["C3 Express API&lt;br/&gt;headers, CSRF header check"]
+    AUTH["C4 Sign-in and sessions"]
+    VAULT["C6 Simulated vault&lt;br/&gt;(not mounted in production)"]
+    PAY["C6 Payment-method routes"]
+    AUD["C7 Audit writer"]
   end
-  subgraph Vendors["Third parties (BAA where PHI possible)"]
-    PUSH["APNs / FCM"]
-    SMS["SMS provider"]
-    MAIL["Email provider"]
-    MON["Error monitoring"]
+  subgraph Data["Trust boundary: database provider"]
+    DB[("C5 Postgres&lt;br/&gt;persona tables, sessions,&lt;br/&gt;vault_tokens, audit_events")]
+  end
+  subgraph Ops["Trust boundary: operators"]
+    CLI["C7 Audit export command"]
+  end
+  subgraph Work["Trust boundary: Replit workspace"]
+    WS["Source, Secrets and&lt;br/&gt;public dev server"]
+  end
+  subgraph GitHub["Trust boundary: GitHub"]
+    PR["Pull requests"]
+    CI["C8 Actions: Browser tests"]
+    PAGES["C9 Pages: public wiki"]
   end
 
-  E -- TLS --&gt; AUTH
-  C -- TLS --&gt; AUTH
-  G -- TLS --&gt; AUTH
-  E -- TLS + session --&gt; API
-  C -- TLS + session --&gt; API
-  G -- TLS + session --&gt; API
-  R -- TLS + staff SSO --&gt; API
+  STATIC -- "HTML, JS, service worker" --&gt; UI
+  UI -- "style sheet and fonts" --&gt; FONTS
+  UI -- "images" --&gt; IMG
+  UI -- "HTTPS, cookie + X-Requested-With" --&gt; API
+  API --&gt; AUTH
+  UI -- "Step 1: card or bank numbers" --&gt; VAULT
+  VAULT -- "Step 2: token and last four" --&gt; UI
+  UI -- "Step 3: token" --&gt; PAY
+  VAULT -- "vault_tokens" --&gt; DB
+  AUTH --&gt; DB
   API --&gt; DB
-  API --&gt; OBJ
-  API --&gt; RES
-  RULES --&gt; DB
-  RULES -- "PHI-free text" --&gt; PUSH
-  RULES -- "PHI-free text" --&gt; SMS
-  RULES -- "PHI-free digest" --&gt; MAIL
-  API -- "scrubbed errors" --&gt; MON</code></pre>
-<p>Trust boundaries: device ↔ cloud; staff ↔ cloud; cloud ↔ each vendor.</p>
-<h2 id="3-threats">3. Threats<a class="headerlink" href="#3-threats" title="Permanent link">&para;</a></h2>
-<p>Legend for status: <strong>Demo</strong> = demonstrated in the browser prototype; <strong>Prod</strong> = production work not started.</p>
-<h3 id="spoofing">Spoofing<a class="headerlink" href="#spoofing" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Threat</th>
-<th>Component</th>
-<th>Mitigation</th>
-<th>Story</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>S1</td>
-<td>Attacker signs in as a guardian using stolen password</td>
-<td>Auth</td>
-<td>MFA required for guardian and caregiver; lockout after 5 wrong codes for 15 minutes with a security notice</td>
-<td>CC-12</td>
-<td>Demo (code <code>482913</code>; lockout alert in <code>lockedOut</code>). Prod: real TOTP/passkeys, rate limiting server-side</td>
-</tr>
-<tr>
-<td>S2</td>
-<td>Someone claims to be a guardian without legal authority</td>
-<td>Review console</td>
-<td>Legal documents reviewed before guardian permissions apply; rejection reasons recorded</td>
-<td>CC-23/24</td>
-<td>Demo (<code>/app/review</code>). Prod: reviewer training, identity verification vendor</td>
-</tr>
-<tr>
-<td>S3</td>
-<td>Stolen/shared caregiver phone used by another person</td>
-<td>Clients</td>
-<td>Session lock after inactivity (default 15 min for caregiver/guardian); Sign out everywhere</td>
-<td>CC-14, CC-27</td>
-<td>Demo. Prod: revoke server sessions and push tokens</td>
-</tr>
-<tr>
-<td>S4</td>
-<td>Forged invite link</td>
-<td>Invite</td>
-<td>Single-use, expiring invite tokens; role set by inviter only</td>
-<td>CC-17</td>
-<td>Prod</td>
-</tr>
-<tr>
-<td>S5</td>
-<td>Spoofed SMS appearing to come from Circle Care (phishing)</td>
-<td>SMS</td>
-<td>Registered sender; messages never ask for codes or links to sign in; educate users</td>
-<td>CC-31</td>
-<td>Prod</td>
-</tr>
-</tbody>
-</table>
-<h3 id="tampering">Tampering<a class="headerlink" href="#tampering" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Threat</th>
-<th>Component</th>
-<th>Mitigation</th>
-<th>Story</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>T1</td>
-<td>Client bypasses UI to perform disallowed action</td>
-<td>API</td>
-<td>Policy check on every request server-side using the same matrix</td>
-<td>CC-19</td>
-<td>Demo in data layer only; several actions not yet guarded (see permission matrix "Coverage gaps"). Prod: API enforcement</td>
-</tr>
-<tr>
-<td>T2</td>
-<td>Insider edits or deletes audit entries to hide access</td>
-<td>DB</td>
-<td>Hash-chained audit log; <code>verifyChain()</code> detects alteration; write-once storage in prod</td>
-<td>CC-28</td>
-<td>Demo (<code>src/data/audit.ts</code>, tests in <code>audit.test.ts</code>). Prod: append-only store, external anchor</td>
-</tr>
-<tr>
-<td>T3</td>
-<td>Malicious file upload (disguised executable)</td>
-<td>Object storage</td>
-<td>Check content signature (PDF/PNG/JPEG), 10 MB limit; malware scan</td>
-<td>CC-67</td>
-<td>Demo (<code>inspectUpload</code>). Prod: server-side scan</td>
-</tr>
-<tr>
-<td>T4</td>
-<td>Local storage altered on device</td>
-<td>Client</td>
-<td>AES-GCM authenticated encryption; tampered data fails to decrypt</td>
-<td>CC-26</td>
-<td>Demo</td>
-</tr>
-<tr>
-<td>T5</td>
-<td>Caregiver fakes visit check-in time</td>
-<td>API</td>
-<td>Server timestamps; location confirmed once at the door; manual reason recorded</td>
-<td>CC-56</td>
-<td>Demo (manualReason). Prod: server time, location policy (CC-8 Q6)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="repudiation">Repudiation<a class="headerlink" href="#repudiation" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Threat</th>
-<th>Mitigation</th>
-<th>Story</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>R1</td>
-<td>Member denies viewing records</td>
-<td>Every view logged and visible to elder/guardian</td>
-<td>CC-28, CC-29</td>
-<td>Demo (<code>logView</code>, 10-minute dedupe per resource)</td>
-</tr>
-<tr>
-<td>R2</td>
-<td>Guardian denies approving a med change</td>
-<td>Approval with <code>decidedAt</code>, actor in audit; elder notified</td>
-<td>CC-64, CC-65</td>
-<td>Demo</td>
-</tr>
-<tr>
-<td>R3</td>
-<td>Caregiver denies giving a dose</td>
-<td>Dose <code>by</code>, <code>at</code>, <code>verified</code> flag</td>
-<td>CC-41</td>
-<td>Demo</td>
-</tr>
-</tbody>
-</table>
-<h3 id="information-disclosure">Information disclosure<a class="headerlink" href="#information-disclosure" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Threat</th>
-<th>Component</th>
-<th>Mitigation</th>
-<th>Story</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>I1</td>
-<td>Lock-screen notification reveals a medicine or condition</td>
-<td>Push/SMS</td>
-<td>Generic titles only ("You have a reminder from Circle Care"); details in app after unlock</td>
-<td>CC-31</td>
-<td>Demo (<code>Alert.title</code> rule)</td>
-</tr>
-<tr>
-<td>I2</td>
-<td>Caregiver browses records off shift</td>
-<td>API</td>
-<td><code>pro@shift</code> rule</td>
-<td>CC-18/19</td>
-<td>Demo + tested</td>
-</tr>
-<tr>
-<td>I3</td>
-<td>Lost device exposes data</td>
-<td>Client</td>
-<td>Device encryption with non-extractable key; session lock; Sign out everywhere; close circle destroys key</td>
-<td>CC-26, CC-27, CC-14</td>
-<td>Demo</td>
-</tr>
-<tr>
-<td>I4</td>
-<td>Export file leaked</td>
-<td>Export</td>
-<td>Passphrase-encrypted export (PBKDF2 250k → AES-256-GCM); export logged; re-auth before export</td>
-<td>CC-32</td>
-<td>Demo</td>
-</tr>
-<tr>
-<td>I5</td>
-<td>Family member bulk-views records (curiosity or coercion)</td>
-<td>API/rules</td>
-<td>Suspicious access detection: 8+ views in 5 min or 3+ denials in 10 min → guardian alert</td>
-<td>CC-35</td>
-<td>Demo (<code>simulate("suspicious-access")</code>, <code>rules.test.ts</code>)</td>
-</tr>
-<tr>
-<td>I6</td>
-<td>PHI in vendor logs (error monitoring, email)</td>
-<td>Vendors</td>
-<td>Scrub payloads; PHI-free email digest; BAAs where unavoidable</td>
-<td>CC-30, CC-83</td>
-<td>Prod</td>
-</tr>
-<tr>
-<td>I7</td>
-<td>XSS steals session/data</td>
-<td>Clients</td>
-<td>Content Security Policy on production build (<code>script-src 'self'</code>, <code>object-src 'none'</code>, <code>frame-src blob:</code> limits what the app itself can embed), no-referrer</td>
-<td>CC-78</td>
-<td>Demo (CSP injected as a <code>&lt;meta&gt;</code> tag in <code>vite.config.ts</code>). Note: the code comment says "nothing can frame the app", but <code>frame-ancestors</code> is not in the policy and is ignored in <code>&lt;meta&gt;</code> CSP anyway — clickjacking protection needs an HTTP header (<code>frame-ancestors 'none'</code> / <code>X-Frame-Options</code>). Prod</td>
-</tr>
-<tr>
-<td>I8</td>
-<td>Document screenshots shared outside circle</td>
-<td>Docs viewer</td>
-<td>Watermark with viewer name and time; each view logged</td>
-<td>CC-67</td>
-<td>Demo</td>
-</tr>
-<tr>
-<td>I9</td>
-<td>Pilot research data re-identifies a family</td>
-<td>Research store</td>
-<td>Separate store, minimal fields, health-word scrub, cohort suppression &lt;5</td>
-<td>CC-74/76/77</td>
-<td>Demo</td>
-</tr>
-<tr>
-<td>I10</td>
-<td>Reviewer sees more than legal docs</td>
-<td>Review console</td>
-<td>Reviewer role limited to <code>docs.legal</code> review</td>
-<td>CC-24</td>
-<td>Demo; Prod: separate app</td>
-</tr>
-</tbody>
-</table>
-<h3 id="denial-of-service">Denial of service<a class="headerlink" href="#denial-of-service" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Threat</th>
-<th>Mitigation</th>
-<th>Story</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>D1</td>
-<td>Push provider outage delays SOS</td>
-<td>SMS fallback (<code>via: "sms-fallback"</code>); escalation chain advances every <code>escalationDelayMin</code> (default 2)</td>
-<td>CC-46–48</td>
-<td>Demo (state only); Prod: real multi-channel delivery, monitoring</td>
-</tr>
-<tr>
-<td>D2</td>
-<td>Alert storm causes guardian to mute app</td>
-<td>De-duplication keys on alerts; quiet hours; critical bypass for SOS only</td>
-<td>CC-50, CC-63</td>
-<td>Demo</td>
-</tr>
-<tr>
-<td>D3</td>
-<td>Account lockout used to block a guardian during emergency</td>
-<td>Lockout limited to 15 min; SOS respond path doesn't require re-auth beyond unlock</td>
-<td>CC-12</td>
-<td>Partial; review</td>
-</tr>
-</tbody>
-</table>
-<h3 id="elevation-of-privilege">Elevation of privilege<a class="headerlink" href="#elevation-of-privilege" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Threat</th>
-<th>Mitigation</th>
-<th>Story</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>E1</td>
-<td>Family member promotes self to guardian</td>
-<td>Only elder/guardian can invite/revoke; guardian role requires verification</td>
-<td>CC-18, CC-24</td>
-<td>Demo</td>
-</tr>
-<tr>
-<td>E2</td>
-<td>Revoked or expired member keeps access</td>
-<td>Status check in <code>roleOf()</code>; time-bound access auto-revokes</td>
-<td>CC-25</td>
-<td>Demo + tested</td>
-</tr>
-<tr>
-<td>E3</td>
-<td>Pending member (invited, not accepted) acts</td>
-<td><code>status !== "active"</code> → no access</td>
-<td>CC-17</td>
-<td>Demo + tested</td>
-</tr>
-<tr>
-<td>E4</td>
-<td>Staff/admin access to all circles</td>
-<td>Break-glass only, logged, reviewed; no standing access</td>
-<td>CC-79</td>
-<td>Prod</td>
-</tr>
-</tbody>
-</table>
-<h2 id="4-prototype-vs-production-summary">4. Prototype vs. production summary<a class="headerlink" href="#4-prototype-vs-production-summary" title="Permanent link">&para;</a></h2>
-<p><strong>Demonstrated (browser, fictional data):</strong> permission matrix and pro@shift; sharing pause; hash-chained audit; device encryption; encrypted file store with signature checks; passphrase export; PHI-free alert titles; session lock; lockout notice; Sign out everywhere (state only); suspicious access rules; guardian document review queue; CSP on build.</p>
-<p><strong>Production work required:</strong> API with server-side policy, real auth/MFA, managed key encryption at rest, append-only audit storage, malware scanning, vendor BAAs (CC-30), real push/SMS with critical-alert entitlements, rate limiting, logging with PHI scrubbing, incident response (CC-34), external pen test (CC-78), HIPAA risk analysis (CC-79).</p>
-<h2 id="5-human-actions">5. Human actions<a class="headerlink" href="#5-human-actions" title="Permanent link">&para;</a></h2>
+  PAY --&gt; DB
+  API --&gt; AUD
+  AUD --&gt; DB
+  CLI -- "masked views; base tables with --full-names" --&gt; DB
+  WS -- "npm install, build, keys" --&gt; Host
+  PR -- "PR code runs with a read-only token" --&gt; CI
+  PAGES -. "public read" .-&gt; Internet(("Anyone"))</code></pre>
+<p>Trust boundaries: browser to host; browser to third parties; host to database provider; operators to database; workspace to host; GitHub to the public. The care data and alerts in C2 never cross to the host today: there is no care-data API yet.</p>
+<h2 id="3-how-risks-are-rated">3. How risks are rated<a class="headerlink" href="#3-how-risks-are-rated" title="Permanent link">&para;</a></h2>
+<p>Each threat records its <strong>Impact</strong> and <strong>Likelihood</strong>, and the <strong>Risk</strong> follows from them. The threat-model test checks every row.</p>
 <ul>
-<li>[ ] Engineering review of this model once an architecture is chosen.</li>
-<li>[ ] Add threats for any integration (pharmacy, EHR) before building it.</li>
-<li>[ ] Re-run STRIDE at each major release.</li>
+<li><strong>Impact:</strong> High means real health, identity or financial data exposed or changed, or a safety alert lost. Medium means account data or availability. Low means nuisance or information about the system.</li>
+<li><strong>Likelihood:</strong> how easy the attack is with the control as it stands. High: anyone can do it today. Medium: it needs an insider, a stolen password or some skill. Low: it needs several controls to fail.</li>
+<li><strong>Risk:</strong> score High as 3, Medium as 2 and Low as 1, and multiply. 6 or more is High (High with High or Medium), 3 or 4 is Medium (Medium with Medium, or High with Low), 2 or less is Low.</li>
+<li><strong>Status:</strong> <strong>In place</strong> (the control exists in code, file named), <strong>Partial</strong> (some of it exists, file named), <strong>Demo only</strong> (it exists in the browser demo but not on the server, file named), <strong>Missing</strong> (no control in this repository).</li>
+<li><strong>Owner:</strong> the role that fixes it: Dev Agent, Release Agent, Security officer (CC-79) or PO.</li>
+<li><strong>Story:</strong> for a gap, the backlog story that fixes it; for a control in place, the story that built or tests it. Blank when no story exists yet.</li>
+</ul>
+<p>Code references are written <code>`file:symbol`</code>. A unit test (<code>src/__tests__/threat-model.test.ts</code>) fails if a referenced file is gone or no longer contains the symbol outside a comment, if a row is malformed or an ID repeats, if a risk doesn't follow from its impact and likelihood, if a control that exists names no file, or if a High risk that isn't In place has no story.</p>
+<h2 id="4-threats-by-component">4. Threats by component<a class="headerlink" href="#4-threats-by-component" title="Permanent link">&para;</a></h2>
+<h3 id="c1-web-app">C1 Web app<a class="headerlink" href="#c1-web-app" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1-I1</td>
+<td>I</td>
+<td>Cross-site scripting steals session data or care data</td>
+<td>CSP header from the server with <code>script-src 'self'</code> and <code>object-src 'none'</code> (<code>server/app.ts:"script-src 'self'"</code>); the build also adds a meta CSP (<code>vite.config.ts:http-equiv</code>); the session cookie is HttpOnly (<code>server/auth.ts:"HttpOnly", "SameSite=Strict"</code>). The two CSP lists are kept separately and can drift</td>
+<td>In place</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td>CC-78</td>
+</tr>
+<tr>
+<td>C1-T1</td>
+<td>T</td>
+<td>The app is framed and clicked through (clickjacking)</td>
+<td><code>frame-ancestors 'none'</code> and <code>X-Frame-Options: DENY</code> from the server (<code>server/app.ts:"frame-ancestors 'none'"</code>, <code>server/app.ts:res.setHeader("X-Frame-Options", "DENY")</code>). <code>vite preview</code> and the dev server send neither for app pages</td>
+<td>In place</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td>CC-78</td>
+</tr>
+<tr>
+<td>C1-I2</td>
+<td>I</td>
+<td>The service worker caches API answers holding account data</td>
+<td>API and vault paths are never cached (<code>public/sw.js:/api/</code>)</td>
+<td>In place</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C1-I3</td>
+<td>I</td>
+<td>A third-party style sheet (Google Fonts) or image host is changed to leak data</td>
+<td>Loaded from <code>index.html</code> with no integrity hash (<code>index.html:fonts.googleapis.com/css2</code>); the CSP limits styles, fonts and images to those hosts</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C1-I4</td>
+<td>I</td>
+<td>A lock-screen notification shows a medicine or condition</td>
+<td>Alert titles are generic, details only in the app (<code>src/data/store.tsx:title: "Update from Circle Care"</code>); one test pins a title, nothing enforces it for every alert</td>
+<td>Partial</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td>CC-31</td>
+</tr>
+</tbody>
+</table>
+<h3 id="c2-demo-store-browser">C2 Demo store (browser)<a class="headerlink" href="#c2-demo-store-browser" title="Permanent link">&para;</a></h3>
+<p>The demo store is a prototype: one browser holds every persona's view of a fictional circle, and the presenter switches persona freely. Its controls show the design; none of them can stop the person who owns the browser.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C2-E1</td>
+<td>E</td>
+<td>A family member reads or changes records they shouldn't by editing their own browser, switching persona, accepting their own invitation or opening the review queue</td>
+<td>One permission matrix and <code>can()</code> (<code>src/data/policy.ts:export function can</code>), called by <code>guard()</code> in most store actions (<code>src/data/store.tsx:const guard</code>). All of it runs in the browser. <code>acceptInvite</code> has no check, <code>invite</code> takes any role from the caller, <code>/app/review</code> has no route guard (<code>src/App.tsx:/app/review</code>), and <code>can()</code> doesn't check whether a guardian is verified</td>
+<td>Demo only</td>
+<td>High</td>
+<td>High</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-202</td>
+</tr>
+<tr>
+<td>C2-E2</td>
+<td>E</td>
+<td>A revoked, expired or pending member keeps access</td>
+<td><code>roleOf()</code> returns nothing unless the member is active (<code>src/data/policy.ts:m.status !== "active"</code>); time-limited access is revoked by the rules engine (tested in <code>src/__tests__/rules.test.ts</code>)</td>
+<td>Demo only</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-202</td>
+</tr>
+<tr>
+<td>C2-I1</td>
+<td>I</td>
+<td>A paid caregiver browses records off shift</td>
+<td><code>pro@shift</code> rule (<code>src/data/policy.ts:rules.includes("pro@shift") &amp;&amp; onShift</code>). Check-in itself has no shift-window check, so a caregiver can check in at any time</td>
+<td>Demo only</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-202</td>
+</tr>
+<tr>
+<td>C2-T1</td>
+<td>T</td>
+<td>Stored data on the device is altered</td>
+<td>AES-GCM with a fresh IV per save and a non-extractable key (<code>src/lib/secureStorage.ts:name: "AES-GCM"</code>). A value without the <code>enc:v1:</code> prefix is still accepted as plain JSON (<code>src/lib/secureStorage.ts:!raw.startsWith("enc:v1:")</code>)</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C2-I2</td>
+<td>I</td>
+<td>A lost or shared device exposes care data</td>
+<td>Encryption at rest as above; inactivity lock (<code>src/components/AppShell.tsx:setLocked</code>); close circle wipes data and key (<code>src/lib/secureStorage.ts:export async function wipeDevice</code>). The unlock button checks nothing and a reload unlocks</td>
+<td>Demo only</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-202</td>
+</tr>
+<tr>
+<td>C2-R1</td>
+<td>R</td>
+<td>Someone denies viewing or changing a record</td>
+<td>Hash-chained access log (<code>src/data/audit.ts:export function verifyChain</code>). The chain has no key, so anyone holding the state can rebuild it, and views of the same resource within 10 minutes are logged once for all personas (<code>src/data/store.tsx:(viewed.current[resource] ?? 0) &lt; 10 * 60000</code>)</td>
+<td>Demo only</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td>CC-202</td>
+</tr>
+<tr>
+<td>C2-I3</td>
+<td>I</td>
+<td>An export file is leaked</td>
+<td>Passphrase export with PBKDF2 (250,000 rounds) and AES-GCM (<code>src/lib/secureStorage.ts:250000</code>). The "Confirm with Face ID" step does nothing, the file is written before the permission check runs (<code>src/pages/shared/PrivacyCenter.tsx:actions.exported()</code>), and it includes guardian-only notes</td>
+<td>Demo only</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-202</td>
+</tr>
+<tr>
+<td>C2-T2</td>
+<td>T</td>
+<td>A disguised file is uploaded as a care document</td>
+<td>Signature check for PDF, PNG and JPEG with a 10 MB limit (<code>src/lib/secureStorage.ts:export function inspectUpload</code>). No malware scan; photo metadata is stripped only from profile photos, and only in the browser</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C2-I4</td>
+<td>I</td>
+<td>A document is screenshotted or downloaded and shared</td>
+<td>Viewer name shown over the document and every view logged (<code>src/pages/shared/Notes.tsx:watermark</code>). The overlay is visual only; the file itself is unchanged</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>PO</td>
+<td></td>
+</tr>
+<tr>
+<td>C2-I5</td>
+<td>I</td>
+<td>A family member bulk-views records out of curiosity or pressure</td>
+<td>Suspicious-access rules: 8 views in 5 minutes or 3 denials in 10 minutes alert the guardian (<code>src/data/store.tsx:n &gt;= 8</code>)</td>
+<td>Demo only</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td>CC-202</td>
+</tr>
+<tr>
+<td>C2-I6</td>
+<td>I</td>
+<td>A health detail is posted into the family chat</td>
+<td>The chat's health-detail check warns before sending (<code>src/data/everyday.ts:export function phiHint</code>). It is a warning in the screen, not a block in <code>sendChat</code></td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>PO</td>
+<td></td>
+</tr>
+<tr>
+<td>C2-D1</td>
+<td>D</td>
+<td>An SOS, missed check-in or vital alert never reaches anyone else</td>
+<td>Alerts are added to the device's own stored state (<code>src/data/store.tsx:export function pushAlert</code>) and escalation runs in that browser, so they show only on the device that raised them. CC-31 covers what an alert says, not how it travels</td>
+<td>Demo only</td>
+<td>High</td>
+<td>High</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-205</td>
+</tr>
+<tr>
+<td>C2-D2</td>
+<td>D</td>
+<td>A failed decrypt or unreadable storage silently starts a fresh demo, losing escalation contacts and settings</td>
+<td>Nothing tells the person: the load falls back to a new demo (<code>src/data/store.tsx:return seed();</code>)</td>
+<td>Missing</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td>CC-205</td>
+</tr>
+</tbody>
+</table>
+<h3 id="c3-express-api">C3 Express API<a class="headerlink" href="#c3-express-api" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C3-T1</td>
+<td>T</td>
+<td>Cross-site request forgery changes an account</td>
+<td>Every non-GET request must carry <code>X-Requested-With: circle-care</code> (<code>server/app.ts:req.get("X-Requested-With") !== "circle-care"</code>); cookies are <code>SameSite=Strict</code> (<code>server/auth.ts:"HttpOnly", "SameSite=Strict"</code>); no CORS is enabled</td>
+<td>In place</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C3-E1</td>
+<td>E</td>
+<td>One account reads or changes another's records (IDOR)</td>
+<td>Every query is scoped to the signed-in user, and other users' card ids answer 404 (<code>server/payments.ts:AND user_id = $2</code>); payment and vault routes are guardian-only</td>
+<td>In place</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C3-T2</td>
+<td>T</td>
+<td>Oversized or malformed input</td>
+<td>JSON bodies limited to 32 KB (<code>server/app.ts:express.json({ limit: "32kb" })</code>), photos to 2 MB with a file-signature check (<code>server/account.ts:sniffImage</code>); SSN, bank and card validators (<code>src/lib/validation.ts:luhn</code>). Photo metadata is stripped in the browser only (<code>src/pages/account/parts.tsx:async function preparePhoto</code>); the server stores photo bytes as sent</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C3-I1</td>
+<td>I</td>
+<td>An error or log line leaks a request body, SSN or stack trace</td>
+<td>The error handler returns safe messages and logs only the message (<code>server/http.ts:err instanceof Error ? err.message : "unknown"</code>); the API returns only the SSN's last four, and the tests scan every response for a full SSN</td>
+<td>In place</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C3-S1</td>
+<td>S</td>
+<td>Whoever holds an open session changes the account's contact email or phone</td>
+<td>Profile changes need only the session and change the contact details in the persona table; the sign-in email can't be changed at all. Changing an SSN needs the password again (<code>server/account.ts:verifyPassword(str(req.body?.password)</code>), but nothing protects a contact change</td>
+<td>Missing</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C3-I2</td>
+<td>I</td>
+<td><code>/api/health</code> tells an attacker the environment and database kind</td>
+<td>It returns <code>env</code> and <code>db</code> (<code>server/app.ts:app.get("/api/health"</code>)</td>
+<td>Partial</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C3-I3</td>
+<td>I</td>
+<td>A signed-in account learns whether an SSN is already registered</td>
+<td>A taken SSN answers 409 and is logged (<code>server/account.ts:action: "ssn.duplicate"</code>). Setting a first SSN needs no password and <code>PUT /ssn</code> has no rate limit, so any signed-in account holding someone's SSN can confirm it</td>
+<td>Partial</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-204</td>
+</tr>
+<tr>
+<td>C3-D1</td>
+<td>D</td>
+<td>Someone registers a victim's SSN first, so the victim's own account is refused</td>
+<td>One account per SSN by fingerprint (<code>server/account.ts:SELECT user_id FROM ssn_fingerprints</code>); the refused person is told to contact support, and no support process exists to release a number</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>PO</td>
+<td></td>
+</tr>
+<tr>
+<td>C3-D2</td>
+<td>D</td>
+<td>Request floods slow or stop the API</td>
+<td>Sign-in and sign-up are limited per address (<code>server/auth.ts:rateLimit({ windowMs: 600_000, max: 30 })</code>), but each try still runs scrypt; the limiter's map is never pruned (<code>server/http.ts:const hits = new Map</code>), and signed-in routes other than the vault have no limit</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td>CC-204</td>
+</tr>
+</tbody>
+</table>
+<h3 id="c4-sign-in-sessions-and-mfa">C4 Sign-in, sessions and MFA<a class="headerlink" href="#c4-sign-in-sessions-and-mfa" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C4-S1</td>
+<td>S</td>
+<td>A stolen or reused password opens a guardian account that holds an SSN and bank details</td>
+<td>The server has no second factor. The six-digit step exists only in the browser demo with a fixed code (<code>src/pages/SignIn.tsx:482913</code>)</td>
+<td>Missing</td>
+<td>High</td>
+<td>High</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-200</td>
+</tr>
+<tr>
+<td>C4-S2</td>
+<td>S</td>
+<td>Password guessing across many tries or many server instances</td>
+<td>scrypt hashing with N = 16384 (<code>server/crypto.ts:N: 16384</code>), below OWASP's minimum of 2^17; 5 failures lock the account for 15 minutes (<code>server/auth.ts:const LOCK_AFTER = 5</code>), and a per-address limit on sign-in and sign-up (<code>server/http.ts:export function rateLimit</code>). The limit is kept in each process, the deploy is autoscale, and the address comes from a forwarded header (<code>server/app.ts:app.set("trust proxy", 1)</code>)</td>
+<td>Partial</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-204</td>
+</tr>
+<tr>
+<td>C4-S3</td>
+<td>S</td>
+<td>A session that was stolen, or used on a shared computer, can't be ended</td>
+<td>Idle 30 minutes and absolute 12 hours (<code>server/config.ts:sessionIdleMinutes: 30</code>); sign-out deletes the current session; session tokens are stored hashed (<code>server/auth.ts:sha256(token)</code>). The only path that ends every session is a lockout during SSN change (<code>server/account.ts:DELETE FROM sessions WHERE user_id = $1</code>). There is no sign out everywhere and no password change or reset, and an expired session row is removed only when it is presented</td>
+<td>Partial</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-201</td>
+</tr>
+<tr>
+<td>C4-I1</td>
+<td>I</td>
+<td>Someone learns whether an email has an account</td>
+<td>For an unknown email sign-in still runs a password hash (<code>server/auth.ts:await verifyPassword(password, await dummyHash())</code>), so the message is the same. A wrong password for a real account also records a failure (two writes and an audit event), so timing differs a little. Sign-up answers 409 for an existing email, and a locked account answers 429</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C4-D1</td>
+<td>D</td>
+<td>An attacker locks a guardian out on purpose before an emergency</td>
+<td>Lockout lasts 15 minutes and is per account (<code>server/auth.ts:attempts &gt;= LOCK_AFTER</code>), so anyone who knows the email can trigger it; SOS in the demo needs no sign-in</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Security officer</td>
+<td></td>
+</tr>
+<tr>
+<td>C4-I2</td>
+<td>I</td>
+<td>The session cookie is sent over plain HTTP</td>
+<td><code>Secure</code> is set in production and staging (<code>server/auth.ts:parts.push("Secure")</code>); HSTS is sent in production only (<code>server/app.ts:Strict-Transport-Security</code>)</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Release Agent</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="c5-postgres">C5 Postgres<a class="headerlink" href="#c5-postgres" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C5-I1</td>
+<td>I</td>
+<td>Someone between the app and the database reads or changes data</td>
+<td>The connection uses TLS but doesn't verify the server's certificate (<code>server/db.ts:rejectUnauthorized: false</code>)</td>
+<td>Missing</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+<td>Dev Agent</td>
+<td>CC-203</td>
+</tr>
+<tr>
+<td>C5-I2</td>
+<td>I</td>
+<td>A database copy or backup exposes SSNs and photos</td>
+<td>SSNs and photos are encrypted with AES-256-GCM under a 32-byte key from the environment (<code>server/crypto.ts:aes-256-gcm</code>); SSN lookups use an HMAC under a separate key. Names, emails and phones are plain text, the ciphertext isn't bound to its row, and there is no re-encryption tool for key rotation</td>
+<td>Partial</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Security officer</td>
+<td>CC-26</td>
+</tr>
+<tr>
+<td>C5-E1</td>
+<td>E</td>
+<td>The app's database user can change or empty the audit table</td>
+<td>A trigger blocks UPDATE and DELETE on <code>audit_events</code> (<code>server/migrations/001_init.sql:audit_events_no_change</code>). No roles or grants are created, so the app's user owns the tables and could TRUNCATE them or drop the trigger</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C5-T1</td>
+<td>T</td>
+<td>A bad value is written straight to the database</td>
+<td>CHECK constraints keep last-four columns to four digits and photos under 2 MB (<code>server/migrations/001_init.sql:CHECK (ssn_last4 ~ '^[0-9]{4}$')</code>, <code>server/migrations/001_init.sql:CHECK (size_bytes &lt;= 2097152)</code>)</td>
+<td>In place</td>
+<td>Low</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="c6-payment-vault">C6 Payment vault<a class="headerlink" href="#c6-payment-vault" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C6-I1</td>
+<td>I</td>
+<td>A full card or bank number is stored</td>
+<td>Only tokens, brand or bank name, type, expiry and last four are written, and the last-four columns can't hold more than four digits (<code>server/migrations/001_init.sql:CHECK (last4 ~ '^[0-9]{4}$')</code>). <code>vault_tokens.metadata</code> (jsonb) and <code>holder_name</code> have no such limit</td>
+<td>Partial</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C6-E1</td>
+<td>E</td>
+<td>The simulated vault is reachable in production</td>
+<td>It is mounted only outside production with the simulated provider (<code>server/app.ts:paymentProvider === "simulated"</code>); production needs a live Stripe key (<code>server/config.ts:sk_live_</code>)</td>
+<td>In place</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C6-T1</td>
+<td>T</td>
+<td>A vault token is reused or claimed by another account</td>
+<td>Tokens are checked for owner, kind, a 15-minute age, single use and revocation under a row lock (<code>server/payments.ts:FOR UPDATE</code>)</td>
+<td>In place</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C6-I2</td>
+<td>I</td>
+<td>Card numbers pass through the app server</td>
+<td>Outside production the simulated vault runs in the same process (<code>server/app.ts:app.use("/vault/v1", vaultRouter(d))</code>), so full test numbers reach it. A real provider's hosted fields would keep them off the server, but that integration isn't built</td>
+<td>Partial</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="c7-audit-log-and-export">C7 Audit log and export<a class="headerlink" href="#c7-audit-log-and-export" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C7-R1</td>
+<td>R</td>
+<td>A person denies a sign-in or a change to identity or payment details</td>
+<td>Events for each such action with actor and time (<code>server/audit.ts:AuditAction</code>); details that look like an SSN or long number are refused (<code>server/audit.ts:LOOKS_SENSITIVE</code>). No IP address or device is recorded, and failed sign-ins for unknown emails aren't recorded</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C7-I1</td>
+<td>I</td>
+<td>An audit export leaks identity or payment data</td>
+<td>By default the export reads the masked views, rescans its output and records a SHA-256 of each file (<code>server/cli/audit-export.ts:createHash("sha256")</code>). With <code>--full-names</code> it reads names from the base persona tables (<code>server/cli/audit-export.ts:opts.fullNames</code>); no read-only auditor role exists though the migration calls for one; and mode 600 applies only to new files (<code>server/cli/audit-export.ts:mode: 0o600</code>), so an overwritten export keeps its old permissions</td>
+<td>Partial</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Security officer</td>
+<td>CC-184</td>
+</tr>
+<tr>
+<td>C7-S1</td>
+<td>S</td>
+<td>Anyone with database credentials runs an export under any name</td>
+<td>The operator's name is whatever is typed (<code>server/cli/audit-export.ts:opts.operator</code>); there is no access check beyond the database login</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Security officer</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="c8-github-actions">C8 GitHub Actions<a class="headerlink" href="#c8-github-actions" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C8-E1</td>
+<td>E</td>
+<td>A pull request's code gets write access or secrets</td>
+<td>The workflow runs on <code>pull_request</code> (not <code>pull_request_target</code>) with a read-only token and no secrets (<code>.github/workflows/browser-tests.yml:contents: read</code>)</td>
+<td>In place</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Release Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C8-T1</td>
+<td>T</td>
+<td>A changed outside action alters what runs</td>
+<td>Actions are pinned to tags, not commits (<code>.github/workflows/browser-tests.yml:actions/checkout@v4</code>), and checkout keeps its token</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td>CC-198</td>
+</tr>
+<tr>
+<td>C8-T2</td>
+<td>T</td>
+<td>A compromised npm or PyPI package runs in CI or the build</td>
+<td>CI installs from the lockfile with integrity hashes (<code>.github/workflows/browser-tests.yml:run: npm ci</code>); Playwright is pinned by version without a hash. No dependency audit or Dependabot</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="c9-github-pages">C9 GitHub Pages<a class="headerlink" href="#c9-github-pages" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C9-I1</td>
+<td>I</td>
+<td>The public wiki tells an attacker where the gaps are</td>
+<td>Everything under <code>docs/</code> is published (<code>mkdocs.yml:docs_dir</code>), including this model, the code reviews and the risk analysis. No secrets or contact details were found; the PO's first name appears on several pages. Publishing is by hand after the PO's yes</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>PO</td>
+<td></td>
+</tr>
+<tr>
+<td>C9-T1</td>
+<td>T</td>
+<td>The published site is changed to mislead readers</td>
+<td>No control in this repository: GitHub's own permissions decide who can push <code>gh-pages</code>, and no branch protection is recorded for it</td>
+<td>Missing</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>PO</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="c10-hosting-and-config">C10 Hosting and config<a class="headerlink" href="#c10-hosting-and-config" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Control in code today</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Likelihood</th>
+<th>Risk</th>
+<th>Owner</th>
+<th>Story</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C10-E1</td>
+<td>E</td>
+<td>Production starts without its protections</td>
+<td>The server exits without both keys, a database URL and a live payment provider, and refuses a live key outside production (<code>server/config.ts:throw new ConfigError</code>)</td>
+<td>In place</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td>CC-183</td>
+</tr>
+<tr>
+<td>C10-I1</td>
+<td>I</td>
+<td>Real SSNs, bank accounts or cards land in a test environment</td>
+<td>Outside production only test values are accepted (<code>server/account.ts:checkSsn(str(req.body?.ssn), d.cfg.testData)</code>), and a refusal is logged by field name only (<code>server/account.ts:action: "nonprod.blocked"</code>)</td>
+<td>In place</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td>CC-182</td>
+</tr>
+<tr>
+<td>C10-T1</td>
+<td>T</td>
+<td>The deployed build differs from what was tested</td>
+<td>The Replit build runs <code>npm install</code>, not <code>npm ci</code>, so the lockfile isn't enforced (<code>.replit:npm install &amp;&amp; npm run build</code>), and the server runs through <code>tsx</code> (<code>package.json:tsx server/index.ts</code>)</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C10-I2</td>
+<td>I</td>
+<td>The deployed copy is opened over HTTP</td>
+<td>It runs as staging, which sets <code>Secure</code> cookies but sends no HSTS (<code>.replit:APP_ENV=staging</code>)</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Release Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C10-S1</td>
+<td>S</td>
+<td>The dev server is reached from another site (DNS rebinding)</td>
+<td>The dev and preview servers accept any host name (<code>vite.config.ts:allowedHosts: true</code>). The dev server is also what the Replit workspace serves publicly (C10-I3)</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+<td>Dev Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C10-I3</td>
+<td>I</td>
+<td>The Replit workspace's public dev server exposes the dev API</td>
+<td>The workspace runs <code>npm run dev</code> (<code>.replit:run = "npm install &amp;&amp; npm run dev"</code>) on port 5000 mapped to port 80 (<code>.replit:externalPort = 80</code>). The dev API sends no CSP (<code>server/app.ts:if (!opts.dev)</code>), its cookies have no <code>Secure</code>, and its development keys sit in <code>.data/</code> (<code>server/config.ts:join(process.cwd(), ".data")</code>). Only test SSNs, bank accounts and cards are accepted there</td>
+<td>Missing</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td></td>
+</tr>
+<tr>
+<td>C10-I4</td>
+<td>I</td>
+<td>Someone with access to the Replit workspace reads the encryption keys and database URL</td>
+<td>Keys come only from environment secrets (<code>server/config.ts:key32("DATA_ENCRYPTION_KEY"</code>); who can open the workspace and its Secrets is set in Replit and recorded nowhere</td>
+<td>Missing</td>
+<td>High</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Security officer</td>
+<td></td>
+</tr>
+<tr>
+<td>C10-D1</td>
+<td>D</td>
+<td>Behind more than one proxy, every user shares one address and one sign-in limit</td>
+<td><code>trust proxy</code> is set to 1 (<code>server/app.ts:app.set("trust proxy", 1)</code>), which is right only behind exactly one proxy. Behind two, 30 sign-ins in 10 minutes from anyone would lock everyone out</td>
+<td>Partial</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Release Agent</td>
+<td>CC-204</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-high-risks-and-their-stories">5. High risks and their stories<a class="headerlink" href="#5-high-risks-and-their-stories" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Threat</th>
+<th>Risk</th>
+<th>Status</th>
+<th>Story</th>
+<th>What the story's criteria require</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C4-S1 No second sign-in step on the server</td>
+<td>High</td>
+<td>Missing</td>
+<td>CC-200 Second sign-in step on the server for guardians and caregivers</td>
+<td>An authenticator app or passkey checked on the server before any session; hashed one-time recovery codes; the demo code never accepted in staging or production</td>
+</tr>
+<tr>
+<td>C4-S3 Sessions can't be ended everywhere; no password change or reset</td>
+<td>High</td>
+<td>Partial</td>
+<td>CC-201 End every session when an account may be at risk</td>
+<td>Sign out everywhere, password change and a 30-minute reset link each end every session; expired rows deleted daily</td>
+</tr>
+<tr>
+<td>C2-E1, C2-E2, C2-I1, C2-I2, C2-I3 Care data and permission checks run only in the browser</td>
+<td>High</td>
+<td>Demo only</td>
+<td>CC-202 Move care-circle data and permission checks to the server</td>
+<td>The API applies the permission matrix to every care record, checks invitations, shifts, unlocks and exports on the server, and separates the reviewer role</td>
+</tr>
+<tr>
+<td>C2-D1 Safety alerts never leave the device that raised them</td>
+<td>High</td>
+<td>Demo only</td>
+<td>CC-205 Deliver safety alerts from the server to the people who need them</td>
+<td>The server records and delivers alerts to each member's own devices, catches up after offline, escalates without the elder's device, and keeps settings and tells the person after a storage reset</td>
+</tr>
+<tr>
+<td>C5-I1 Database certificate not verified</td>
+<td>High</td>
+<td>Missing</td>
+<td>CC-203 Verify the database server's certificate</td>
+<td>Remote connections verify the provider's certificate; a bad certificate stops start-up in staging and production</td>
+</tr>
+<tr>
+<td>C4-S2, C3-I3 Rate limits per process, address from a forwarded header; no limit on SSN checks</td>
+<td>High</td>
+<td>Partial</td>
+<td>CC-204 Shared rate limits for sign-in and account changes</td>
+<td>One shared store for every instance, only the host proxy's address trusted, limits on SSN, profile, photo and payment routes, and expired buckets removed</td>
+</tr>
+</tbody>
+</table>
+<p>Each story is in the Notion backlog as Needs refinement, with its full Given/When/Then criteria and a link back to its threat. None is in Sprint 14.</p>
+<p>Two stories are marked Done for the browser demo only, and the server versions are the new stories: CC-12 (MFA) is covered by CC-200, and CC-19 (access rules) by CC-202.</p>
+<p>Medium risks with no story yet, for the next refinement: contact changes without re-authentication (C3-S1), one shared CSP list for the build and the server (C1-I1), SSN squatting and its support process (C3-D1), account enumeration (C4-I1), deliberate lockout (C4-D1), database roles for the audit table (C5-E1), audit export access (C7-S1), IP or device in audit events (C7-R1), dependency checks (C8-T2), where security documents are published (C9-I1), deploy with <code>npm ci</code> (C10-T1), the public workspace dev server (C10-I3) and who can read the Replit Secrets (C10-I4).</p>
+<h2 id="6-what-changed-since-the-october-draft">6. What changed since the October draft<a class="headerlink" href="#6-what-changed-since-the-october-draft" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Backend:</strong> the October draft said the prototype has no backend and payments were out of scope. The accounts server, Postgres, sessions and the payment vault now exist (C3 to C7).</li>
+<li><strong>Clickjacking (old I7):</strong> <code>frame-ancestors 'none'</code> and <code>X-Frame-Options: DENY</code> are now sent as server headers.</li>
+<li><strong>Guarded actions (old T1):</strong> most data-changing store actions call <code>guard()</code>, but <code>acceptInvite</code> doesn't, <code>invite</code> accepts any role, and the review queue has no route guard (C2-E1).</li>
+<li><strong>Tamper (old T4):</strong> a plain-JSON value is still accepted (C2-T1), and a failed decrypt resets the demo without telling anyone (C2-D2).</li>
+<li><strong>Export re-auth (old I4):</strong> the confirm step does nothing yet (C2-I3).</li>
+<li><strong>Reviewer (old I10) and guardian verification (old E1):</strong> any visitor can open the review queue, and <code>can()</code> doesn't check whether a guardian is verified (C2-E1).</li>
+<li><strong>View logging (old R1):</strong> views are deduplicated per resource across personas (C2-R1).</li>
+<li><strong>Availability:</strong> alert delivery, request floods, lockouts and the proxy setting are now modelled (C2-D1, C2-D2, C3-D1, C3-D2, C4-D1, C10-D1).</li>
+<li><strong>New areas:</strong> chat, check-ins, CI, the public wiki, the Replit workspace and hosting are now modelled (C2-I6, C8 to C10).</li>
+</ul>
+<h2 id="7-human-actions">7. Human actions<a class="headerlink" href="#7-human-actions" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] Review by an engineer with security experience.</li>
+<li>[ ] Sign-off by the designated security officer (CC-79).</li>
+<li>[ ] Decide whether security documents stay on the public wiki (C9-I1).</li>
+<li>[ ] Decide who can open the Replit workspace and its Secrets, and record it (C10-I4).</li>
+<li>[ ] Re-run this model when CC-202 moves care data to the server, and before any integration is built.</li>
 </ul>
 
 

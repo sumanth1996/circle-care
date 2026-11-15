@@ -2498,6 +2498,8 @@
       
         
       
+        
+      
     
     
     
@@ -2810,6 +2812,34 @@
     
   
     Code review: Sprint 14, data inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, threat model
   
 
     
@@ -3303,7 +3333,7 @@
 </tbody>
 </table>
 <h3 id="the-permission-matrix">The permission matrix<a class="headerlink" href="#the-permission-matrix" title="Permanent link">&para;</a></h3>
-<p>The single source of truth is <code>MATRIX</code> in <code>src/data/policy.ts</code>, read through <code>can(state, actorId, action, resource)</code>. Every data-changing store action is guarded; refused actions change nothing and are written to the access log as <code>denied</code>. The full table, rules (<code>pro@shift</code>, <code>ALWAYS_SHARED</code>) and open design questions are in the <a href="../../../security/permission-matrix/">Permission matrix</a>; a summary is in <a href="../../architecture/security-and-privacy/#permission-model">Security &amp; privacy</a>.</p>
+<p>The single source of truth is <code>MATRIX</code> in <code>src/data/policy.ts</code>, read through <code>can(state, actorId, action, resource)</code>. Most data-changing store actions are guarded (<code>acceptInvite</code> and the role passed to <code>invite</code> aren't checked yet; see threat C2-E1 and CC-202); refused actions change nothing and are written to the access log as <code>denied</code>. The full table, rules (<code>pro@shift</code>, <code>ALWAYS_SHARED</code>) and open design questions are in the <a href="../../../security/permission-matrix/">Permission matrix</a>; a summary is in <a href="../../architecture/security-and-privacy/#permission-model">Security &amp; privacy</a>.</p>
 <h2 id="permissions-privacy">Permissions &amp; privacy<a class="headerlink" href="#permissions-privacy" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
