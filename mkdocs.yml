@@ -129,3 +129,4 @@ nav:
       - "Code review: Sprint 13, browser tests": reviews/2026-11-14-sprint-13-browser-tests.md
       - "Code review: Sprint 14, data inventory": reviews/2026-11-15-sprint-14-data-inventory.md
       - "Code review: Sprint 14, threat model": reviews/2026-11-15-sprint-14-threat-model.md
+      - "Code review: Sprint 14, browser tests hardening": reviews/2026-11-15-sprint-14-browser-tests-hardening.md

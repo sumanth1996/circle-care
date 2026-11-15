@@ -22,7 +22,7 @@ describe("Browser tests workflow (CC-198)", () => {
     // Each step starts with "- "; split on that so every checkout's own `with:` block is checked.
     const checkouts = CODE.split(/\n\s+- /).filter((step) => /(?:^|\n\s*)uses: actions\/checkout@/.test(step));
     expect(checkouts.length).toBeGreaterThan(0);
-    for (const step of checkouts) expect(step, step).toMatch(/\n\s+with:(?:\n\s+[\w-]+: [^\n]*)*\n\s+persist-credentials: false(?:\n|$)/);
+    for (const step of checkouts) expect(step, step).toMatch(/\n\s+with:(?:\n\s+[\w-]+: [^\n]*)*\n\s+persist-credentials: ["']?false["']?(?:\n|$)/);
   });
 
   it("keeps the token read-only and never runs pull-request code with secrets", () => {
