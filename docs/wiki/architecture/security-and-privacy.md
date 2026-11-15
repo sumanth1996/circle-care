@@ -51,7 +51,7 @@ prev(n)     = hash(n − 1)
 ```
 
 - `verifyChain()` walks the log and reports the first entry whose `prev` or `hash` does not match — catching **edits, deletions and reordering**. The Privacy Center shows *"Access log is intact — All N entries check out"* or *"Entry N of M doesn't match its seal."*
-- Entries store identifiers and resource names only, never health values.
+- Entries store ids, actions and resource names, never readings or note text. A resource name can be a medicine, a document or an appointment, so the log is PHI ([data inventory](../../compliance/09-data-inventory.md)).
 - `RETENTION_YEARS = 6` documents the intended retention.
 - SHA-256 is implemented in pure JavaScript so the chain can be computed synchronously; a unit test compares it with Node's `crypto` for edge-case inputs.
 

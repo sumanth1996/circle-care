@@ -4,8 +4,9 @@ import { sha256 } from "../lib/sha256";
 // Tamper-evident audit log (CC-28). Each entry stores the hash of the entry
 // before it, and its own hash covers its fields plus that link. Changing,
 // removing or reordering any entry breaks every hash after it, which
-// verifyChain() detects. Entries hold identifiers and resource names only —
-// never health values.
+// verifyChain() detects. Entries hold ids, actions and resource names, never
+// readings or note text, but a resource name can be a medicine, a document or
+// an appointment, so the log is PHI (CC-9, docs/compliance/09-data-inventory.md).
 
 export const GENESIS = "0".repeat(64);
 export type RawAudit = Omit<AuditEvent, "prev" | "hash">;

@@ -2,14 +2,22 @@ import { describe, it, expect } from "vitest";
 import { seed, GUARDIAN, FAMILY } from "../data/demo";
 import { evaluate, audit } from "../data/store";
 import { todayOf, clock } from "../data/selectors";
-import { hm } from "../lib/time";
+import { hm, minutesOfDay } from "../lib/time";
 import { verifyChain } from "../data/audit";
 
 const minsAgo = (s: ReturnType<typeof seed>, m: number) => hm(new Date(clock(s).getTime() - m * 60000));
+/** The demo at noon today, so "70 minutes ago" never crosses midnight whenever the tests run. */
+const seedAtNoon = () => { const s = seed(); s.clockOffsetMin += 12 * 60 - minutesOfDay(clock(s)); return s; };
 
 describe("rules engine", () => {
+  // Known gap (review of CC-9, 2026-11-15): evaluate() looks only at today's doses and check-in window,
+  // so a dose due at 23:30 that is missed is never escalated once the date rolls over. Backlog story:
+  // CC-199 "Escalate doses and check-ins that cross midnight". The tests below pin the clock to noon for that reason.
+  it.todo("escalates a dose due just before midnight that is still missed after midnight");
+  it.todo("escalates a check-in window that ends after midnight");
+
   it("escalates a missed dose to the caregiver, then the guardian", () => {
-    const s = seed();
+    const s = seedAtNoon();
     const med = s.meds.find((m) => m.id === "med-lisinopril")!;
     med.times = [minsAgo(s, 70)];
     s.doses = s.doses.filter((d) => !(d.medId === med.id && d.date === todayOf(s)));
@@ -20,7 +28,7 @@ describe("rules engine", () => {
   });
 
   it("does not repeat the same alert", () => {
-    const s = seed();
+    const s = seedAtNoon();
     const med = s.meds.find((m) => m.id === "med-lisinopril")!;
     med.times = [minsAgo(s, 70)];
     s.doses = s.doses.filter((d) => !(d.medId === med.id && d.date === todayOf(s)));
@@ -29,7 +37,7 @@ describe("rules engine", () => {
   });
 
   it("missed check-in prompts the elder first, then the guardian 15 minutes later (CC-52)", () => {
-    const s = seed();
+    const s = seedAtNoon();
     s.checkins = s.checkins.filter((c) => c.date !== todayOf(s));
     s.settings.checkinWindow = { start: minsAgo(s, 120), end: minsAgo(s, 5) };
     evaluate(s);

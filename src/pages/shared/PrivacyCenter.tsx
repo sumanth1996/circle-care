@@ -148,7 +148,7 @@ export default function PrivacyCenter() {
             <p className="muted small">{integrity.ok ? `All ${integrity.count} entries check out. Each entry is sealed to the one before it, so any change or deletion would show up here.` : `Entry ${integrity.brokenAt + 1} of ${integrity.count} doesn't match its seal. Our security team is alerted automatically.`}</p>
           </div>
         </div>
-        <p className="tiny">Kept for {RETENTION_YEARS} years, even after a circle is closed, as health privacy law requires. The log never stores health details — only who opened what, and when.</p>
+        <p className="tiny">In the full product, the access log is kept for {RETENTION_YEARS} years, even after a circle is closed, as health privacy law requires. It records who opened or changed what, and when. It can name a medicine, a document or an appointment, so the log is protected as health information.</p>
       </section>
 
       <section className="grid-2">
@@ -207,7 +207,7 @@ export default function PrivacyCenter() {
         <Sheet title="Close this circle?" onClose={() => { setClosing(false); setConfirmText(""); }}>
           <div className="stack">
             <p>This deletes Maggie's medicines, notes, documents and schedules, removes everyone's access, and erases the encryption key on this device so no copy can be read.</p>
-            <p className="small muted">Download a copy first if you might need it. The access log is kept for {RETENTION_YEARS} years as the law requires; it holds no health details. In the full product, backups are purged within 35 days and you get an email confirming deletion.</p>
+            <p className="small muted">Download a copy first if you might need it. In the full product, the access log is kept for {RETENTION_YEARS} years as the law requires and protected as health information, backups are purged within 35 days, and you get an email confirming deletion. In this demo, the log is deleted with everything else.</p>
             <label className="field"><span>Type DELETE to confirm</span><input className="input" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoCapitalize="characters" /></label>
             <button className="btn lg block danger" disabled={confirmText.trim().toUpperCase() !== "DELETE"} onClick={async () => { nav("/"); await actions.closeCircle(); toast("The circle was closed and its data deleted"); }}><Trash2 size={20} /> Delete everything</button>
             <button className="btn lg block plain" onClick={() => { setClosing(false); setConfirmText(""); }}>Keep the circle</button>

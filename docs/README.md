@@ -19,7 +19,7 @@ These drafts are also published in the **Circle Care Product Wiki** (MkDocs site
 | CC-6 | [research/06-opportunity-solution-tree.md](research/06-opportunity-solution-tree.md) | North Star, opportunities, solutions, assumption tests (mermaid) | Yes — run assumption tests, re-rank after research |
 | CC-7 | [research/07-competitive-teardown.md](research/07-competitive-teardown.md) | Teardown framework, comparison table, positioning gaps | Yes — verify every product fact before publishing |
 | CC-8 | [compliance/08-regulatory-memo.md](compliance/08-regulatory-memo.md) | HIPAA / FTC / state law / TCPA / ADA / guardianship applicability | Yes — counsel review; answer Q1–Q13 |
-| CC-9 | [compliance/09-data-inventory.md](compliance/09-data-inventory.md) | Every data element in `types.ts` + pilot store, classified | Yes — security officer and counsel sign-off on classes and retention |
+| CC-9 | [compliance/09-data-inventory.md](compliance/09-data-inventory.md) | Every field in `types.ts`, every Postgres column and the pilot store, classified (checked by `classification.test.ts`; reviewed 2026-11-15) | Yes — security officer and counsel sign-off on classes and retention |
 | CC-10 | [security/10-threat-model.md](security/10-threat-model.md) | STRIDE threat model with DFD; prototype vs. production | Yes — engineering security review once architecture is chosen |
 | CC-18 | [security/permission-matrix.md](security/permission-matrix.md) | Readable rendering of `MATRIX` in `src/data/policy.ts` | Partly — decide open design questions; close coverage gaps; build server-side enforcement |
 | CC-30 | [compliance/30-vendor-baa-register.md](compliance/30-vendor-baa-register.md) | Vendor and BAA register template | Yes — pick vendors, assign owners, sign BAAs |

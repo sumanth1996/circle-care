@@ -101,7 +101,7 @@ Action-driven alerts (new requests, decisions, invitations, shift offers, appoin
 
 - Alerts are addressed to **personas** (`elder`, `caregiver`, `guardian`), not to individual members, because the demo has one app per persona.
 - Security alerts go only to the guardian. Health alerts go only to the guardian and only while Maggie shares readings.
-- The access log and alerts never contain health values; health-alert details show the reading inside the app only.
+- Lock-screen text never contains health details. A health alert's reading shows only in its in-app detail, and the access log can name a medicine or a document, so both are protected as PHI.
 
 ## Notifications
 

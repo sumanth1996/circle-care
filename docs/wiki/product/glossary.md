@@ -4,7 +4,7 @@ Terms used across the product, the code and this wiki. Code identifiers are show
 
 | Term | Meaning |
 |---|---|
-| **Access log** | The record of who viewed, created, changed, approved, exported or was refused what, and when (`AuditEvent`). Shown to the elder and guardian in the Privacy Center. Never stores health values. See *Tamper-evident*. |
+| **Access log** | The record of who viewed, created, changed, approved, exported or was refused what, and when (`AuditEvent`). Shown to the elder and guardian in the Privacy Center. It holds no readings or note text, but it can name a medicine, a document or an appointment, so it is protected as PHI. See *Tamper-evident*. |
 | **Acknowledge (hand-off)** | The next caregiver tapping **I've read this** on the previous shift's hand-off. Unread hand-offs appear on the guardian's attention list. |
 | **Acknowledge (SOS)** | A responder tapping **I'm on my way**. This stops escalation and tells the elder who is coming. |
 | **Adherence** | Share of scheduled doses recorded as taken. Shown per day in the weekly digest. |

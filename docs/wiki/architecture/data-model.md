@@ -1,6 +1,6 @@
 # Data model
 
-All entities are defined in `src/data/types.ts` and seeded in `src/data/demo.ts`. In the prototype the whole model lives in one `State` object in the browser. The [data inventory (CC-9)](../../compliance/09-data-inventory.md) classifies every field (PHI, personal, operational) and proposes retention.
+All entities are defined in `src/data/types.ts` and seeded in `src/data/demo.ts`. In the prototype the whole model lives in one `State` object in the browser. The [data inventory (CC-9)](../../compliance/09-data-inventory.md) classifies every state field and every Postgres column as PHI, PII, sensitive financial or identity, or operational, and proposes retention. The classes live in `src/data/classification.ts`, and a unit test fails when a new field has none.
 
 ## Entity relationships
 
