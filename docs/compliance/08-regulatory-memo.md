@@ -1,7 +1,7 @@
 # Regulatory Applicability Memo
 
 Notion stories: CC-8 counsel's review of this memo (not started), CC-196 this update
-Status: DRAFT v2 for counsel review, updated 2026-11-15 — not legal advice. v1 was written by the product owner from general knowledge on 2026-10-19, before Sprints 11 to 13 added real accounts, Social Security numbers, bank accounts, cards, profile photos, the family chat with voice replies, daily check-ins, supply counts and the evening recap. v2 adds those (§2.1, §10) and questions Q14 to Q22, and was checked against the [data inventory (CC-9)](09-data-inventory.md). No lawyer has reviewed it. Every conclusion below is a working assumption to be confirmed or corrected by qualified counsel before launch or pilot.
+Status: DRAFT v2 for counsel review, updated 2026-11-15 — not legal advice. v1 was written by the product owner from general knowledge on 2026-10-19, before Sprints 11 to 13 added real accounts, Social Security numbers, bank accounts, cards, profile photos, the family chat with voice replies, daily check-ins, supply counts and the evening recap. v2 adds those (§2.1, §10) and questions Q14 to Q25, and was checked against the [data inventory (CC-9)](09-data-inventory.md). No lawyer has reviewed it. Every conclusion below is a working assumption to be confirmed or corrected by qualified counsel before launch or pilot.
 
 ## 1. Purpose
 
@@ -20,17 +20,17 @@ Two business models, as in §3: **Consumer**, where a family uses Circle Care on
 
 | Data | Consumer model | Agency model | Working assumption | Questions |
 |---|---|---|---|---|
-| Social Security number | Applies. Elder, caregiver and guardian accounts all hold one | Applies | Not health data, but state SSN protection laws and every state's breach law cover it on its own, whatever the model. Collecting it at all needs a stated purpose | Q14, Q15, Q22 |
-| Bank account | Applies. Only the legal guardian adds one, to pay for care by ACH | Applies if the agency bills families through Circle Care | Payment rules (Nacha, Regulation E) and money transmission law depend on who moves the money; GLBA may apply if Circle Care counts as a financial institution | Q16, Q17, Q22 |
-| Card | Applies. Guardian only, up to 5 | Applies if the agency bills through Circle Care | PCI DSS applies by contract with the card brands; tokenizing with Stripe keeps full numbers out of Circle Care's systems in production | Q16, Q17 |
+| Social Security number | Applies. Elder, caregiver and guardian accounts all hold one | Applies the same way, including agency caregivers' accounts | Not health data, but state SSN protection and data-security laws and every state's breach law cover it on its own, whatever the model. Collecting it at all needs a stated purpose | Q14, Q15, Q22, Q24 |
+| Bank account | Applies. Only the legal guardian adds one, to pay for care by ACH; a guardian's profile isn't complete without one, and the only one can't be removed | Applies if the agency bills families through Circle Care | Payment rules (Nacha, Regulation E) and money transmission law depend on who moves the money; GLBA may apply if Circle Care counts as a financial institution. A guardian paying for care from the elder's money may have to account for it | Q16, Q17, Q22, Q24, Q25 |
+| Card | Applies. Only the legal guardian adds cards, up to 5 | Applies if the agency bills through Circle Care | PCI DSS applies by contract with the card brands. The plan is to tokenize with Stripe so full numbers stay out of Circle Care's systems, but the Stripe path isn't built yet: today the development vault receives full test numbers in Circle Care's own server process | Q16, Q17, Q23 |
 | Profile photo | Applies to every account | Applies; a full-face photo of a client is likely PHI under a BAA | No face matching is done, so biometric laws likely don't apply today. A photo sent straight to the API keeps its location data (data inventory action) | Q18 |
 | Family chat messages | Applies. Free text that can hold health details | Applies once an agency caregiver is added to the chat | Treated as health data: consumer health data under state laws and the HBNR in consumer mode, PHI under a BAA in agency mode, though which messages a BAA covers is unclear (Q3) | Q3, Q12, Q19 |
-| Voice replies in chat | Applies when the elder speaks a reply | Applies | The browser's speech recognition may send the elder's voice to the browser maker's servers. Only the text is stored, but sending the audio may be a disclosure to a third party | Q20 |
+| Voice replies in chat | Applies when any member speaks a reply; the elder's chat has a large microphone button | Applies, including agency caregivers' replies | The chat's speech recognition doesn't ask the browser to stay on the device, so it may send the speaker's voice to the browser maker's servers. Only the text is stored, but sending the audio may be a disclosure to a third party, and the chat says the words are turned into text on the device (CC-222) | Q20 |
 | Daily check-ins | Applies. How the elder feels, water and meals | Applies if caregivers or the agency see them | Consumer health data; the elder chooses whether the guardian sees them, and a day logged while not sharing stays private | Q21 |
-| "I'm OK" check-ins | Applies (in the October draft); now with an optional mood | Applies | The mood makes it health data, like the daily check-ins | Q9, Q21 |
-| Supply counts | Applies. Pills left and refill requests reveal which medicines the elder takes | Applies | Health data. The app records that someone asked the pharmacy; it doesn't contact the pharmacy itself | — |
+| "I'm OK" check-ins | Applies (in the October draft); now with an optional mood | Applies; likely PHI where agency caregivers see them | The mood makes it health data, like the daily check-ins | Q9, Q21 |
+| Supply counts | Applies. Pills left and refill requests reveal which medicines the elder takes | Applies; caregivers on shift can see and update them | Health data. The app records that someone asked the pharmacy; it doesn't contact the pharmacy itself | — |
 | Evening recap | Applies; only the legal guardian sees it | Applies the same way | Nothing new is stored; it is worked out each time from data above. Its alert text carries no health details | Q21 |
-| Account email and password | Applies to every account | Applies | Several states' breach laws treat an email plus its password as breach-triggering data on its own. Passwords are stored only as hashes | Q22 |
+| Account email and password | Applies to every account | Applies to agency staff accounts too | Several states' breach laws treat an email plus its password as breach-triggering data on its own. Passwords are stored only as hashes | Q22 |
 
 ## 3. HIPAA
 
@@ -66,6 +66,7 @@ The public Privacy page already states this posture ("designed to the HIPAA stan
 - **HBNR (16 CFR Part 318):** applies to vendors of personal health records and related entities **not** covered by HIPAA. As amended (2024), it is understood to cover health apps that draw information from multiple sources; Circle Care draws from the elder, caregivers and family (now also through the chat, voice replies and daily check-ins), and possibly device/health integrations later. A "breach" includes unauthorized disclosures, not only hacks — e.g., sharing with an analytics vendor without authorization.
 - Implication: in consumer mode, a breach could require notice to individuals, the FTC and possibly media. Timelines differ from HIPAA. Counsel to confirm (Q4). Sending voice audio to a speech service without authorization could itself count as a breach under this definition (Q20).
 - New promises to track: "ACH bank transfers have no platform fee", and that SSNs and full bank and card numbers are never shown or stored in full.
+- A promise that isn't true today: the chat's voice sheet says "Your words are turned into text on this device", but the chat doesn't ask the browser to recognize speech on the device, unlike the medicine voice check. Until story CC-222 fixes the code or the wording, this is a deception risk under Section 5 (Q20).
 
 ## 5. State laws (examples, not exhaustive)
 
@@ -80,6 +81,7 @@ The public Privacy page already states this posture ("designed to the HIPAA stan
 | State EVV rules (Medicaid personal care) | If agencies use Circle Care for Medicaid visits | Circle Care is **not** an EVV system; don't market as one |
 | State SSN protection laws (e.g., California, Connecticut, Michigan, New York) | Circle Care collects SSNs from elders, caregivers and guardians | Limits on displaying, mailing and transmitting SSNs; some states require a published SSN privacy policy. Today the full number is never shown and is stored only encrypted (CC-180, CC-181). Confirm which states need a policy (Q14) |
 | State biometric privacy laws (e.g., Illinois BIPA, Texas, Washington) | Only if profile photos or voice are ever used to recognize a person | No face or voice matching today; consent would be needed before any is added (Q18, Q20) |
+| State data-security laws (e.g., Massachusetts 201 CMR 17.00, New York SHIELD Act) | Circle Care holds residents' SSNs and bank account details | A written information security program, vendor oversight and encryption duties, whatever the health-law answer (Q24) |
 | State money transmission laws | Only if Circle Care itself holds or moves money between the guardian and caregivers or agencies | Use a licensed processor that holds the funds; confirm the structure before money moves (Q16) |
 
 ## 6. TCPA (SMS and calls)
@@ -112,10 +114,11 @@ The public Privacy page already states this posture ("designed to the HIPAA stan
 
 ## 10. Payments, SSNs and identity data (added 2026-11-15)
 
-- **Why SSNs are collected.** Sign-up asks every account for an SSN to verify identity. Collecting it for elders, caregivers and guardians alike needs a purpose counsel agrees with. If it is used for caregiver background checks through a vendor, the Fair Credit Reporting Act may apply, with its own consent and adverse-action steps (Q14, Q15).
+- **Why SSNs are collected.** Sign-up asks every account for an SSN to verify identity, but nothing verifies it yet: no identity-check vendor is connected, and the app only checks the format and that the SSN isn't on another account. Collecting it for elders, caregivers and guardians alike needs a purpose counsel agrees with. If it is used for caregiver background checks through a vendor, the Fair Credit Reporting Act may apply, with its own consent and adverse-action steps (Q14, Q15).
 - **Controls in place today** (see the data inventory): SSNs are stored only encrypted, with a separate fingerprint to stop one SSN on two accounts; bank and card numbers go only to the vault and Circle Care keeps a token and the last four; audit records keep the last four only; real values are refused outside production (CC-180 to CC-188).
 - **Gaps already in the backlog** (from the [threat model (CC-10)](../security/10-threat-model.md)): no second sign-in step on the server for accounts that hold an SSN and bank details (CC-200); no way to end every session or reset a password (CC-201); a signed-in account can learn whether an SSN is already registered (CC-204); the database connection doesn't verify the server's certificate (CC-203).
 - **Who moves the money.** "Pay for care by ACH" can mean Circle Care debits the guardian and pays a caregiver or agency. That may make it a money transmitter, or a financial institution under GLBA and the FTC Safeguards Rule, unless a licensed processor holds and moves the funds (Q16). ACH debits need the guardian's authorization under Nacha rules and Regulation E, and recurring card charges may fall under state automatic-renewal laws (Q17).
+- **Paying from the elder's money.** A guardian or agent under a power of attorney who pays for care from the elder's funds usually has a duty to keep records and account for that spending, and some courts require yearly accountings. Circle Care could help with receipts, but shouldn't suggest it meets a court's rules (Q25).
 - **Paying caregivers.** If a family pays a private caregiver through Circle Care, tax and worker-classification duties (for example household employment) may arise for the family; Circle Care should not give tax advice. A question for counsel before money moves, not a product promise.
 
 ## 11. Open questions for counsel
@@ -144,6 +147,9 @@ The public Privacy page already states this posture ("designed to the HIPAA stan
 | Q20 | Voice replies: is sending the elder's voice to a browser speech service a disclosure that needs a BAA (agency) or consent (consumer, MHMDA), or a breach under the HBNR? Should voice be off by default or processed on the device? |
 | Q21 | The elder can keep daily check-ins private from the guardian. Can a guardian with healthcare authority override that, and must the evening recap respect it? |
 | Q22 | Which state breach laws do SSNs, financial account numbers and an email with its password trigger, alongside HIPAA and the HBNR, and what notice timelines follow (CC-34)? |
+| Q23 | With card numbers entered in Stripe's own fields, is Circle Care's PCI DSS scope the smallest self-assessment (SAQ A), and what does it become if card numbers ever pass through our server, as the development vault does today (SAQ D)? |
+| Q24 | Do state data-security laws such as Massachusetts 201 CMR 17.00 and the New York SHIELD Act apply to us, and what must our written security program include? |
+| Q25 | When a guardian or agent pays for care from the elder's money through Circle Care, what records must they keep, and should the app help without claiming to meet a court's accounting rules? |
 
 ## 12. Next steps (human action)
 

@@ -8,6 +8,8 @@ const ROOT = resolve(__dirname, "../..");
 const MEMO = readFileSync(resolve(ROOT, "docs/compliance/08-regulatory-memo.md"), "utf8");
 const INVENTORY = readFileSync(resolve(ROOT, "docs/compliance/09-data-inventory.md"), "utf8");
 const THREATS = readFileSync(resolve(ROOT, "docs/security/10-threat-model.md"), "utf8");
+const README = readFileSync(resolve(ROOT, "docs/README.md"), "utf8");
+const CHAT = readFileSync(resolve(ROOT, "src/components/chat.tsx"), "utf8");
 
 /** The text from a heading line up to the next heading of the same or a higher level. */
 function section(doc: string, heading: string) {
@@ -37,7 +39,10 @@ describe("regulatory memo draft (CC-196)", () => {
     expect(status).toMatch(/DRAFT v\d+ for counsel review, updated \d{4}-\d{2}-\d{2} — not legal advice/);
     expect(status).toContain("No lawyer has reviewed it");
     expect(status).toContain("Every conclusion below is a working assumption");
-    expect(MEMO).not.toMatch(/reviewed by counsel|approved by counsel|counsel (has|have) (reviewed|approved|confirmed)|legal review (is )?(complete|done)/i);
+    const claims = /(reviewed|approved|confirmed|signed off) by (counsel|a lawyer|an attorney|legal)|(counsel|attorney|(?<!No )lawyer)s? (has|have) (reviewed|approved|confirmed|signed off)|lawyer[- ]approved|legal review (is )?(complete|done|passed)/i;
+    expect(MEMO).not.toMatch(claims);
+    // The pattern itself catches the wordings it is meant to.
+    for (const claim of ["confirmed by counsel", "Lawyer approved", "a lawyer has reviewed this", "legal review complete"]) expect(claim).toMatch(claims);
   });
 
   it("covers every data type the inventory lists for accounts, payments, chat and check-ins", () => {
@@ -54,11 +59,31 @@ describe("regulatory memo draft (CC-196)", () => {
     for (const row of NEW_DATA) {
       expect(row, row.join(" | ")).toHaveLength(5);
       const [name, consumer, agency, assumption, questions] = row;
-      expect(consumer, `${name}: consumer model`).toMatch(/^(Applies|Not)/);
-      expect(agency, `${name}: agency model`).toMatch(/^(Applies|Not)/);
+      // Each model says how, not just whether: "Applies" alone isn't enough.
+      expect(consumer, `${name}: consumer model`).toMatch(/^(Applies|Not)\S*[;.,]? \S+/);
+      expect(agency, `${name}: agency model`).toMatch(/^(Applies|Not)\S*[;.,]? \S+/);
       expect(assumption.length, `${name}: working assumption`).toBeGreaterThan(20);
       expect(questions, `${name}: questions`).toMatch(/^(—|Q\d+(, Q\d+)*)$/);
     }
+  });
+
+  it("says who can add what, as the data inventory does", () => {
+    // Where the inventory says only the legal guardian can write a data type, the memo row must say so too.
+    const inventory = tableRows(section(INVENTORY, "## SSNs, bank accounts, cards and profile photos"));
+    const guardianOnly = inventory.filter((r) => /legal guardian only/i.test(r[3])).map((r) => dataName(r[0]));
+    expect(guardianOnly).toEqual(expect.arrayContaining(["Bank account", "Card"]));
+    for (const name of guardianOnly) {
+      const row = NEW_DATA.find((r) => dataName(r[0]) === name)!;
+      expect(row[1], `${name} in memo §2.1`).toMatch(/only the legal guardian/i);
+    }
+  });
+
+  it("flags the chat's on-device voice wording as untrue for as long as the code makes it so", () => {
+    const promises = section(MEMO, "## 4. FTC Act §5 and the FTC Health Breach Notification Rule (HBNR)");
+    const says = CHAT.includes("Your words are turned into text on this device");
+    const keepsOnDevice = /processLocally\s*=\s*true/.test(CHAT);
+    const flagged = /A promise that isn't true today: the chat's voice sheet/.test(promises);
+    expect(flagged, "memo §4 must flag the chat's voice promise exactly while it is untrue (CC-222)").toBe(says && !keepsOnDevice);
   });
 
   it("numbers its questions for counsel in order and defines every one it refers to", () => {
@@ -67,9 +92,12 @@ describe("regulatory memo draft (CC-196)", () => {
     const defined = new Set(numbers);
     for (const [ref] of MEMO.matchAll(/\bQ\d+\b/g)) expect(defined, `${ref} is referred to but not in §11`).toContain(ref);
     // Every new data type with a question points at one; the new questions are all used somewhere.
-    for (const q of ["Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22"]) {
+    // Every question added in v2 (Q14 on) is linked to a data type in §2.1.
+    for (const q of numbers.slice(13)) {
       expect(NEW_DATA.some((r) => r[4].split(", ").includes(q)), `${q} is not linked to a data type in §2.1`).toBe(true);
     }
+    // The docs index asks counsel to answer them all.
+    expect(README).toContain(`answer Q1–Q${numbers.length}`);
   });
 
   it("links the backlog gaps it names to stories that the threat model also tracks", () => {
