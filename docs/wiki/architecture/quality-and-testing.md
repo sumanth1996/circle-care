@@ -20,7 +20,7 @@ Measured on GitHub Actions for [PR #7](https://github.com/sumanth1996/circle-car
 
 | Suite | Count | Result |
 |---|---|---|
-| Unit tests | **469** in 10 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
+| Unit tests | **475** in 11 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
 | E2E scenarios | **29** | All pass, with no page or console errors |
 | Chat and recap scenarios | **7** | All pass |
 | Accessibility | **26** screens plus the evening recap card | **0** axe-core violations (WCAG 2.1 A/AA) |
@@ -113,6 +113,8 @@ Set `CHROMIUM_PATH` to use a specific Chromium binary. Failure screenshots and t
 ## CI
 
 `.github/workflows/browser-tests.yml` (CC-194) runs on every pull request to `main`, on pushes to `main` and on demand: `npm ci`, `npm test`, `npm run build`, then `vite preview` and the three browser scripts, keeping `tests/e2e/out/` as an artifact for 7 days. Each script exits with 1 on a failure, so the check goes red.
+
+Since CC-198 the workflow runs Node 22 on `ubuntu-24.04`, pins every outside action to a full commit SHA with its release in a comment, keeps no token after checkout, and cancels an older run only for a pull request, so every run on `main` finishes. `src/__tests__/ci-workflow.test.ts` fails if any of that slips. To update an action, look up the new release's commit SHA and change the SHA and the comment together.
 
 Still to add: `npm audit --audit-level=high`, `mkdocs build --strict` for this wiki, and branch protection so a red check blocks merging.
 
