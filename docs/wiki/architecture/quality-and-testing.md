@@ -16,11 +16,11 @@ The strategy favours **testing the rules where they live** (the data layer is pu
 
 ## Current results (Sprint 13, 2026-11-14)
 
-Measured on GitHub Actions, which runs on every pull request to `main`. The unit-test count is from [PR #10](https://github.com/sumanth1996/circle-care/pull/10) (CC-198); the browser counts are from [PR #7](https://github.com/sumanth1996/circle-care/pull/7) (CC-194).
+Measured on GitHub Actions, which runs on every pull request to `main`. The unit-test count is from [PR #11](https://github.com/sumanth1996/circle-care/pull/11) (CC-195); the browser counts are from [PR #7](https://github.com/sumanth1996/circle-care/pull/7) (CC-194).
 
 | Suite | Count | Result |
 |---|---|---|
-| Unit tests | **475** in 11 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
+| Unit tests | **487** in 12 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
 | E2E scenarios | **29** | All pass, with no page or console errors |
 | Chat and recap scenarios | **7** | All pass |
 | Accessibility | **26** screens plus the evening recap card | **0** axe-core violations (WCAG 2.1 A/AA) |
@@ -108,7 +108,6 @@ Set `CHROMIUM_PATH` to use a specific Chromium binary. Failure screenshots and t
 | No e2e for shift swaps, shift offers, emergency-card edits or invitation acceptance | Untested journeys | Add scenarios |
 | Hand-off, schedule, feed, emergency card and SOS screens not in the axe list | Unchecked accessibility | Add them to `a11y.py` |
 | No visual regression tests | Layout bugs (e.g. the digest chart in the screenshot) | Playwright screenshot comparisons |
-| The demo store can lose a change made in the last quarter second before the tab closes | A switch can come back after a quick reload; tests must wait for the save | Backlog story CC-195 |
 
 ## CI
 

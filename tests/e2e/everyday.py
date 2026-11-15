@@ -11,7 +11,6 @@ import json
 import os
 import re
 import sys
-import time
 
 from playwright.sync_api import sync_playwright, expect
 
@@ -80,26 +79,6 @@ with sync_playwright() as p:
 
     log = lambda: pg.get_by_role("log", name="Messages")
     recap = lambda: pg.locator("#recap")
-
-    def wait_for_save(before):
-        """Wait until the app has saved and then stopped saving.
-
-        The demo store saves on a 250 ms timer, and a reload sooner throws the change away (backlog story CC-195).
-        Each save is encrypted with a fresh IV, so the stored text changes whenever a save lands. The 15 s tick also
-        saves, so the first change alone could be the tick's. Polling starts after the flip, so waiting until the text
-        has stayed the same for 0.6 s, longer than the timer, since it last changed covers the flip's own save.
-        Polled from here, not with wait_for_function: the app's CSP (script-src 'self') blocks the eval it needs.
-        """
-        read = lambda: pg.evaluate("() => localStorage.getItem('circle-care-demo')")
-        last, changed_at, start = before, None, time.monotonic()
-        while time.monotonic() - start < 8:
-            now = read()
-            if now != last:
-                last, changed_at = now, time.monotonic()
-            elif changed_at is not None and time.monotonic() - changed_at >= 0.6:
-                return
-            pg.wait_for_timeout(100)
-        raise AssertionError("the change was not saved within 8 seconds")
 
     def flip(name, on):
         """Turn a settings switch on or off the way a person would.
@@ -234,16 +213,20 @@ with sync_playwright() as p:
         signin("guardian")
         pg.goto(B + "/app/guardian/settings")
         expect(pg.get_by_role("switch", name="Evening recap update")).to_be_checked()
-        before = pg.evaluate("() => localStorage.getItem('circle-care-demo')")
         flip("Evening recap update", False)
-        wait_for_save(before)
+        # CC-195: the change is saved as soon as it's made, so reloading straight away keeps it.
         pg.reload()
         expect(pg.get_by_role("switch", name="Evening recap update")).not_to_be_checked()
         pg.goto(B + "/app/guardian")
         expect(recap()).to_contain_text("The 7 PM update is off")
         pg.goto(B + "/app/guardian/settings")
         flip("Evening recap update", True)
-    step("CC-191 turning off Update at 7 PM stays off after a reload", recap_switch)
+        # CC-195: nothing is lost when the page is hidden (switching apps on a phone) and then reloaded. The change save
+        # has usually already started, so this checks that the hide handler does no harm, not that it alone saves.
+        pg.evaluate("() => { Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true }); document.dispatchEvent(new Event('visibilitychange')); }")
+        pg.reload()
+        expect(pg.get_by_role("switch", name="Evening recap update")).to_be_checked()
+    step("CC-191 and CC-195 Update at 7 PM keeps its setting when the page reloads straight away, and nothing is lost when it is hidden first", recap_switch)
 
     b.close()
 
