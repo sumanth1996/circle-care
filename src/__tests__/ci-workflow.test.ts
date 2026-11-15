@@ -18,13 +18,17 @@ describe("Browser tests workflow (CC-198)", () => {
     }
   });
 
-  it("keeps no credentials after checkout", () => {
-    expect(CODE).toMatch(/uses: actions\/checkout@[0-9a-f]{40} # v[\d.]+\n\s+with:\n\s+persist-credentials: false\n/);
+  it("keeps no credentials after any checkout", () => {
+    // Each step starts with "- "; split on that so every checkout's own `with:` block is checked.
+    const checkouts = CODE.split(/\n\s+- /).filter((step) => /(?:^|\n\s*)uses: actions\/checkout@/.test(step));
+    expect(checkouts.length).toBeGreaterThan(0);
+    for (const step of checkouts) expect(step, step).toMatch(/\n\s+with:(?:\n\s+[\w-]+: [^\n]*)*\n\s+persist-credentials: false(?:\n|$)/);
   });
 
   it("keeps the token read-only and never runs pull-request code with secrets", () => {
     expect(CODE).toMatch(/^permissions:\n {2}contents: read\n/m);
-    expect(CODE).not.toMatch(/write/);
+    expect(CODE).not.toMatch(/^\s+[\w-]+: write\b/m);
+    expect(CODE).not.toContain("write-all");
     expect(CODE).not.toContain("pull_request_target");
     expect(CODE).not.toContain("secrets.");
   });
@@ -36,13 +40,15 @@ describe("Browser tests workflow (CC-198)", () => {
   });
 
   it("cancels an older run only for pull requests, so runs on main always finish", () => {
-    expect(CODE).toMatch(/^concurrency:\n {2}group: browser-tests-\$\{\{ github\.ref \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}\n/m);
+    // Only pull requests share a group by branch; any other run is alone in a group named by its run id,
+    // so a newer push to main can neither cancel it nor drop it while it waits.
+    expect(CODE).toMatch(/^concurrency:\n {2}group: browser-tests-\$\{\{ github\.event_name == 'pull_request' && github\.ref \|\| github\.run_id \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}\n/m);
   });
 
   it("still runs the unit tests and all three browser suites with nothing skipped", () => {
     for (const step of ["run: npm test", "run: python tests/e2e/e2e.py", "run: python tests/e2e/everyday.py", "run: python tests/e2e/a11y.py"]) {
       expect(CODE).toContain(step);
     }
-    expect(CODE).not.toMatch(/continue-on-error|if: false/);
+    expect(CODE).not.toMatch(/continue-on-error|if:\s*false|if:\s*\$\{\{\s*false/);
   });
 });
