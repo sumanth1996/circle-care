@@ -1,7 +1,7 @@
 # Threat Model (STRIDE): Circle Care as built
 
 Notion story: CC-10 Threat model for MVP architecture
-Status: DRAFT v3, reviewed against `main` (cc3e577) on 2026-11-15. It replaces the October 19 draft, which was written against a planned architecture and said the prototype had no backend. v3 adds availability threats and the Lead Architect's corrections.
+Status: DRAFT v3, reviewed against `main` (cc3e577) on 2026-11-15. It replaces the October 19 draft, which was written against a planned architecture and said the prototype had no backend. v3 adds availability threats and the Lead Architect's corrections. C8-T1 was updated on 2026-11-15 when CC-198 locked down the Browser tests workflow.
 
 !!! warning "Still needs human security review"
     This model was written and checked by the build team's agents. Before any real data is used, it still needs review by **an engineer with security experience** and sign-off by the **designated security officer** (CC-79). It is not a penetration test (CC-78).
@@ -186,7 +186,7 @@ The demo store is a prototype: one browser holds every persona's view of a ficti
 | ID | STRIDE | Threat | Control in code today | Status | Impact | Likelihood | Risk | Owner | Story |
 |---|---|---|---|---|---|---|---|---|---|
 | C8-E1 | E | A pull request's code gets write access or secrets | The workflow runs on `pull_request` (not `pull_request_target`) with a read-only token and no secrets (`.github/workflows/browser-tests.yml:contents: read`) | In place | Medium | Low | Low | Release Agent | |
-| C8-T1 | T | A changed outside action alters what runs | Actions are pinned to tags, not commits (`.github/workflows/browser-tests.yml:actions/checkout@v4`), and checkout keeps its token | Partial | Medium | Medium | Medium | Release Agent | CC-198 |
+| C8-T1 | T | A changed outside action alters what runs | Every action is pinned to a full commit SHA (`.github/workflows/browser-tests.yml:actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1`), checkout keeps no token (`.github/workflows/browser-tests.yml:persist-credentials: false`), and a unit test fails if either slips (`src/__tests__/ci-workflow.test.ts:keeps no credentials after any checkout`). A pinned release that was bad when pinned is still trusted | In place | Medium | Low | Low | Release Agent | CC-198 |
 | C8-T2 | T | A compromised npm or PyPI package runs in CI or the build | CI installs from the lockfile with integrity hashes (`.github/workflows/browser-tests.yml:run: npm ci`); Playwright is pinned by version without a hash. No dependency audit or Dependabot | Partial | Medium | Medium | Medium | Release Agent | |
 
 ### C9 GitHub Pages

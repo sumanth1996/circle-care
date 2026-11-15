@@ -1,5 +1,7 @@
 # CC-194: unit tests plus the browser and accessibility suites on every pull request to main.
 # GitHub's runners can install Chromium; the Claude build environment can't.
+# CC-198: every outside action is pinned to a full commit SHA (its release in the comment),
+# checkout keeps no token, and only pull-request runs cancel an older run of the same branch.
 name: Browser tests
 
 on:
@@ -13,22 +15,26 @@ permissions:
   contents: read
 
 concurrency:
-  group: browser-tests-${{ github.ref }}
-  cancel-in-progress: true
+  # A newer push to a pull request replaces its older run. Every other run (main, on demand)
+  # gets a group of its own, so it is never cancelled or dropped while waiting.
+  group: browser-tests-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   browser-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 20
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
           cache: npm
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
 
@@ -70,7 +76,7 @@ jobs:
 
       - name: Keep screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: browser-test-screenshots
           path: tests/e2e/out/
