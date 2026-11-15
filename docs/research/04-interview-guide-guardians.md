@@ -3,7 +3,7 @@
 Notion story: CC-4 Interview guide: legal guardians · CC-197 concept tests of the built features
 Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No interviews have taken place.
 
-> Participants come through the CC-1 screener. Do not ask to see legal documents. Do not ask for the elder's name or diagnoses. Session up to 70 minutes (if time is short, drop T5 and T9); many guardians work full time, so offer evenings and weekends.
+> Participants come through the CC-1 screener. Do not ask to see legal documents. Do not ask for the elder's name or diagnoses. Session up to 70 minutes (if time is short, drop T5 and T4); many guardians work full time, so offer evenings and weekends.
 
 ## Goals
 
@@ -22,7 +22,6 @@ Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No inter
 - If they mention a crisis that is ongoing, check they're OK to continue.
 - Run the concept tests on the research phone, never the participant's. After the session, tap *Reset demo* in the presenter sheet so nothing carries over to the next person.
 - Chat voice: before the session, block the microphone for the prototype site in the research phone's browser (screener §9), so the chat opens its typing box instead of listening. In Chrome and most browsers the chat's voice reply sends speech to an online service, though the screen says it stays on the device (CC-222), and one tap starts it listening to the whole room. Ask what they expect happens to their words if they spoke. Remove this line once CC-222 is done.
-- The dose voice in §6 T2 only ever runs on the device and switches itself off otherwise, so it is safe; with the microphone blocked it is simply off.
 - The demo's medicine names (Metformin, Lisinopril, Vitamin D3, Atorvastatin) belong to the made-up Maggie and are fine in prompts. Never note them as the participant's.
 
 ## 1. Warm-up (5 min)

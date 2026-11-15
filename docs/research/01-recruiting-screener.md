@@ -52,7 +52,7 @@ Ask by phone or a short form. Read questions aloud for elders. Record answers in
 2. What state do you live in? — *aim for at least 3 states*
 3. Are you, or anyone in your household, employed by a company that makes health or caregiving apps? — *exclude if yes*
 4. Have you taken part in a paid research interview in the last 6 months? — *exclude if 2+*
-5. Are you comfortable with a conversation of up to an hour (elders) or up to 70 minutes (caregivers and guardians), by phone, video or in person? Which do you prefer?
+5. Are you comfortable with a conversation of up to 70 minutes, with breaks, by phone, video or in person? Which do you prefer?
 
 ### 4.2 Elders
 
@@ -107,7 +107,7 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 
 ## 6. Incentive
 
-- Proposed: $40 gift card for the main session (up to 60 minutes for elders, 70 for caregivers and guardians); $20 for a 15-minute follow-up.
+- Proposed: $40 gift card for the main session (up to 70 minutes); $20 for a 15-minute follow-up.
 - Offer the choice of a physical card mailed or e-card; some elders will not want an e-card.
 - Budget for minimum quotas: 17 × $40 = $680 (+ 20% buffer). **Funding not yet secured.**
 

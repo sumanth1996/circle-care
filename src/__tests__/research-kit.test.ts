@@ -49,7 +49,11 @@ const PHARMACIES = [...new Set(seed().meds.map((m) => m.supply?.pharmacy).filter
 const onScreen = (label: string) => {
   if (APP.includes(label)) return true;
   const p = PHARMACIES.find((x) => label.includes(x));
-  return !!p && label.split(p).every((part) => !part.trim() || APP.includes(part.trim()));
+  if (!p) return false;
+  // The words either side of the pharmacy must sit either side of the app's {…pharmacy…} placeholder.
+  const esc = (t: string) => t.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const [before, after] = label.split(p);
+  return new RegExp(`${esc(before)}\\s*\\{[^}]*pharmacy[^}]*\\}\\s*${esc(after)}`).test(APP);
 };
 
 // The demo clock is moved within a frozen day, as in everyday.test.ts.
@@ -137,6 +141,8 @@ describe("research kit (CC-197)", () => {
     expect(can(s, CAREGIVER, "write", "supply")).toBe(true);
     const visit = s.visits.find((v) => v.caregiverId === CAREGIVER && v.date === todayOf(s) && v.checkIn && !v.checkOut);
     expect(visit, "the seed checks Ana in on a weekday morning").toBeDefined();
+    // T3's Send hand-off and check out runs submitHandoff, which checks the caregiver out.
+    expect(read("src/data/store.tsx")).toMatch(/submitHandoff:[\s\S]{0,300}?v\.checkOut = clock\(s\)/);
     visit!.checkOut = new Date().toISOString();
     expect(can(s, CAREGIVER, "write", "supply")).toBe(false);
     expect(GUIDES.caregiver).toMatch(/\*\*Run §6b straight after T2, before T3\.\*\*/);

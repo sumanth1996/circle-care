@@ -7,7 +7,7 @@
 | Developer · Tester · Build & Deploy | Dev Agent · QA Agent · Release Agent |
 | Product Owner | Sumanth (PO), go to start CC-197 given 2026-11-15 |
 | Date | 2026-11-15 |
-| Final verdict | Round 1: changes requested · Round 2 pending |
+| Final verdict | Round 1 and 2: changes requested · Round 3 pending |
 
 ## What changed
 
@@ -40,6 +40,20 @@
 | 14 | Tests checked labels, not behaviour; the record overclaimed | Three behaviour tests added against the seed; the label claim is scoped to §6b/§7b |
 | 15–17 | Smaller accuracy fixes | Guardian meals note is in the alerts; "with breakfast"; Vitamin D3 and Ruth added |
 | 18 | The checklist-format check could never fail | Removed |
+
+## Round 2: changes requested (small fixes)
+
+All four round 1 Musts were confirmed fixed against the code and the seed.
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | The elder timings (§1 to §6 about 54 minutes, plus §6b and wrap-up) didn't fit "up to 60 minutes" | Elder sessions are up to 70 minutes like the others; the screener question and incentive match |
+| 2 | The short-session drop lists removed the only test of a new feature (caregiver T7, guardian T9) | Drop older optional tasks instead: caregiver T4, guardian T5 and T4 |
+| 3 | The "run §6b before T3" instruction sat below the T3 row | Moved to the §6 intro, and the T3 row says "run §6b first" |
+| 4 | The dose-voice line was copied into guides whose §6 has no voice | Kept in the elder guide only |
+| 5 | With the microphone blocked, *Answer with my voice* may still show | The elder guide says what tapping it shows, as expected behaviour |
+| 6 | "First *My day* tap" was too narrow; *Reset demo* also resets text size | "Any tap", and set the text size again |
+| 7 | The pharmacy-label check was loose; the shift test set checkOut by hand | The check matches the app's placeholder exactly; the test also checks that the hand-off action checks the caregiver out |
 
 ## Results
 

@@ -3,7 +3,7 @@
 Notion story: CC-2 Interview guide: elders · CC-197 concept tests of the built features
 Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No interviews have taken place.
 
-> Participants come through the CC-1 screener. Only interview people who can give their own consent. Session length up to 60 minutes. Offer breaks. If the session reaches 55 minutes before §6b, or the person tires, move §6b to the 15-minute follow-up.
+> Participants come through the CC-1 screener. Only interview people who can give their own consent. Session length up to 70 minutes: §1 to §6 take about 54, §6b 10 and the wrap-up 3. Offer breaks. If the session reaches 55 minutes before §6b, or the person tires, move §6b to the 15-minute follow-up.
 
 ## Goals
 
@@ -23,7 +23,7 @@ Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No inter
 - If they disclose risk of harm (neglect, abuse, an unsafe situation), pause the interview and follow the safety protocol agreed with the research lead **before** fieldwork starts (human action: write this protocol).
 - Run the concept tests on the research phone, never the participant's. After the session, tap *Reset demo* in the presenter sheet so nothing carries over to the next person.
 - Chat voice: before the session, block the microphone for the prototype site in the research phone's browser (screener §9), so the chat opens its typing box instead of listening. In Chrome and most browsers the chat's voice reply sends speech to an online service, though the screen says it stays on the device (CC-222), and one tap starts it listening to the whole room. Ask what they expect happens to their words if they spoke. Remove this line once CC-222 is done.
-- The dose voice in §6 T2 only ever runs on the device and switches itself off otherwise, so it is safe; with the microphone blocked it is simply off.
+- The dose voice in §6 T2 runs only on the device, so it is safe. Where the browser can't do that it doesn't show; with the microphone blocked, *Answer with my voice* may still show, and tapping it shows *Voice isn't working right now. Please tap a button instead.* That is expected: note it under T2's "tries voice?".
 - The demo's medicine names (Metformin, Lisinopril, Vitamin D3, Atorvastatin) belong to the made-up Maggie and are fine in prompts. Never note them as the participant's.
 
 ## 1. Warm-up (5 min)
@@ -81,7 +81,7 @@ After each task: "On a scale of 1 to 5, how easy was that?" and "What would you 
 
 Close the concept test with: "Who in your life would you want in a circle like this? Who would you leave out?"
 
-Before §6b, turn *Pause sharing* back off: T3 leaves it on. A day whose first *My day* tap happens while sharing is paused stays private all day, so T5's footer and T8's *Her day* would show it as private. If that happens, tap *Reset demo* and sign in as Maggie again.
+Before §6b, turn *Pause sharing* back off: T3 leaves it on. Any *My day* tap while sharing is paused makes that day private, so T5's footer and T8's *Her day* would show it as private. If that happens, tap *Reset demo*, sign in as Maggie again and set their text size again.
 
 ## 6b. Concept test — everyday care built since October (10 min)
 

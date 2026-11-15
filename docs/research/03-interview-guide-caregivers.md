@@ -3,7 +3,7 @@
 Notion story: CC-3 Interview guide: professional caregivers · CC-197 concept tests of the built features
 Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No interviews have taken place.
 
-> Participants come through the CC-1 screener. If the caregiver works for an agency and the agency required approval, confirm written approval is on file. Never ask for client names. Session length up to 70 minutes; schedule around shifts and offer evenings. If time is short, drop T4 and T7. Run sessions Monday to Saturday, when the demo gives Ana a shift.
+> Participants come through the CC-1 screener. If the caregiver works for an agency and the agency required approval, confirm written approval is on file. Never ask for client names. Session length up to 70 minutes; schedule around shifts and offer evenings. If time is short, drop T4. Run sessions Monday to Saturday, when the demo gives Ana a shift.
 
 ## Goals
 
@@ -22,7 +22,6 @@ Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No inter
 - Respect language preference; offer an interpreter if needed (budget TBD).
 - Run the concept tests on the research phone, never the participant's. After the session, tap *Reset demo* in the presenter sheet so nothing carries over to the next person.
 - Chat voice: before the session, block the microphone for the prototype site in the research phone's browser (screener §9), so the chat opens its typing box instead of listening. In Chrome and most browsers the chat's voice reply sends speech to an online service, though the screen says it stays on the device (CC-222), and one tap starts it listening to the whole room. Ask what they expect happens to their words if they spoke. Remove this line once CC-222 is done.
-- The dose voice in §6 T2 only ever runs on the device and switches itself off otherwise, so it is safe; with the microphone blocked it is simply off.
 - The demo's medicine names (Metformin, Lisinopril, Vitamin D3, Atorvastatin) belong to the made-up Maggie and are fine in prompts. Never note them as the participant's.
 
 ## 1. Warm-up (5 min)
@@ -69,16 +68,16 @@ Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No inter
 
 Use `/#/app` → Ana on a phone. Read each task aloud. The demo checks Ana in at 8 AM on its own; if she is already on shift, T1 becomes "Show me how you'd know you're on shift."
 
+**Run §6b straight after T2, before T3.** T3's **Send hand-off and check out** ends Ana's shift, which hides *Pills on hand* and the refill buttons and turns off **Save as a note**, and she can't check in again that day. If T3 has already happened, tap *Reset demo*, sign in as Ana again and re-add her to the chat.
+
 | Task | Prompt | Watch for | Success = |
 |---|---|---|---|
 | T1 Check in | "You just arrived at Maggie's. Start your shift." | Finds check-in; reaction to plan unlocking only on shift; manual-reason flow | Checks in unaided |
 | T2 Give a dose | "Maggie's morning medicine is due. Record that she took it." Then: "She says no to the evening one." | Order of doses; high-priority callout; recording a refusal | Records taken + refused |
-| T3 Hand-off | "Your shift is over. Leave things for the next person." | Reads the auto-drafted summary; edits or accepts; trust in the draft | Sends hand-off; says whether they'd trust the draft |
+| T3 Hand-off (run §6b first) | "Your shift is over. Leave things for the next person." | Reads the auto-drafted summary; edits or accepts; trust in the draft | Sends hand-off; says whether they'd trust the draft |
 | T4 Shift swap (optional) | "You can't make Thursday. Ask someone to cover." | Expects the guardian to approve? | Finds the flow |
 
 After each: "1–5, how easy?" and "Would this save you time or add time compared to today?"
-
-**Run §6b straight after T2, before T3.** T3's **Send hand-off and check out** ends Ana's shift, which hides *Pills on hand* and the refill buttons and turns off **Save as a note**, and she can't check in again that day. If T3 has already happened, tap *Reset demo*, sign in as Ana again and re-add her to the chat.
 
 ## 6b. Concept test — everyday care built since October (10 min)
 
