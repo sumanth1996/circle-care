@@ -18,7 +18,7 @@ import type { Resource } from "./policy";
  *   object counts as its own record, and a link to another record doesn't make
  *   it one (Chat's read times are Operational though its messages are PHI).
  *   This rule doesn't by itself make an id, status or flag PHI.
- * - Demo ids are readable ("med-lisinopril", "t-bath", "ap-metformin",
+ * - Demo ids are readable ("med-lisinopril", "t-bath", "ap-metformin", "s-ana",
  *   "appt-auto-med-lisinopril-…", "b-" + count time), so those ids, and keys
  *   built from them, are PHI. Production should use opaque ids.
  */
@@ -83,11 +83,11 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   Shift: {
     resource: "schedule",
-    fields: { id: O, caregiverId: P, days: P, start: P, end: P, accepted: O },
+    fields: { id: P, caregiverId: P, days: P, start: P, end: P, accepted: O },
   },
   Visit: {
     resource: "schedule",
-    fields: { id: O, shiftId: O, caregiverId: P, date: P, checkIn: P, checkOut: P, manualReason: P },
+    fields: { id: O, shiftId: P, caregiverId: P, date: P, checkIn: P, checkOut: P, manualReason: P },
   },
   Handoff: {
     resource: "handoffs",

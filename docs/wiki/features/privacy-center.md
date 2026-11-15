@@ -73,7 +73,7 @@
 | Check-in sharing — who can change | Elder only (`setDailySharing`). A general settings write that touches check-in or health sharing is refused and audited, whoever sends it, and only Maggie can pause or resume all sharing. *Share daily check-ins with Sarah* covers feeling, water and meals; the guardian sees a *Shared* or *Private* badge. Pausing all sharing hides them too, and the badge reads *Paused*. Days she logged while not sharing stay private. | CC-143 |
 | Access log shown | Last 30 days, excluding Maggie's own actions, newest 12 | `PrivacyCenter.tsx` |
 | Integrity check | `verifyChain()` over the whole log; failure shows *"Access log may have been altered — Entry N of M doesn't match its seal."* | `audit.ts` |
-| Retention statement | *"In the full product it is kept for 6 years, even after a circle is closed, as health privacy law requires."* (`RETENTION_YEARS = 6`). In the demo, closing the circle wipes the log with everything else | `audit.ts` |
+| Retention statement | *"In the full product, the access log is kept for 6 years, even after a circle is closed, as health privacy law requires."* (`RETENTION_YEARS = 6`). In the demo, closing the circle wipes the log with everything else | `audit.ts` |
 | Export contents | Members (without photos), medications, doses, tasks, check-ins, daily check-ins (CC-142; a guardian's copy includes only shared days, and none while not shared), notes, document metadata, access log | `doExport` |
 | Export encryption | PBKDF2-SHA-256, 250,000 iterations, 16-byte salt → AES-256-GCM, 12-byte IV; file is JSON with `format: "circle-care-export"`, `kdf`, `cipher`, `salt`, `iv`, `data` | `encryptWithPassphrase` |
 | Close circle — who | Elder or guardian (`data: delete`) | `closeCircle` |

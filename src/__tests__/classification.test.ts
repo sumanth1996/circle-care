@@ -92,7 +92,7 @@ describe("data classification (CC-9)", () => {
     expect(f("AuditEvent", "resource")).toBe("PHI");
   });
 
-  it("treats readable ids (medicines, tasks, approvals), and keys built from them, as PHI", () => {
+  it("treats readable ids (medicines, tasks, approvals, shifts), and keys built from them, as PHI", () => {
     const f = (e: string, k: string) => STATE_CLASSIFICATION[e].fields[k];
     expect(f("Medication", "id")).toBe("PHI");
     expect(f("Appointment", "id")).toBe("PHI"); // "appt-auto-med-lisinopril-…" (everyday.ts autoRefillId)
@@ -100,6 +100,8 @@ describe("data classification (CC-9)", () => {
     expect(f("TaskLog", "taskId")).toBe("PHI");
     expect(f("Approval", "id")).toBe("PHI"); // "ap-metformin"
     expect(f("MedSupply", "bottleId")).toBe("PHI"); // "b-" + the time it was counted
+    expect(f("Shift", "id")).toBe("PHI"); // "s-ana"
+    expect(f("Visit", "shiftId")).toBe("PHI");
     expect(f("DoseLog", "medId")).toBe("PHI");
     expect(f("Appointment", "medIds")).toBe("PHI");
     expect(f("Alert", "key")).toBe("PHI");
@@ -203,7 +205,7 @@ describe("classification check itself", () => {
 function inventoryRows(md: string) {
   const rows: Record<string, Record<DataClass, string[]>> = {};
   for (const line of md.split("\n")) {
-    const m = line.match(/^\| `([\w]+)` \|(.*)\|\s*$/);
+    const m = line.match(/^\| `([\w.]+)` \|(.*)\|\s*$/);
     if (!m) continue;
     const cells = m[2].split("|").map((c) => c.trim());
     if (cells.length < 5) continue;

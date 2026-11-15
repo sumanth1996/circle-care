@@ -148,7 +148,7 @@ export default function PrivacyCenter() {
             <p className="muted small">{integrity.ok ? `All ${integrity.count} entries check out. Each entry is sealed to the one before it, so any change or deletion would show up here.` : `Entry ${integrity.brokenAt + 1} of ${integrity.count} doesn't match its seal. Our security team is alerted automatically.`}</p>
           </div>
         </div>
-        <p className="tiny">In the full product it is kept for {RETENTION_YEARS} years, even after a circle is closed, as health privacy law requires. It records who opened or changed what, and when. It can name a medicine, a document or an appointment, so the log is protected as health information.</p>
+        <p className="tiny">In the full product, the access log is kept for {RETENTION_YEARS} years, even after a circle is closed, as health privacy law requires. It records who opened or changed what, and when. It can name a medicine, a document or an appointment, so the log is protected as health information.</p>
       </section>
 
       <section className="grid-2">

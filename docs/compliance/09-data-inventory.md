@@ -27,7 +27,7 @@ So a new field can't reach `main` without a class here. Re-run the review, and u
 Two rules keep the tags consistent, and the test checks both:
 
 - **Who and when go with the record.** In a record that holds PHI, the member who did it and the time are PHI too, because together they say who cared for Maggie, and when. Each nested object counts as its own record, and a link to another record doesn't make it one, so the chat's read times stay operational though its messages are PHI. This rule doesn't by itself make an id, a status or a flag PHI. The test goes by field name (`by`, `at`, `…By`, `…At` and a short list of member references), so new who or when fields should follow that naming.
-- **Demo ids are readable.** They embed what they are about: `med-lisinopril`, `t-bath`, `ap-metformin`, `appt-auto-med-lisinopril-…` for an automatic refill, and `b-` plus the count time for a bottle. So `Medication.id`, `CareTask.id`, `Approval.id`, `Appointment.id`, `MedSupply.bottleId`, the fields that hold those ids and alert keys built from them are PHI. Production should use opaque ids.
+- **Demo ids are readable.** They embed what they are about: `med-lisinopril`, `t-bath`, `ap-metformin`, `s-ana` for a caregiver's shift, `appt-auto-med-lisinopril-…` for an automatic refill, and `b-` plus the count time for a bottle. So `Medication.id`, `CareTask.id`, `Approval.id`, `Shift.id`, `Appointment.id`, `MedSupply.bottleId`, the fields that hold those ids and alert keys built from them are PHI. Production should use opaque ids.
 
 "Who can see" names the permission-matrix resource (`MATRIX` in `src/data/policy.ts`, rendered in the [permission matrix](../security/permission-matrix.md)) and the roles that may read it. `pro@shift` is a paid caregiver while checked in to a visit. When Maggie pauses sharing (CC-81), family and paid caregivers keep only `sos`, `emergencyCard` and `circle`.
 
@@ -78,8 +78,8 @@ Each row lists every field of one entity by class; inline objects use dots (`pil
 | `DoseLog` | `medId`, `date`, `time`, `status`, `by`, `at`, `verified`, `reason` | — | — | `id` | `doses`: elder, guardian, family, pro@shift. `reason` is free text |
 | `CareTask` | `id`, `title`, `icon`, `time`, `recurrence`, `assignee` | — | — | — | `tasks`: elder, guardian, family, pro@shift. Titles reveal care needs |
 | `TaskLog` | `taskId`, `date`, `by`, `at`, `note` | — | — | — | `tasks`: elder, guardian, family, pro@shift |
-| `Shift` | `caregiverId`, `days`, `start`, `end` | — | — | `id`, `accepted` | `schedule`: elder, guardian, family, pro. Reveals that Maggie gets home care |
-| `Visit` | `caregiverId`, `date`, `checkIn`, `checkOut`, `manualReason` | — | — | `id`, `shiftId` | `schedule`: elder, guardian, family, pro. No location is stored |
+| `Shift` | `id`, `caregiverId`, `days`, `start`, `end` | — | — | `accepted` | `schedule`: elder, guardian, family, pro. Reveals that Maggie gets home care |
+| `Visit` | `shiftId`, `caregiverId`, `date`, `checkIn`, `checkOut`, `manualReason` | — | — | `id` | `schedule`: elder, guardian, family, pro. No location is stored |
 | `Handoff` | `by`, `at`, `mood`, `meals`, `concerns`, `notes`, `summary`, `acknowledgedBy`, `acknowledgedAt`, `skippedReason` | — | — | `id`, `visitId` | `handoffs`: guardian, family, pro; written only by a caregiver on shift |
 | `SosEvent` | `startedAt`, `status`, `responderId`, `acknowledgedAt`, `resolvedAt`, `outcome` | — | — | `id`, `step`, `via` | `sos`: elder, guardian, family, pro, even while sharing is paused |
 | `Checkin` | `date`, `at`, `mood` | — | — | — | `history`: elder, guardian, family |
