@@ -54,7 +54,7 @@ Data assets: see [CC-9 data inventory](09-data-inventory.md). System assets:
 | R12 | SOS / escalation not delivered (availability) | A6, A7 | P: escalation chain, SMS fallback design | 3 | 5 | 15 High | Multi-channel delivery, monitoring and alerting, critical-alert entitlements; clear "call 911" guidance | TBD |
 | R13 | Data loss (no backups / failed restore) | A4, A5, A9 | None yet | 2 | 4 | 8 Med | Encrypted backups, restore tests quarterly; contingency plan | TBD |
 | R14 | Leaked export file | A1 | P: passphrase encryption PBKDF2 250k + AES-GCM; export logged | 2 | 3 | 6 Med | Re-auth before export; passphrase strength meter | TBD |
-| R15 | XSS / injected script | A1 | P: CSP on production build (meta tag) | 2 | 4 | 8 Med | CSP as header incl. `frame-ancestors`; remove `'unsafe-inline'` styles if feasible | TBD |
+| R15 | XSS / injected script | A1 | P: CSP on production build (meta tag) and as an HTTP header from the server with `frame-ancestors 'none'` | 2 | 4 | 8 Med | Remove `'unsafe-inline'` styles if feasible; one shared CSP list | TBD |
 | R16 | Over-collection in free text (notes, reasons) | A4 | P: notes visibility choice | 4 | 2 | 8 Med | Guidance in UI; retention limits | TBD |
 | R17 | Re-identification from pilot data | A12 | P: separate store, minimal fields, `scrubHealth`, cohort < 5 hidden | 2 | 2 | 4 Low | Review comments before quoting; delete at 12 months | TBD |
 | R18 | Workforce untrained on HIPAA | A11 | None | 3 | 3 | 9 Med | Training at hire and yearly; sanctions policy | TBD |
@@ -77,7 +77,7 @@ Data assets: see [CC-9 data inventory](09-data-inventory.md). System assets:
 | Audit controls | Demo: hash-chained audit log |
 | Integrity | Demo: GCM authentication, audit chain |
 | Person or entity authentication | Demo MFA only |
-| Transmission security | Planned TLS; no backend yet |
+| Transmission security | Accounts API over HTTPS with `Secure` cookies; database TLS without a certificate check (CC-203); care data has no backend yet |
 
 ## 6. Treatment plan priorities
 

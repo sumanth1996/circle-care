@@ -32,9 +32,9 @@ These drafts are also published in the **Circle Care Product Wiki** (MkDocs site
 
 These came from reading the code, not from research:
 
-1. ~~Several store actions bypassed the permission check.~~ **Fixed Oct 19, 2026:** every data-changing action is now checked (a new `handoffs` resource covers hand-offs; elder-only and member-specific actions check the actor). See [permission matrix](security/permission-matrix.md#coverage-gaps-prototype).
+1. ~~Several store actions bypassed the permission check.~~ **Fixed Oct 19, 2026:** most data-changing actions are now checked (a new `handoffs` resource covers hand-offs; elder-only and member-specific actions check the actor). The gaps left (`acceptInvite`, the role passed to `invite`, the review queue) are threat C2-E1 in the threat model and move to CC-202. See [permission matrix](security/permission-matrix.md#coverage-gaps-prototype).
 2. The elder cannot read guardian-only notes (`notes.private`), which conflicts with "her data, her decision" and may conflict with a right of access.
-3. The CSP is a `<meta>` tag, so it can't block framing; clickjacking protection needs an HTTP header from the host (the misleading `vite.config.ts` comment has been corrected).
+3. ~~The CSP is a `<meta>` tag, so it can't block framing.~~ **Fixed:** the server now sends the CSP with `frame-ancestors 'none'` and `X-Frame-Options: DENY` as HTTP headers (`server/app.ts`).
 4. ~~No committed axe-core or Playwright scripts.~~ **Fixed:** `tests/e2e/e2e.py` (29 scenarios) and `tests/e2e/a11y.py` (24 screens) are committed; see `tests/e2e/README.md`.
 5. The `/pilot` form collects name and contact but the prototype discards them; production needs a separate, deletable contact store.
 
