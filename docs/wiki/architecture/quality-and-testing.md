@@ -4,7 +4,7 @@
 
 | Layer | Tool | What it proves | Where |
 |---|---|---|---|
-| Unit | Vitest | The data layer is correct: permission matrix, rules engine, audit chain, SHA-256, health detection | `src/__tests__/*.test.ts` |
+| Unit | Vitest | The data layer is correct: permission matrix, rules engine, audit chain, SHA-256, health detection, and a data class for every field (CC-9) | `src/__tests__/*.test.ts` |
 | End-to-end | Python + Playwright (Chromium) | Real user journeys across the website and all three personas against the **production build** | `tests/e2e/e2e.py` |
 | Family chat and evening recap | Python + Playwright (Chromium) | Sprint 12 screens: chat, health-detail sheet, Maggie's large-text chat and voice reply, the recap card and its switch (CC-194) | `tests/e2e/everyday.py` |
 | Accessibility | axe-core injected by Playwright | No WCAG 2.1 A/AA violations on key screens | `tests/e2e/a11y.py` |
