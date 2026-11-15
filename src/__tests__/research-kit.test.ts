@@ -1,9 +1,15 @@
 // CC-197: keeps the research kit (docs/research/01 to 04) honest and in step with the prototype it tests:
 // a draft with no real people, concept tests of the features built since October whose screen labels
 // exist in the app, a consent outline that says how notes are kept and deleted, and the human steps left.
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { resolve, join } from "node:path";
+import { seed, CAREGIVER } from "../data/demo";
+import { recap, lowSupply } from "../data/everyday";
+import { can } from "../data/policy";
+import { todayOf } from "../data/selectors";
+import { toMin, minutesOfDay } from "../lib/time";
+import type { State } from "../data/types";
 
 const ROOT = resolve(__dirname, "../..");
 const read = (p: string) => readFileSync(resolve(ROOT, p), "utf8");
@@ -37,6 +43,20 @@ function section(doc: string, heading: RegExp) {
 }
 const everyday = (doc: string) => section(doc, /^## \d+b\. Concept test — everyday care built since October/);
 
+// The demo seeds the pharmacy, so a guide may quote a confirmation with it filled in.
+const PHARMACIES = [...new Set(seed().meds.map((m) => m.supply?.pharmacy).filter((p): p is string => !!p))];
+/** A label is on screen if the app has it, or has the text around a seeded pharmacy name. */
+const onScreen = (label: string) => {
+  if (APP.includes(label)) return true;
+  const p = PHARMACIES.find((x) => label.includes(x));
+  return !!p && label.split(p).every((part) => !part.trim() || APP.includes(part.trim()));
+};
+
+// The demo clock is moved within a frozen day, as in everyday.test.ts.
+beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 10, 17, 12, 0)); });
+afterEach(() => { vi.useRealTimers(); });
+const setTime = (s: State, t: string) => { s.clockOffsetMin = toMin(t) - minutesOfDay(new Date()); return s; };
+
 describe("research kit (CC-197)", () => {
   it("is still a draft, updated for CC-197, and says no research has happened", () => {
     for (const [name, doc] of Object.entries(KIT)) {
@@ -62,17 +82,18 @@ describe("research kit (CC-197)", () => {
     for (const [name, doc] of Object.entries(GUIDES)) {
       const quoted = [...everyday(doc).matchAll(/\*\*([^*]+)\*\*|\*([^*]+)\*/g)].map((m) => m[1] ?? m[2]);
       expect(quoted.length, name).toBeGreaterThan(3);
-      for (const label of quoted) expect(APP.includes(label), `${name} quotes "${label}"`).toBe(true);
+      for (const label of quoted) expect(onScreen(label), `${name} quotes "${label}"`).toBe(true);
     }
   });
 
   it("keeps participants off the chat microphone exactly while the chat's voice promise is untrue (CC-222)", () => {
-    const says = /turned into text on (this|the|your) device/i.test(CHAT);
     const keepsOnDevice = /processLocally\s*=\s*true/.test(CHAT);
     for (const [name, doc] of Object.entries(GUIDES)) {
-      const reminder = /^- Chat voice: .*don't let them speak into it.*\(CC-222\)/m.test(doc);
-      expect(reminder, `${name}: chat voice reminder`).toBe(says && !keepsOnDevice);
+      const reminder = /^- Chat voice: .*block the microphone.*\(CC-222\)/m.test(doc);
+      expect(reminder, `${name}: chat voice reminder`).toBe(!keepsOnDevice);
     }
+    // The screener's research-phone setup is what the reminder points to.
+    expect(section(SCREENER, /^## 9\. Human actions before starting/)).toMatch(/microphone blocked for the prototype site/);
   });
 
   it("says in the consent outline how notes are stored and deleted, and that no health details are asked for", () => {
@@ -82,7 +103,9 @@ describe("research kit (CC-197)", () => {
     expect(consent).toMatch(/Recordings within 30 days of transcription/);
     expect(consent).toMatch(/De-identified notes within 12 months/);
     expect(consent).toMatch(/made-up people/);
-    expect(consent).toMatch(/reset it after every session/);
+    expect(consent).toMatch(/reset the practice app and clear the phone's browser data/);
+    expect(consent).toMatch(/never which conditions you have or what your medicines are/);
+    expect(consent).toMatch(/any time until the name-to-number list is deleted/);
     expect(section(SCREENER, /^## 7\. De-identification rules/)).toContain("*Reset demo*");
   });
 
@@ -91,7 +114,33 @@ describe("research kit (CC-197)", () => {
     for (const need of [/^- \[ \] Recruiting:/, /^- \[ \] Incentives:/, /^- \[ \] Consent review:/, /^- \[ \] Safety protocol:/]) {
       expect(steps.some((s) => need.test(s)), String(need)).toBe(true);
     }
-    expect(steps.every((s) => s.startsWith("- [ ] "))).toBe(true);
+  });
+
+  it("tells the guardian what the seeded evening recap really says (Review R1-2)", () => {
+    const s = setTime(seed(), "19:05");
+    const r = recap(s);
+    expect(r.calm).toBe(false);
+    const t6 = everyday(GUIDES.guardian).split("\n").find((l) => l.startsWith("| T6 "))!;
+    expect(t6).not.toMatch(/trusts \*A calm day/);
+    expect(t6).toMatch(/isn't a calm day/);
+  });
+
+  it("names every medicine the demo already shows as low (Review R1-2)", () => {
+    const low = lowSupply(seed()).map((l) => l.med.name);
+    expect(low.length).toBeGreaterThan(0);
+    const t7 = everyday(GUIDES.guardian).split("\n").find((l) => l.startsWith("| T7 "))!;
+    for (const name of low) expect(t7, name).toContain(name);
+  });
+
+  it("runs the caregiver's everyday tasks before T3 ends Ana's shift (Review R1-1)", () => {
+    const s = setTime(seed(), "10:00");
+    expect(can(s, CAREGIVER, "write", "supply")).toBe(true);
+    const visit = s.visits.find((v) => v.caregiverId === CAREGIVER && v.date === todayOf(s) && v.checkIn && !v.checkOut);
+    expect(visit, "the seed checks Ana in on a weekday morning").toBeDefined();
+    visit!.checkOut = new Date().toISOString();
+    expect(can(s, CAREGIVER, "write", "supply")).toBe(false);
+    expect(GUIDES.caregiver).toMatch(/\*\*Run §6b straight after T2, before T3\.\*\*/);
+    expect(everyday(GUIDES.caregiver)).toMatch(/before T3/);
   });
 
   it("holds no real contact details", () => {

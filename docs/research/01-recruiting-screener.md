@@ -52,7 +52,7 @@ Ask by phone or a short form. Read questions aloud for elders. Record answers in
 2. What state do you live in? — *aim for at least 3 states*
 3. Are you, or anyone in your household, employed by a company that makes health or caregiving apps? — *exclude if yes*
 4. Have you taken part in a paid research interview in the last 6 months? — *exclude if 2+*
-5. Are you comfortable with a 45–60 minute conversation by phone, video or in person? Which do you prefer?
+5. Are you comfortable with a conversation of up to an hour (elders) or up to 70 minutes (caregivers and guardians), by phone, video or in person? Which do you prefer?
 
 ### 4.2 Elders
 
@@ -95,10 +95,10 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 2. What we will ask about (daily routines, help, privacy), that we will show a practice app, and how long it takes.
 3. Taking part is voluntary; you can skip any question or stop at any time and still receive the incentive.
 4. Recording: audio only, with separate opt-in; notes taken either way.
-5. **Health details.** We don't ask about your health, and we record no health details beyond what you choose to tell us. *Please do not tell us specific diagnoses, medicine names or doctors' names.* If you do, we replace them in the notes with "[condition]" or "[med]" and delete them from the recording's transcript.
-6. **The practice app.** It shows made-up people (Maggie, Sarah, James and Ana), not you or anyone you know. Please don't type or say anything real into it. It runs on our research phone, not yours, and we reset it after every session, so nothing you tap stays on it. In the chat screen we ask you to type rather than speak (see the interview guides).
-7. **How notes are stored.** Notes use your participant number, never your name. They are kept in an encrypted folder that only the research team can open, and never pasted into tools that learn from what is typed into them. The list that links your name to your number is kept separately, in one locked file.
-8. **When things are deleted.** Recordings within 30 days of transcription. The name-to-number list once your incentive is paid and any follow-up is done. De-identified notes within 12 months. You can ask us to delete your notes and recording sooner, until they are de-identified and combined with others.
+5. **Health details.** We ask about your daily routine and the help you get. We may ask how many medicines you take on a schedule and whether eyesight, hearing or your hands make phones harder, but never which conditions you have or what your medicines are. We record no health details beyond what you choose to tell us. *Please do not tell us specific diagnoses, medicine names or doctors' names.* If you do, we replace them in the notes and the transcript with "[condition]" or "[med]". If you are a caregiver or guardian, the same goes for the person you care for.
+6. **The practice app.** It shows made-up people (Maggie, Sarah, James, Ana and Ruth), not you or anyone you know. Please don't type or say anything real into it. It runs on our research phone, not yours. After every session we reset the practice app and clear the phone's browser data for it, so what you tapped or typed isn't kept. Its microphone is switched off for the chat, so you type, or tell us what to type.
+7. **How notes are stored.** Notes use your participant number, never your name. They are kept in an encrypted folder that only the research team can open, and never pasted into tools that learn from what is typed into them. Recordings are transcribed by the team, or by a tool that doesn't learn from what it is given, and names are taken out of the transcript. The list that links your name to your number is kept separately, in one locked file.
+8. **When things are deleted.** Recordings within 30 days of transcription; until then the recording still has your voice and anything you said. The name-to-number list once your incentive is paid and any follow-up is done. De-identified notes within 12 months. You can ask us to delete your notes and recording sooner, any time until the name-to-number list is deleted. After that we can no longer tell which notes are yours.
 9. Quotes may be used without names or identifying details.
 10. Contact for questions or withdrawal.
 11. Signature or recorded verbal consent with date.
@@ -107,7 +107,7 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 
 ## 6. Incentive
 
-- Proposed: $40 gift card for 45–60 minutes; $20 for a 15-minute follow-up.
+- Proposed: $40 gift card for the main session (up to 60 minutes for elders, 70 for caregivers and guardians); $20 for a 15-minute follow-up.
 - Offer the choice of a physical card mailed or e-card; some elders will not want an e-card.
 - Budget for minimum quotas: 17 × $40 = $680 (+ 20% buffer). **Funding not yet secured.**
 
@@ -119,7 +119,7 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 - Never paste notes into tools that train on inputs.
 - Recordings: store encrypted, delete within 30 days after transcription.
 - Notes: one file per participant ID in the encrypted research folder. Delete the de-identified notes within 12 months, and log each deletion (date and ID only) in the tracker.
-- The practice app: run sessions on a research phone, never the participant's. After each session, open the presenter sheet and tap *Reset demo* so no taps, typed chat messages or check-ins carry over to the next person.
+- The practice app: run sessions on a research phone, never the participant's, in a guest browser profile, with keyboard learning and suggestions turned off and the microphone blocked for the prototype site. After each session, open the presenter sheet and tap *Reset demo* so no taps, typed chat messages or check-ins carry over, then clear the browser's site data and history for the prototype. *Reset demo* resets the practice app only: feedback answers, pilot sign-ups and browser history are cleared by the site-data step.
 
 ## 8. Scheduling tracker (template)
 
@@ -142,4 +142,4 @@ None of these can be done by the product team's agents. Each needs a named perso
 - [ ] Interpreter: decide the interpreter budget for caregivers who prefer another language.
 - [ ] Print large-type flyers.
 - [ ] Set up encrypted storage for recordings, notes and the ID key.
-- [ ] Set up a research phone with the prototype, at the elder's preferred text size, and check *Reset demo* works on it.
+- [ ] Set up a research phone: a guest browser profile, keyboard learning off, the microphone blocked for the prototype site, and a check that *Reset demo* and clearing site data work on it.

@@ -3,7 +3,7 @@
 Notion story: CC-3 Interview guide: professional caregivers · CC-197 concept tests of the built features
 Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No interviews have taken place.
 
-> Participants come through the CC-1 screener. If the caregiver works for an agency and the agency required approval, confirm written approval is on file. Never ask for client names. Session length 55–70 minutes; schedule around shifts and offer evenings.
+> Participants come through the CC-1 screener. If the caregiver works for an agency and the agency required approval, confirm written approval is on file. Never ask for client names. Session length up to 70 minutes; schedule around shifts and offer evenings. If time is short, drop T4 and T7. Run sessions Monday to Saturday, when the demo gives Ana a shift.
 
 ## Goals
 
@@ -21,8 +21,9 @@ Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No inter
 - No client names, no medicine names, no addresses. Use "[client]", "[med]".
 - Respect language preference; offer an interpreter if needed (budget TBD).
 - Run the concept tests on the research phone, never the participant's. After the session, tap *Reset demo* in the presenter sheet so nothing carries over to the next person.
-- Chat voice: in the family chat, ask the participant to type. Show the microphone and ask what they expect happens to their words, but don't let them speak into it. In some browsers the chat's voice reply may send speech to an online service, though the screen says it stays on the device (CC-222). Remove this line once CC-222 is done.
-- The demo's medicine names (Metformin, Lisinopril, Atorvastatin) belong to the made-up Maggie and are fine in prompts. Never note them as the participant's.
+- Chat voice: before the session, block the microphone for the prototype site in the research phone's browser (screener §9), so the chat opens its typing box instead of listening. In Chrome and most browsers the chat's voice reply sends speech to an online service, though the screen says it stays on the device (CC-222), and one tap starts it listening to the whole room. Ask what they expect happens to their words if they spoke. Remove this line once CC-222 is done.
+- The dose voice in §6 T2 only ever runs on the device and switches itself off otherwise, so it is safe; with the microphone blocked it is simply off.
+- The demo's medicine names (Metformin, Lisinopril, Vitamin D3, Atorvastatin) belong to the made-up Maggie and are fine in prompts. Never note them as the participant's.
 
 ## 1. Warm-up (5 min)
 
@@ -66,7 +67,7 @@ Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No inter
 
 ## 6. Concept test — prototype tasks (12 min)
 
-Use `/#/app` → Ana on a phone. Read each task aloud.
+Use `/#/app` → Ana on a phone. Read each task aloud. The demo checks Ana in at 8 AM on its own; if she is already on shift, T1 becomes "Show me how you'd know you're on shift."
 
 | Task | Prompt | Watch for | Success = |
 |---|---|---|---|
@@ -77,14 +78,16 @@ Use `/#/app` → Ana on a phone. Read each task aloud.
 
 After each: "1–5, how easy?" and "Would this save you time or add time compared to today?"
 
+**Run §6b straight after T2, before T3.** T3's **Send hand-off and check out** ends Ana's shift, which hides *Pills on hand* and the refill buttons and turns off **Save as a note**, and she can't check in again that day. If T3 has already happened, tap *Reset demo*, sign in as Ana again and re-add her to the chat.
+
 ## 6b. Concept test — everyday care built since October (10 min)
 
-Same phone, still as Ana, checked in from T1. Before T6, switch to Sarah in the presenter sheet (*Demo mode*), open **Chat**, then **People**, switch Ana on, and switch back to Ana. The demo keeps its data on this phone only, so a second phone wouldn't add her.
+Same phone, still as Ana, on shift from T1 and before T3. Before T6, switch to Sarah in the presenter sheet (*Demo mode*), open **Chat**, then **People**, switch Ana on, and switch back to Ana. The demo keeps its data on this phone only, so a second phone wouldn't add her.
 
 | Task | Prompt | Watch for | Success = |
 |---|---|---|---|
-| T5 Pills on hand | "One of Maggie's medicines is running low. Which one, and what would you do?" Then: "A new bottle of 30 just arrived." | Finds *Pills on hand* on Today; taps **Request refill**; expects the pharmacy to be told (it is only recorded in the app); finds **New bottle** | Names the low medicine, requests a refill and records the new bottle |
-| T6 Family chat | "Let the family know Maggie enjoyed her walk today." Then: "Tell them she took her Metformin 500 mg with lunch." (Typed; see the reminder on chat voice.) | Reaction to being added by the family; the health-detail check on the second message: **Save as a note**, **Send anyway** or **Edit**; sees only messages from after joining | Sends the first message and makes a choice on the check |
+| T5 Pills on hand | "One of Maggie's medicines is running low. Which one, and what would you do?" Then: "A new bottle of 30 just arrived." | Finds *Pills on hand* on Today; taps **Request refill**; the app then says *asked Fog City Pharmacy for a refill*: do they read that as the app having told the pharmacy? (It only records that Ana asked.) Finds **New bottle** | Names the low medicine, requests a refill and records the new bottle |
+| T6 Family chat | "Let the family know Maggie enjoyed her walk today." Then: "Tell them she took her Metformin 500 mg with breakfast." (Typed; see the reminder on chat voice.) | Reaction to being added by the family; the health-detail check on the second message: **Save as a note**, **Send anyway** or **Edit**; sees only messages from after joining | Sends the first message and makes a choice on the check |
 | T7 Check-ins and the recap (concept) | "Maggie can log how she feels, her water and meals, and only Sarah sees it, when Maggie shares. Sarah also gets an evening recap of Maggie's day at 7 PM." | Do they want to see Maggie's check-ins? Why? Would the recap change the texts and calls they get from Sarah? | Not scored; record the answers |
 
 After T5 and T6: "1–5, how easy?" and "Would this save you time or add time compared to today?"
@@ -123,7 +126,7 @@ Surprises / contradicts a hypothesis:
 | H-C5 | Shift-limited access to the care plan is acceptable to caregivers. | 4+ of 6 | Most say they need off-shift access (record why) |
 | H-C6 | Agency software already covers EVV, so Circle Care must coexist rather than replace it. | Agency caregivers describe mandatory EVV tools | Few use EVV |
 | H-C7 | Caregivers would record pill counts and request refills in the app if it saves a call or a text. | 4+ of 6 complete T5 and say they'd use it | Most say it adds work |
-| H-C8 | Caregivers understand that **Request refill** records the request and doesn't contact the pharmacy. | 4+ of 6 explain it correctly after T5 | Most expect the pharmacy to be told (the label or the flow needs to change) |
+| H-C8 | Caregivers understand that **Request refill** records the request and doesn't contact the pharmacy. Correct means: "it notes that I asked the pharmacy myself; Circle Care doesn't contact it." | 4+ of 6 explain it correctly after T5 | Most expect the app to have told the pharmacy (the label or the confirmation needs to change) |
 | H-C9 | Caregivers accept joining the family chat only when the family adds them. | 4+ of 6 | Most expect to be in it from the start, or not at all |
 | H-C10 | The health-detail check in the chat feels helpful, not like being policed. | 4+ of 6 | Most find it intrusive |
-| H-C11 | Sarah's evening recap would cut the check-up texts caregivers get from family. | 3+ of 6 expect fewer | Most expect no change |
+| H-C11 | Sarah's evening recap would cut the check-up texts caregivers get from family. | Half or more of those asked T7 expect fewer | Most expect no change |
