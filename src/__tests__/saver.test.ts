@@ -115,6 +115,20 @@ describe("demo store saver (CC-195)", () => {
     expect(stored).toEqual(["enc(fresh demo)"]);
   });
 
+  it("can't save the wiped circle when the page is hidden right after the wipe", async () => {
+    const stored: string[] = [];
+    const saver = createSaver<string>((v) => `enc(${v})`, (s) => stored.push(s));
+    await saver.save("old circle");
+    stored.length = 0;
+    saver.pause();
+    await saver.save("old circle during wipe");
+    saver.resume();
+    await saver.flush(); // pagehide before the fresh demo's save effect runs
+    expect(stored).toEqual([]);
+    await saver.changed("fresh demo");
+    expect(stored).toEqual(["enc(fresh demo)"]);
+  });
+
   it("retries the newest save once when encoding fails", async () => {
     const stored: string[] = [];
     let calls = 0;

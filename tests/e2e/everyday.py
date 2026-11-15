@@ -221,11 +221,12 @@ with sync_playwright() as p:
         expect(recap()).to_contain_text("The 7 PM update is off")
         pg.goto(B + "/app/guardian/settings")
         flip("Evening recap update", True)
-        # CC-195: hiding the page (switching apps on a phone) and then reloading keeps the change too.
+        # CC-195: nothing is lost when the page is hidden (switching apps on a phone) and then reloaded. The change save
+        # has usually already started, so this checks that the hide handler does no harm, not that it alone saves.
         pg.evaluate("() => { Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true }); document.dispatchEvent(new Event('visibilitychange')); }")
         pg.reload()
         expect(pg.get_by_role("switch", name="Evening recap update")).to_be_checked()
-    step("CC-191 and CC-195 Update at 7 PM keeps its setting when the page reloads straight away or after it is hidden", recap_switch)
+    step("CC-191 and CC-195 Update at 7 PM keeps its setting when the page reloads straight away, and nothing is lost when it is hidden first", recap_switch)
 
     b.close()
 

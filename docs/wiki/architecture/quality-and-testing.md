@@ -20,7 +20,7 @@ Measured on GitHub Actions, which runs on every pull request to `main`. The unit
 
 | Suite | Count | Result |
 |---|---|---|
-| Unit tests | **486** in 12 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
+| Unit tests | **487** in 12 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
 | E2E scenarios | **29** | All pass, with no page or console errors |
 | Chat and recap scenarios | **7** | All pass |
 | Accessibility | **26** screens plus the evening recap card | **0** axe-core violations (WCAG 2.1 A/AA) |

@@ -14,7 +14,7 @@ export interface Saver<T> {
   changed(value: T): Promise<void>;
   /** Saves the latest value again, for a page that is being hidden or closed. */
   flush(): Promise<void>;
-  /** Stops saving and drops every save under way, until resume(). */
+  /** Stops saving, drops every save under way and forgets the last value, until resume(). */
   pause(): void;
   resume(): void;
 }
@@ -43,8 +43,9 @@ export function createSaver<T>(encode: (value: T) => Promise<string> | string, s
 
   const saver: Saver<T> = {
     save(value) {
-      latest = { value };
+      // While paused, a value is neither saved nor kept, so a flush right after resume() can't save the wiped circle.
       if (paused) return Promise.resolve();
+      latest = { value };
       return write(value, ++started, epoch, true);
     },
     changed(value) {
@@ -57,6 +58,7 @@ export function createSaver<T>(encode: (value: T) => Promise<string> | string, s
     pause() {
       paused = true;
       epoch++;
+      latest = null;
     },
     resume() {
       paused = false;

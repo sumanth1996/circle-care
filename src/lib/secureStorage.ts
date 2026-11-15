@@ -115,6 +115,8 @@ export async function wipeDevice(storageKeys: string[]) {
   for (const k of storageKeys) localStorage.removeItem(k);
   keyPromise = null;
   await idbDelete(KEY_ID).catch(() => {});
+  // A key load that started during the delete may have cached the old key; drop it so the next save makes a new one.
+  keyPromise = null;
   await clearFiles().catch(() => {});
 }
 
