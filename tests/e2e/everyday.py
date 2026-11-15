@@ -214,15 +214,18 @@ with sync_playwright() as p:
         pg.goto(B + "/app/guardian/settings")
         expect(pg.get_by_role("switch", name="Evening recap update")).to_be_checked()
         flip("Evening recap update", False)
-        # CC-195: the change is saved at once, so a reload 50 ms later keeps it, with no wait for the save.
-        pg.wait_for_timeout(50)
+        # CC-195: the change is saved as soon as it's made, so reloading straight away keeps it.
         pg.reload()
         expect(pg.get_by_role("switch", name="Evening recap update")).not_to_be_checked()
         pg.goto(B + "/app/guardian")
         expect(recap()).to_contain_text("The 7 PM update is off")
         pg.goto(B + "/app/guardian/settings")
         flip("Evening recap update", True)
-    step("CC-191 turning off Update at 7 PM stays off after a reload", recap_switch)
+        # CC-195: hiding the page (switching apps on a phone) and then reloading keeps the change too.
+        pg.evaluate("() => { Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true }); document.dispatchEvent(new Event('visibilitychange')); }")
+        pg.reload()
+        expect(pg.get_by_role("switch", name="Evening recap update")).to_be_checked()
+    step("CC-191 and CC-195 Update at 7 PM keeps its setting when the page reloads straight away or after it is hidden", recap_switch)
 
     b.close()
 

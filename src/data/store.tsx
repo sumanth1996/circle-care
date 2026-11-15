@@ -249,8 +249,10 @@ function useStoreState(initial: State) {
   latest.current = state;
 
   // Encrypted save (CC-26), started as soon as the state changes (CC-195). Also saved when the page is hidden or closed.
-  useEffect(() => { persist(state).catch(() => {}); }, [state]);
-  useEffect(() => saveWhenPageGoes(() => { persist(latest.current).catch(() => {}); }), []);
+  useEffect(() => { saver.changed(state).catch(() => {}); }, [state]);
+  useEffect(() => saveWhenPageGoes(() => { saver.flush().catch(() => {}); }), []);
+  // Screens that show time (a dose coming due, "5 min ago") re-render on the tick even when the state is unchanged.
+  const [, setBeat] = useState(0);
 
   const update = useCallback((fn: Updater) => {
     setState((prev) => {
@@ -264,7 +266,7 @@ function useStoreState(initial: State) {
   // Tick the rules engine so time-based escalations fire while the app is open.
   useEffect(() => {
     setState(tick);
-    const t = setInterval(() => setState(tick), 15000);
+    const t = setInterval(() => { setState(tick); setBeat((b) => b + 1); }, 15000);
     return () => clearInterval(t);
   }, []);
 
@@ -300,13 +302,19 @@ function useStoreState(initial: State) {
       /** CC-33: close the circle and delete its data from this device, including the encryption key. */
       closeCircle: async () => {
         if (!can(latest.current, meId(latest.current.persona), "delete", "data")) { update((s) => { audit(s, actor(s), "denied", "delete data"); }); return; }
-        await wipeDevice([STATE_KEY]);
+        // No save may land while the data and key are wiped, or it could bring the circle back (CC-195).
+        saver.pause();
         try {
-          const log = JSON.parse(localStorage.getItem("circle-care-deletions") ?? "[]") as string[];
-          localStorage.setItem("circle-care-deletions", JSON.stringify([...log, new Date().toISOString()]));
-        } catch { /* ignore */ }
-        setState(seed());
-        viewed.current = {};
+          await wipeDevice([STATE_KEY]);
+          try {
+            const log = JSON.parse(localStorage.getItem("circle-care-deletions") ?? "[]") as string[];
+            localStorage.setItem("circle-care-deletions", JSON.stringify([...log, new Date().toISOString()]));
+          } catch { /* ignore */ }
+          setState(seed());
+          viewed.current = {};
+        } finally {
+          saver.resume();
+        }
       },
       skipAhead: (min: number) => update((s) => { s.clockOffsetMin += min; }),
       simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen" | "low-supply" | "no-meals" | "nothing-logged") => update((s) => {
@@ -661,12 +669,11 @@ const saver = createSaver<State>(
   (state) => (cryptoAvailable() ? encryptForStorage(state) : JSON.stringify(state)),
   (encoded) => localStorage.setItem(STATE_KEY, encoded),
 );
-const persist = (state: State) => saver.save(state);
-
 async function loadState(): Promise<State> {
   try {
-    // Have the device key ready before the first save, so a save right after a change isn't held up by it (CC-195).
-    if (cryptoAvailable()) await deviceKey();
+    // Start loading the device key now, so the first save after a change isn't held up by it (CC-195).
+    // Not awaited: a slow or blocked IndexedDB must not keep the app from opening.
+    if (cryptoAvailable()) deviceKey().catch(() => {});
     const s = cryptoAvailable() ? await loadEncrypted<State>(STATE_KEY) : (JSON.parse(localStorage.getItem(STATE_KEY) ?? "null") as State | null);
     if (s && s.version === STATE_VERSION) return s;
   } catch {

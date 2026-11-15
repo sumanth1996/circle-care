@@ -117,7 +117,7 @@ The accounts API serves each person only their own rows (`requireUser`); payment
 
 ## Retention and deletion (intended)
 
-- **Close the circle** (elder or guardian, `data.delete`): the prototype wipes circle state, destroys the device key and clears the file store (`wipeDevice`, CC-33), so any leftover copy is unreadable. Production: delete within 30 days (as `/privacy` promises), including backups on their normal rotation.
+- **Close the circle** (elder or guardian, `data.delete`): the prototype wipes circle state, destroys the device key and clears the file store (`wipeDevice`, CC-33), so any leftover copy is unreadable. Saving is paused during the wipe and any save already under way is dropped, so it can't write the circle back (CC-195). Production: delete within 30 days (as `/privacy` promises), including backups on their normal rotation.
 - **Delete an account:** persona, session, photo, fingerprint, vault token, bank and card rows go with the `users` row (`ON DELETE CASCADE`). `audit_events` has no foreign key, so it keeps the masked history. There is no account-deletion endpoint yet, so today this happens only by deleting the row directly. Confirm the design with counsel.
 - **Audit logs:** at least 6 years (`RETENTION_YEARS = 6` in `src/data/audit.ts`). The circle's access log names medicines and documents (PHI) and the server log keeps last fours (sensitive), so both are protected like the data they describe. Confirm with counsel (CC-8 Q10).
 - **Sessions:** expire after 12 hours, but nothing purges expired rows yet: each is deleted only when its cookie comes back, on sign-out, or on a lock-out at the password check before an SSN change (a sign-in lock-out leaves existing sessions in place). A purge job is needed before production.

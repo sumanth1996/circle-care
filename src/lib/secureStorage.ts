@@ -53,14 +53,18 @@ export const cryptoAvailable = () => typeof crypto !== "undefined" && !!crypto.s
 
 let keyPromise: Promise<CryptoKey> | null = null;
 export function deviceKey(): Promise<CryptoKey> {
-  keyPromise ??= (async () => {
+  if (keyPromise) return keyPromise;
+  const mine = (async () => {
     const existing = await idbGet<CryptoKey>(KEY_ID);
     if (existing) return existing;
     const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
     await idbPut(KEY_ID, key);
     return key;
   })();
-  return keyPromise;
+  keyPromise = mine;
+  // A failure isn't kept, so the next save tries again (CC-195).
+  mine.catch(() => { if (keyPromise === mine) keyPromise = null; });
+  return mine;
 }
 
 function b64(buf: ArrayBuffer | Uint8Array) {
@@ -89,12 +93,8 @@ export async function encryptForStorage(value: unknown): Promise<string> {
   return `enc:v1:${b64(iv)}:${b64(ct)}`;
 }
 
-/** Saves a JSON value encrypted. Stored as "enc:v1:<iv>:<ciphertext>". */
-export async function saveEncrypted(storageKey: string, value: unknown) {
-  localStorage.setItem(storageKey, await encryptForStorage(value));
-}
 
-/** Loads a value saved with saveEncrypted. Plain JSON from older versions is read and re-encrypted on next save. */
+/** Loads a value saved with encryptForStorage. Plain JSON from older versions is read and re-encrypted on next save. */
 export async function loadEncrypted<T>(storageKey: string): Promise<T | null> {
   const raw = localStorage.getItem(storageKey);
   if (!raw) return null;
