@@ -2409,6 +2409,14 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2749,6 +2757,118 @@
     
   
     Code review: Sprint 14, threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-browser-tests-hardening/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, browser tests hardening
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-save-before-close/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, save before the tab closes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-regulatory-memo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, regulatory memo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-research-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, research kit
   
 
     
@@ -3447,7 +3567,7 @@ Status: DRAFT v4, reviewed against <code>main</code> on 2026-11-15 (demo state v
 </table>
 <h2 id="retention-and-deletion-intended">Retention and deletion (intended)<a class="headerlink" href="#retention-and-deletion-intended" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Close the circle</strong> (elder or guardian, <code>data.delete</code>): the prototype wipes circle state, destroys the device key and clears the file store (<code>wipeDevice</code>, CC-33), so any leftover copy is unreadable. Production: delete within 30 days (as <code>/privacy</code> promises), including backups on their normal rotation.</li>
+<li><strong>Close the circle</strong> (elder or guardian, <code>data.delete</code>): the prototype wipes circle state, destroys the device key and clears the file store (<code>wipeDevice</code>, CC-33), so any leftover copy is unreadable. Saving is paused during the wipe and any save already under way is dropped, so it can't write the circle back (CC-195). Production: delete within 30 days (as <code>/privacy</code> promises), including backups on their normal rotation.</li>
 <li><strong>Delete an account:</strong> persona, session, photo, fingerprint, vault token, bank and card rows go with the <code>users</code> row (<code>ON DELETE CASCADE</code>). <code>audit_events</code> has no foreign key, so it keeps the masked history. There is no account-deletion endpoint yet, so today this happens only by deleting the row directly. Confirm the design with counsel.</li>
 <li><strong>Audit logs:</strong> at least 6 years (<code>RETENTION_YEARS = 6</code> in <code>src/data/audit.ts</code>). The circle's access log names medicines and documents (PHI) and the server log keeps last fours (sensitive), so both are protected like the data they describe. Confirm with counsel (CC-8 Q10).</li>
 <li><strong>Sessions:</strong> expire after 12 hours, but nothing purges expired rows yet: each is deleted only when its cookie comes back, on sign-out, or on a lock-out at the password check before an SSN change (a sign-in lock-out leaves existing sessions in place). A purge job is needed before production.</li>

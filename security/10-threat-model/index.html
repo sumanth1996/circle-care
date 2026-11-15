@@ -2475,6 +2475,14 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2828,6 +2836,118 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-browser-tests-hardening/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, browser tests hardening
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-save-before-close/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, save before the tab closes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-regulatory-memo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, regulatory memo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reviews/2026-11-15-sprint-14-research-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, research kit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3076,7 +3196,7 @@
 
 <h1 id="threat-model-stride-circle-care-as-built">Threat Model (STRIDE): Circle Care as built<a class="headerlink" href="#threat-model-stride-circle-care-as-built" title="Permanent link">&para;</a></h1>
 <p>Notion story: CC-10 Threat model for MVP architecture
-Status: DRAFT v3, reviewed against <code>main</code> (cc3e577) on 2026-11-15. It replaces the October 19 draft, which was written against a planned architecture and said the prototype had no backend. v3 adds availability threats and the Lead Architect's corrections.</p>
+Status: DRAFT v3, reviewed against <code>main</code> (cc3e577) on 2026-11-15. It replaces the October 19 draft, which was written against a planned architecture and said the prototype had no backend. v3 adds availability threats and the Lead Architect's corrections. C8-T1 was updated on 2026-11-15 when CC-198 locked down the Browser tests workflow.</p>
 <div class="admonition warning">
 <p class="admonition-title">Still needs human security review</p>
 <p>This model was written and checked by the build team's agents. Before any real data is used, it still needs review by <strong>an engineer with security experience</strong> and sign-off by the <strong>designated security officer</strong> (CC-79). It is not a penetration test (CC-78).</p>
@@ -3360,7 +3480,7 @@ Status: DRAFT v3, reviewed against <code>main</code> (cc3e577) on 2026-11-15. It
 <td>C2-I2</td>
 <td>I</td>
 <td>A lost or shared device exposes care data</td>
-<td>Encryption at rest as above; inactivity lock (<code>src/components/AppShell.tsx:setLocked</code>); close circle wipes data and key (<code>src/lib/secureStorage.ts:export async function wipeDevice</code>). The unlock button checks nothing and a reload unlocks</td>
+<td>Encryption at rest as above; inactivity lock (<code>src/components/AppShell.tsx:setLocked</code>); close circle wipes data and key (<code>src/lib/secureStorage.ts:export async function wipeDevice</code>), with saving paused so no save in flight can write the circle back (<code>src/data/store.tsx:saver.pause()</code>). The unlock button checks nothing and a reload unlocks</td>
 <td>Demo only</td>
 <td>High</td>
 <td>Medium</td>
@@ -3906,11 +4026,11 @@ Status: DRAFT v3, reviewed against <code>main</code> (cc3e577) on 2026-11-15. It
 <td>C8-T1</td>
 <td>T</td>
 <td>A changed outside action alters what runs</td>
-<td>Actions are pinned to tags, not commits (<code>.github/workflows/browser-tests.yml:actions/checkout@v4</code>), and checkout keeps its token</td>
-<td>Partial</td>
+<td>Every action is pinned to a full commit SHA (<code>.github/workflows/browser-tests.yml:actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1</code>), checkout keeps no token (<code>.github/workflows/browser-tests.yml:persist-credentials: false</code>), and a unit test fails if either slips (<code>src/__tests__/ci-workflow.test.ts:keeps no credentials after any checkout</code>). A pinned release that was bad when pinned is still trusted</td>
+<td>In place</td>
 <td>Medium</td>
-<td>Medium</td>
-<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
 <td>Release Agent</td>
 <td>CC-198</td>
 </tr>

@@ -2456,6 +2456,14 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2796,6 +2804,118 @@
     
   
     Code review: Sprint 14, threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-browser-tests-hardening/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, browser tests hardening
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-save-before-close/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, save before the tab closes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-regulatory-memo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, regulatory memo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-research-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, research kit
   
 
     
@@ -3460,7 +3580,7 @@
 <li><strong>Selectors</strong> (<code>src/data/selectors.ts</code>) compute derived views — dose states, next item, late check-ins, coverage gaps, streaks, adherence, North Star, activity feed.</li>
 <li><strong>Demo clock</strong>: <code>clock(state)</code> = now + <code>clockOffsetMin</code> so presenters can skip ahead.</li>
 <li><strong>Versioning</strong>: <code>STATE_VERSION</code> (<code>src/data/demo.ts</code>) = 11. <code>loadState()</code> in <code>store.tsx</code> discards and reseeds a stored state with any other version. See <a href="../data-model/#state-versions">State versions</a>.</li>
-<li><strong>Persistence</strong>: saves are debounced by 250 ms and flushed on <code>pagehide</code>. See <a href="../security-and-privacy/#encryption-at-rest">Security &amp; privacy</a>.</li>
+<li><strong>Persistence</strong>: each change starts an encrypted save at once, with the device key starting to load when the app opens (<code>src/data/saver.ts</code>, CC-195). A save only writes when nothing newer is stored, and the state is saved again when the page is hidden or closed. The 15 second tick keeps the same state when nothing changed, so it doesn't save, but screens that show time still re-render. Closing the circle pauses saving and forgets the last state while the data and key are wiped, so nothing from the old circle can be saved afterwards. See <a href="../security-and-privacy/#encryption-at-rest">Security &amp; privacy</a>.</li>
 <li><strong>Read logging</strong>: <code>logView(resource)</code> writes a <em>viewed</em> entry at most once per resource every 10 minutes.</li>
 </ul>
 <h2 id="rules-engine">Rules engine<a class="headerlink" href="#rules-engine" title="Permanent link">&para;</a></h2>

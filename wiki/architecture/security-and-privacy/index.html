@@ -2439,6 +2439,14 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2792,6 +2800,118 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-browser-tests-hardening/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, browser tests hardening
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-save-before-close/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, save before the tab closes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-regulatory-memo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, regulatory memo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-research-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, research kit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3129,7 +3249,7 @@
 <p><code>src/lib/secureStorage.ts</code> (CC-26, CC-27):</p>
 <ol>
 <li>On first use the app generates an <strong>AES-GCM 256-bit key</strong> with <code>crypto.subtle.generateKey(…, extractable = false, ["encrypt", "decrypt"])</code> and stores the <code>CryptoKey</code> object in IndexedDB (<code>circle-care-keys</code>). Because it is <strong>non-extractable</strong>, no JavaScript — including the app's own — can read or export the raw key bytes.</li>
-<li>Every save serialises the state to JSON and encrypts it with a <strong>fresh random 12-byte IV</strong>. The result is stored as <code>enc:v1:&lt;base64 iv&gt;:&lt;base64 ciphertext&gt;</code> in <code>localStorage["circle-care-demo"]</code>.</li>
+<li>Every save serialises the state to JSON and encrypts it with a <strong>fresh random 12-byte IV</strong>. The result is stored as <code>enc:v1:&lt;base64 iv&gt;:&lt;base64 ciphertext&gt;</code> in <code>localStorage["circle-care-demo"]</code>. A save starts as soon as the state changes and again when the page is hidden or closed (CC-195). Encryption is async, so a change made a few milliseconds before the tab closes can still be lost; real accounts are stored on the server.</li>
 <li>Loading decrypts with the same key. GCM authentication means a modified ciphertext or a missing key can't be read: the app starts a fresh demo instead, without telling anyone. A value without the <code>enc:v1:</code> prefix is still read as plain JSON (threat C2-T1).</li>
 <li>Documents are encrypted the same way in IndexedDB <code>circle-care-files</code>.</li>
 <li>If Web Crypto or IndexedDB is unavailable, the prototype falls back to plain <code>localStorage</code> (demo convenience only).</li>

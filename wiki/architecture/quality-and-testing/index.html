@@ -1351,15 +1351,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-results-sprint-13-2026-11-14" class="md-nav__link">
+  <a href="#current-results-sprint-14-2026-11-15" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current results (Sprint 13, 2026-11-14)
+        Current results (Sprint 14, 2026-11-15)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Current results (Sprint 13, 2026-11-14)">
+    <nav class="md-nav" aria-label="Current results (Sprint 14, 2026-11-15)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2373,6 +2373,14 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2726,6 +2734,118 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-browser-tests-hardening/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, browser tests hardening
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-save-before-close/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, save before the tab closes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-regulatory-memo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, regulatory memo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reviews/2026-11-15-sprint-14-research-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code review: Sprint 14, research kit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2771,15 +2891,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-results-sprint-13-2026-11-14" class="md-nav__link">
+  <a href="#current-results-sprint-14-2026-11-15" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current results (Sprint 13, 2026-11-14)
+        Current results (Sprint 14, 2026-11-15)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Current results (Sprint 13, 2026-11-14)">
+    <nav class="md-nav" aria-label="Current results (Sprint 14, 2026-11-15)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2941,8 +3061,8 @@
 </tbody>
 </table>
 <p>The strategy favours <strong>testing the rules where they live</strong> (the data layer is pure and easy to test) and <strong>testing behaviour end to end</strong> for anything a person sees. A separate <a href="../../../security/78-security-test-plan/">security test plan (CC-78)</a> covers ASVS/MASVS and the external penetration test.</p>
-<h2 id="current-results-sprint-13-2026-11-14">Current results (Sprint 13, 2026-11-14)<a class="headerlink" href="#current-results-sprint-13-2026-11-14" title="Permanent link">&para;</a></h2>
-<p>Measured on GitHub Actions for <a href="https://github.com/sumanth1996/circle-care/pull/7">PR #7</a> (CC-194), which runs on every pull request to <code>main</code>.</p>
+<h2 id="current-results-sprint-14-2026-11-15">Current results (Sprint 14, 2026-11-15)<a class="headerlink" href="#current-results-sprint-14-2026-11-15" title="Permanent link">&para;</a></h2>
+<p>Measured on GitHub Actions, which runs on every pull request to <code>main</code>. The unit-test count is from <a href="https://github.com/sumanth1996/circle-care/pull/13">PR #13</a> (CC-197); the browser counts are from <a href="https://github.com/sumanth1996/circle-care/pull/7">PR #7</a> (CC-194).</p>
 <table>
 <thead>
 <tr>
@@ -2954,7 +3074,7 @@
 <tbody>
 <tr>
 <td>Unit tests</td>
-<td><strong>469</strong> in 10 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight</td>
+<td><strong>505</strong> in 14 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight</td>
 <td>All pass (<code>npm test</code>)</td>
 </tr>
 <tr>
@@ -3194,15 +3314,11 @@ python<span class="w"> </span>tests/e2e/a11y.py<span class="w">      </span><spa
 <td>Layout bugs (e.g. the digest chart in the screenshot)</td>
 <td>Playwright screenshot comparisons</td>
 </tr>
-<tr>
-<td>The demo store can lose a change made in the last quarter second before the tab closes</td>
-<td>A switch can come back after a quick reload; tests must wait for the save</td>
-<td>Backlog story CC-195</td>
-</tr>
 </tbody>
 </table>
 <h2 id="ci">CI<a class="headerlink" href="#ci" title="Permanent link">&para;</a></h2>
 <p><code>.github/workflows/browser-tests.yml</code> (CC-194) runs on every pull request to <code>main</code>, on pushes to <code>main</code> and on demand: <code>npm ci</code>, <code>npm test</code>, <code>npm run build</code>, then <code>vite preview</code> and the three browser scripts, keeping <code>tests/e2e/out/</code> as an artifact for 7 days. Each script exits with 1 on a failure, so the check goes red.</p>
+<p>Since CC-198 the workflow runs Node 22 on <code>ubuntu-24.04</code>, pins every outside action to a full commit SHA with its release in a comment, keeps no token after checkout, and cancels an older run only for a pull request; every other run gets a group of its own, so runs on <code>main</code> always finish. <code>src/__tests__/ci-workflow.test.ts</code> fails if any of that slips. It checks that each pin is a full SHA with a release in its comment, not that the SHA matches that release, so when you update an action, look up the release's commit SHA with <code>git ls-remote --tags</code> and change the SHA and the comment together. Nothing updates the pins yet; Dependabot for GitHub Actions is in follow-up story CC-221.</p>
 <p>Still to add: <code>npm audit --audit-level=high</code>, <code>mkdocs build --strict</code> for this wiki, and branch protection so a red check blocks merging.</p>
 <h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
 <ul>
