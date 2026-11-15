@@ -3,25 +3,25 @@
 This page explains the security and privacy controls that are **real code in the prototype**, how they work, and what a production system still needs. Detailed working documents: [threat model (CC-10)](../../security/10-threat-model.md), [permission matrix (CC-18)](../../security/permission-matrix.md), [security test plan (CC-78)](../../security/78-security-test-plan.md), [incident response runbook (CC-34)](../../security/34-incident-response-runbook.md), [HIPAA risk analysis (CC-79)](../../compliance/79-hipaa-security-risk-analysis.md).
 
 !!! warning "Prototype, not a compliant system"
-    The prototype demonstrates privacy-by-design with fictional data in one browser. It has not been security-reviewed or penetration-tested, has no backend, and must not be used with real health information.
+    The prototype demonstrates privacy-by-design with fictional data in one browser. Care-circle data lives only in the browser. The accounts server accepts real names, emails and phone numbers, but outside production it refuses real SSNs, bank accounts and cards. It has not been security-reviewed or penetration-tested and must not be used with real health information.
 
 ## Control summary
 
 | Control | In the prototype | In production (planned) | Story |
 |---|---|---|---|
 | Encryption at rest | AES-256-GCM in the browser; non-extractable key in IndexedDB | Server-side encryption with managed, rotated keys (KMS); device encryption in native apps | CC-26 |
-| Encryption in transit | N/A (no network calls) | TLS 1.2+ everywhere; certificate pinning in native apps | CC-26 |
-| Authentication | Simulated password + 6-digit MFA, 5-attempt lockout, simulated biometrics | Real MFA / passkeys, server rate limiting, device binding | CC-11 – 13 |
-| Session management | Inactivity lock (15 min; elder optional), sign out everywhere (local) | Server sessions with revocation, push-token revocation | CC-14, CC-27 |
-| Authorisation | One matrix, one `can()` check on every data-changing action | Identical policy enforced in the API | CC-18, CC-19 |
-| Audit | SHA-256 hash-chained log with integrity check | Server-side append-only log, externally anchored, 6-year retention | CC-28, CC-29 |
+| Encryption in transit | Care data: N/A (stays in the browser). Accounts API: HTTPS with `Secure` cookies; the database connection uses TLS without certificate checks (CC-203) | TLS 1.2+ everywhere; certificate pinning in native apps | CC-26 |
+| Authentication | Browser demo: simulated password, 6-digit MFA with a fixed code, simulated biometrics. Accounts server: scrypt passwords, 5-failure lockout, per-address sign-in limit, no second factor yet (CC-200) | Real MFA / passkeys, server rate limiting, device binding | CC-11 – 13 |
+| Session management | Browser: inactivity lock (15 min; elder optional), sign out everywhere (local). Server: hashed session tokens, 30-minute idle and 12-hour limits, sign-out of the current session; no sign out everywhere yet (CC-201) | Server sessions with revocation, push-token revocation | CC-14, CC-27 |
+| Authorisation | One matrix and one `can()` check, called by most data-changing actions in the browser (gaps in the threat model, CC-10) | Identical policy enforced in the API | CC-18, CC-19 |
+| Audit | Browser: SHA-256 hash-chained log with integrity check. Server: `audit_events` table where a trigger blocks changes and deletes, and a masked export command | Server-side append-only log, externally anchored, 6-year retention | CC-28, CC-29 |
 | Anomaly detection | Bulk-view and repeated-denial alerts | Tuned detection, security-team escalation | CC-35 |
 | Notifications | PHI-free titles | Same, enforced in the notification service | CC-31 |
 | Documents | Content-type check, 10 MB limit, encryption, watermarked viewer | Server-side malware scan, encrypted object storage | CC-67 |
 | Export | Passphrase-encrypted file (PBKDF2 → AES-GCM) | Same, plus re-authentication | CC-32 |
 | Deletion | Wipe state, files and key on this device | Deletion across services and backups (purged within 35 days) | CC-33 |
 | Screen privacy | App-switcher privacy shield | Native secure-screen flags | CC-26 |
-| Browser hardening | CSP `<meta>` tag on production builds; `no-referrer` | CSP and `frame-ancestors` as HTTP headers; HSTS | CC-78 |
+| Browser hardening | CSP `<meta>` tag on production builds; CSP, `frame-ancestors 'none'`, `X-Frame-Options: DENY` and `no-referrer` as HTTP headers from the server; HSTS in production only | HSTS on every deployed copy; one shared CSP list | CC-78 |
 | Voice | On-device recognition only; nothing stored | Same | CC-73 |
 | Research data | Kept apart from care data; health words scrubbed | Separate store, retention policy | CC-76, CC-77 |
 
@@ -31,7 +31,7 @@ This page explains the security and privacy controls that are **real code in the
 
 1. On first use the app generates an **AES-GCM 256-bit key** with `crypto.subtle.generateKey(…, extractable = false, ["encrypt", "decrypt"])` and stores the `CryptoKey` object in IndexedDB (`circle-care-keys`). Because it is **non-extractable**, no JavaScript — including the app's own — can read or export the raw key bytes.
 2. Every save serialises the state to JSON and encrypts it with a **fresh random 12-byte IV**. The result is stored as `enc:v1:<base64 iv>:<base64 ciphertext>` in `localStorage["circle-care-demo"]`.
-3. Loading decrypts with the same key. GCM authentication means a modified ciphertext or a missing key fails closed: the app starts a fresh demo instead of reading tampered data.
+3. Loading decrypts with the same key. GCM authentication means a modified ciphertext or a missing key can't be read: the app starts a fresh demo instead, without telling anyone. A value without the `enc:v1:` prefix is still read as plain JSON (threat C2-T1).
 4. Documents are encrypted the same way in IndexedDB `circle-care-files`.
 5. If Web Crypto or IndexedDB is unavailable, the prototype falls back to plain `localStorage` (demo convenience only).
 
@@ -72,7 +72,7 @@ can(state, actorId, action, resource): boolean
 | `pro@shift` | A professional caregiver matches only while checked in today and not checked out — **minimum necessary** |
 | `ALWAYS_SHARED` | `sos`, `emergencyCard`, `circle` stay available to family and pros when the elder pauses sharing |
 | Health readings | The guardian's `vitals: read` also requires `settings.vitals.shareWithGuardian` |
-| Enforcement | Every data-changing store action calls `guard()`; refusals change nothing and write a `denied` audit entry. Read access in the UI uses `AccessGuard` / `useCan`, which call the same `can()` |
+| Enforcement | Data-changing store actions call `guard()`, except `acceptInvite`, `invite`'s role and the demo controls (see the threat model); refusals change nothing and write a `denied` audit entry. Read access in the UI uses `AccessGuard` / `useCan`, which call the same `can()` |
 
 ### Summary matrix
 
@@ -114,7 +114,7 @@ frame-src blob:; worker-src 'self'; connect-src 'self';
 object-src 'none'; base-uri 'self'; form-action 'self'
 ```
 
-plus `<meta name="referrer" content="no-referrer">`. A `<meta>` CSP cannot set `frame-ancestors`, so **clickjacking protection needs an HTTP header from the host** (production backlog, CC-78).
+plus `<meta name="referrer" content="no-referrer">`. A `<meta>` CSP cannot set `frame-ancestors`, so the server also sends the policy as an HTTP header with `frame-ancestors 'none'`, plus `X-Frame-Options: DENY` (`server/app.ts`). The two CSP lists are kept separately and must be changed together.
 
 ## Privacy shield and session lock
 
@@ -183,7 +183,7 @@ Added in Sprint 11 (CC-172 – CC-190). Details are on [Accounts, identity & pay
 7. **Breach response** — [incident response runbook](../../security/34-incident-response-runbook.md) with assigned roles and a tabletop exercise.
 8. A third-party **penetration test** (OWASP ASVS L2 / MASVS) — [security test plan](../../security/78-security-test-plan.md).
 9. A designated **security officer** owning the [risk analysis](../../compliance/79-hipaa-security-risk-analysis.md).
-10. HTTP security headers (`frame-ancestors`, HSTS) from the host.
+10. HSTS on every deployed copy. The server already sends the CSP, `frame-ancestors` and the other headers; the staging deploy sends no HSTS.
 
 ## Related pages
 

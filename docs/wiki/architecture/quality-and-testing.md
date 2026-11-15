@@ -20,7 +20,7 @@ Measured on GitHub Actions for [PR #7](https://github.com/sumanth1996/circle-car
 
 | Suite | Count | Result |
 |---|---|---|
-| Unit tests | **461** in 9 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
+| Unit tests | **469** in 10 files (client and server), plus 2 to-dos for doses and check-ins that cross midnight | All pass (`npm test`) |
 | E2E scenarios | **29** | All pass, with no page or console errors |
 | Chat and recap scenarios | **7** | All pass |
 | Accessibility | **26** screens plus the evening recap card | **0** axe-core violations (WCAG 2.1 A/AA) |
