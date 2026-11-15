@@ -18,7 +18,7 @@ Working drafts for the backlog stories that need real people, counsel or vendors
 | CC-7 | [Competitive teardown](../research/07-competitive-teardown.md) | Framework, comparison table, positioning gaps | Yes — verify every product fact |
 | CC-8 | [Regulatory memo](../compliance/08-regulatory-memo.md) | HIPAA, FTC, state law, TCPA, ADA, guardianship applicability | Yes — counsel review |
 | CC-9 | [Data inventory](../compliance/09-data-inventory.md) | Every state field and Postgres column classified, checked by a unit test; reviewed against `main` on 2026-11-15 | Yes — security officer and counsel sign-off |
-| CC-10 | [Threat model](../security/10-threat-model.md) | STRIDE threat model with data-flow diagram | Yes — engineering security review |
+| CC-10 | [Threat model](../security/10-threat-model.md) | STRIDE threat model of the built system, with each control traced to code | Yes — engineering security review and security officer |
 | CC-18 | [Permission matrix](../security/permission-matrix.md) | Readable rendering of `MATRIX` | Partly — open design questions, server enforcement |
 | CC-30 | [Vendor & BAA register](../compliance/30-vendor-baa-register.md) | Vendor and BAA register template | Yes — pick vendors, sign BAAs |
 | CC-34 | [Incident response runbook](../security/34-incident-response-runbook.md) | Severity levels, roles, playbooks, notification table, tabletop | Yes — assign roles, confirm timelines, tabletop |

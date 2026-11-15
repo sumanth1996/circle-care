@@ -3,17 +3,17 @@
 This page explains the security and privacy controls that are **real code in the prototype**, how they work, and what a production system still needs. Detailed working documents: [threat model (CC-10)](../../security/10-threat-model.md), [permission matrix (CC-18)](../../security/permission-matrix.md), [security test plan (CC-78)](../../security/78-security-test-plan.md), [incident response runbook (CC-34)](../../security/34-incident-response-runbook.md), [HIPAA risk analysis (CC-79)](../../compliance/79-hipaa-security-risk-analysis.md).
 
 !!! warning "Prototype, not a compliant system"
-    The prototype demonstrates privacy-by-design with fictional data in one browser. It has not been security-reviewed or penetration-tested, has no backend, and must not be used with real health information.
+    The prototype demonstrates privacy-by-design with fictional data in one browser. Care-circle data lives only in the browser; the accounts server holds test data only. It has not been security-reviewed or penetration-tested and must not be used with real health information.
 
 ## Control summary
 
 | Control | In the prototype | In production (planned) | Story |
 |---|---|---|---|
 | Encryption at rest | AES-256-GCM in the browser; non-extractable key in IndexedDB | Server-side encryption with managed, rotated keys (KMS); device encryption in native apps | CC-26 |
-| Encryption in transit | N/A (no network calls) | TLS 1.2+ everywhere; certificate pinning in native apps | CC-26 |
+| Encryption in transit | Care data: N/A (stays in the browser). Accounts API: HTTPS with `Secure` cookies; the database connection uses TLS without certificate checks (CC-203) | TLS 1.2+ everywhere; certificate pinning in native apps | CC-26 |
 | Authentication | Simulated password + 6-digit MFA, 5-attempt lockout, simulated biometrics | Real MFA / passkeys, server rate limiting, device binding | CC-11 – 13 |
 | Session management | Inactivity lock (15 min; elder optional), sign out everywhere (local) | Server sessions with revocation, push-token revocation | CC-14, CC-27 |
-| Authorisation | One matrix, one `can()` check on every data-changing action | Identical policy enforced in the API | CC-18, CC-19 |
+| Authorisation | One matrix and one `can()` check, called by most data-changing actions in the browser (gaps in the threat model, CC-10) | Identical policy enforced in the API | CC-18, CC-19 |
 | Audit | SHA-256 hash-chained log with integrity check | Server-side append-only log, externally anchored, 6-year retention | CC-28, CC-29 |
 | Anomaly detection | Bulk-view and repeated-denial alerts | Tuned detection, security-team escalation | CC-35 |
 | Notifications | PHI-free titles | Same, enforced in the notification service | CC-31 |
@@ -31,7 +31,7 @@ This page explains the security and privacy controls that are **real code in the
 
 1. On first use the app generates an **AES-GCM 256-bit key** with `crypto.subtle.generateKey(…, extractable = false, ["encrypt", "decrypt"])` and stores the `CryptoKey` object in IndexedDB (`circle-care-keys`). Because it is **non-extractable**, no JavaScript — including the app's own — can read or export the raw key bytes.
 2. Every save serialises the state to JSON and encrypts it with a **fresh random 12-byte IV**. The result is stored as `enc:v1:<base64 iv>:<base64 ciphertext>` in `localStorage["circle-care-demo"]`.
-3. Loading decrypts with the same key. GCM authentication means a modified ciphertext or a missing key fails closed: the app starts a fresh demo instead of reading tampered data.
+3. Loading decrypts with the same key. GCM authentication means a modified ciphertext or a missing key can't be read: the app starts a fresh demo instead, without telling anyone. A value without the `enc:v1:` prefix is still read as plain JSON (threat C2-T1).
 4. Documents are encrypted the same way in IndexedDB `circle-care-files`.
 5. If Web Crypto or IndexedDB is unavailable, the prototype falls back to plain `localStorage` (demo convenience only).
 
@@ -72,7 +72,7 @@ can(state, actorId, action, resource): boolean
 | `pro@shift` | A professional caregiver matches only while checked in today and not checked out — **minimum necessary** |
 | `ALWAYS_SHARED` | `sos`, `emergencyCard`, `circle` stay available to family and pros when the elder pauses sharing |
 | Health readings | The guardian's `vitals: read` also requires `settings.vitals.shareWithGuardian` |
-| Enforcement | Every data-changing store action calls `guard()`; refusals change nothing and write a `denied` audit entry. Read access in the UI uses `AccessGuard` / `useCan`, which call the same `can()` |
+| Enforcement | Data-changing store actions call `guard()`, except `acceptInvite`, `invite`'s role and the demo controls (see the threat model); refusals change nothing and write a `denied` audit entry. Read access in the UI uses `AccessGuard` / `useCan`, which call the same `can()` |
 
 ### Summary matrix
 

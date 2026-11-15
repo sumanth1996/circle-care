@@ -1,7 +1,7 @@
 # Permission Matrix
 
 Notion story: CC-18 Define role permissions (matrix)
-Status: Implemented in the prototype (`src/data/policy.ts`, enforced through `can()` — CC-19) and covered by `src/__tests__/policy.test.ts`. Production server-side enforcement is **not built** (no backend exists yet).
+Status: Implemented in the prototype (`src/data/policy.ts`, enforced through `can()` — CC-19) and covered by `src/__tests__/policy.test.ts`. Production server-side enforcement is **not built**: the accounts server exists, but care-circle data has no API yet (CC-202).
 
 This page is a readable rendering of the `MATRIX` constant as of 2026-10-19. If the code changes, the code wins — regenerate this table.
 
@@ -79,7 +79,7 @@ Most change actions in the store go through `guard()` in `src/data/store.tsx` (r
 
 ## Coverage gaps (prototype)
 
-Closed on 2026-10-19. Every data-changing store action is now checked:
+Closed on 2026-10-19 for the actions below. The CC-10 threat model (2026-11-15) found three that are still open: `acceptInvite` has no check, `invite` accepts any role from the caller, and the review queue at `/app/review` has no route guard. The demo controls (`skipAhead`, `simulate`, `resetDemo`, persona switching) are unguarded on purpose. All of these move to the server in CC-202.
 
 | Action | Check |
 |---|---|
