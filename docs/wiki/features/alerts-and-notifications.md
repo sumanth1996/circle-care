@@ -63,7 +63,7 @@
 
 \* Critical when the medicine is high-priority.
 
-Action-driven alerts (new requests, decisions, invitations, shift offers, appointments, sharing changes, legal-document review) are listed on each feature page under *Notifications*.
+Action-driven alerts (new requests, decisions, invitations, shift offers, appointments, sharing changes, legal-document review) are listed on each feature page under *Notifications*. Help board alerts (CC-209, CC-210) are on the [Help board](help-board.md#notifications) page.
 
 ### Lock-screen titles in use
 
