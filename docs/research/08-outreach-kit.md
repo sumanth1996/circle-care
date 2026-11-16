@@ -12,7 +12,8 @@ Use with the [recruiting screener](01-recruiting-screener.md). Fill the placehol
 | Mon Nov 16 to Fri Nov 20 | Name the recruiting owner, secure the incentive budget, get the consent text reviewed, review and approve the safety protocol (see the [fieldwork plan](10-fieldwork-plan.md) §5) | PO and recruiting owner |
 | Mon Nov 23 to Fri Dec 4 | Send outreach to each channel in screener §3; screen people as they reply; send consent forms. Thanksgiving week is slow, so send the first outreach on Mon Nov 23 | Recruiting owner |
 | Mon Dec 7 to Fri Dec 11 | Fill gaps in the quotas; confirm every booking; send reminders | Recruiting owner |
-| Mon Dec 14 to Wed Dec 23 | Interviews (see the fieldwork plan) | Moderator and note-taker |
+| Mon Dec 14 to Tue Dec 22 | Interviews (see the fieldwork plan) | Moderator and note-taker |
+| Tue Dec 22 and Wed Dec 23 | 15-minute follow-up calls to check the journey maps | Moderator |
 
 Recruiting stops early for a segment once its minimum is booked and the mix in screener §2 is met.
 
@@ -24,7 +25,7 @@ Recruiting stops early for a segment once its minimum is booked and the mix in s
 >
 > I'm [owner's name], working on Circle Care, a concept app that helps an older person, their caregivers and their family share medicine schedules and check-ins while the older person stays in charge of their own information.
 >
-> Before we build further, we want to hear from older adults who live at home and get some help. Conversations are up to 70 minutes with breaks, by phone, video or in person, between December 14 and 23. Each person gets a [$40] gift card, by mail or email.
+> Before we build further, we want to hear from older adults who live at home and get some help. Conversations are up to 70 minutes with breaks, by phone, video or in person, between December 14 and 22. Each person gets a [$40] gift card, by mail or email.
 >
 > Could you share the attached one-page flyer, or mention it in a newsletter? We never ask you for anyone's contact details: people who are interested contact us directly. The consent outline is attached so you can see how we keep and delete notes.
 >
@@ -39,7 +40,7 @@ Recruiting stops early for a segment once its minimum is booked and the mix in s
 >
 > I'm [owner's name], working on Circle Care, a concept app for shift hand-offs, medicine schedules and check-ins between paid caregivers and families.
 >
-> We'd like to talk with caregivers about a recent shift: what they had to remember, how they handed over and what got in the way. Conversations are up to 70 minutes, outside work hours, between December 14 and 23, and each person gets a [$40] gift card.
+> We'd like to talk with caregivers about a recent shift: what they had to remember, how they handed over and what got in the way. Conversations are up to 70 minutes, outside work hours, between December 14 and 22, and each person gets a [$40] gift card.
 >
 > With your permission, could we post the attached flyer in the break room or staff chat? Your agency won't see anyone's answers, and we won't recruit through supervisors. If your policy needs written approval, a caregiver can ask us for a letter to give you; you'll then know only that they took part.
 >
@@ -48,7 +49,7 @@ Recruiting stops early for a segment once its minimum is booked and the mix in s
 
 ## 4. Post for a caregiver support group (ask the facilitator first)
 
-> Are you a legal guardian or hold power of attorney for an older adult? We're designing a care app called Circle Care and want to learn how you keep track of someone's care from a distance: what you need to know, what you need to approve, and what wears you out. Up to 70 minutes by phone or video, December 14 to 23, with a [$40] gift card as thanks. Reply to [project email] or call [project phone]. We keep your answers under a number, not your name.
+> Are you a legal guardian or hold power of attorney for an older adult? We're designing a care app called Circle Care and want to learn how you keep track of someone's care from a distance: what you need to know, what you need to approve, and what wears you out. Up to 70 minutes by phone or video, December 14 to 22, with a [$40] gift card as thanks. Reply to [project email] or call [project phone]. We keep your answers under a number, not your name.
 
 ## 5. Large-type flyer (print at 16 point or larger)
 
@@ -58,7 +59,7 @@ Recruiting stops early for a segment once its minimum is booked and the mix in s
 >
 > A friendly conversation of up to 70 minutes, with breaks.
 >
-> By phone, video or in person, December 14 to 23.
+> By phone, video or in person, December 14 to 22.
 >
 > You'll receive a **[$40] gift card** to thank you.
 >

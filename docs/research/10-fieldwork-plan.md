@@ -22,14 +22,15 @@ Sessions run up to 70 minutes, with at least 30 minutes after each to reset the 
 |---|---|
 | Mon Dec 14 to Fri Dec 18 | 10:00 AM, 1:30 PM, 6:30 PM |
 | Sat Dec 19 | 10:00 AM, 1:30 PM |
-| Mon Dec 21 and Tue Dec 22 | 10:00 AM, 1:30 PM, 6:30 PM (overflow and late bookings) |
+| Mon Dec 21 | 1:30 PM, 6:30 PM (overflow and late bookings) |
+| Tue Dec 22 | 10:00 AM, 1:30 PM, 6:30 PM (overflow and late bookings) |
 
 **Pick the slot by the participant's local time.** Recruiting aims for at least 3 states, so a slot that suits one person may not suit another: 10:00 AM PT is 1:00 PM in the Eastern time zone, and 6:30 PM PT is 9:30 PM there. As a guide, offer elders a daytime slot in their own time zone, caregivers a slot between or after their shifts, and guardians who work full time an evening or Saturday slot. Record every session in the tracker in Pacific time.
 
-Target: the minimums (6 elders, 6 caregivers, 5 guardians) done by Sat Dec 19, with at most 3 sessions a day for one moderator. Then:
+Target: the minimums (6 elders, 6 caregivers, 5 guardians) done by Sat Dec 19, with at most 3 sessions a day for one moderator. Mon Dec 14 to Sat Dec 19 has exactly 17 slots, so any cancellation spills into the overflow days unless a second moderator takes some sessions. Then:
 
 - **Mon Dec 21, 8:00 to 10:00 AM:** the affinity session for CC-5, with at least 2 people (the [journey maps](05-journey-maps.md#synthesis-process-after-interviews) synthesis process). Overflow interviews after it are folded into the themes the same day.
-- **Tue Dec 22 and Wed Dec 23:** the journey-map checks with participants (the [synthesis kit](11-synthesis-kit.md) §4). One 15-minute follow-up call can cover both a map check and the elder guide's §6b follow-up.
+- **Tue Dec 22 and Wed Dec 23:** the 15-minute journey-map checks with participants (the [synthesis kit](11-synthesis-kit.md) §4). Keep them separate from any elder §6b follow-up, which needs its own call.
 
 ## 3. Before each session (run sheet)
 
@@ -58,7 +59,7 @@ Target: the minimums (6 elders, 6 caregivers, 5 guardians) done by Sat Dec 19, w
 This protocol covers a participant saying, or the moderator seeing, that an older adult is being neglected, abused, financially exploited, or is in an unsafe situation, or that the participant is in danger themselves. It applies whether an elder speaks about themselves, or a caregiver or guardian speaks about the person they care for.
 
 1. **Immediate danger, in person.** If someone is in danger right now (a fall with injury, a threat of violence, a medical emergency), stop the interview and call 911, or help the participant call.
-2. **Immediate danger, by phone or video.** A 911 call from the moderator reaches the moderator's own area, not the participant's. First help the participant, or someone with them, call 911 where they are, and stay on the line. If the moderator has to call for them, the research lead gets the address from the ID key and gives it to the dispatcher for the participant's area.
+2. **Immediate danger, by phone or video.** A 911 call from the moderator reaches the moderator's own area, not the participant's. First help the participant, or someone with them, call 911 where they are, and stay on the line. If the moderator has to call for them, the research lead gets the address from the ID key, or asks the participant where they are if it isn't there, and gives it to the dispatcher for the participant's area.
 3. **No immediate danger.** Pause the interview. Thank the person for telling you. Don't investigate, ask leading questions, or promise to keep it secret, because you may need to share it (consent item 10). Don't discuss it while anyone who may be causing the harm, such as an aide or a relative in the room, can hear: offer to talk at another time instead.
 4. **Offer help.** Tell the participant how to reach the Adult Protective Services office in their state, and the Eldercare Locator for local services. The research lead keeps the current contact details for both on a printed help card for every session; don't rely on an app during the call.
 5. **Decide whether to report.** In some states anyone who suspects elder abuse must report it, not only licensed professionals, so the research team itself may have to. Before fieldwork, the research lead checks the rules for every state that participants are booked from. After a disclosure, the research lead decides and makes any report. Don't report from the session itself unless the danger is immediate.
@@ -75,7 +76,7 @@ From screener §7, with dates:
 | Name and contact (ID key) | One encrypted, access-restricted file | Once incentives are paid and follow-ups are done |
 | Recordings | Encrypted research folder | Within 30 days of transcription |
 | De-identified notes | Encrypted research folder, one file per ID | Within 12 months; log the deletion (date and ID only) in the encrypted tracker |
-| Filled-in tracker and synthesis sheets | Encrypted research folder, copied from the blank templates in this repository | With the de-identified notes |
+| Filled-in tracker and synthesis sheets | Encrypted research folder, copied from the blank templates in this repository | With the last de-identified notes; the tracker's deletion log (ID and date only) is kept until then |
 | Safety log | The research lead's restricted file | As the research lead's reviewed guidance says |
 
 Nothing with a name, contact detail, recording or raw note goes into this repository, Notion or Slack, and neither does a filled-in tracker or synthesis sheet.

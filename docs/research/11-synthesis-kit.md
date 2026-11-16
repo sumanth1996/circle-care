@@ -43,7 +43,7 @@ One row per hypothesis in the guides: H-E1 to H-E10 ([elders](02-interview-guide
 
 ## 4. Checking the journey maps with participants (CC-5)
 
-CC-5 needs the three journey maps checked with at least 5 participants, including at least one from each segment. Use a 15-minute follow-up call (incentive in screener §6) on Tue Dec 22 or Wed Dec 23, after the affinity session on Mon Dec 21 (the [fieldwork plan](10-fieldwork-plan.md) §2). For elders, the same call can cover the elder guide's §6b follow-up.
+CC-5 needs the three journey maps checked with at least 5 participants, including at least one from each segment. Use a 15-minute follow-up call (incentive in screener §6) on Tue Dec 22 or Wed Dec 23, after the affinity session on Mon Dec 21 (the [fieldwork plan](10-fieldwork-plan.md) §2). Keep it separate from any elder §6b follow-up, which needs its own call.
 
 **Script.**
 

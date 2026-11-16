@@ -198,6 +198,7 @@ describe("Sprint 15 research prep kit (CC-1 to CC-5)", () => {
       expect(doc, name).not.toMatch(phone);
       // Short dial numbers (988, 311 and the like) belong on the research lead's printed card, not here.
       for (const [, n] of doc.matchAll(/\b(?:call|dial|text|ring)\s+(\d{3,})\b/gi)) expect(n, name).toBe("911");
+      expect(doc, name).not.toMatch(/\b(?:211|311|411|511|611|711|811|988)\b/);
     }
   });
 
