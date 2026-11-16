@@ -15,6 +15,7 @@ Exits with 1 if any scenario fails or the page throws, so CI can gate on it.
 import datetime
 import json
 import os
+import re
 import sys
 
 from playwright.sync_api import sync_playwright, expect
@@ -116,12 +117,18 @@ def step(name, fn):
 
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
-    ctx = b.new_context(viewport={"width": 390, "height": 844}, timezone_id="America/Los_Angeles", locale="en-US")
+    ctx = b.new_context(viewport={"width": 390, "height": 844}, timezone_id="America/Los_Angeles", locale="en-US",
+                        bypass_csp=True)  # only so axe can be injected, as a11y.py does
     ctx.route("**/api/**", answer)
     pg = ctx.new_page()
     pg.clock.set_system_time(NOW)
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.on("console", lambda m: errs.append(m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
+
+    def go(path):
+        # A hash-only change keeps the same document, so load it fresh, like opening a link from an email.
+        pg.goto("about:blank")
+        pg.goto(B + path)
 
     def axe(label):
         pg.add_script_tag(path=AXE)
@@ -129,7 +136,7 @@ with sync_playwright() as p:
         assert not v, f"{label} has accessibility problems: {v}"
 
     def to_code_step():
-        pg.goto(B + "/app/login")
+        go("/app/login")
         pg.get_by_label("Email").fill("sarah@example.com")
         pg.get_by_label("Password").fill("a long test password")
         pg.get_by_role("button", name="Sign in").click()
@@ -153,7 +160,7 @@ with sync_playwright() as p:
     step("CC-235 At the code step, Sarah asks for a reset link after losing her phone and codes", ask_for_link)
 
     def confirm_link():
-        pg.goto(B + "/app/recover-two-step?token=confirm-token")
+        go("/app/recover-two-step?token=confirm-token")
         expect(pg.get_by_role("heading", name="Reset two-step sign-in?")).to_be_visible()
         # The token is read once and taken out of the address bar; opening the link alone changes nothing.
         assert "token" not in pg.url, pg.url
@@ -162,17 +169,18 @@ with sync_playwright() as p:
         pg.get_by_role("button", name="Start the 72-hour wait").click()
         expect(pg.get_by_role("heading", name="The wait has started")).to_be_visible()
         expect(pg.get_by_text("Thursday, November 19")).to_be_visible()
-        expect(pg.get_by_text("9:00 AM PST")).to_be_visible()
+        # Chromium may put a narrow no-break space before AM.
+        expect(pg.get_by_text(re.compile(r"9:00\sAM PST"))).to_be_visible()
 
     step("CC-235 The emailed link starts a 72-hour wait only when she presses the button", confirm_link)
 
     def bad_links():
-        pg.goto(B + "/app/recover-two-step?token=confirm-token")
+        go("/app/recover-two-step?token=confirm-token")
         pg.get_by_role("button", name="Start the 72-hour wait").click()
         expect(pg.get_by_role("heading", name="This link doesn't work")).to_be_visible()
-        pg.goto(B + "/app/recover-two-step")
+        go("/app/recover-two-step")
         expect(pg.get_by_role("alert")).to_contain_text("expired or was already used")
-        pg.goto(B + "/app/recover-two-step/cancel?token=wrong")
+        go("/app/recover-two-step/cancel?token=wrong")
         pg.get_by_role("button", name="Cancel the reset").click()
         expect(pg.get_by_role("heading", name="This link doesn't work")).to_be_visible()
         axe("The expired-link page")
@@ -191,7 +199,7 @@ with sync_playwright() as p:
 
     def signed_in_device_cancels():
         S["signed_in"] = True
-        pg.goto(B + "/app/account")
+        go("/app/account")
         warn = pg.get_by_role("alert").filter(has_text="Someone asked to reset two-step sign-in")
         expect(warn).to_be_visible()
         expect(warn).to_contain_text("Thursday, November 19")
@@ -205,7 +213,7 @@ with sync_playwright() as p:
 
     def cancel_by_email():
         reset_state(wait={"readyAt": READY, "ready": False})
-        pg.goto(B + "/app/recover-two-step/cancel?token=cancel-token")
+        go("/app/recover-two-step/cancel?token=cancel-token")
         expect(pg.get_by_role("heading", name="Cancel the reset?")).to_be_visible()
         assert "token" not in pg.url, pg.url
         axe("The cancel-link page")
