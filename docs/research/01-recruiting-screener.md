@@ -123,6 +123,8 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 
 ## 8. Scheduling tracker (template)
 
+The working tracker is [09-recruiting-tracker.csv](09-recruiting-tracker.csv), with IDs pre-assigned up to the stretch quotas. The table below shows its shape.
+
 | ID | Segment | Channel | Screened (date) | Qualifies? | Consent sent | Session date/time | Mode | Interviewer | Note-taker | Incentive sent | Follow-up? | Notes (no PII) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | E01 | Elder | | | | | | | | | | | |
@@ -137,9 +139,9 @@ None of these can be done by the product team's agents. Each needs a named perso
 - [ ] Recruiting: name an owner for each channel and start recruiting (CC-1).
 - [ ] Incentives: secure the incentive budget, and decide whether the longer sessions in the v2 guides (up to 70 minutes) change the amount.
 - [ ] Consent review: get the consent text in §5 reviewed before first use.
-- [ ] Safety protocol: write the protocol for disclosures of harm (see the elder guide).
+- [ ] Safety protocol: review and approve the draft protocol for disclosures of harm in the [fieldwork plan](10-fieldwork-plan.md#5-safety-protocol-for-disclosures-of-harm-draft-needs-review).
 - [ ] Agency approvals: get written agency OK for caregivers who need it (C6).
 - [ ] Interpreter: decide the interpreter budget for caregivers who prefer another language.
-- [ ] Print large-type flyers.
+- [ ] Print large-type flyers (text in the [outreach kit](08-outreach-kit.md#5-large-type-flyer-print-at-16-point-or-larger)).
 - [ ] Set up encrypted storage for recordings, notes and the ID key.
 - [ ] Set up a research phone: a guest browser profile, keyboard learning off, the microphone blocked for the prototype site, and a check that *Reset demo* and clearing site data work on it.

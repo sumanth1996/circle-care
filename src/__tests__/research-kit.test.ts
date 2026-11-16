@@ -168,3 +168,94 @@ describe("research kit (CC-197)", () => {
     }
   });
 });
+
+// Sprint 15: the prep kit for CC-1 to CC-5 (outreach, ID-only tracker, fieldwork plan, synthesis kit).
+// It is agent work that a person then runs, so it must stay a draft with no real people in it, agree with
+// the screener's quotas and the guides' hypotheses, and keep its dates on the real calendar.
+const PREP = {
+  outreach: read("docs/research/08-outreach-kit.md"),
+  fieldwork: read("docs/research/10-fieldwork-plan.md"),
+  synthesis: read("docs/research/11-synthesis-kit.md"),
+};
+const TRACKER = read("docs/research/09-recruiting-tracker.csv").trim().split("\n").map((l) => l.split(","));
+
+describe("Sprint 15 research prep kit (CC-1 to CC-5)", () => {
+  it("is a dated draft that names its stories and says nothing has happened yet", () => {
+    for (const [name, doc] of Object.entries(PREP)) {
+      expect(doc.split("\n").find((l) => l.startsWith("Notion stor")), name).toMatch(/CC-[1-5]\b/);
+      const status = doc.split("\n").find((l) => l.startsWith("Status:"))!;
+      expect(status, name).toMatch(/^Status: DRAFT, \d{4}-\d{2}-\d{2}\./);
+      expect(status, name).toMatch(/No one has been contacted|No sessions are booked|No interview has taken place/);
+    }
+  });
+
+  it("holds no real contact details, in the docs or the tracker", () => {
+    const email = /[\w.+-]+@[\w-]+\.[\w.]+/;
+    const phone = /\(?\b\d{3}\)?[-. ]\d{3}[-. ]\d{4}\b/;
+    const tracker = TRACKER.map((r) => r.join(",")).join("\n");
+    for (const [name, doc] of Object.entries({ ...PREP, tracker })) {
+      expect(doc, name).not.toMatch(email);
+      expect(doc, name).not.toMatch(phone);
+    }
+  });
+
+  it("keeps the tracker to participant IDs, with an ID for every stretch-quota place", () => {
+    const [header, ...rows] = TRACKER;
+    expect(header[0]).toBe("ID");
+    for (const col of header) expect(col, "no column for who someone is").not.toMatch(/name|phone|email|address|contact|birth/i);
+    expect(new Set(rows.map((r) => r.length))).toEqual(new Set([header.length]));
+    expect(new Set(rows.map((r) => r[0])).size).toBe(rows.length);
+    const quotas = section(SCREENER, /^## 2\. Quotas/);
+    const stretch = (seg: RegExp) => Number(quotas.split("\n").find((l) => seg.test(l))!.split("|")[3].trim());
+    for (const [prefix, segment, row] of [
+      ["E", "Elder", /^\| Elders/],
+      ["C", "Caregiver", /^\| Professional caregivers/],
+      ["G", "Guardian", /^\| Legal guardians/],
+      ["F", "Family helper", /^\| Family helpers/],
+    ] as const) {
+      const ids = rows.filter((r) => r[0].startsWith(prefix));
+      expect(ids.length, segment).toBe(stretch(row));
+      for (const r of ids) expect(r[1], r[0]).toBe(segment);
+      expect(ids.map((r) => Number(r[0].slice(1))), segment).toEqual(ids.map((_, i) => i + 1));
+    }
+  });
+
+  it("puts each weekday on the right date, inside the recruiting window or Sprint 15", () => {
+    const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let checked = 0;
+    for (const [name, doc] of Object.entries(PREP)) {
+      for (const [, day, mon, date] of doc.matchAll(/\b(Sun|Mon|Tue|Wed|Thu|Fri|Sat) (Nov|Dec) (\d{1,2})\b/g)) {
+        const d = new Date(2026, MONTHS.indexOf(mon), Number(date));
+        expect(DAYS[d.getDay()], `${name}: ${day} ${mon} ${date}`).toBe(day);
+        expect(d >= new Date(2026, 10, 16) && d <= new Date(2026, 11, 27), `${name}: ${mon} ${date}`).toBe(true);
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(5);
+  });
+
+  it("scores exactly the hypotheses the guides list", () => {
+    for (const [prefix, doc] of [["H-E", GUIDES.elder], ["H-C", GUIDES.caregiver], ["H-G", GUIDES.guardian]] as const) {
+      const last = Math.max(...[...doc.matchAll(new RegExp(`^\\| ${prefix}(\\d+) \\|`, "gm"))].map((m) => Number(m[1])));
+      expect(PREP.synthesis, prefix).toContain(`${prefix}1 to ${prefix}${last}`);
+    }
+  });
+
+  it("has a safety protocol that blocks fieldwork until reviewed and keeps disclosures out of the notes", () => {
+    const protocol = section(PREP.fieldwork, /^## 5\. Safety protocol/);
+    expect(protocol).toMatch(/no interviews run/i);
+    expect(protocol).toMatch(/call 911/);
+    expect(protocol).toMatch(/never in the notes or the repository/);
+    expect(protocol).toMatch(/receive the incentive either way/);
+    expect(SCREENER).toMatch(/\[fieldwork plan\]\(10-fieldwork-plan\.md#5-safety-protocol/);
+  });
+
+  it("lets agents work only from notes that are already de-identified", () => {
+    const rules = section(PREP.synthesis, /^## 1\. What agents may receive/);
+    expect(rules).toMatch(/participant ID only/);
+    expect(rules).toMatch(/\[condition\].*\[med\]/);
+    expect(rules).toMatch(/no recording/);
+    expect(section(PREP.fieldwork, /^## 1\. Roles/)).toMatch(/never see recordings, names or contact details/);
+  });
+});
