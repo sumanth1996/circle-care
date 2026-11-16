@@ -33,7 +33,7 @@ export interface Deps {
    */
   defer: (task: () => Promise<unknown>) => void;
 }
-export interface AuthedUser { id: string; role: Role; email: string; /** CC-200: an authenticator app is set up. */ mfaEnrolled: boolean }
+export interface AuthedUser { id: string; role: Role; email: string; /** CC-200: an authenticator app is set up. */ mfaEnrolled: boolean; /** When this session was started by a password (or a sign-up). */ signedInAt?: Date }
 
 declare module "express-serve-static-core" {
   interface Request { user?: AuthedUser }
@@ -66,14 +66,14 @@ async function loadSession(d: Deps, req: Request, res: Response) {
     const token = readCookie(req, COOKIE);
     if (token) {
       const now = d.now();
-      const { rows } = await d.db.query<{ user_id: string; role: Role; email: string; last_seen_at: Date; expires_at: Date; mfa_enabled_at: Date | null }>(
-        "SELECT s.user_id, s.last_seen_at, s.expires_at, u.role, u.email, u.mfa_enabled_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1",
+      const { rows } = await d.db.query<{ user_id: string; role: Role; email: string; created_at: Date; last_seen_at: Date; expires_at: Date; mfa_enabled_at: Date | null }>(
+        "SELECT s.user_id, s.created_at, s.last_seen_at, s.expires_at, u.role, u.email, u.mfa_enabled_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1",
         [sha256(token)],
       );
       const s = rows[0];
       const idleLimit = now.getTime() - d.cfg.sessionIdleMinutes * 60_000;
       if (s && new Date(s.expires_at).getTime() > now.getTime() && new Date(s.last_seen_at).getTime() > idleLimit) {
-        req.user = { id: s.user_id, role: s.role, email: s.email, mfaEnrolled: !!s.mfa_enabled_at };
+        req.user = { id: s.user_id, role: s.role, email: s.email, mfaEnrolled: !!s.mfa_enabled_at, signedInAt: new Date(s.created_at) };
         if (now.getTime() - new Date(s.last_seen_at).getTime() > 30_000) await d.db.query("UPDATE sessions SET last_seen_at = $1 WHERE token_hash = $2", [now, sha256(token)]);
       } else {
         if (s) await d.db.query("DELETE FROM sessions WHERE token_hash = $1", [sha256(token)]);

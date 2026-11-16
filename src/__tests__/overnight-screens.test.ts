@@ -77,10 +77,44 @@ describe("last night's doses after midnight", () => {
 
   it("does not list a dose that finished escalating before midnight", () => {
     const { s } = lateDose("med-metformin", "21:00");
-    later(s, 200); // 00:20
+    later(s, 65); // 22:05, both alerts out
+    later(s, 135); // 00:20
     expect(lastNightDoses(s)).toHaveLength(0);
     const n = nextUp(s);
     expect(n.kind === "dose" && n.slot.date !== todayOf(s)).toBe(false);
+  });
+
+  it("carries on a dose's alerts the app slept through before midnight, and lists it until it's marked", () => {
+    const { s, med, day, key } = lateDose("med-metformin", "21:00");
+    later(s, 10); // 21:10: due, nothing sent yet. Then the laptop closes until 00:20.
+    later(s, 190);
+    expect(has(s, `dose-cg-${day}-${key}`)).toBe(true);
+    expect(has(s, `dose-g-${day}-${key}`)).toBe(true);
+    expect(lastNightDoses(s).map((d) => d.key)).toEqual([key]);
+    later(s, 5); // still listed after the next run, though the last run was today
+    expect(lastNightDoses(s).map((d) => d.key)).toEqual([key]);
+    expect(logDose(s, ELDER, med.id, "21:00", "taken", undefined, day)).toBe(true);
+    evaluate(s);
+    expect(lastNightDoses(s)).toHaveLength(0);
+  });
+
+  it("carries on when the caregiver was told before midnight and Sarah's step was slept through", () => {
+    const { s, day, key } = lateDose("med-metformin", "21:00");
+    later(s, 35); // 21:35, caregiver told
+    expect(has(s, `dose-cg-${day}-${key}`)).toBe(true);
+    later(s, 165); // 00:20
+    expect(byKey(s, `dose-g-${day}-${key}`)).toHaveLength(1);
+  });
+
+  it("looks back at nothing on a first run with no record of a last run, or after a day away", () => {
+    const first = lateDose("med-metformin", "21:00").s;
+    first.alerts = []; delete first.lastRunAt;
+    later(first, 200);
+    expect(lastNightDoses(first)).toHaveLength(0);
+    const away = lateDose("med-metformin", "21:00").s;
+    away.alerts = []; away.lastRunAt = addDays(clock(away), -2).toISOString();
+    later(away, 200);
+    expect(lastNightDoses(away)).toHaveLength(0);
   });
 
   it("records a dose only for today or yesterday", () => {
@@ -146,6 +180,18 @@ describe("check-ins after midnight", () => {
     s.checkins.push({ date: todayOf(s), at: clock(s).toISOString() });
     expect(checkinMissedLastNight(s)).toBe(false);
     expect(checkinButtonShows(s)).toBe(false);
+  });
+
+  it("carries on a missed check-in the app slept through before Sarah's prompt", () => {
+    const { s, day } = lateWindow("20:00", "22:00", "22:05"); // Maggie's prompt goes out, then the tab sleeps
+    expect(has(s, `checkin-elder-${day}`)).toBe(true);
+    expect(has(s, `checkin-${day}`)).toBe(false);
+    later(s, 135); // 00:20
+    expect(has(s, `checkin-${day}`)).toBe(true);
+    expect(s.alerts.find((a) => a.key === `checkin-${day}`)!.detail).toContain("last night");
+    expect(checkinMissedLastNight(s)).toBe(true);
+    later(s, 5); // still shown after the next run
+    expect(checkinMissedLastNight(s)).toBe(true);
   });
 
   it("hides the button after a check-in inside a window that ends after midnight", () => {

@@ -13,7 +13,7 @@ export type AuditAction =
   | "nonprod.blocked" | "audit.exported"
   | "ratelimit.exceeded"
   | "auth.signout_all" | "password.changed" | "password.reset_requested" | "password.reset" | "email.undeliverable"
-  | "auth.challenge" | "auth.mfa_failed" | "mfa.locked" | "mfa.enrolled" | "mfa.recovery_used";
+  | "auth.challenge" | "auth.mfa_failed" | "mfa.locked" | "mfa.enrolled" | "mfa.recovery_used" | "mfa.enrol_password_wrong";
 
 /** A standalone run of 9+ digits (SSN, account or card number) or a dashed SSN. Hex hashes don't match. */
 export const LOOKS_SENSITIVE = /(^|[^0-9a-z])\d{9,}([^0-9a-z]|$)|\b\d{3}-\d{2}-\d{4}\b/i;
@@ -39,6 +39,7 @@ export function describe(action: string, d: Record<string, unknown>): string {
     case "auth.mfa_failed": return "Wrong sign-in code entered";
     case "mfa.locked": return "Sign-in codes paused for 15 minutes after 5 wrong codes";
     case "mfa.enrolled": return "Two-step sign-in turned on (authenticator app)";
+    case "mfa.enrol_password_wrong": return "Wrong password entered while setting up two-step sign-in";
     case "mfa.recovery_used": return `A recovery code was used — ${d.remaining} left`;
     case "auth.failed": return "Sign-in attempt with a wrong password";
     case "auth.locked": return "Sign-in locked for 15 minutes after too many attempts";

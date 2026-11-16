@@ -168,6 +168,26 @@ describe("CC-200 guardians and caregivers must enrol before using their account"
     expect(r.mfaPendingSetups).toBeGreaterThanOrEqual(1);
     expect((await h.db.query<{ p: string | null }>("SELECT mfa_pending_secret_enc AS p FROM users WHERE id = $1", [g.id])).rows[0].p).toBeNull();
   });
+
+  it("setting up from a sign-in older than 10 minutes asks for the password again; a wrong one is refused and audited", SLOW, async () => {
+    const g = await signedUp(h, "guardian", {}, { enrol: false });
+    // A fresh sign-in needs no password (sign-up just checked it).
+    h.clock.t += 11 * 60_000;
+    const none = await g.ag.post("/api/auth/mfa/enrol/start");
+    expect(none.status).toBe(401);
+    expect(none.body.code).toBe("reauth_required");
+    expect(none.text).not.toMatch(/otpauth|secret"/);
+    const wrong = await g.ag.post("/api/auth/mfa/enrol/start", { password: "not-my-password" });
+    expect(wrong.status).toBe(403);
+    expect(wrong.body.code).toBe("reauth_failed");
+    expect(await auditOf(g.id, "mfa.enrol_password_wrong")).toHaveLength(1);
+    expect(JSON.stringify(await auditOf(g.id, "mfa.enrol_password_wrong"))).not.toContain("not-my-password");
+    const right = await g.ag.post("/api/auth/mfa/enrol/start", { password: g.body.password });
+    expect(right.status).toBe(200);
+    expect(right.body.secret).toBeTruthy();
+    const confirm = await g.ag.post("/api/auth/mfa/enrol/confirm", { code: nextCode(h, right.body.secret) });
+    expect(confirm.status).toBe(200);
+  });
 });
 
 /* ---------------- Sign-in ---------------- */

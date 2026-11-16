@@ -117,7 +117,7 @@ function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial
             <div className="you-said-actions">
               <button type="button" className="btn lg" disabled={!t || tooLong} onClick={() => { stop(); onSend(t, spoken && mode === "voice"); }}><Send size={24} /> Send</button>
               {mode === "voice"
-                ? <button type="button" className="btn secondary lg" onClick={start}><RotateCcw size={24} /> Try again</button>
+                ? <button type="button" className="btn secondary lg" disabled={onDevice !== "yes"} onClick={start}><RotateCcw size={24} /> Try again</button>
                 : onDevice === "yes" && <button type="button" className="btn secondary lg" onClick={() => { setMode("voice"); start(); }}><Mic size={24} /> Talk instead</button>}
             </div>
           </div>

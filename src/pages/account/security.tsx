@@ -25,14 +25,28 @@ export function TwoStepSetup({ required, onDone }: { required: boolean; onDone: 
   const [codes, setCodes] = useState<string[] | null>(null);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState<"key" | "codes" | null>(null);
+  // CC-200 review: an older sign-in has to confirm the password before a new key is made.
+  const [needPassword, setNeedPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string>();
   const codeRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
   const codesHeadRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (codes) codesHeadRef.current?.focus(); }, [codes]);
 
-  const start = async () => {
-    setBusy(true); setMessage(undefined);
-    try { setSetup(await auth.startSetup()); setTimeout(() => codeRef.current?.focus(), 0); }
-    catch (e) { setMessage(apiErrors(e).message); }
+  const start = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setMessage(undefined);
+    if (needPassword && !password) { setPasswordError("Enter your password"); passwordRef.current?.focus(); return; }
+    setPasswordError(undefined); setBusy(true);
+    try { setSetup(await auth.startSetup(needPassword ? password : undefined)); setPassword(""); setTimeout(() => codeRef.current?.focus(), 0); }
+    catch (err) {
+      if (err instanceof ApiError && (err.code === "reauth_required" || err.code === "reauth_failed")) {
+        setNeedPassword(true); setPassword("");
+        if (err.code === "reauth_failed") setPasswordError(err.message); else setMessage(err.message);
+        setTimeout(() => passwordRef.current?.focus(), 0);
+      } else setMessage(apiErrors(err).message);
+    }
     finally { setBusy(false); }
   };
 
@@ -90,7 +104,17 @@ export function TwoStepSetup({ required, onDone }: { required: boolean; onDone: 
           <li><Smartphone size={16} aria-hidden="true" /> Any authenticator app works — for example Google Authenticator, Microsoft Authenticator or your password manager.</li>
           <li><KeyRound size={16} aria-hidden="true" /> You'll also get 10 recovery codes in case you lose your phone.</li>
         </ul>
-        <button className="btn lg block" onClick={start} disabled={busy}>{busy ? "Starting…" : "Set up two-step sign-in"}</button>
+        {needPassword ? (
+          <form className="stack" onSubmit={start} noValidate>
+            <Field id="mfa-setup-password" label="Your password" error={passwordError}>
+              <input ref={passwordRef} id="mfa-setup-password" name="password" type="password" className="input" autoComplete="current-password"
+                value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={!!passwordError} aria-describedby={describedBy("mfa-setup-password", passwordError)} />
+            </Field>
+            <button className="btn lg block" disabled={busy}>{busy ? "Checking…" : "Continue setup"}</button>
+          </form>
+        ) : (
+          <button className="btn lg block" onClick={() => start()} disabled={busy}>{busy ? "Starting…" : "Set up two-step sign-in"}</button>
+        )}
       </div>
     );
   }

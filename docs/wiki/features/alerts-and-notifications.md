@@ -38,7 +38,7 @@
 
 `evaluate(state)` in `src/data/store.tsx` runs **every 15 seconds** while the app is open and **after every change**. Alerts are de-duplicated by `key`, so a rule fires once per condition (per dose slot per day, per SOS step, per 10-minute window for security rules).
 
-**Across midnight (CC-199).** Dose and check-in alerts belong to the day the dose was due or the check-in window opened, and their keys carry that day, so nothing repeats when the date rolls over.
+**Across midnight (CC-199).** Dose and check-in alerts belong to the day the dose was due or the check-in window opened, and their keys carry that day, so nothing repeats when the date rolls over. If the app was asleep when a step came due the evening before (a closed laptop, a phone tab in the background), the step goes out on the first run after midnight instead of being dropped: the app keeps the time it last ran (`lastRunAt`), and a follow-up that was already due then, or whose first alert went out, carries on until it's settled. A first run with no record of a last run, or one after a day away, looks back at nothing.
 
 - A dose due late in the evening whose escalation is still running at midnight (Sarah's step falls at or after 00:00, for example a 23:30 dose) keeps the same steps and timings: still missed at 00:40, Ana and then Sarah are alerted as for a daytime dose. Its reminders and snooze carry on past midnight too. Marked after midnight, it settles as usual: the alerts show as resolved and the all-clear goes out.
 - A check-in window that ends after midnight (for example 22:00–00:30), or whose prompt to Sarah falls after midnight, prompts Maggie and then Sarah as usual. A check-in made once her button showed for that window, before or after midnight, covers it.

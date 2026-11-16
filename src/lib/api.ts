@@ -71,7 +71,8 @@ export const auth = {
   /** Send either the 6-digit code or a recovery code with the challenge from signIn(). */
   verify: (challenge: string, answer: { code: string } | { recoveryCode: string }) =>
     api<{ user: { id: string; role: Role }; recoveryCodesLeft?: number }>("/api/auth/mfa/verify", { body: { challenge, ...answer } }),
-  startSetup: () => api<MfaSetup>("/api/auth/mfa/enrol/start", { method: "POST", body: {} }),
+  /** A sign-in older than 10 minutes must send the password again (code "reauth_required"). */
+  startSetup: (password?: string) => api<MfaSetup>("/api/auth/mfa/enrol/start", { method: "POST", body: password ? { password } : {} }),
   confirmSetup: (code: string) => api<{ recoveryCodes: string[] }>("/api/auth/mfa/enrol/confirm", { body: { code } }),
   signOutEverywhere: () => api<{ sessionsEnded: number }>("/api/auth/signout-everywhere", { method: "POST", body: {} }),
   changePassword: (currentPassword: string, newPassword: string) => api<{ otherSessionsEnded: number }>("/api/auth/password", { body: { currentPassword, newPassword } }),

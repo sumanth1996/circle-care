@@ -74,7 +74,7 @@ Each row lists every field of one entity by class; inline objects use dots (`pil
 
 | Entity | PHI | PII | Sensitive financial or identity | Operational | Who can see |
 |---|---|---|---|---|---|
-| `State` | `health.heightCm`, `health.overrides.at`, `health.overrides.hr`, `health.overrides.spo2`, `health.overrides.addedAt` | `health.birthYear` | — | `version`, `persona`, `signedIn`, `clockOffsetMin`, `elderId`, `health.device` | `health` goes with `vitals`: Maggie, Sarah (while Maggie shares) |
+| `State` | `health.heightCm`, `health.overrides.at`, `health.overrides.hr`, `health.overrides.spo2`, `health.overrides.addedAt` | `health.birthYear` | — | `version`, `persona`, `signedIn`, `clockOffsetMin`, `lastRunAt`, `elderId`, `health.device` | `health` goes with `vitals`: Maggie, Sarah (while Maggie shares) |
 | `Member` | — | `name`, `short`, `role`, `relation`, `phone`, `photo`, `verification` | — | `id`, `color`, `status`, `expiresOn`, `favorite`, `invitedAt` | `circle`: elder, guardian, family, pro. `relation` and `verification` can reveal legal authority |
 | `Medication` | `id`, `name`, `strength`, `dose`, `times`, `instructions`, `prescriber`, `purpose`, `critical`, `paused`, `pill.color`, `pill.shape`, `history.at`, `history.by`, `history.change` | — | — | — | `meds`: elder, guardian, family, pro@shift. Never on the lock screen (CC-31). `id` embeds the drug name |
 | `MedSupply` | `count`, `countedAt`, `perDose`, `bottleId`, `requestedAt`, `requestedBy`, `pharmacy` | — | — | — | `supply`: elder, guardian, family, pro@shift |

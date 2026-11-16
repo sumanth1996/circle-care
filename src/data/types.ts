@@ -434,6 +434,8 @@ export interface State {
   persona: Persona | null;
   signedIn: Record<Persona, boolean>;
   clockOffsetMin: number;
+  /** When the rules last ran (CC-199 review): follow-ups due while the app was asleep across midnight carry on. */
+  lastRunAt?: string;
   elderId: string;
   members: Member[];
   meds: Medication[];

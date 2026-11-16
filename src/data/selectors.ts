@@ -72,7 +72,36 @@ export const isOpen = (d: DoseSlot) => d.state === "due" || d.state === "late" |
  * Last night's doses still open after midnight: the ones in `overnightDoses`, which the rules engine is still
  * following up. Screens list them, labelled as from last night, so they can be marked and their alerts settle.
  */
-export const lastNightDoses = (s: State): DoseSlot[] => overnightDoses(s).filter(isOpen);
+export const lastNightDoses = (s: State): DoseSlot[] => followUpDoses(s).filter(isOpen);
+
+/**
+ * Whether a follow-up from yesterday still runs today (CC-199 review). `started` is its first alert, due at `dueMs`;
+ * `next` is the one that should have followed by `stepMs`. It carries on when `next` went out after midnight (so
+ * screens keep it until it's settled), or hasn't gone out although its time came, because the app was asleep across
+ * midnight (a closed laptop, a phone tab in the background): either `started` went out, or the app last ran
+ * yesterday after it was due and before `next` was. A first run with no record of a last run looks back at nothing.
+ */
+function chainCarriesOver(s: State, started: string, next: string, dueMs: number, stepMs: number) {
+  const midnight = at(todayOf(s), "00:00").getTime();
+  const sent = s.alerts.find((a) => a.key === next);
+  if (sent) return new Date(sent.at).getTime() >= midnight;
+  if (stepMs >= midnight) return false; // still to come today, handled by the ordinary rules
+  if (s.alerts.some((a) => a.key === started)) return true;
+  const last = s.lastRunAt ? new Date(s.lastRunAt).getTime() : NaN;
+  return last >= at(yesterdayOf(s), "00:00").getTime() && last < midnight && last >= dueMs && last < stepMs;
+}
+
+/**
+ * Yesterday's unconfirmed doses the rules engine still follows up today: the `overnightDoses`, plus any whose
+ * escalation the app slept through before midnight (CC-199 review).
+ */
+export function followUpDoses(s: State): DoseSlot[] {
+  const y = yesterdayOf(s);
+  const overnight = overnightDoses(s);
+  const carried = dosesFor(s, y).filter((d) => !d.log && !overnight.some((o) => o.key === d.key)
+    && chainCarriesOver(s, `dose-cg-${y}-${d.key}`, `dose-g-${y}-${d.key}`, at(y, d.time).getTime(), at(y, d.time).getTime() + doseThresholds(s, d.med).guardian * 60000));
+  return [...overnight, ...carried].sort((a, b) => toMin(a.time) - toMin(b.time));
+}
 
 export function tasksFor(s: State, date = todayOf(s)) {
   const d = new Date(`${date}T12:00:00`).getDay();
@@ -162,9 +191,11 @@ export function checkinFollowUps(s: State): { date: string; minutesPast: number 
   // Minutes from the opening day's midnight to the window's end.
   const endsAt = toMin(s.settings.checkinWindow.end) + (wrapsMidnight(s) ? 1440 : 0);
   const out: { date: string; minutesPast: number }[] = [];
-  // Yesterday's window, only when Sarah's prompt (15 minutes after the end) could not go out before midnight.
-  if (endsAt + 15 >= 1439) {
-    const date = yesterdayOf(s);
+  // Yesterday's window, when Sarah's prompt (15 minutes after the end) could not go out before midnight.
+  // Also an earlier window whose prompts the app slept through before midnight (CC-199 review).
+  const date = yesterdayOf(s);
+  const endMs = at(date, "00:00").getTime() + endsAt * 60000;
+  if (endsAt + 15 >= 1439 || chainCarriesOver(s, `checkin-elder-${date}`, `checkin-${date}`, endMs, endMs + 15 * 60000)) {
     if (!checkedInFor(s, date) && nowMin + 1440 > endsAt) out.push({ date, minutesPast: nowMin + 1440 - endsAt });
   }
   if (!checkinToday(s) && nowMin > endsAt) out.push({ date: ymd(now), minutesPast: nowMin - endsAt });

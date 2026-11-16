@@ -53,6 +53,21 @@ describe("CC-203: database TLS", () => {
     expect(isLocalDb("postgres://app@localhost.evil.example/cc")).toBe(false);
   });
 
+  it("checks the host node-postgres really connects to, not just the URL's host", () => {
+    // A host parameter wins over the URL's host in node-postgres, so it can't pass a remote server off as local.
+    for (const url of ["postgres://u:p@localhost/x?host=db.evil.example", "postgres:///x?host=db.evil.example"]) {
+      expect(isLocalDb(url, {})).toBe(false);
+      expect(pgConnection(url, undefined, {}).ssl).toEqual({ rejectUnauthorized: true });
+    }
+    // An empty host means PGHOST, which Replit points at its remote database.
+    expect(isLocalDb("postgres:///cc", { PGHOST: "ep-cool-db.us-east-2.aws.neon.tech" })).toBe(false);
+    expect(pgConnection("postgres:///cc", undefined, { PGHOST: "db.example.com" }).ssl).toEqual({ rejectUnauthorized: true });
+    // With nothing set it is localhost, and a unix socket is local too.
+    expect(isLocalDb("postgres:///cc", {})).toBe(true);
+    expect(isLocalDb("postgres:///cc?host=/var/run/postgresql", {})).toBe(true);
+    expect(isLocalDb("postgres://u@localhost/cc?host=localhost", {})).toBe(true);
+  });
+
   it("stops at start-up with a clear message when the certificate can't be verified", async () => {
     failWith = Object.assign(new Error("self-signed certificate"), { code: "DEPTH_ZERO_SELF_SIGNED_CERT" });
     const cfg = loadConfig({ APP_ENV: "test", DATABASE_URL: "postgres://app:pw@db.example.com/cc" });

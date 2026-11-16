@@ -54,7 +54,7 @@ describe("Family chat voice reply (CC-222)", () => {
     expect(CHAT).toMatch(/const ok = s === "on-device";/);
     expect(CHAT).toMatch(/if \(ok\) start\(\);\s*else \{ setMode\("type"\); setNote\(NOT_ON_DEVICE\); \}/);
     // The microphone can't be tapped, and Talk instead isn't offered, until the check has said yes.
-    expect(CHAT).toMatch(/disabled=\{onDevice !== "yes"\}/);
+    expect(CHAT.match(/disabled=\{onDevice !== "yes"\}/g)?.length, "the mic and Try again both wait for the check").toBe(2);
     expect(CHAT).toMatch(/onDevice === "yes" && <button.*Talk instead<\/button>/);
   });
 });

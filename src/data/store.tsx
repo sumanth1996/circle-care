@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc, Appointment } from "./types";
 import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo";
-import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, yesterdayOf, activeSos, member, todayVisit, tasksFor, overnightDoses, checkinFollowUps } from "./selectors";
+import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, yesterdayOf, activeSos, member, todayVisit, tasksFor, followUpDoses, checkinFollowUps } from "./selectors";
 import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
 import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays, greeting } from "../lib/time";
@@ -103,9 +103,9 @@ export function evaluate(s: State) {
   runReminders(s);
 
   // Missed-dose escalation (CC-42, CC-43): caregiver first, then guardian. Yesterday's late-evening doses whose
-  // escalation was still running at midnight carry on with the same timings (CC-199). Keys name the day the dose
-  // was due, so nothing repeats across midnight.
-  for (const d of [...overnightDoses(s), ...dosesFor(s)]) {
+  // escalation was still running at midnight carry on with the same timings, and so does a chain the app slept
+  // through (CC-199). Keys name the day the dose was due, so nothing repeats across midnight.
+  for (const d of [...followUpDoses(s), ...dosesFor(s)]) {
     if (d.log) continue;
     const th = doseThresholds(s, d.med);
     if (d.minutesLate >= th.caregiver) {
@@ -261,6 +261,9 @@ export function evaluate(s: State) {
 
   // CC-208: when quiet hours end, what waited overnight goes out as one morning summary.
   releaseHeld(s);
+
+  // CC-199 review: the next run can tell which of yesterday's steps came due while the app was asleep.
+  s.lastRunAt = now.toISOString();
 }
 
 /**

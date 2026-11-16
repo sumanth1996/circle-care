@@ -45,7 +45,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   State: {
     resource: null,
     fields: {
-      version: O, persona: O, signedIn: O, clockOffsetMin: O, elderId: O,
+      version: O, persona: O, signedIn: O, clockOffsetMin: O, lastRunAt: O, elderId: O,
       "health.heightCm": P, "health.birthYear": I, "health.device": O,
       "health.overrides.at": P, "health.overrides.hr": P, "health.overrides.spo2": P, "health.overrides.addedAt": P,
     },

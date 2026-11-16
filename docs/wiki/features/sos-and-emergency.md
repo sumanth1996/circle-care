@@ -79,7 +79,7 @@
 16. If Maggie has not tapped **I'm OK** by the end of her check-in window (default 10:00 AM), she gets one more gentle prompt.
 17. Fifteen minutes later, Sarah is alerted and her home screen shows **Maggie hasn't checked in** — *"Window ended at 10:00 AM — consider calling."*
 
-A window belongs to the day it opens (CC-199). If it ends after midnight (for example 22:00–00:30), or Sarah's prompt falls after midnight, Maggie and then Sarah are prompted the next day as usual, and Sarah's alert reads *"Maggie hasn't checked in last night"*. A check-in Maggie makes once her button shows for that window, before or after midnight, covers it. Only the previous evening's window is followed up; earlier ones never are.
+A window belongs to the day it opens (CC-199). If it ends after midnight (for example 22:00–00:30), or Sarah's prompt falls after midnight, Maggie and then Sarah are prompted the next day as usual, and Sarah's alert reads *"Maggie hasn't checked in last night"*. A check-in Maggie makes once her button shows for that window, before or after midnight, covers it. An earlier evening window is followed up after midnight too when the app was asleep before Sarah's prompt went out (see Alerts, *Across midnight*). Only the previous evening's window is followed up; earlier ones never are.
 
 ## Functional details & business rules
 

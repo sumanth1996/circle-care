@@ -14,7 +14,7 @@ import { Router, type RequestHandler, type Response } from "express";
 import type { Role } from "../src/lib/validation";
 import { audit } from "./audit";
 import { requireUser, startSession, type Deps } from "./auth";
-import { decrypt, encrypt, randomToken, sha256 } from "./crypto";
+import { decrypt, encrypt, randomToken, sha256, verifyPassword } from "./crypto";
 import type { Queryable } from "./db";
 import { HttpError, route, str } from "./http";
 import { deliver, messages } from "./mailer";
@@ -25,6 +25,8 @@ import { base32Decode, hashRecoveryCode, newRecoveryCodes, newSecret, normaliseR
 export const MFA_REQUIRED: readonly Role[] = ["guardian", "caregiver"];
 export const CHALLENGE_MINUTES = 5;
 const PENDING_MINUTES = 15;
+/** Setting up two-step sign-in more than this long after signing in asks for the password again. */
+export const REAUTH_MINUTES = 10;
 const MAX_WRONG = 5;
 const WRONG_WINDOW_MINUTES = 15;
 
@@ -91,8 +93,19 @@ export function mfaRouter(d: Deps): Router {
   r.post("/enrol/start", requireUser, limit(d, { name: "mfa-enrol", by: "user", windowMs: 3600_000, max: 10 }), route(async (req, res) => {
     const u = req.user!;
     if (u.mfaEnrolled) throw new HttpError(409, "Two-step sign-in is already on for this account.", undefined, undefined, "mfa_already_enrolled");
-    const secret = newSecret();
     const now = d.now();
+    // Review fix: someone holding an older stolen session can't bind their own authenticator app.
+    // Right after a sign-in or sign-up the password was just checked; otherwise ask for it again.
+    if (!u.signedInAt || now.getTime() - u.signedInAt.getTime() > REAUTH_MINUTES * 60_000) {
+      const password = str(req.body?.password);
+      if (!password) throw new HttpError(401, "For your security, enter your password to set up two-step sign-in.", "password", undefined, "reauth_required");
+      const pw = (await d.db.query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [u.id])).rows[0];
+      if (!pw || !(await verifyPassword(password, pw.password_hash))) {
+        await audit(d.db, { action: "mfa.enrol_password_wrong", actor: u.id, detail: {}, at: now });
+        throw new HttpError(403, "That isn't your password.", "password", undefined, "reauth_failed");
+      }
+    }
+    const secret = newSecret();
     await d.db.query("UPDATE users SET mfa_pending_secret_enc = $2, mfa_pending_at = $3 WHERE id = $1 AND mfa_enabled_at IS NULL", [u.id, encrypt(d.cfg, secret), now]);
     // The only time the secret leaves the server.
     res.json({ secret, otpauthUri: otpauthUri(secret, u.email), issuer: "Circle Care", account: u.email, digits: 6, period: 30 });

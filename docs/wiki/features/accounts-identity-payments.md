@@ -97,7 +97,7 @@ Photo, name, role and **Profile complete** (or a list of what's missing). Sectio
 
 Guardians and caregivers can see care and payment details, so right after creating the account they set up a second step: a 6-digit code from an authenticator app. Until they do, the server answers every account, payment and vault request with `403 mfa_enrolment_required`, and the app sends them to **Set up two-step sign-in** (`/app/two-step`). Elders can turn it on from My account but don't have to.
 
-1. **Set up two-step sign-in** asks the server for a new key. The key is shown once, in groups of four (`ABCD EFGH …`), with **Copy key**, and an `otpauth://` link under *On this phone? Use the setup link instead* (as a link and as text).
+1. **Set up two-step sign-in** asks the server for a new key. If the sign-in is more than 10 minutes old, the page first asks for the password again, so someone at an unlocked computer can't attach their own phone (`server/mfa.ts:REAUTH_MINUTES`); a wrong password is refused and shows in the account's activity. The key is shown once, in groups of four (`ABCD EFGH …`), with **Copy key**, and an `otpauth://` link under *On this phone? Use the setup link instead* (as a link and as text).
 2. The person adds the key to their app and enters the code it shows. **Turn on two-step sign-in** checks it on the server.
 3. The server answers with **10 recovery codes**, shown once, with **Copy codes**. **Continue** stays disabled until *I've saved my recovery codes somewhere safe* is ticked.
 
