@@ -100,3 +100,4 @@ fieldset.field legend { margin-bottom: 6px; }
 .sub-form { padding: 14px; border: 1px solid var(--line); border-radius: 14px; }
 .confirm-row { padding: 14px; border-radius: 14px; background: var(--red-soft); display: grid; gap: 10px; }
 .confirm-row p { margin: 0; }
+.reset-steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }

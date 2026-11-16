@@ -49,6 +49,8 @@ export interface Config {
    * until a human connects one), so messages are recorded as undelivered.
    */
   mailer: "outbox" | "none";
+  /** CC-235: hours between confirming a reset of two-step sign-in by email and being able to finish it. Only the test environment may change it. */
+  mfaRecoveryWaitHours: number;
   /** Non-fatal start-up notes, printed by the server. */
   warnings: string[];
 }
@@ -110,6 +112,11 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
   const publicUrl = (e.PUBLIC_URL || `http://localhost:${Number(e.PORT) || 5000}`).replace(/\/+$/, "");
   if (!/^https?:\/\/[^/\s]+$/.test(publicUrl)) problems.push("PUBLIC_URL must be the app's origin, e.g. https://care.example.com (no path).");
   else if ((isProd || env === "staging") && e.PUBLIC_URL && !publicUrl.startsWith("https://")) problems.push("PUBLIC_URL must use https in staging and production.");
+  const waitRaw = e.MFA_RECOVERY_WAIT_HOURS;
+  if (waitRaw !== undefined && waitRaw !== "") {
+    if (env !== "test") problems.push("MFA_RECOVERY_WAIT_HOURS can only be changed in the test environment; everywhere else the wait is 72 hours.");
+    else if (!/^\d+(\.\d+)?$/.test(waitRaw.trim())) problems.push("MFA_RECOVERY_WAIT_HOURS must be a number of hours.");
+  }
   if (!isProd && /^sk_live_/.test(e.STRIPE_SECRET_KEY ?? "")) {
     problems.push("A live Stripe key can't be used outside production. Use a test key (sk_test_…).");
   }
@@ -153,6 +160,7 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     rateLimits: env === "test" ? rl === "on" : true,
     publicUrl,
     mailer: isProd ? "none" : "outbox",
+    mfaRecoveryWaitHours: env === "test" && waitRaw ? Number(waitRaw) : 72,
     warnings,
   };
 }

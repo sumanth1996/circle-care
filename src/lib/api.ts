@@ -59,7 +59,9 @@ export interface ActivityEvent { at: string; action: string; text: string }
 /** Who is signed in, even before the second step is set up. */
 export interface AuthUser { id: string; role: Role; email: string; mfaEnrolled: boolean; mfaRequired: boolean }
 /** A correct password either signs in, or (with two-step sign-in on) asks for a code. */
-export type SignInResult = { user: { id: string; role: Role } } | { mfaRequired: true; challenge: string; expiresInSeconds: number };
+export type SignInResult = { user: { id: string; role: Role } } | { mfaRequired: true; challenge: string; expiresInSeconds: number; recovery?: RecoveryWait };
+/** A reset of two-step sign-in that has been confirmed by email and is in its waiting period (CC-235). */
+export interface RecoveryWait { readyAt: string; ready: boolean }
 export interface MfaSetup { secret: string; otpauthUri: string; issuer: string; account: string }
 
 /** Error code the server sends when a guardian or caregiver must set up two-step sign-in first. */
@@ -78,4 +80,10 @@ export const auth = {
   changePassword: (currentPassword: string, newPassword: string) => api<{ otherSessionsEnded: number }>("/api/auth/password", { body: { currentPassword, newPassword } }),
   requestReset: (email: string) => api<{ message: string }>("/api/auth/password-reset/request", { body: { email } }),
   confirmReset: (token: string, password: string) => api<{ ok: true }>("/api/auth/password-reset/confirm", { body: { token, password } }),
+  /* Lost phone and recovery codes (CC-235): password, then an emailed link, then a 72-hour wait anyone signed in can cancel. */
+  recoveryRequest: (challenge: string) => api<{ ok: true; message?: string; waiting?: RecoveryWait }>("/api/auth/mfa/recovery/request", { body: { challenge } }),
+  recoveryConfirm: (token: string) => api<{ ok: true; readyAt: string; waitHours: number }>("/api/auth/mfa/recovery/confirm", { body: { token } }),
+  recoveryCancel: (token?: string) => api<{ ok: true; cancelled: boolean }>("/api/auth/mfa/recovery/cancel", { body: token ? { token } : {} }),
+  recoveryStatus: () => api<{ waiting: RecoveryWait | null }>("/api/auth/mfa/recovery"),
+  recoveryComplete: (challenge: string) => api<{ user: { id: string; role: Role }; mustSetUp: true; sessionsEnded: number }>("/api/auth/mfa/recovery/complete", { body: { challenge } }),
 };

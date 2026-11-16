@@ -4,10 +4,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Copy, KeyRound, LogOut, ShieldCheck, Smartphone } from "lucide-react";
+import { Clock, Copy, KeyRound, LogOut, MailCheck, ShieldCheck, Smartphone } from "lucide-react";
 import { useToast } from "../../components/ui";
 import { useAccount } from "../../data/account";
-import { ApiError, auth, type Me, type MfaSetup } from "../../lib/api";
+import { ApiError, auth, type Me, type MfaSetup, type RecoveryWait } from "../../lib/api";
 import { passwordRules } from "../../lib/validation";
 import { apiErrors, describedBy, Field, focusFirstError, FormError, PasswordChecklist, type Errors } from "./parts";
 
@@ -154,8 +154,19 @@ export function TwoStepSetup({ required, onDone }: { required: boolean; onDone: 
 
 /* ---------------- The code step at sign-in (CC-200) ---------------- */
 
-export function CodeStep({ challenge, onSignedIn, onRestart }: { challenge: string; onSignedIn: (codesLeft?: number) => void | Promise<void>; onRestart: (message: string) => void }) {
-  const [mode, setMode] = useState<"code" | "recovery">("code");
+/** When a waiting reset can be finished, in the reader's own time zone. */
+export const whenReady = (iso: string) =>
+  new Date(iso).toLocaleString([], { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+
+export function CodeStep({ challenge, recovery, onSignedIn, onRestart, onReset }: {
+  challenge: string;
+  recovery?: RecoveryWait;
+  onSignedIn: (codesLeft?: number) => void | Promise<void>;
+  onRestart: (message: string) => void;
+  /** CC-235: the reset finished; the new session can only set up two-step sign-in again. */
+  onReset: (sessionsEnded: number) => void | Promise<void>;
+}) {
+  const [mode, setMode] = useState<"code" | "recovery" | "lost">(recovery ? "lost" : "code");
   const [value, setValue] = useState("");
   const [error, setError] = useState<string>();
   const [message, setMessage] = useState<string>();
@@ -184,6 +195,9 @@ export function CodeStep({ challenge, onSignedIn, onRestart }: { challenge: stri
 
   const switchMode = () => { setMode(mode === "code" ? "recovery" : "code"); setValue(""); setError(undefined); setTimeout(() => ref.current?.focus(), 0); };
 
+  if (mode === "lost") return <LostPhone challenge={challenge} recovery={recovery} onRestart={onRestart} onReset={onReset}
+    onBack={() => { setMode("code"); setTimeout(() => ref.current?.focus(), 0); }} />;
+
   return (
     <form className="stack" onSubmit={submit} noValidate>
       <FormError message={message} />
@@ -201,8 +215,86 @@ export function CodeStep({ challenge, onSignedIn, onRestart }: { challenge: stri
       )}
       <button className="btn lg block" disabled={busy}>{busy ? "Checking…" : "Sign in"}</button>
       <button type="button" className="btn plain block" onClick={switchMode}>{mode === "code" ? "Use a recovery code instead" : "Use the code from my app"}</button>
+      <button type="button" className="btn plain block" onClick={() => setMode("lost")}>Lost your phone and your recovery codes?</button>
       <p className="hint center">After 5 wrong codes, we stop accepting codes for 15 minutes and email you.</p>
     </form>
+  );
+}
+
+/* ---------------- Lost phone and recovery codes (CC-235) ---------------- */
+
+function LostPhone({ challenge, recovery, onBack, onRestart, onReset }: {
+  challenge: string; recovery?: RecoveryWait; onBack: () => void; onRestart: (message: string) => void; onReset: (sessionsEnded: number) => void | Promise<void>;
+}) {
+  const [wait, setWait] = useState<RecoveryWait | undefined>(recovery);
+  const [sent, setSent] = useState<string>();
+  const [message, setMessage] = useState<string>();
+  const [busy, setBusy] = useState(false);
+  const headRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { headRef.current?.focus(); }, [sent, wait]);
+
+  const fail = (err: unknown) => {
+    setBusy(false);
+    if (err instanceof ApiError && err.code === "mfa_challenge_expired") { onRestart(err.message); return; }
+    setMessage(apiErrors(err).message);
+  };
+
+  const ask = async () => {
+    setBusy(true); setMessage(undefined);
+    try {
+      const r = await auth.recoveryRequest(challenge);
+      if (r.waiting) setWait(r.waiting); else setSent(r.message);
+      setBusy(false);
+    } catch (err) { fail(err); }
+  };
+
+  const finish = async () => {
+    setBusy(true); setMessage(undefined);
+    try { const r = await auth.recoveryComplete(challenge); await onReset(r.sessionsEnded); }
+    catch (err) { fail(err); }
+  };
+
+  if (wait?.ready) return (
+    <div className="stack">
+      <h2 className="t-sm" tabIndex={-1} ref={headRef}>Your reset is ready</h2>
+      <FormError message={message} />
+      <p className="muted">The waiting period is over and nobody cancelled it. Finishing will remove your old authenticator key and recovery codes, sign out every device, and take you straight to setting up two-step sign-in on your new phone.</p>
+      <button className="btn lg block" onClick={finish} disabled={busy}>{busy ? "Finishing…" : "Finish the reset"}</button>
+      <button type="button" className="btn plain block" onClick={onBack}>I found my phone</button>
+    </div>
+  );
+
+  if (wait) return (
+    <div className="stack" role="status">
+      <h2 className="t-sm row" tabIndex={-1} ref={headRef} style={{ "--gap": "8px" } as React.CSSProperties}><Clock size={20} aria-hidden="true" /> Your reset is waiting</h2>
+      <p>You can finish it after <b>{whenReady(wait.readyAt)}</b>. Come back then and sign in with your password.</p>
+      <p className="small muted">The wait gives you time to stop a reset you didn't ask for. To cancel it, use the link in the email we sent, or open My account on any device that's still signed in.</p>
+      <button type="button" className="btn plain block" onClick={onBack}>Use a code instead</button>
+    </div>
+  );
+
+  if (sent) return (
+    <div className="stack" role="status">
+      <h2 className="t-sm row" tabIndex={-1} ref={headRef} style={{ "--gap": "8px" } as React.CSSProperties}><MailCheck size={20} aria-hidden="true" /> Check your email</h2>
+      <p>{sent}</p>
+      <p className="small muted">Didn't get it? Check your spam folder. You can ask again up to 3 times a day.</p>
+      <button type="button" className="btn plain block" onClick={onBack}>Use a code instead</button>
+    </div>
+  );
+
+  return (
+    <div className="stack">
+      <h2 className="t-sm" tabIndex={-1} ref={headRef}>Reset two-step sign-in</h2>
+      <FormError message={message} />
+      <p className="muted">If you've lost your phone and your recovery codes, you can reset two-step sign-in. To keep your account safe, it takes three steps:</p>
+      <ol className="small muted reset-steps">
+        <li>We email you a link. Open it within 30 minutes.</li>
+        <li>We wait 72 hours. Anyone signed in on another device, and the email link, can cancel it.</li>
+        <li>You sign in with your password again and set up a new phone.</li>
+      </ol>
+      <button className="btn lg block" onClick={ask} disabled={busy}>{busy ? "Sending…" : "Email me a link"}</button>
+      <button type="button" className="btn plain block" onClick={onBack}>Use a code instead</button>
+    </div>
   );
 }
 
@@ -217,11 +309,44 @@ export function SignInSecurity({ me }: { me: Me }) {
         {me.mfaEnrolled ? <span className="badge green">On · authenticator app</span> : <span className="badge yellow">Off</span>}
       </div>
       {me.mfaEnrolled
-        ? <p className="hint">Lost your phone? Sign in with one of your recovery codes.</p>
+        ? <p className="hint">Lost your phone? Sign in with one of your recovery codes. If you've lost those too, choose "Lost your phone and your recovery codes?" at sign-in.</p>
         : <Link to="/app/two-step" className="btn secondary">Set up two-step sign-in</Link>}
+      {me.mfaEnrolled && <WaitingReset />}
       <ChangePassword me={me} />
       <SignOutEverywhere />
     </section>
+  );
+}
+
+/** CC-235: a reset someone started shows on every signed-in device, with a way to stop it. */
+function WaitingReset() {
+  const toast = useToast();
+  const [wait, setWait] = useState<RecoveryWait | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string>();
+  useEffect(() => {
+    let live = true;
+    auth.recoveryStatus().then((r) => { if (live) setWait(r.waiting); }).catch(() => { /* nothing to show */ });
+    return () => { live = false; };
+  }, []);
+  if (!wait) return null;
+
+  const cancel = async () => {
+    setBusy(true); setMessage(undefined);
+    try { await auth.recoveryCancel(); setWait(null); toast("Reset cancelled. Your authenticator app and recovery codes still work."); }
+    catch (e) { setMessage(apiErrors(e).message); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="confirm-row" role="alert" aria-labelledby="wr-h">
+      <h3 id="wr-h" className="pm-h">Someone asked to reset two-step sign-in</h3>
+      <p className="small">{wait.ready ? "It can be finished now" : `It can be finished after ${whenReady(wait.readyAt)}`}. If this wasn't you, cancel it and change your password.</p>
+      <FormError message={message} />
+      <div className="row wrap">
+        <button className="btn danger" onClick={cancel} disabled={busy}>{busy ? "Cancelling…" : "Cancel the reset"}</button>
+      </div>
+    </div>
   );
 }
 
