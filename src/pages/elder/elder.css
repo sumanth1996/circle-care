@@ -1,6 +1,7 @@
 .elder-hello { font-size: calc(var(--text-base) * 1.9); line-height: 1.08; font-weight: 700; letter-spacing: -0.03em; }
 .elder-date { color: var(--muted); font-size: calc(var(--text-base) * 0.95); font-weight: 500; }
-.elder-tiles { display: grid; gap: 16px; }
+/* minmax(0, 1fr): one tile with a long word can no longer widen every tile past the screen at 200% zoom. */
+.elder-tiles { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .elder-tile { display: flex; align-items: center; gap: 18px; width: 100%; min-height: 128px; padding: 22px; border: 0; border-radius: 30px; text-align: left; cursor: pointer; text-decoration: none !important; color: var(--ink); background: var(--paper); box-shadow: var(--shadow-soft); transition: transform 0.15s var(--ease); font-size: var(--text-base); }
 .elder-tile:active { transform: scale(0.98); }
 .elder-tile .k { font-size: calc(var(--text-base) * 0.8); font-weight: 600; color: var(--muted); }
