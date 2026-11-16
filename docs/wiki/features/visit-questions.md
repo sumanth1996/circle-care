@@ -54,4 +54,4 @@
 
 ## Related pages
 
-[Care calendar](care-calendar.md) · [Privacy Center](privacy-center.md) · [Help board](help-board.md)
+[After-visit notes](after-visit-notes.md) · [Care calendar](care-calendar.md) · [Privacy Center](privacy-center.md) · [Help board](help-board.md)

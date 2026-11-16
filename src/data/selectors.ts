@@ -53,11 +53,13 @@ export function dosesFor(s: State, date = todayOf(s)): DoseSlot[] {
 
 export const isOpen = (d: DoseSlot) => d.state === "due" || d.state === "late" || d.state === "escalated";
 
+/** Maggie's daily routines for a day. One-off next steps from visit notes (CC-218) are listed by `nextStepsFor`. */
 export function tasksFor(s: State, date = todayOf(s)) {
   const d = new Date(`${date}T12:00:00`).getDay();
   const now = clock(s);
   const isToday = date === ymd(now);
   return s.tasks
+    .filter((t) => t.recurrence !== "once")
     .filter((t) => t.recurrence === "daily" || (t.recurrence === "weekdays" ? d >= 1 && d <= 5 : d === 0 || d === 6))
     .map((t) => {
       const log = s.taskLogs.find((l) => l.taskId === t.id && l.date === date);

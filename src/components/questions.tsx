@@ -10,6 +10,7 @@ import { ELDER, GUARDIAN } from "../data/demo";
 import { Toggle, useToast } from "./ui";
 import { HealthHint } from "./chat";
 import { fmtDay, fmtShortDay, fmtTime } from "../lib/time";
+import { RecentVisits } from "./visitNotes";
 import "./sprint17.css";
 
 /**
@@ -73,7 +74,7 @@ export function VisitQuestions() {
       {visits.length === 0 ? <p className="muted">No upcoming visits.</p> : (
         <>
           <label className="field"><span>Visit</span>
-            <select className="input" value={apptId} onChange={(e) => setParams({ appt: e.target.value })}>
+            <select className="input" aria-label="Visit" value={apptId} onChange={(e) => setParams({ appt: e.target.value })}>
               {visits.map((v) => <option key={v.id} value={v.id}>{v.title}, {fmtShortDay(v.date)} at {fmtTime(v.time)}</option>)}
             </select>
           </label>
@@ -106,6 +107,8 @@ export function VisitQuestions() {
           </form>
         </>
       )}
+
+      <RecentVisits />
 
       {hint && <HealthHint text={text.trim()} spotted={hint} canNote={false} onNote={() => undefined} onSend={add} onEdit={() => setHint(null)} sendLabel="Add anyway" intro="Everyone who can see Maggie's visits sees this list. Health details are safer on Maggie's record, where her sharing choices decide who sees them." noNoteText="Edit it to leave the health detail out, or add it anyway." />}
     </div>

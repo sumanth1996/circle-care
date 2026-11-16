@@ -91,6 +91,7 @@ nav:
       - Help board: wiki/features/help-board.md
       - Coming Home: wiki/features/coming-home.md
       - Visit questions: wiki/features/visit-questions.md
+      - After-visit notes: wiki/features/after-visit-notes.md
   - Architecture & Security:
       - System overview: wiki/architecture/system-overview.md
       - Data model: wiki/architecture/data-model.md

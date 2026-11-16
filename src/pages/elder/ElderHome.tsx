@@ -8,6 +8,7 @@ import { nextUp, clock, checkinToday, member, isOpen } from "../../data/selector
 import { Avatar, PillArt, taskIcons, IconTile, useSpeech, useToast } from "../../components/ui";
 import { fmtTime, fmtDay, greeting, toMin, minutesOfDay } from "../../lib/time";
 import { elderHelpLines } from "../../data/help";
+import { MyNextSteps } from "../../components/visitNotes";
 import "./elder.css";
 
 /** CC-68: elder home with three big actions — What's next, SOS, Call my person.
@@ -99,6 +100,8 @@ export default function ElderHome() {
           {asked.map((l) => <p key={l.id} className={l.claimed ? "yes" : ""}>{l.claimed ? <CheckCircle2 size={22} color="var(--green)" aria-hidden="true" /> : <HandHeart size={22} aria-hidden="true" />} {l.text}</p>)}
         </section>
       )}
+
+      <MyNextSteps />
 
       <ElderChatTile />
 

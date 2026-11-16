@@ -9,6 +9,7 @@ import type { Medication } from "../../data/types";
 import { SupplyRow } from "../../components/guardianEveryday";
 import { lowSupply } from "../../data/everyday";
 import "./caregiver.css";
+import { MyNextSteps } from "../../components/visitNotes";
 
 const stateBadge: Record<DoseSlot["state"], [string, string]> = {
   taken: ["green", "Given"], skipped: ["yellow", "Skipped"], refused: ["yellow", "Declined"],
@@ -66,6 +67,8 @@ export default function CaregiverToday() {
           <button className="btn" style={{ alignSelf: "flex-start" }} onClick={() => { actions.acknowledgeHandoff(prevHandoff.id); toast("Hand-off acknowledged"); }}><Check size={18} /> I've read this</button>
         </section>
       )}
+
+      <MyNextSteps />
 
       {!onShift ? (
         <div className="panel center stack" style={{ "--gap": "8px", padding: 36 } as React.CSSProperties}>
