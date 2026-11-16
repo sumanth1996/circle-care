@@ -1,5 +1,6 @@
 // Role-based sign-up (CC-172, CC-173) and the profile steps that follow:
-// Identity (SSN, CC-180) → Photo (CC-179) → Bank account for guardians (CC-186).
+// Two-step sign-in for guardians and caregivers (CC-200) → Identity (SSN, CC-180)
+// → Photo (CC-179) → Bank account for guardians (CC-186).
 
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
@@ -10,11 +11,14 @@ import { ROLE_INFO, useAccount } from "../../data/account";
 import { api, type Me, type Role } from "../../lib/api";
 import { normEmail, normName, normPhone, passwordRules, ROLES } from "../../lib/validation";
 import { apiErrors, BankForm, describedBy, Field, focusFirstError, FormError, PasswordChecklist, PhotoField, SsnForm, TestDataBanner, type Errors } from "./parts";
+import { TwoStepSetup } from "./security";
 import "./account.css";
 
-type Step = "account" | "identity" | "photo" | "bank";
-const STEPS: Record<Role, Step[]> = { elder: ["account", "identity", "photo"], caregiver: ["account", "identity", "photo"], guardian: ["account", "identity", "photo", "bank"] };
-const STEP_LABEL: Record<Step, string> = { account: "Account", identity: "Identity", photo: "Photo", bank: "Bank account" };
+type Step = "account" | "security" | "identity" | "photo" | "bank";
+// Guardians and caregivers set up two-step sign-in straight after creating the account:
+// the server won't let them use the rest of it until they do (CC-200).
+const STEPS: Record<Role, Step[]> = { elder: ["account", "identity", "photo"], caregiver: ["account", "security", "identity", "photo"], guardian: ["account", "security", "identity", "photo", "bank"] };
+const STEP_LABEL: Record<Step, string> = { account: "Account", security: "Two-step sign-in", identity: "Identity", photo: "Photo", bank: "Bank account" };
 const ICON = { elder: User, caregiver: HeartHandshake, guardian: Scale };
 
 /** Typed details survive "Change role" (CC-172). Kept in memory only — never the password. */
@@ -29,8 +33,9 @@ export default function Join() {
 
 function RolePicker() {
   const nav = useNavigate();
-  const { me, ready, available } = useAccount();
+  const { me, needsSetup, ready, available } = useAccount();
   if (ready && me) return <Navigate to={me.profileStatus === "complete" ? "/app/account" : `/app/join/${me.role}`} replace />;
+  if (ready && needsSetup) return <Navigate to={`/app/join/${needsSetup}`} replace />;
   return (
     <main className="acct-shell">
       <Link to="/" className="welcome-back"><ArrowLeft size={18} /> Circle Care website</Link>
@@ -64,7 +69,7 @@ function RolePicker() {
 function Steps({ role }: { role: Role }) {
   const nav = useNavigate();
   const toast = useToast();
-  const { me, setMe, ready } = useAccount();
+  const { me, setMe, ready, needsSetup, refresh } = useAccount();
   const steps = STEPS[role];
   const info = ROLE_INFO[role];
   const [step, setStep] = useState<Step>("account");
@@ -72,10 +77,16 @@ function Steps({ role }: { role: Role }) {
 
   // Signed in already: resume at the first unfinished step.
   useEffect(() => {
-    if (!ready || !me) return;
+    if (!ready) return;
+    if (needsSetup) {
+      if (needsSetup !== role) { nav(`/app/join/${needsSetup}`, { replace: true }); return; }
+      if (step === "account") setStep("security");
+      return;
+    }
+    if (!me) return;
     if (me.role !== role) { nav(`/app/join/${me.role}`, { replace: true }); return; }
     if (step === "account") setStep(me.missing.includes("ssn") ? "identity" : me.missing.includes("bank_account") ? "bank" : "photo");
-  }, [ready, me, role, nav, step]);
+  }, [ready, me, needsSetup, role, nav, step]);
 
   useEffect(() => { headRef.current?.focus(); }, [step]);
 
@@ -106,11 +117,18 @@ function Steps({ role }: { role: Role }) {
       <section className="acct-card panel">
         <h1 ref={headRef} tabIndex={-1} className="t-md">
           {step === "account" && "Create your account"}
+          {step === "security" && "Set up two-step sign-in"}
           {step === "identity" && "Verify your identity"}
           {step === "photo" && "Add a photo"}
           {step === "bank" && "Add your bank account"}
         </h1>
-        {step === "account" && <AccountStep role={role} onDone={(m) => next(m)} />}
+        {step === "account" && <AccountStep role={role} onDone={(m) => (m ? next(m) : setStep("security"))} />}
+        {step === "security" && (
+          <TwoStepSetup required onDone={async () => {
+            const m = await refresh();
+            if (m) { toast("Two-step sign-in is on"); next(m); }
+          }} />
+        )}
         {step === "identity" && me && (
           <>
             <p className="muted">Every member of a care circle verifies their identity. This keeps Maggie's circle limited to real, known people.</p>
@@ -131,13 +149,14 @@ function Steps({ role }: { role: Role }) {
             <BankForm me={me} submitLabel="Save and finish" onSaved={async () => { const r = await api<{ me: Me }>("/api/me"); finish(r.me); }} />
           </>
         )}
-        {step !== "account" && step !== "bank" && <p className="hint center">Your role can't be changed after the account is created. Contact support if it's wrong.</p>}
+        {step !== "account" && step !== "bank" && step !== "security" && <p className="hint center">Your role can't be changed after the account is created. Contact support if it's wrong.</p>}
       </section>
     </main>
   );
 }
 
-function AccountStep({ role, onDone }: { role: Role; onDone: (m: Me) => void }) {
+function AccountStep({ role, onDone }: { role: Role; onDone: (m: Me | null) => void }) {
+  const { refresh } = useAccount();
   const [f, setF] = useState({ ...draft, password: "", confirm: "", acceptTerms: false });
   const [errors, setErrors] = useState<Errors>({});
   const [message, setMessage] = useState<string>();
@@ -165,9 +184,10 @@ function AccountStep({ role, onDone }: { role: Role; onDone: (m: Me) => void }) 
     setBusy(true);
     try {
       await api("/api/auth/signup", { body: { role, firstName: f.firstName, lastName: f.lastName, phone: f.phone, email: f.email, password: f.password, acceptTerms: true } });
-      const r = await api<{ me: Me }>("/api/me");
+      // For guardians and caregivers this comes back empty until two-step sign-in is set up.
+      const m = await refresh();
       Object.assign(draft, { firstName: "", lastName: "", phone: "", email: "" });
-      onDone(r.me);
+      onDone(m);
     } catch (err) {
       const x = apiErrors(err);
       setErrors(x.errors); setMessage(x.message);

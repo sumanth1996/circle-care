@@ -7,6 +7,7 @@ import { audit } from "./audit";
 import { requireUser, type Deps } from "./auth";
 import type { Queryable } from "./db";
 import { HttpError, route, str } from "./http";
+import { limit } from "./ratelimit";
 
 const MAX_CARDS = 5;
 const TOKEN_TTL_MS = 15 * 60_000;
@@ -46,6 +47,8 @@ export function paymentsRouter(d: Deps): Router {
   const r = Router();
   r.use(requireUser);
   r.use((req, _res, next) => (req.user!.role === "guardian" ? next() : next(new HttpError(403, "Payment methods are managed by the legal guardian."))));
+  // Per-account limit on payment-method changes (CC-204); reading the list isn't counted.
+  r.use(limit(d, { name: "payments", by: "user", windowMs: 3600_000, max: 30, methods: ["POST", "PUT", "PATCH", "DELETE"], auditOnExceed: true, message: "Too many payment-method changes. Please wait a while and try again." }));
   const live = () => { if (d.cfg.paymentProvider === "stripe") throw new HttpError(503, "Adding payment methods isn't available yet in this environment."); };
 
   r.get("/", route(async (req, res) => { res.json(await paymentMethods(d.db, req.user!.id)); }));

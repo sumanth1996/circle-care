@@ -10,12 +10,14 @@ import { useStore } from "../../data/store";
 import { api, type ActivityEvent, type Me, type PaymentMethods } from "../../lib/api";
 import { formatPhone, normEmail, normName, normPhone } from "../../lib/validation";
 import { accountTypeLabel, apiErrors, BankForm, CardForm, describedBy, Field, focusFirstError, FormError, MaskedSsn, MeAvatar, PhotoField, SsnForm, TestDataBanner, type Errors } from "./parts";
+import { SignInSecurity } from "./security";
 import "./account.css";
 
 export default function MyAccount() {
-  const { me, ready, available } = useAccount();
+  const { me, needsSetup, ready, available } = useAccount();
   if (!ready) return <main className="acct-shell"><p className="muted" role="status">Loading your account…</p></main>;
   if (!available) return <Navigate to="/app" replace />;
+  if (!me && needsSetup) return <Navigate to="/app/two-step" replace />;
   if (!me) return <Navigate to="/app/login" replace />;
   return <AccountPage me={me} />;
 }
@@ -73,6 +75,7 @@ function AccountPage({ me }: { me: Me }) {
             <p className="muted small">Linking your account to a real care circle is the next step on the roadmap. Meanwhile you can explore the full {info.label.toLowerCase()} experience with demo data.</p>
             <button className="btn secondary" onClick={() => { actions.signIn(me.role); nav(`/app/${me.role}`); }}>Explore the {info.label.toLowerCase()} app <ArrowRight size={16} /></button>
           </section>
+          <SignInSecurity me={me} />
           <SecuritySection />
         </div>
       </div>
@@ -229,7 +232,7 @@ function SecuritySection() {
           {events.map((e, i) => <li key={i}><span>{e.text}</span><time dateTime={e.at} className="small muted">{fmt(e.at)}</time></li>)}
         </ul>
       )}
-      <p className="hint">See something you didn't do? Sign out and contact support right away.</p>
+      <p className="hint">See something you didn't do? Change your password, use “Sign out everywhere” above, and contact support right away.</p>
     </section>
   );
 }
