@@ -13,6 +13,8 @@ import { cryptoAvailable, deviceKey, encryptForStorage, loadEncrypted, wipeDevic
 import { createSaver, saveWhenPageGoes } from "./saver";
 import { runReminders, settleDose, snoozeReminder, heldFor, releaseHeld } from "./calmAlerts";
 import * as help from "./help";
+import * as plans from "./comingHome";
+import * as questions from "./visitQuestions";
 
 export const STATE_KEY = "circle-care-demo";
 
@@ -59,6 +61,8 @@ export function applySettings(s: State, who: string, patch: Partial<Settings>) {
   if (patch.sharingPaused !== undefined && who !== ELDER) { audit(s, who, "denied", "change paused sharing"); return; }
   // What shows on Maggie's home is her choice (CC-165).
   if (patch.elderChatOnHome !== undefined && who !== ELDER) { audit(s, who, "denied", "change Maggie's home screen"); return; }
+  // CC-211: who sees the help Maggie asks for is hers to choose, through setHelpFrom (which checks and audits).
+  if (patch.helpFrom !== undefined) { audit(s, who, "denied", "change who sees Maggie's help requests"); return; }
   const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
   if (!(elderOnly && who === ELDER) && !allowed(s, who, "write", "settings")) return;
   const wasPaused = s.settings.sharingPaused;
@@ -245,6 +249,9 @@ export function evaluate(s: State) {
 
   // CC-209, CC-210: the Help board's 24-hour notice and "Did this happen?" question.
   help.runHelp(s);
+
+  // CC-213, CC-214: the coming-home plan's day-before notice, follow-up reminder and archive.
+  plans.runPlans(s);
 
   // CC-208: when quiet hours end, what waited overnight goes out as one morning summary.
   releaseHeld(s);
@@ -637,6 +644,20 @@ function useStoreState(initial: State) {
       releaseHelp: (id: string) => update((s) => { help.releaseHelp(s, actor(s), id); }),
       finishHelp: (id: string) => update((s) => { help.finishHelp(s, actor(s), id); }),
       notYetHelp: (id: string) => update((s) => { help.notYetHelp(s, actor(s), id); }),
+      // Sprint 17 (CC-211 – CC-214, CC-217).
+      askHelp: (input: help.AskInput) => update((s) => { help.askHelp(s, actor(s), input); }),
+      setHelpFrom: (ids: string[]) => update((s) => { help.setHelpFrom(s, actor(s), ids); }),
+      thank: (personId: string) => update((s) => { help.thankFor(s, actor(s), personId); }),
+      startPlan: (date: string) => update((s) => { plans.startPlan(s, actor(s), date); }),
+      renamePlanItem: (planId: string, itemId: string, title: string) => update((s) => { plans.renameItem(s, actor(s), planId, itemId, title); }),
+      addPlanItem: (planId: string, title: string) => update((s) => { plans.addItem(s, actor(s), planId, title); }),
+      removePlanItem: (planId: string, itemId: string) => update((s) => { plans.removeItem(s, actor(s), planId, itemId); }),
+      assignPlanItem: (planId: string, itemId: string, personId: string | null) => update((s) => { plans.assignItem(s, actor(s), planId, itemId, personId); }),
+      setFollowUpDays: (planId: string, days: number) => update((s) => { plans.setFollowUpDays(s, actor(s), planId, days); }),
+      addQuestion: (apptId: string, text: string) => update((s) => { questions.addQuestion(s, actor(s), apptId, text); }),
+      hideQuestion: (apptId: string, qid: string, hidden: boolean) => update((s) => { questions.hideQuestion(s, actor(s), apptId, qid, hidden); }),
+      moveQuestion: (apptId: string, qid: string, dir: -1 | 1) => update((s) => { questions.moveQuestion(s, actor(s), apptId, qid, dir); }),
+      removeQuestion: (apptId: string, qid: string) => update((s) => { questions.removeQuestion(s, actor(s), apptId, qid); }),
       readChat: () => update((s) => everyday.readChat(s, actor(s))),
       setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */

@@ -9,6 +9,7 @@ import { fmtShortDay, fmtTime, relative, addDays } from "../../lib/time";
 import type { Member } from "../../data/types";
 import Consent from "../elder/Consent";
 import { verifyChain, RETENTION_YEARS } from "../../data/audit";
+import { helpCandidates, helpFromPeople } from "../../data/help";
 import { encryptWithPassphrase, decryptWithPassphrase } from "../../lib/secureStorage";
 
 const access: Record<Member["role"], string> = {
@@ -93,8 +94,25 @@ export default function PrivacyCenter() {
       <section className="panel stack" style={{ "--gap": "12px" } as React.CSSProperties} aria-labelledby="pc-help">
         <div className="row">
           <HandHeart size={30} color="var(--blue)" style={{ flex: "none" }} />
-          <div className="grow"><b id="pc-help">Help requests</b><p className="muted small">Rides, groceries and visits Sarah asks for. Only the people she picks see each one, and only {isElder ? "you" : "Maggie"} and Sarah see them while sharing is paused. A request for an appointment shows as an appointment only, without the doctor or the reason.</p></div>
+          <div className="grow"><b id="pc-help">Help requests</b><p className="muted small">Rides, groceries and visits Sarah asks for, and help {isElder ? "you ask" : "Maggie asks"} for. Only the people picked see each one, and only {isElder ? "you" : "Maggie"} and Sarah see them while sharing is paused. A request for an appointment shows as an appointment only, without the doctor or the reason.</p></div>
           <button className="btn sm secondary" onClick={() => nav(isElder ? "/app/elder/help" : "/app/guardian/help")}>See them</button>
+        </div>
+        {/* CC-211: who sees the help Maggie asks for herself. Only she chooses. */}
+        <div className="stack pc-help-from" style={{ "--gap": "8px" } as React.CSSProperties} role="group" aria-labelledby="pc-help-from">
+          <b id="pc-help-from" className="small">Who sees help {isElder ? "you ask" : "Maggie asks"} for</b>
+          {helpCandidates(state).map((m) => {
+            const on = helpFromPeople(state).includes(m.id);
+            return (
+              <div key={m.id} className="row">
+                <Avatar m={m} size={30} />
+                <span className="grow">{m.short} <span className="tiny">{m.relation}</span></span>
+                {isElder
+                  ? <Toggle checked={on} onChange={(v) => { const cur = helpFromPeople(state); actions.setHelpFrom(v ? [...cur, m.id] : cur.filter((x) => x !== m.id)); toast(v ? `${m.short} will see help you ask for` : `${m.short} won't see help you ask for`); }} label={`${m.short} sees help I ask for`} />
+                  : <span className={`badge ${on ? "green" : ""}`}>{on ? "Sees them" : "Doesn't"}</span>}
+              </div>
+            );
+          })}
+          <p className="tiny">{isElder ? "Sarah always sees them." : "Only Maggie can change this. You always see them."}</p>
         </div>
       </section>
 

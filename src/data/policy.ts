@@ -9,7 +9,7 @@ import { todayOf } from "./selectors";
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
   | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
-  | "supply" | "wellbeing" | "chat" | "help";
+  | "supply" | "wellbeing" | "chat" | "help" | "plan" | "questions";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -43,7 +43,12 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   chat:            { read: ["elder", "guardian", "family", "pro"], write: ["elder", "guardian", "family", "pro"], invite: ["elder", "guardian"] },
   // Sprint 16 — Help board (CC-209, CC-210). Sarah posts and cancels; the people she picks claim and finish.
   // Who sees each request is narrowed further to its audience (see canSeeHelp in help.ts).
-  help:            { read: ["elder", "guardian", "family", "pro"], write: ["guardian"], respond: ["guardian", "family", "pro"] },
+  // CC-211: Maggie asks for a hand herself ("propose"), to the people she chose in her Privacy Center.
+  help:            { read: ["elder", "guardian", "family", "pro"], write: ["guardian"], respond: ["guardian", "family", "pro"], propose: ["elder"] },
+  // Sprint 17 — Coming Home plan (CC-213, CC-214). Sarah writes it; others see only items given to them, as help requests.
+  plan:            { read: ["elder", "guardian"], write: ["guardian"] },
+  // CC-217: the shared question list for an appointment. A paid caregiver only while on shift.
+  questions:       { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian", "family", "pro@shift"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */

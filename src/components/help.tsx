@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { ArrowLeft, HandHeart, Plus, Car, ShoppingBasket, Coffee, Home, Sparkles, Check, EyeOff, CalendarClock, PauseCircle, History, MapPin } from "lucide-react";
+import { ArrowLeft, HandHeart, Plus, Car, ShoppingBasket, Coffee, Home, Sparkles, Check, EyeOff, CalendarClock, PauseCircle, History, MapPin, Smartphone, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../data/store";
 import { clock, meId, member, nameOf, todayOf } from "../data/selectors";
 import { can } from "../data/policy";
 import { phiHint } from "../data/everyday";
-import { HELP_KINDS, HELP_NOTE_MAX, askingDone, helpBoard, helpCandidates, helpHistory, helpView, helpWeek, type HelpInput } from "../data/help";
+import { HELP_KINDS, HELP_NOTE_MAX, askingDone, helpBoard, helpCandidates, helpHistory, helpView, helpWeek, whoDidWhat, whoDidLine, type HelpInput } from "../data/help";
 import { ELDER, GUARDIAN } from "../data/demo";
 import type { HelpKind, HelpRequest } from "../data/types";
 import { Avatar, Segmented, Sheet, useToast } from "./ui";
@@ -13,7 +13,7 @@ import { HealthHint } from "./chat";
 import { addDays, fmtShortDay, fmtTime, hm, toMin, fromMin, ymd } from "../lib/time";
 import "./help.css";
 
-const KIND_ICON: Record<HelpKind, typeof Car> = { ride: Car, groceries: ShoppingBasket, company: Coffee, visit: Home, other: Sparkles };
+const KIND_ICON: Record<HelpKind, typeof Car> = { ride: Car, groceries: ShoppingBasket, company: Coffee, visit: Home, phone: Smartphone, other: Sparkles };
 const STATUS_LABEL: Record<HelpRequest["status"], string> = { open: "Open", claimed: "Taken", done: "Done", cancelled: "Cancelled" };
 
 /**
@@ -140,7 +140,8 @@ export function HelpBoard() {
             )}
           </section>
 
-          <section className="panel stack" style={{ "--gap": "10px" } as CSSProperties} aria-labelledby="help-week">
+{isGuardian || isElder ? <WhoDidWhat /> : (
+                    <section className="panel stack" style={{ "--gap": "10px" } as CSSProperties} aria-labelledby="help-week">
             <h2 id="help-week" className="help-h" style={{ margin: 0 }}>Who helped this week</h2>
             {week.length === 0 ? <p className="muted small">Nothing finished in the last 7 days.</p> : (
               <ul className="help-week">
@@ -151,6 +152,7 @@ export function HelpBoard() {
             )}
             <p className="tiny">Names are in A to Z order. Nobody is ranked.</p>
           </section>
+          )}
 
           {history.length > 0 && (
             <details className="panel help-history">
@@ -297,5 +299,38 @@ function NewHelp({ onClose, onPosted }: { onClose: () => void; onPosted: () => v
         <p className="tiny center">Each person gets “New help request in Circle Care”. The lock screen never shows the details.</p>
       </form>
     </Sheet>
+  );
+}
+
+/**
+ * CC-212: Who did what this week, for Sarah and Maggie. Everyone who helped, A to Z, with what they did and how
+ * many. Nobody is ranked and nothing is counted as missed. Maggie's version has a Thank button that sends a short
+ * note in the family chat; someone who has left the circle still shows, without one.
+ */
+function WhoDidWhat() {
+  const { state, actions } = useStore();
+  const toast = useToast();
+  const me = meId(state.persona);
+  const isElder = me === ELDER;
+  const rows = whoDidWhat(state, me);
+  const [thanked, setThanked] = useState<string[]>([]);
+  return (
+    <section className="panel stack" style={{ "--gap": "10px" } as CSSProperties} aria-labelledby="help-who-did">
+      <h2 id="help-who-did" className="help-h" style={{ margin: 0 }}>{isElder ? "Who helped you this week" : "Who did what this week"}</h2>
+      {rows.length === 0 ? <p className="muted small">Nothing in the last 7 days yet.</p> : (
+        <ul className="help-week">
+          {rows.map((w) => (
+            <li key={w.id}>
+              <Avatar m={member(state, w.id)} size={32} />
+              <span className="grow"><b>{w.name}</b>{w.left && <span className="tiny"> · no longer in the circle</span>}<span className="muted small" style={{ display: "block" }}>{whoDidLine(w)}</span></span>
+              {isElder && !w.left && (thanked.includes(w.id)
+                ? <span className="small help-thanked"><Check size={16} /> Thanked</span>
+                : <button className="btn secondary" aria-label={`Thank ${w.name}`} onClick={() => { actions.thank(w.id); setThanked([...thanked, w.id]); toast(`Your thank-you is in the family chat`); }}><Heart size={16} /> Thank</button>)}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="tiny">Help requests, care tasks and visits in the last 7 days. Names are in A to Z order. Nobody is ranked.</p>
+    </section>
   );
 }

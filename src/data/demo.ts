@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, Dail
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 13;
+export const STATE_VERSION = 14;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -221,6 +221,7 @@ export function seed(now = new Date()): State {
     ],
     appointments,
     help: helpSeed(now, appointments),
+    plans: [],
     health: { heightCm: 163, birthYear: 1946, device: "Maggie's watch", overrides: [] },
     audit,
     alerts: [
@@ -249,6 +250,7 @@ export function seed(now = new Date()): State {
       dailyLog: { shareWithGuardian: true, waterGoal: 6 },
       elderChatOnHome: true,
       recapNotify: true,
+      helpFrom: [FAMILY],
       vitals: { intervalMin: 30, thresholds: { hrHigh: 110, hrLow: 50, hrJump: 25, spo2Low: 92, spo2Drop: 4 }, shareWithGuardian: true },
       emergencyCard: {
         allergies: "Penicillin",
