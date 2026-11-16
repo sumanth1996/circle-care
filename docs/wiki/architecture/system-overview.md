@@ -194,8 +194,8 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 
 | Order | Rule | Story |
 |---|---|---|
-| 1 | Dose repeat reminder at +10 min; caregiver and guardian escalation at their thresholds | CC-39, CC-42, CC-43 |
-| 2 | Missed check-in: elder prompt after window end; guardian at +15 min | CC-52 |
+| 1 | Dose repeat reminder at +10 min; caregiver and guardian escalation at their thresholds. A late-evening dose whose escalation runs past midnight carries on the next day under the day it was due | CC-39, CC-42, CC-43, CC-199 |
+| 2 | Missed check-in: elder prompt after window end; guardian at +15 min. A window that ends after midnight, or whose guardian prompt does, is followed up the next day under the day it opened | CC-52, CC-199 |
 | 3 | Late caregiver check-in (> 15 min) | CC-57 |
 | 4 | SOS escalation step every `escalationDelayMin` minutes | CC-48 |
 | 5 | Approval waiting > 24 h | CC-64 |

@@ -7,7 +7,7 @@
 | **Feature ID / area** | F-12 · Rules engine, alert centre and in-app banners |
 | **Personas** | All — elder (banners only), caregiver and guardian (banners and Alerts list) |
 | **Status** | <span class="cc-badge cc-badge--partial">Partially built</span> — alerts are generated and shown in-app; push, SMS and email delivery are not built |
-| **Related stories** | CC-31 PHI-free notifications · CC-35 suspicious-access detection · CC-39 repeat reminder · CC-42 dose escalation · CC-50 critical alerts · CC-52 missed check-in · CC-57 late caregiver · CC-63 channels & quiet hours · CC-64 approval reminder · CC-86 health alerts · CC-25 access expiry · CC-206 all-clear · CC-207 reminder repeats & snooze · CC-208 quiet-hours morning summary |
+| **Related stories** | CC-31 PHI-free notifications · CC-35 suspicious-access detection · CC-39 repeat reminder · CC-42 dose escalation · CC-50 critical alerts · CC-52 missed check-in · CC-57 late caregiver · CC-63 channels & quiet hours · CC-64 approval reminder · CC-86 health alerts · CC-25 access expiry · CC-206 all-clear · CC-207 reminder repeats & snooze · CC-208 quiet-hours morning summary · CC-199 doses and check-ins that cross midnight |
 | **Last updated** | 2026-11-15 |
 
 </div>
@@ -38,15 +38,21 @@
 
 `evaluate(state)` in `src/data/store.tsx` runs **every 15 seconds** while the app is open and **after every change**. Alerts are de-duplicated by `key`, so a rule fires once per condition (per dose slot per day, per SOS step, per 10-minute window for security rules).
 
+**Across midnight (CC-199).** Dose and check-in alerts belong to the day the dose was due or the check-in window opened, and their keys carry that day, so nothing repeats when the date rolls over.
+
+- A dose due late in the evening whose escalation is still running at midnight (Sarah's step falls at or after 00:00, for example a 23:30 dose) keeps the same steps and timings: still missed at 00:40, Ana and then Sarah are alerted as for a daytime dose. Its reminders and snooze carry on past midnight too. Marked after midnight, it settles as usual: the alerts show as resolved and the all-clear goes out.
+- A check-in window that ends after midnight (for example 22:00–00:30), or whose prompt to Sarah falls after midnight, prompts Maggie and then Sarah as usual. A check-in made once her button showed for that window, before or after midnight, covers it.
+- Only the day before is looked at, and only for those late items. A dose or window that finished escalating before midnight, anything already escalated or resolved, and anything from earlier days is never raised again. Quiet hours work as at any other time, so Sarah's non-urgent alerts after midnight wait for the morning summary.
+
 ### Alert catalogue
 
 | # | Alert | Rule | To | Severity | Lock-screen title |
 |---|---|---|---|---|---|
 | 1 | Dose reminder (CC-207) | At the dose time, then every 10 min (15 after a snooze) up to Sarah's limit (1–5, default 3). In-app text starts *"Reminder 2 of 3"*. Stops once the dose is marked | Elder | Info | You have a reminder from Circle Care |
-| 2 | Dose — caregiver | ≥ 30 min (15 high-priority) | Caregiver | Warning / Critical* | You have a reminder from Circle Care |
-| 3 | Dose — guardian | ≥ 60 min (30 high-priority) | Guardian | Warning / Critical* | Circle Care needs your attention |
-| 4 | Check-in — elder | No check-in after window end (10:00) | Elder | Info | You have a reminder from Circle Care |
-| 5 | Check-in — guardian | Window end + 15 min | Guardian | Warning | Circle Care needs your attention |
+| 2 | Dose — caregiver | ≥ 30 min (15 high-priority), also after midnight for a late-evening dose | Caregiver | Warning / Critical* | You have a reminder from Circle Care |
+| 3 | Dose — guardian | ≥ 60 min (30 high-priority), also after midnight for a late-evening dose | Guardian | Warning / Critical* | Circle Care needs your attention |
+| 4 | Check-in — elder | No check-in after window end (10:00), also when the window ends after midnight | Elder | Info | You have a reminder from Circle Care |
+| 5 | Check-in — guardian | Window end + 15 min, also after midnight. In-app: *"Maggie hasn't checked in today"*, or *"last night"* for the previous evening's window | Guardian | Warning | Circle Care needs your attention |
 | 6 | Late caregiver | Shift start + 15 min, no check-in | Guardian, caregiver | Warning | Circle Care needs your attention |
 | 7 | SOS sent | Elder sends SOS | Guardian, caregiver | Critical | Emergency alert from Circle Care |
 | 8 | SOS escalation | Every 2 min until acknowledged | Guardian, caregiver | Critical | Emergency alert from Circle Care |
@@ -143,7 +149,7 @@ This page *is* the notification reference; see the catalogue above.
 
 | Type | Test |
 |---|---|
-| Unit — `rules.test.ts` | Escalates a missed dose to the caregiver, then the guardian · does not repeat the same alert · missed check-in prompts the elder first, then the guardian 15 minutes later · flags bulk record viewing · flags repeated denials · reminds the guardian about requests older than a day · ends time-limited access automatically |
+| Unit — `rules.test.ts` | Escalates a missed dose to the caregiver, then the guardian · does not repeat the same alert · missed check-in prompts the elder first, then the guardian 15 minutes later · flags bulk record viewing · flags repeated denials · reminds the guardian about requests older than a day · ends time-limited access automatically · across midnight (CC-199): a 23:30 dose still missed at 00:40 escalates, daytime timings kept, a window ending after midnight and one whose guardian prompt falls after it, no follow-up after a check-in before midnight, no alert twice when the rules run every minute past midnight, nothing for two nights ago, a dose taken after midnight resolves with an all-clear, reminders and snooze carry on, quiet hours and the morning summary still apply |
 | Unit — `health.test.ts` | Detection rules for alerts 13 |
 | E2E | *CC-35 suspicious access alerts the guardian* · *CC-64 24-hour approval reminder* · *CC-86 a sudden heart-rate change alerts the guardian* · *Missed dose escalates…* |
 | Unit — `calm-alerts.test.ts` | Sprint 16: all-clear to each person alerted, none before an alert, Skipped and Refused shown with who and why, reminders cleared, paused sharing, audit · 3 reminders 10 minutes apart then stop, missed-dose timers unchanged, snooze, Sarah's 1–5 setting, high-priority timing · quiet hours hold and summarise at 7 AM, urgent alerts at once, no empty summary, off delivers at once, generic lock-screen line |
