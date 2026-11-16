@@ -5,12 +5,14 @@ import { nameOf } from "../../data/selectors";
 import { PillArt, Sheet, Toggle, useToast, IconTile, taskIcons, Segmented } from "../../components/ui";
 import { fmtTime, fmtShortDay, uid } from "../../lib/time";
 import type { Medication, CareTask } from "../../data/types";
+import { SupplyRow } from "../../components/guardianEveryday";
 import "./guardian.css";
 
 const blank = (): Medication => ({ id: uid("med"), name: "", strength: "", dose: "1 tablet", times: ["08:00"], instructions: "", prescriber: "", purpose: "", critical: false, paused: false, pill: { color: "#FFFFFF", shape: "round" }, history: [] });
 const pillColors = ["#FFFFFF", "#F7C6A3", "#FFD966", "#D9E7FF", "#C9F0D5", "#F5C2D9"];
 
-/** CC-36 add medication · CC-37 edit/pause (guardian applies directly) · CC-43 high-priority flag · CC-44 recurring care tasks. */
+/** CC-36 add medication · CC-37 edit/pause (guardian applies directly) · CC-43 high-priority flag · CC-44 recurring care tasks.
+ *  CC-120 – CC-121: pills on hand, days left, refill requests. */
 export default function Medications() {
   const { state, actions } = useStore();
   const toast = useToast();
@@ -26,6 +28,14 @@ export default function Medications() {
         <div><p className="page-kicker">Maggie's plan</p><h1>Medicines & routines</h1></div>
         <button className="btn" onClick={() => setEdit({ med: blank(), isNew: true })}><Plus size={18} /> Add medicine</button>
       </div>
+
+      <label className="row wrap small" style={{ "--gap": "8px", marginTop: -8 } as React.CSSProperties}>
+        <span className="muted">Remind me when a medicine has</span>
+        <select className="input" style={{ width: "auto", minHeight: 36, padding: "0 10px" }} value={state.settings.refillAlertDays} onChange={(e) => { actions.settings({ refillAlertDays: Number(e.target.value) }); toast(`Refill reminders at ${e.target.value} days`); }} aria-label="Days of supply left before a refill reminder">
+          {Array.from({ length: 12 }, (_, i) => i + 3).map((d) => <option key={d} value={d}>{d} days</option>)}
+        </select>
+        <span className="muted">left</span>
+      </label>
 
       <div className="grid-2">
         {state.meds.map((m) => (
@@ -43,6 +53,7 @@ export default function Medications() {
             </div>
             <div className="timechips">{m.times.map((t) => <span key={t} className="timechip"><Clock size={14} /> {fmtTime(t)}</span>)}</div>
             <p className="small">{m.instructions}</p>
+            <SupplyRow med={m} state={state} />
             <div className="row wrap" style={{ "--gap": "8px" } as React.CSSProperties}>
               <button className="btn sm secondary" onClick={() => setEdit({ med: structuredClone(m), isNew: false })}>Edit</button>
               <button className="btn sm plain" onClick={() => { actions.saveMed({ ...m, paused: !m.paused }, false); toast(m.paused ? `${m.name} resumed` : `${m.name} paused`); }}>{m.paused ? <><Play size={14} /> Resume</> : <><Pause size={14} /> Pause</>}</button>
@@ -55,7 +66,7 @@ export default function Medications() {
       <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>
         <div className="section-head"><h2 className="section-title">Daily routines</h2><button className="btn sm secondary" onClick={() => setTaskSheet(true)}><Plus size={16} /> Add routine</button></div>
         <div className="list">
-          {state.tasks.map((t) => (
+          {state.tasks.filter((t) => t.recurrence !== "once").map((t) => (
             <div key={t.id} className="list-row has-icon">
               <IconTile icon={taskIcons[t.icon]} color="var(--care)" />
               <span className="grow"><span className="list-title" style={{ display: "block" }}>{t.title}</span><span className="list-sub">{fmtTime(t.time)} · {t.recurrence === "daily" ? "Every day" : t.recurrence === "weekdays" ? "Weekdays" : "Weekends"} · {t.assignee === "caregiver" ? "Caregiver on shift" : t.assignee === "elder" ? "Maggie" : nameOf(state, t.assignee)}</span></span>

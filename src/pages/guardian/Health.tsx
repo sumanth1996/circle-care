@@ -10,6 +10,9 @@ import {
   minutesToHm, nextReadingAt, GOALS, type VitalEvent, type SleepStage,
 } from "../../lib/health";
 import { addDays, fmtShortDay, fmtTime, ymd } from "../../lib/time";
+import { DailyWeek } from "../../components/guardianEveryday";
+import { sharedFeeling, dailyShared } from "../../data/everyday";
+import type { State } from "../../data/types";
 import "./health.css";
 
 // Validated palettes (dataviz validator, light surface):
@@ -52,6 +55,7 @@ export default function Health() {
         <EyeOff size={48} color="var(--muted)" style={{ margin: "0 auto" }} />
         <h1 className="t-lg" style={{ marginTop: 14 }}>Maggie isn't sharing health readings</h1>
         <p className="lede balance" style={{ maxWidth: 480, margin: "10px auto 0" }}>She can turn this back on in her Privacy Center. Medicines, check-ins, the calendar and SOS work as usual.</p>
+        <div style={{ textAlign: "left", marginTop: 28 }}><DailyWeek state={state} /></div>
       </div>
     );
   }
@@ -81,6 +85,7 @@ export default function Health() {
       <Segmented label="Health section" value={tab} onChange={(t) => { setTab(t); setDayOffset(0); }} options={[{ value: "summary", label: "Summary" }, { value: "vitals", label: "Heart & oxygen" }, { value: "activity", label: "Activity" }]} />
 
       {tab === "summary" && <Summary state={state} readings={todayReadings} events={todayEvents} weights={weights} activity={activityFor(today, now, today)} today={today} onOpen={setTab} />}
+      {tab === "summary" && <DailyWeek state={state} />}
       {tab === "vitals" && (
         <>
           {stepper}
@@ -100,6 +105,13 @@ export default function Health() {
 
 /* ---------------- Summary ---------------- */
 
+/** CC-143: the face Maggie taps (if she shares it), else an older check-in face mapped onto the same six feelings. */
+function moodOf(state: State, date: string) {
+  const r = sharedFeeling(state, date);
+  if (r.state === "shared") return { date, valence: r.feeling.valence, label: r.feeling.label, source: "check-in" as const, shared: true };
+  return { ...moodFrom(date), shared: r.state !== "private" };
+}
+
 function Summary({ state, readings, events, weights, activity, today, onOpen }: {
   state: ReturnType<typeof useStore>["state"]; readings: ReturnType<typeof readingsFor>; events: VitalEvent[]; weights: { date: string; kg: number }[];
   activity: ReturnType<typeof activityFor>; today: string; onOpen: (t: Tab) => void;
@@ -111,8 +123,7 @@ function Summary({ state, readings, events, weights, activity, today, onOpen }: 
   const kg = weights.at(-1)!.kg;
   const kgChange = Math.round((kg - weights[0].kg) * 2.20462 * 10) / 10;
   const sleep = sleepFor(today);
-  const checkin = state.checkins.find((c) => c.date === today);
-  const mood = moodFrom(today, checkin?.mood);
+  const mood = moodOf(state, today);
   const age = new Date(today).getFullYear() - state.health.birthYear;
 
   return (
@@ -141,7 +152,7 @@ function Summary({ state, readings, events, weights, activity, today, onOpen }: 
         <Highlight icon={PersonStanding} color={C.stand} name="Stand hours" value={activity.standHours} unit={`/ ${GOALS.standHours} hr`} caption="Hours she stood and moved" meter={{ value: activity.standHours, goal: GOALS.standHours }} onClick={() => onOpen("activity")} />
         <Highlight icon={Activity} color={C.walk} name="Walking" value={activity.walkMin} unit="min" caption={`Goal ${GOALS.walkMin} min`} meter={{ value: activity.walkMin, goal: GOALS.walkMin }} onClick={() => onOpen("activity")} />
         <Highlight icon={Moon} color={C.sleep} name="Sleep last night" value={minutesToHm(sleep.asleepMin)} unit="" caption={`In bed ${fmtTime(sleep.inBed)} – ${fmtTime(sleep.wake)} · woke ${sleep.awakenings}×`} onClick={() => onOpen("activity")} />
-        <Highlight icon={Smile} color={C.rest} name="State of mind" value={mood.source === "none" ? "—" : mood.label} unit="" caption={mood.source === "none" ? "No mood added to today's check-in" : "From Maggie's morning check-in"} onClick={() => onOpen("activity")} />
+        <Highlight icon={Smile} color={C.rest} name="State of mind" value={mood.source === "none" ? "—" : mood.label} unit="" caption={!mood.shared ? (dailyShared(state) ? "Not shared today" : "Check-ins aren't shared") : mood.source === "none" ? "No feeling added today" : "From Maggie's daily check-in"} onClick={() => onOpen("activity")} />
         <Highlight icon={Scale} color={C.weight} name="Weight" value={lb(kg)} unit="lb" caption={`${kgChange > 0 ? "+" : ""}${kgChange} lb in 30 days`} spark={weights.map((w) => w.kg)} onClick={() => onOpen("vitals")} />
         <Highlight icon={Ruler} color={C.weight} name="Height · BMI" value={ftIn(state.health.heightCm)} unit={`· BMI ${bmi(kg, state.health.heightCm)}`} caption={`${state.health.heightCm} cm · age ${age}`} />
       </div>
@@ -272,7 +283,7 @@ function ActivityView({ activity, day, isToday, state, now }: { activity: Return
   const stageMin = (k: SleepStage) => sleep.segments.filter((s) => s.stage === k).reduce((a, s) => a + s.end - s.start, 0);
   const total = sleep.segments.at(-1)!.end - sleep.segments[0].start;
   const week = Array.from({ length: 7 }, (_, i) => ymd(addDays(new Date(`${day}T12:00:00`), i - 6)));
-  const moods = week.map((d) => moodFrom(d, state.checkins.find((c) => c.date === d)?.mood));
+  const moods = week.map((d) => moodOf(state, d));
   const visits = state.visits.filter((v) => week.includes(v.date) && v.checkIn).length;
   const counts = { sleep: 0, rest: 0, stand: 0, walk: 0 };
   activity.hours.forEach((h) => counts[h]++);
@@ -348,7 +359,7 @@ function ActivityView({ activity, day, isToday, state, now }: { activity: Return
           ))}
           <div className="mood-axis tiny" aria-hidden="true"><span>Very pleasant</span><span>Neutral</span><span>Unpleasant</span></div>
         </div>
-        <p className="tiny">Mood comes from the face Maggie picks at her morning check-in — she can always skip it. Low moods several days in a row are a good moment for a call.</p>
+        <p className="tiny">Mood comes from the face Maggie taps on her home screen, when she shares check-ins. She can always skip it. Low moods several days in a row are a good moment for a call.</p>
       </section>
     </div>
   );

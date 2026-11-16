@@ -5,8 +5,8 @@ import react from "@vitejs/plugin-react";
  * Content Security Policy (CC-78). Added to production builds only: the dev
  * server needs inline scripts for hot reload. Only our own code runs; images
  * come from us or Unsplash; fonts from Google Fonts. Note: a <meta> CSP can't
- * set frame-ancestors, so anti-framing needs an HTTP header from the host
- * (production backlog, CC-78).
+ * set frame-ancestors, so the server sends the same policy as an HTTP header
+ * with frame-ancestors (server/app.ts). Change the two lists together.
  */
 const CSP = [
   "default-src 'self'",

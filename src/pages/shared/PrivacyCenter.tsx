@@ -1,20 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse } from "lucide-react";
+import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse, Smile, HandHeart } from "lucide-react";
 import { useStore } from "../../data/store";
+import { dailyShared } from "../../data/everyday";
 import { clock, member, nameOf } from "../../data/selectors";
 import { Avatar, Sheet, Toggle, download, useToast } from "../../components/ui";
 import { fmtShortDay, fmtTime, relative, addDays } from "../../lib/time";
 import type { Member } from "../../data/types";
 import Consent from "../elder/Consent";
 import { verifyChain, RETENTION_YEARS } from "../../data/audit";
+import { helpCandidates, helpFromPeople } from "../../data/help";
+import { PrivacyAboutAndAdmin } from "../../components/aboutMe";
 import { encryptWithPassphrase, decryptWithPassphrase } from "../../lib/secureStorage";
 
 const access: Record<Member["role"], string> = {
   elder: "Everything",
   guardian: "Everything, and approves big decisions",
-  family: "Today's medicines, tasks, notes and alerts",
-  pro: "Today's plan, only during their shifts",
+  family: "Today's medicines, tasks, notes, alerts and the help requests Sarah shares with them",
+  pro: "Today's plan, only during their shifts, and the help requests Sarah shares with them",
 };
 
 /**
@@ -49,7 +52,7 @@ export default function PrivacyCenter() {
 
   // CC-32: the export is encrypted with a passphrase the person chooses (PBKDF2 → AES-256-GCM).
   const doExport = async () => {
-    const data = { exportedAt: new Date().toISOString(), note: "Circle Care demo export (fictional data).", circle: state.members.map(({ photo: _p, ...m }) => m), medications: state.meds, doses: state.doses, tasks: state.tasks, checkins: state.checkins, notes: state.notes, documents: state.docs, accessLog: state.audit };
+    const data = { exportedAt: new Date().toISOString(), note: "Circle Care demo export (fictional data).", circle: state.members.map(({ photo: _p, ...m }) => m), medications: state.meds, doses: state.doses, tasks: state.tasks, checkins: state.checkins, dailyCheckins: isElder || dailyShared(state) ? state.dailyLogs.filter((l) => isElder || !l.private) : [], notes: state.notes, documents: state.docs, accessLog: state.audit };
     const file = await encryptWithPassphrase(JSON.stringify(data, null, 2), pass);
     download(`circle-care-export-${new Date().toISOString().slice(0, 10)}.ccexport`, file);
     actions.exported();
@@ -79,6 +82,43 @@ export default function PrivacyCenter() {
           {isElder ? <Toggle checked={state.settings.vitals.shareWithGuardian} onChange={(v) => { actions.setHealthSharing(v); toast(v ? "Sharing health readings with Sarah" : "Health readings are private"); }} label="Share health readings with Sarah" /> : <span className={`badge ${state.settings.vitals.shareWithGuardian ? "green" : "orange"}`}>{state.settings.vitals.shareWithGuardian ? "Shared" : "Private"}</span>}
         </div>
       </section>
+
+      <section className="panel stack" style={{ "--gap": "12px" } as React.CSSProperties}>
+        <div className="row">
+          <Smile size={30} color="var(--elder)" style={{ flex: "none" }} />
+          <div className="grow"><b>Share daily check-ins with Sarah</b><p className="muted small">How {isElder ? "you feel" : "she feels"}, glasses of water and meals from {isElder ? "your" : "her"} home screen. {!state.settings.dailyLog.shareWithGuardian ? "Not shared right now." : state.settings.sharingPaused ? "Private while sharing is paused." : "Only Sarah can see them. Days logged while not sharing stay private."}</p></div>
+          {isElder ? <Toggle checked={state.settings.dailyLog.shareWithGuardian} onChange={(v) => { actions.setDailySharing(v); toast(v ? "Sharing check-ins with Sarah" : "Check-ins are private"); }} label="Share daily check-ins with Sarah" /> : <span className={`badge ${dailyShared(state) ? "green" : "orange"}`}>{!state.settings.dailyLog.shareWithGuardian ? "Private" : state.settings.sharingPaused ? "Paused" : "Shared"}</span>}
+        </div>
+      </section>
+
+      {/* CC-209: help requests are their own kind of data, with their own sharing rule. */}
+      <section className="panel stack" style={{ "--gap": "12px" } as React.CSSProperties} aria-labelledby="pc-help">
+        <div className="row">
+          <HandHeart size={30} color="var(--blue)" style={{ flex: "none" }} />
+          <div className="grow"><b id="pc-help">Help requests</b><p className="muted small">Rides, groceries and visits Sarah asks for, and help {isElder ? "you ask" : "Maggie asks"} for. Only the people picked see each one, and only {isElder ? "you" : "Maggie"} and Sarah see them while sharing is paused. A request for an appointment shows as an appointment only, without the doctor or the reason.</p></div>
+          <button className="btn sm secondary" onClick={() => nav(isElder ? "/app/elder/help" : "/app/guardian/help")}>See them</button>
+        </div>
+        {/* CC-211: who sees the help Maggie asks for herself. Only she chooses. */}
+        <div className="stack pc-help-from" style={{ "--gap": "8px" } as React.CSSProperties} role="group" aria-labelledby="pc-help-from">
+          <b id="pc-help-from" className="small">Who sees help {isElder ? "you ask" : "Maggie asks"} for</b>
+          {helpCandidates(state).map((m) => {
+            const on = helpFromPeople(state).includes(m.id);
+            return (
+              <div key={m.id} className="row">
+                <Avatar m={m} size={30} />
+                <span className="grow">{m.short} <span className="tiny">{m.relation}</span></span>
+                {isElder
+                  ? <Toggle checked={on} onChange={(v) => { const cur = helpFromPeople(state); actions.setHelpFrom(v ? [...cur, m.id] : cur.filter((x) => x !== m.id)); toast(v ? `${m.short} will see help you ask for` : `${m.short} won't see help you ask for`); }} label={`${m.short} sees help I ask for`} />
+                  : <span className={`badge ${on ? "green" : ""}`}>{on ? "Sees them" : "Doesn't"}</span>}
+              </div>
+            );
+          })}
+          <p className="tiny">{isElder ? "Sarah always sees them." : "Only Maggie can change this. You always see them."}</p>
+        </div>
+      </section>
+
+      {/* CC-219, CC-226: What matters to me, one entry per section, and insurance and admin details. */}
+      <PrivacyAboutAndAdmin />
 
       <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>
         <h2 className="section-title">Who can see {isElder ? "your" : "her"} information</h2>
@@ -139,7 +179,7 @@ export default function PrivacyCenter() {
             <p className="muted small">{integrity.ok ? `All ${integrity.count} entries check out. Each entry is sealed to the one before it, so any change or deletion would show up here.` : `Entry ${integrity.brokenAt + 1} of ${integrity.count} doesn't match its seal. Our security team is alerted automatically.`}</p>
           </div>
         </div>
-        <p className="tiny">Kept for {RETENTION_YEARS} years, even after a circle is closed, as health privacy law requires. The log never stores health details — only who opened what, and when.</p>
+        <p className="tiny">In the full product, the access log is kept for {RETENTION_YEARS} years, even after a circle is closed, as health privacy law requires. It records who opened or changed what, and when. It can name a medicine, a document or an appointment, so the log is protected as health information.</p>
       </section>
 
       <section className="grid-2">
@@ -198,7 +238,7 @@ export default function PrivacyCenter() {
         <Sheet title="Close this circle?" onClose={() => { setClosing(false); setConfirmText(""); }}>
           <div className="stack">
             <p>This deletes Maggie's medicines, notes, documents and schedules, removes everyone's access, and erases the encryption key on this device so no copy can be read.</p>
-            <p className="small muted">Download a copy first if you might need it. The access log is kept for {RETENTION_YEARS} years as the law requires; it holds no health details. In the full product, backups are purged within 35 days and you get an email confirming deletion.</p>
+            <p className="small muted">Download a copy first if you might need it. In the full product, the access log is kept for {RETENTION_YEARS} years as the law requires and protected as health information, backups are purged within 35 days, and you get an email confirming deletion. In this demo, the log is deleted with everything else.</p>
             <label className="field"><span>Type DELETE to confirm</span><input className="input" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoCapitalize="characters" /></label>
             <button className="btn lg block danger" disabled={confirmText.trim().toUpperCase() !== "DELETE"} onClick={async () => { nav("/"); await actions.closeCircle(); toast("The circle was closed and its data deleted"); }}><Trash2 size={20} /> Delete everything</button>
             <button className="btn lg block plain" onClick={() => { setClosing(false); setConfirmText(""); }}>Keep the circle</button>

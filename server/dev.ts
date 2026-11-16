@@ -3,6 +3,7 @@
 
 import type { Express } from "express";
 import { createApp } from "./app";
+import { scheduleCleanup } from "./cleanup";
 import { loadConfig } from "./config";
 import { openDb } from "./db";
 import { migrate } from "./migrate";
@@ -16,6 +17,7 @@ export function getDevApp(): Promise<Express> {
     const applied = await migrate(db);
     if (applied.length) console.log(`[db] applied migrations: ${applied.join(", ")}`);
     console.log(`[api] ${cfg.env} API ready (database: ${db.kind}, test data only)`);
+    await scheduleCleanup(db, cfg).first; // CC-201: the dev database in .data/ is cleaned too
     return createApp({ cfg, db, dev: true });
   })();
   return g.__ccDevApp;

@@ -70,10 +70,11 @@
 | Pause sharing — who can change | Elder only (UI switch; guardian sees a badge) | `PrivacyCenter.tsx`, `ELDER_SETTINGS` |
 | Pause sharing — effect | Family and pro refused on everything except `sos`, `emergencyCard`, `circle`; guardian keeps access with a banner; caregiver app shows *"Maggie has paused sharing"* | `can()` |
 | Health sharing — who can change | Elder only (`setHealthSharing`) | CC-87 |
+| Check-in sharing — who can change | Elder only (`setDailySharing`). A general settings write that touches check-in or health sharing is refused and audited, whoever sends it, and only Maggie can pause or resume all sharing. *Share daily check-ins with Sarah* covers feeling, water and meals; the guardian sees a *Shared* or *Private* badge. Pausing all sharing hides them too, and the badge reads *Paused*. Days she logged while not sharing stay private. | CC-143 |
 | Access log shown | Last 30 days, excluding Maggie's own actions, newest 12 | `PrivacyCenter.tsx` |
 | Integrity check | `verifyChain()` over the whole log; failure shows *"Access log may have been altered — Entry N of M doesn't match its seal."* | `audit.ts` |
-| Retention statement | *"Kept for 6 years, even after a circle is closed, as health privacy law requires."* (`RETENTION_YEARS = 6`) | `audit.ts` |
-| Export contents | Members (without photos), medications, doses, tasks, check-ins, notes, document metadata, access log | `doExport` |
+| Retention statement | *"In the full product, the access log is kept for 6 years, even after a circle is closed, as health privacy law requires."* (`RETENTION_YEARS = 6`). In the demo, closing the circle wipes the log with everything else | `audit.ts` |
+| Export contents | Members (without photos), medications, doses, tasks, check-ins, daily check-ins (CC-142; a guardian's copy includes only shared days, and none while not shared), notes, document metadata, access log | `doExport` |
 | Export encryption | PBKDF2-SHA-256, 250,000 iterations, 16-byte salt → AES-256-GCM, 12-byte IV; file is JSON with `format: "circle-care-export"`, `kdf`, `cipher`, `salt`, `iv`, `data` | `encryptWithPassphrase` |
 | Close circle — who | Elder or guardian (`data: delete`) | `closeCircle` |
 | Close circle — effect | Removes the stored state, destroys the device key, clears the encrypted file store, records a deletion timestamp, reseeds the demo | `wipeDevice` |
@@ -87,9 +88,10 @@
 | `data` delete | ✓ | ✓ | — | — |
 | `circle` revoke | ✓ | ✓ | — | — |
 | `vitals` sharing switch | ✓ (only) | — | — | — |
+| `wellbeing` sharing switch (CC-143) | ✓ (only) | — | — | — |
 
-!!! note "The log holds no health details"
-    *"The log never stores health details — only who opened what, and when."* Entries store an actor id, an action and a resource name.
+!!! note "The log is protected like health information"
+    *"It records who opened or changed what, and when. It can name a medicine, a document or an appointment, so the log is protected as health information."* Entries store an actor id, an action and a resource name, and the resource name can be a medicine, a document or an appointment, so the [data inventory](../../compliance/09-data-inventory.md) classifies the log as PHI (CC-9).
 
 ## Notifications
 
@@ -98,6 +100,7 @@
 | Sharing paused | Guardian, caregiver | Update from Circle Care | Maggie paused sharing. Only emergency alerts are shared until she resumes. |
 | Sharing resumed | Guardian, caregiver | Update from Circle Care | Maggie resumed sharing with the circle. |
 | Health sharing on / off | Guardian | Update from Circle Care | See [Health insights](health-insights.md#notifications) |
+| Check-in sharing on / off (CC-143) | Guardian | Update from Circle Care | See [Health insights](health-insights.md#notifications) |
 | Member removed | Guardian | Update from Circle Care | Maggie removed *name* from the circle. |
 | Signed out everywhere | Guardian | Update from Circle Care | *Name* signed out of Circle Care on all devices. |
 

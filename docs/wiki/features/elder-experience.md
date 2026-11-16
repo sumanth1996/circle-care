@@ -6,9 +6,9 @@
 |---|---|
 | **Feature ID / area** | F-02 · Elder app (`/app/elder`) |
 | **Personas** | Maggie (elder) |
-| **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> — voice depends on browser support for on-device speech recognition |
-| **Related stories** | CC-39 reminder card · CC-40 taken / skipped / refused · CC-48 SOS-list suggestion · CC-52 daily check-in · CC-65 decisions visible to the elder · CC-68 three-action home · CC-69 call my person · CC-70 text size & contrast · CC-71 colour contrast · CC-72 read-aloud · CC-73 voice confirmation · CC-14 elder lock option |
-| **Last updated** | 2026-10-19 |
+| **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> — voice, in the dose check and the family chat, works only where the browser can recognize speech on the device; elsewhere it opens for typing |
+| **Related stories** | CC-39 reminder card · CC-40 taken / skipped / refused · CC-48 SOS-list suggestion · CC-52 daily check-in · CC-65 decisions visible to the elder · CC-68 three-action home · CC-69 call my person · CC-70 text size & contrast · CC-71 colour contrast · CC-72 read-aloud · CC-73 voice confirmation · CC-14 elder lock option · CC-142 one-tap daily check-ins (Sprint 12) |
+| **Last updated** | 2026-11-14 |
 
 </div>
 
@@ -22,8 +22,8 @@
 
 ## User journey
 
-1. Maggie opens the app and sees today's date and a greeting — *"Good morning, Maggie"* (before noon), *"Good afternoon"* (until 5 PM), *"Good evening"*.
-2. From one hour before the check-in window opens until she checks in, a banner asks **"How are you this morning?"** — *"Let Sarah know you're OK."* She taps **I'm OK**. Toast and spoken confirmation: *"Sarah will see you're OK"*. The banner becomes *"You checked in at 8:40 AM"*.
+1. Maggie opens the app and sees today's date and a greeting — *"Hello, Maggie"* (midnight to 5 AM), *"Good morning"* (until noon), *"Good afternoon"* (until 5 PM), *"Good evening"*.
+2. From one hour before the check-in window opens until she checks in, a banner asks **"How are you this morning?"** (**"How are you doing?"** outside the morning). For a window that ends after midnight it stays until the window ends, and while last night's window is being followed up. — *"Let Sarah know you're OK."* She taps **I'm OK**. Toast and spoken confirmation: *"Sarah will see you're OK"*. The banner becomes *"You checked in at 8:40 AM"*.
 3. The **What's next** tile shows the single most important item, e.g. *"Up next · 6:00 PM — Metformin — 1 tablet. Take with food."* A speaker button reads it aloud.
 4. She taps the tile to open the **reminder card** (see below) and answers **I took it**, **Skip this time** or **I don't want to take it**.
 5. The red **SOS** tile opens the hold-to-send screen ([SOS & emergency](sos-and-emergency.md)).
@@ -107,9 +107,29 @@ A gentle repeat reminder is pushed to the elder **10 minutes** after an unconfir
 |---|---|
 | Window | 08:00–10:00 by default (guardian Settings) |
 | Banner appears | From window start − 60 minutes until she checks in |
-| Mood | The home-screen button records 😊 ("Pleasant"); mood feeds the guardian's [Health](health-insights.md#activity-sleep-and-mood-cc-89-cc-92) view |
+| Mood | Since Sprint 12 the "I'm OK" button records no mood. How she feels comes from the optional *My day* faces below (CC-142). Older check-ins in the demo seed still carry a mood. |
 | Missed | After the window ends, one more prompt to Maggie; 15 minutes later, the guardian is alerted ([Alerts](alerts-and-notifications.md)) |
 | Only Maggie | `elderCheckin` refuses any other actor and logs a `denied` entry |
+
+### My day: one-tap check-ins (CC-142, Sprint 12)
+
+An optional card on the elder home, under the three big actions. Nothing is required and there's no Submit button: every tap saves.
+
+| Row | What she taps | Rule |
+|---|---|---|
+| How do you feel? | One of six drawn faces: *Great, Good, Calm, Okay, Not great, Low* (no emoji) | Tapping the chosen face again clears it. The time she tapped is kept. |
+| Water | **−** and **+** round buttons, with glass icons toward the goal | Each tap adds or takes one glass from what's saved, so quick taps never lose one. 0 to 20 glasses. Goal 6 (`settings.dailyLog.waterGoal`). A toast says *"That's your goal for today"* when she reaches it. |
+| Meals | Breakfast, Lunch, Dinner | Tap to tick, tap again to un-tick. |
+
+| Rule | Value |
+|---|---|
+| Who can log | Maggie only (`wellbeing: write`). Anyone else is refused, logged as `denied`, and nothing changes. |
+| Evening reminder | At or after 7 PM, **once a day**, only if she added nothing that day: *"If you like, tap how you feel, your water and your meals. You can skip it."* |
+| Footer | *"Sarah can see this. Change it in My privacy."* while she shares, *"Only you can see this."* while she doesn't, and *"Today stays private, because you started it while not sharing."* on a private day |
+| Private days | A day she starts while not sharing (or while all sharing is paused) stays private for the whole day, even if she turns sharing on later. Sarah sees *"Not shared today"*, never zero counts. |
+| Storage | One `DailyLog` per day (`date`, `feeling`, `feelingAt`, `water`, `meals`, `updatedAt`), encrypted on the device with the rest of the state. Saved demo data moves to version 8. |
+
+Demo: the presenter sheet's *Simulate no check-ins by 7 PM* clears today's log and moves the clock to 7 PM so the reminder shows. Mockup: [daily check-ins](../../design/sprint-12/README.md).
 
 ### Voice confirmation (`src/lib/voice.ts`)
 
@@ -139,6 +159,8 @@ The elder app also follows the phone's own text-size setting.
 | Record her own dose | `doses: write` — elder allowed |
 | Complete her own task | `tasks: write` — elder allowed |
 | Check in, ask about a decision, suggest SOS-list changes | Elder only (actor check in the store) |
+| Log her feeling, water and meals (CC-142) | `wellbeing: write` — elder only |
+| Share daily check-ins with Sarah (CC-143) | Elder only (`setDailySharing`), in her Privacy Center |
 | Change her display, lock, sharing and emergency-card settings | Allowed for the elder via the `ELDER_SETTINGS` allow-list even though `settings: write` is guardian-only |
 | Read decisions | `approvals: read` — elder and guardian |
 
@@ -156,6 +178,7 @@ The elder's own views are logged in the access log (e.g. *"viewed her home scree
 | Maggie asks about a decision | Guardian | You have a new message in Circle Care | Maggie has a question about "*title*": *question* |
 | Maggie suggests an SOS-list change | Guardian | You have a new message in Circle Care | Maggie suggested a change to her SOS list: "*text*" |
 | New appointment added | Elder | Update from Circle Care | New appointment: *title* on *date* at *time*. |
+| 7 PM and nothing logged today (CC-142), once a day | Elder | You have a reminder from Circle Care | If you like, tap how you feel, your water and your meals. You can skip it. |
 
 The elder app has no notification bell; banners appear briefly and tapping one returns to the relevant elder screen.
 
@@ -173,7 +196,8 @@ The elder app has no notification bell; banners appear briefly and tapping one r
 
 | Field | Entity | Written by |
 |---|---|---|
-| `date`, `at`, `mood` | `Checkin` | I'm OK |
+| `date`, `at` (`mood` only in older records) | `Checkin` | I'm OK |
+| `date`, `feeling`, `feelingAt`, `water`, `meals`, `updatedAt` | `DailyLog` | My day (CC-142) |
 | `medId`, `date`, `time`, `status`, `by`, `at`, `verified=false`, `reason` | `DoseLog` | Reminder card |
 | `taskId`, `date`, `by`, `at` | `TaskLog` | Task Done |
 | `elderSeen`, `elderQuestion` | `Approval` | Updates about me |
@@ -189,13 +213,15 @@ The elder app has no notification bell; banners appear briefly and tapping one r
 | Maggie answers a dose that is only "Coming up" | Allowed — the record is saved with the current time |
 | No favourites active | Call tile shows *"Family"* with a phone icon |
 | All items done | *"You're all done for today"* |
+| She logs only water or a meal | The day counts as logged, so no evening reminder |
+| She ticks and un-ticks the same meal | The day counts as empty again, so the reminder can still go out |
 
 ## Test coverage
 
 | Type | Test |
 |---|---|
 | E2E | *Elder holds SOS, countdown, sends* (signs in as elder, checks *Call my person*) · *Guardian approves request; elder sees decision* (**New** badge, **OK, got it**) · *CC-14 elder lock option; CC-48 elder suggests SOS-list change* |
-| Unit | `rules.test.ts` — repeat dose reminder to the elder; missed check-in prompts the elder first (CC-52). `health.test.ts` — mood mapping from check-in faces |
+| Unit | `rules.test.ts` — repeat dose reminder to the elder; missed check-in prompts the elder first (CC-52). `health.test.ts` — mood mapping from check-in faces. `everyday.test.ts` — CC-142: taps save, un-tick and clear, water limits, elder-only writes, one 7 PM reminder, no reminder once anything is logged |
 | Accessibility | axe-core on four elder screens |
 
 ## Known limitations & production gaps

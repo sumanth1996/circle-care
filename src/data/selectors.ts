@@ -1,18 +1,24 @@
 import type { State, Medication, DoseLog, CareTask, Member, Persona, Shift } from "./types";
 import { ymd, toMin, minutesOfDay, nowFrom, addDays, at } from "../lib/time";
-import { CAREGIVER, ELDER, GUARDIAN } from "./demo";
+import { CAREGIVER, ELDER, FAMILY, GUARDIAN } from "./demo";
 
 export const clock = (s: State) => nowFrom(s.clockOffsetMin);
 export const todayOf = (s: State) => ymd(clock(s));
+/** The day before today on the demo clock (CC-199). */
+export const yesterdayOf = (s: State) => ymd(addDays(clock(s), -1));
 
 export const member = (s: State, id?: string | null): Member | undefined => s.members.find((m) => m.id === id);
 export const nameOf = (s: State, id?: string | null) => member(s, id)?.short ?? "Someone";
 
 /** Which member the current persona signs in as in the demo. */
-export const meId = (p: Persona | null) => (p === "elder" ? ELDER : p === "caregiver" ? CAREGIVER : GUARDIAN);
+export const meId = (p: Persona | null) => (p === "elder" ? ELDER : p === "caregiver" ? CAREGIVER : p === "family" ? FAMILY : GUARDIAN);
+/** The demo app view a member signs in to, if they have one. */
+export const personaOf = (id: string): Persona | undefined => (id === ELDER ? "elder" : id === GUARDIAN ? "guardian" : id === CAREGIVER ? "caregiver" : id === FAMILY ? "family" : undefined);
 
 export type DoseState = "taken" | "skipped" | "refused" | "upcoming" | "due" | "late" | "escalated";
 export interface DoseSlot {
+  /** The day the dose was due (YYYY-MM-DD). */
+  date: string;
   key: string;
   med: Medication;
   time: string;
@@ -29,13 +35,15 @@ export function doseThresholds(s: State, med: Medication) {
 export function dosesFor(s: State, date = todayOf(s)): DoseSlot[] {
   const now = clock(s);
   const isToday = date === ymd(now);
+  const isYesterday = date === ymd(addDays(now, -1));
   const nowMin = minutesOfDay(now);
   const slots: DoseSlot[] = [];
   for (const med of s.meds) {
     if (med.paused) continue;
     for (const time of med.times) {
       const log = s.doses.find((d) => d.medId === med.id && d.date === date && d.time === time);
-      const late = isToday ? nowMin - toMin(time) : date < ymd(now) ? 9999 : -9999;
+      // Yesterday's doses count their minutes across midnight, so a late-evening dose escalates on time (CC-199).
+      const late = isToday ? nowMin - toMin(time) : isYesterday ? nowMin + 1440 - toMin(time) : date < ymd(now) ? 9999 : -9999;
       const th = doseThresholds(s, med);
       let state: DoseState;
       if (log) state = log.status;
@@ -43,19 +51,65 @@ export function dosesFor(s: State, date = todayOf(s)): DoseSlot[] {
       else if (late < th.caregiver) state = "due";
       else if (late < th.guardian) state = "late";
       else state = "escalated";
-      slots.push({ key: `${med.id}@${time}`, med, time, log, state, minutesLate: Math.max(0, late) });
+      slots.push({ date, key: `${med.id}@${time}`, med, time, log, state, minutesLate: Math.max(0, late) });
     }
   }
   return slots.sort((a, b) => toMin(a.time) - toMin(b.time));
 }
 
+/**
+ * CC-199: yesterday's unconfirmed doses whose escalation was still running at midnight, because the guardian step
+ * falls at or after 00:00 (a 23:30 dose alerts Sarah at 00:30). They escalate across midnight like any other dose.
+ * Doses that finished escalating before midnight, and every earlier day, are never looked at again.
+ */
+export function overnightDoses(s: State): DoseSlot[] {
+  return dosesFor(s, yesterdayOf(s)).filter((d) => !d.log && toMin(d.time) + doseThresholds(s, d.med).guardian >= 1440);
+}
+
 export const isOpen = (d: DoseSlot) => d.state === "due" || d.state === "late" || d.state === "escalated";
 
+/**
+ * Last night's doses still open after midnight: the ones in `overnightDoses`, which the rules engine is still
+ * following up. Screens list them, labelled as from last night, so they can be marked and their alerts settle.
+ */
+export const lastNightDoses = (s: State): DoseSlot[] => followUpDoses(s).filter(isOpen);
+
+/**
+ * Whether a follow-up from yesterday still runs today (CC-199 review). `started` is its first alert, due at `dueMs`;
+ * `next` is the one that should have followed by `stepMs`. It carries on when `next` went out after midnight (so
+ * screens keep it until it's settled), or hasn't gone out although its time came, because the app was asleep across
+ * midnight (a closed laptop, a phone tab in the background): either `started` went out, or the app last ran
+ * yesterday after it was due and before `next` was. A first run with no record of a last run looks back at nothing.
+ */
+function chainCarriesOver(s: State, started: string, next: string, dueMs: number, stepMs: number) {
+  const midnight = at(todayOf(s), "00:00").getTime();
+  const sent = s.alerts.find((a) => a.key === next);
+  if (sent) return new Date(sent.at).getTime() >= midnight;
+  if (stepMs >= midnight) return false; // still to come today, handled by the ordinary rules
+  if (s.alerts.some((a) => a.key === started)) return true;
+  const last = s.lastRunAt ? new Date(s.lastRunAt).getTime() : NaN;
+  return last >= at(yesterdayOf(s), "00:00").getTime() && last < midnight && last >= dueMs && last < stepMs;
+}
+
+/**
+ * Yesterday's unconfirmed doses the rules engine still follows up today: the `overnightDoses`, plus any whose
+ * escalation the app slept through before midnight (CC-199 review).
+ */
+export function followUpDoses(s: State): DoseSlot[] {
+  const y = yesterdayOf(s);
+  const overnight = overnightDoses(s);
+  const carried = dosesFor(s, y).filter((d) => !d.log && !overnight.some((o) => o.key === d.key)
+    && chainCarriesOver(s, `dose-cg-${y}-${d.key}`, `dose-g-${y}-${d.key}`, at(y, d.time).getTime(), at(y, d.time).getTime() + doseThresholds(s, d.med).guardian * 60000));
+  return [...overnight, ...carried].sort((a, b) => toMin(a.time) - toMin(b.time));
+}
+
+/** Maggie's daily routines for a day. One-off next steps from visit notes (CC-218) are listed by `nextStepsFor`. */
 export function tasksFor(s: State, date = todayOf(s)) {
   const d = new Date(`${date}T12:00:00`).getDay();
   const now = clock(s);
   const isToday = date === ymd(now);
   return s.tasks
+    .filter((t) => t.recurrence !== "once")
     .filter((t) => t.recurrence === "daily" || (t.recurrence === "weekdays" ? d >= 1 && d <= 5 : d === 0 || d === 6))
     .map((t) => {
       const log = s.taskLogs.find((l) => l.taskId === t.id && l.date === date);
@@ -73,7 +127,8 @@ export type NextUp =
 /** The single "What's next" item on the elder's home screen. */
 export function nextUp(s: State): NextUp {
   const doses = dosesFor(s);
-  const open = doses.find(isOpen);
+  // A dose from last night that is still being followed up comes first, so Maggie can say whether she took it.
+  const open = lastNightDoses(s)[0] ?? doses.find(isOpen);
   if (open) return { kind: "dose", slot: open };
   const nowMin = minutesOfDay(clock(s));
   const upcomingDose = doses.find((d) => d.state === "upcoming");
@@ -127,8 +182,62 @@ export function checkinToday(s: State) {
   return s.checkins.find((c) => c.date === todayOf(s));
 }
 
+/**
+ * Missed daily check-in follow-ups (CC-52, CC-199): each check-in window still waiting for Maggie, with the minutes
+ * since it ended. A window belongs to the day it opens. One that ends after midnight (22:00–00:30), or whose
+ * prompt to Sarah falls after midnight, is followed up the next day too; earlier windows are never looked at again.
+ */
+export function checkinFollowUps(s: State): { date: string; minutesPast: number }[] {
+  const now = clock(s);
+  const nowMin = minutesOfDay(now);
+  // Minutes from the opening day's midnight to the window's end.
+  const endsAt = toMin(s.settings.checkinWindow.end) + (wrapsMidnight(s) ? 1440 : 0);
+  const out: { date: string; minutesPast: number }[] = [];
+  // Yesterday's window, when Sarah's prompt (15 minutes after the end) could not go out before midnight.
+  // Also an earlier window whose prompts the app slept through before midnight (CC-199 review).
+  const date = yesterdayOf(s);
+  const endMs = at(date, "00:00").getTime() + endsAt * 60000;
+  if (endsAt + 15 >= 1439 || chainCarriesOver(s, `checkin-elder-${date}`, `checkin-${date}`, endMs, endMs + 15 * 60000)) {
+    if (!checkedInFor(s, date) && nowMin + 1440 > endsAt) out.push({ date, minutesPast: nowMin + 1440 - endsAt });
+  }
+  if (!checkinToday(s) && nowMin > endsAt) out.push({ date: ymd(now), minutesPast: nowMin - endsAt });
+  return out;
+}
+
+const wrapsMidnight = (s: State) => toMin(s.settings.checkinWindow.end) < toMin(s.settings.checkinWindow.start);
+
+/**
+ * Whether Maggie has checked in for the window that opens on `date`. Any check-in that day counts, and so does one
+ * made later. For a window that ends after midnight, only one made once her button showed (an hour before the
+ * start) counts, so an early check-in for the night before never covers it (CC-199).
+ */
+function checkedInFor(s: State, date: string) {
+  const opened = at(date, s.settings.checkinWindow.start).getTime() - 60 * 60000;
+  return s.checkins.some((c) => (!wrapsMidnight(s) && c.date === date) || new Date(c.at).getTime() >= opened);
+}
+
+/** Today's window ended without a check-in. Same rule as `checkinFollowUps`, so a window that ends after midnight is never missed before it ends. */
 export function checkinMissed(s: State) {
-  return !checkinToday(s) && minutesOfDay(clock(s)) > toMin(s.settings.checkinWindow.end);
+  return checkinFollowUps(s).some((w) => w.date === todayOf(s));
+}
+
+/** Last night's window, which ended after midnight or too late for Sarah's prompt to go out before it, was missed (CC-199). */
+export function checkinMissedLastNight(s: State) {
+  return checkinFollowUps(s).some((w) => w.date === yesterdayOf(s));
+}
+
+/**
+ * Whether Maggie's "I'm OK" button shows. It shows from an hour before her window starts. For a window that ends
+ * after midnight it keeps showing until the window ends, and it shows while last night's window is being followed
+ * up, so her answer to that reminder is one tap. Same rules as `checkinFollowUps` (CC-199).
+ */
+export function checkinButtonShows(s: State) {
+  if (checkinMissedLastNight(s)) return true;
+  const nowMin = minutesOfDay(clock(s));
+  const { start, end } = s.settings.checkinWindow;
+  if (!wrapsMidnight(s)) return !checkinToday(s) && nowMin >= toMin(start) - 60;
+  if (nowMin <= toMin(end)) return !checkedInFor(s, yesterdayOf(s)); // last night's window, still open after midnight
+  return nowMin >= toMin(start) - 60 && !checkedInFor(s, todayOf(s));
 }
 
 export function checkinStreak(s: State) {
@@ -166,8 +275,9 @@ export function activeSos(s: State) {
   return s.sos.find((e) => e.status !== "resolved");
 }
 
+/** Alerts this person has been sent. One held for their quiet hours shows once the morning summary releases it (CC-208). */
 export function alertsFor(s: State, p: Persona) {
-  return s.alerts.filter((a) => a.to.includes(p)).sort((a, b) => b.at.localeCompare(a.at));
+  return s.alerts.filter((a) => a.to.includes(p) && !a.held?.includes(p)).sort((a, b) => b.at.localeCompare(a.at));
 }
 
 export const unreadCount = (s: State, p: Persona) => alertsFor(s, p).filter((a) => !a.read.includes(p)).length;
@@ -191,8 +301,16 @@ export function feed(s: State) {
   }
   for (const h of s.handoffs) items.push({ at: h.at, kind: "handoff", by: h.by, text: h.skippedReason ? `Hand-off skipped — ${h.skippedReason}` : `Hand-off note: ${h.notes || h.summary}` });
   for (const n of s.notes) items.push({ at: n.at, kind: "note", by: n.by, text: n.text });
-  for (const c of s.checkins) items.push({ at: c.at, kind: "checkin", by: ELDER, tone: "good", text: `Checked in: “I'm OK” ${c.mood ?? ""}` });
+  for (const c of s.checkins) items.push({ at: c.at, kind: "checkin", by: ELDER, tone: "good", text: "Checked in: “I'm OK”" });
   for (const e of s.sos) items.push({ at: e.startedAt, kind: "sos", by: ELDER, tone: e.status === "resolved" ? "warn" : "bad", text: e.status === "resolved" ? `SOS resolved — ${e.outcome ?? ""}` : "SOS is active" });
   for (const a of s.approvals) if (a.decidedAt) items.push({ at: a.decidedAt, kind: "approval", by: GUARDIAN, text: `${a.status === "approved" ? "Approved" : "Declined"}: ${a.title}` });
   return items.filter((i) => i.at <= clock(s).toISOString()).sort((a, b) => b.at.localeCompare(a.at));
+}
+
+/** Where an alert's link opens for one person. /app/sos, /app/chat and /app/help open that page in their own view. */
+export function alertLink(p: Persona, link?: string) {
+  const l = link ?? "";
+  if (l === "/app/help") return p === "family" ? "/app/family" : `/app/${p}/help`;
+  if (l === "/app/sos" || l === "/app/chat") return `/app/${p}/${l.slice(5)}`;
+  return l.startsWith(`/app/${p}`) ? l : undefined;
 }

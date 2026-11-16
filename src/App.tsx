@@ -11,6 +11,8 @@ import Privacy from "./pages/site/Privacy";
 import Pilot from "./pages/site/Pilot";
 import Welcome from "./pages/Welcome";
 import SignIn from "./pages/SignIn";
+import TwoStep from "./pages/account/TwoStep";
+import { ForgotPassword, ResetPassword } from "./pages/account/PasswordReset";
 import AppShell from "./components/AppShell";
 import ElderHome from "./pages/elder/ElderHome";
 import ElderNext from "./pages/elder/ElderNext";
@@ -37,6 +39,15 @@ import EmergencyCard from "./pages/shared/EmergencyCard";
 import SosResponder from "./pages/shared/SosResponder";
 import Alerts from "./pages/shared/Alerts";
 import Invite from "./pages/Invite";
+import { ChatView } from "./components/chat";
+import { HelpBoard } from "./components/help";
+import { VisitQuestions, QuestionsPrint } from "./components/questions";
+import { CallLogPage } from "./components/callLog";
+import { AboutMePage } from "./components/aboutMe";
+import { VisitNotesPage } from "./components/visitNotes";
+import { AwayPage } from "./components/away";
+import ElderAsk from "./pages/elder/ElderAsk";
+import ComingHome from "./pages/guardian/ComingHome";
 import Review from "./pages/internal/Review";
 import PilotDashboard from "./pages/internal/PilotDashboard";
 import { AccessGuard } from "./components/Extras";
@@ -70,6 +81,9 @@ export default function App() {
             <Route path="/app/join/:role" element={<Join />} />
             <Route path="/app/login" element={<Login />} />
             <Route path="/app/account" element={<MyAccount />} />
+            <Route path="/app/two-step" element={<TwoStep />} />
+            <Route path="/app/forgot-password" element={<ForgotPassword />} />
+            <Route path="/app/reset-password" element={<ResetPassword />} />
             <Route path="/app/sign-in/:persona" element={<SignIn />} />
             <Route path="/app/invite/:memberId" element={<Invite />} />
             <Route path="/app/review" element={<Review />} />
@@ -83,6 +97,14 @@ export default function App() {
               <Route path="settings" element={<ElderSettings />} />
               <Route path="decisions" element={<ElderDecisions />} />
               <Route path="card" element={<EmergencyCard />} />
+              <Route path="chat" element={<ChatView large />} />
+              <Route path="help" element={<HelpBoard />} />
+              <Route path="ask" element={<ElderAsk />} />
+              <Route path="questions" element={<VisitQuestions />} />
+              <Route path="visit-notes/:id" element={<VisitNotesPage />} />
+              <Route path="calls" element={<CallLogPage />} />
+              <Route path="about-me" element={<AboutMePage />} />
+              <Route path="questions/print/:id" element={<QuestionsPrint />} />
             </Route>
             <Route path="/app/caregiver" element={<AppShell persona="caregiver" />}>
               <Route index element={<CaregiverToday />} />
@@ -92,6 +114,25 @@ export default function App() {
               <Route path="card" element={<EmergencyCard />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="sos" element={<SosResponder />} />
+              <Route path="chat" element={<ChatView />} />
+              <Route path="help" element={<HelpBoard />} />
+              <Route path="questions" element={<VisitQuestions />} />
+              <Route path="visit-notes/:id" element={<VisitNotesPage />} />
+              <Route path="calls" element={<CallLogPage />} />
+              <Route path="about-me" element={<AboutMePage />} />
+            </Route>
+            {/* CC-209, CC-210: James (family). The Help board is his home. */}
+            <Route path="/app/family" element={<AppShell persona="family" />}>
+              <Route index element={<HelpBoard />} />
+              <Route path="chat" element={<ChatView />} />
+              <Route path="card" element={<EmergencyCard />} />
+              <Route path="alerts" element={<Alerts />} />
+              <Route path="sos" element={<SosResponder />} />
+              <Route path="questions" element={<VisitQuestions />} />
+              <Route path="visit-notes/:id" element={<VisitNotesPage />} />
+              <Route path="calls" element={<CallLogPage />} />
+              <Route path="about-me" element={<AboutMePage />} />
+              <Route path="away" element={<AwayPage />} />
             </Route>
             <Route path="/app/guardian" element={<AppShell persona="guardian" />}>
               <Route index element={<GuardianHome />} />
@@ -109,8 +150,19 @@ export default function App() {
               <Route path="settings" element={<GuardianSettings />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="sos" element={<SosResponder />} />
+              <Route path="chat" element={<ChatView />} />
+              <Route path="help" element={<HelpBoard />} />
+              <Route path="coming-home" element={<ComingHome />} />
+              <Route path="questions" element={<VisitQuestions />} />
+              <Route path="visit-notes/:id" element={<VisitNotesPage />} />
+              <Route path="calls" element={<CallLogPage />} />
+              <Route path="about-me" element={<AboutMePage />} />
+              <Route path="away" element={<AwayPage />} />
+              <Route path="questions/print/:id" element={<QuestionsPrint />} />
             </Route>
             <Route path="/app/sos" element={<SosRedirect />} />
+            <Route path="/app/chat" element={<SosRedirect to="chat" />} />
+            <Route path="/app/help" element={<SosRedirect to="help" />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </AccountProvider>
@@ -121,8 +173,10 @@ export default function App() {
 }
 
 import { useStore } from "./data/store";
-function SosRedirect() {
+/** Alert links like /app/sos, /app/chat and /app/help open the same page for whoever is signed in. */
+function SosRedirect({ to = "sos" }: { to?: "sos" | "chat" | "help" }) {
   const { state } = useStore();
   const p = state.persona ?? "guardian";
-  return <Navigate to={p === "elder" ? "/app/elder/sos" : `/app/${p}/sos`} replace />;
+  // James's Help board is his home page.
+  return <Navigate to={p === "family" && to === "help" ? "/app/family" : `/app/${p}/${to}`} replace />;
 }

@@ -53,14 +53,18 @@ export const cryptoAvailable = () => typeof crypto !== "undefined" && !!crypto.s
 
 let keyPromise: Promise<CryptoKey> | null = null;
 export function deviceKey(): Promise<CryptoKey> {
-  keyPromise ??= (async () => {
+  if (keyPromise) return keyPromise;
+  const mine = (async () => {
     const existing = await idbGet<CryptoKey>(KEY_ID);
     if (existing) return existing;
     const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
     await idbPut(KEY_ID, key);
     return key;
   })();
-  return keyPromise;
+  keyPromise = mine;
+  // A failure isn't kept, so the next save tries again (CC-195).
+  mine.catch(() => { if (keyPromise === mine) keyPromise = null; });
+  return mine;
 }
 
 function b64(buf: ArrayBuffer | Uint8Array) {
@@ -83,13 +87,14 @@ export async function decryptBytes(iv: Uint8Array, ct: ArrayBuffer): Promise<Arr
   return crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as BufferSource }, key, ct);
 }
 
-/** Saves a JSON value encrypted. Stored as "enc:v1:<iv>:<ciphertext>". */
-export async function saveEncrypted(storageKey: string, value: unknown) {
+/** Encrypts a JSON value into the stored form "enc:v1:<iv>:<ciphertext>" without writing it (CC-195). */
+export async function encryptForStorage(value: unknown): Promise<string> {
   const { iv, ct } = await encryptBytes(new TextEncoder().encode(JSON.stringify(value)));
-  localStorage.setItem(storageKey, `enc:v1:${b64(iv)}:${b64(ct)}`);
+  return `enc:v1:${b64(iv)}:${b64(ct)}`;
 }
 
-/** Loads a value saved with saveEncrypted. Plain JSON from older versions is read and re-encrypted on next save. */
+
+/** Loads a value saved with encryptForStorage. Plain JSON from older versions is read and re-encrypted on next save. */
 export async function loadEncrypted<T>(storageKey: string): Promise<T | null> {
   const raw = localStorage.getItem(storageKey);
   if (!raw) return null;
@@ -110,6 +115,8 @@ export async function wipeDevice(storageKeys: string[]) {
   for (const k of storageKeys) localStorage.removeItem(k);
   keyPromise = null;
   await idbDelete(KEY_ID).catch(() => {});
+  // A key load that started during the delete may have cached the old key; drop it so the next save makes a new one.
+  keyPromise = null;
   await clearFiles().catch(() => {});
 }
 

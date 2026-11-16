@@ -36,6 +36,7 @@ export default function ElderSettings() {
       <div className="list">
         <label className="list-row" style={{ minHeight: 72 }}><span className="grow" style={{ fontWeight: 600 }}>High contrast</span><Toggle checked={s.highContrast} onChange={(v) => actions.settings({ highContrast: v })} label="High contrast" /></label>
         <label className="list-row" style={{ minHeight: 72 }}><span className="grow" style={{ fontWeight: 600 }}>Read things aloud</span><Toggle checked={s.readAloud} onChange={(v) => actions.settings({ readAloud: v })} label="Read things aloud" /></label>
+        <label className="list-row" style={{ minHeight: 72 }}><span className="grow"><span style={{ fontWeight: 600, display: "block" }}>Show chat on my home</span><span className="muted" style={{ fontSize: "0.8em", display: "block" }}>Hide it any time. The chat stays under Family.</span></span><Toggle checked={s.elderChatOnHome} onChange={(v) => actions.settings({ elderChatOnHome: v })} label="Show chat on my home" /></label>
       </div>
       <p className="muted" style={{ fontSize: "0.8em" }}>Circle Care also follows the text size you set on your phone.</p>
 

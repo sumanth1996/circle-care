@@ -1,7 +1,7 @@
 # Permission Matrix
 
 Notion story: CC-18 Define role permissions (matrix)
-Status: Implemented in the prototype (`src/data/policy.ts`, enforced through `can()` — CC-19) and covered by `src/__tests__/policy.test.ts`. Production server-side enforcement is **not built** (no backend exists yet).
+Status: Implemented in the prototype (`src/data/policy.ts`, enforced through `can()` — CC-19) and covered by `src/__tests__/policy.test.ts`. Production server-side enforcement is **not built**: the accounts server exists, but care-circle data has no API yet (CC-202).
 
 This page is a readable rendering of the `MATRIX` constant as of 2026-10-19. If the code changes, the code wins — regenerate this table.
 
@@ -41,6 +41,30 @@ Legend: R read · W write · P propose (needs approval) · A approve · I invite
 | `emergencyCard` | Allergies, conditions, contacts | R W | R P | R | R | R | — |
 | `sos` | SOS events | R W | R S | R S | R S | R S | — |
 | `data` | Export / close circle | E D | E D | — | — | — | — |
+| `supply` | Pills on hand, refill requests (CC-120/121) | R W | R W | R W | R W | — | — |
+| `wellbeing` | Daily check-ins: feeling, water, meals (CC-142/143) | R W | R ¹ | — | — | — | — |
+| `chat` | Private family chat (CC-164/165) | R W I | R W I | R W | R W ² | R W ² | — |
+| `help` | Help board requests (CC-209/210, CC-211) | R P ⁴ | R W S | R S ³ | R S ³ | R S ³ | — |
+| `plan` | Coming Home plan (CC-213/214) | R | R W | — ⁵ | — ⁵ | — ⁵ | — |
+| `questions` | Shared question list for a visit (CC-217) | R W ⁶ | R W ⁶ | R W | R W | — | — |
+| `visitNotes` | After-visit notes and next steps (CC-218) | R W ⁷ | R W ⁷ | R W ⁷ | R W ⁷ | R W ⁷ | — |
+| `calls` | Call log: organization, date, next step (CC-226 to CC-228) | R W | R W | R | R | — | — |
+| `calls.admin` | Call outcome and person spoken to | R | R | R ⁸ | R ⁸ | — | — |
+| `calls.ref` | Reveal a call's reference number in full | R | R | — | — | — | — |
+| `aboutMe` | What matters to me sections (CC-219) | R W ⁹ | R W ⁹ | R ⁹ | R ⁹ | — | — |
+| `away` | Sarah's away dates and who covers (CC-229 to CC-231) | R | R W | R ¹⁰ | — | — | — |
+
+¹ Only while Maggie shares check-ins (`settings.dailyLog.shareWithGuardian`) and hasn't paused all sharing.
+³ Only the requests Sarah shared with that person (`HelpRequest.audience`, checked by `canSeeHelp()` in `src/data/help.ts`). Respond means claim ("I'll do it"), give it back ("Can't anymore") and mark it done; only the person who claimed a request can give it back or finish it. A request tied to an appointment shows as an appointment only, and as just "Appointment" and the time to anyone without appointment access. Hidden from family and caregivers while sharing is paused.
+⁴ Propose here means Maggie asks for a hand herself (`askHelp`). It goes to the people she chose in her Privacy Center (`settings.helpFrom`, which only she can change, through `setHelpFrom`), and Sarah is told.
+⁵ Others never see the plan. An item Sarah gives someone becomes a help request on their board, so they see that item only, under `help`.
+⁶ Also needs appointment access (`canSeeQuestions()` in `src/data/visitQuestions.ts`). Only Maggie can hide an item (then only she and Sarah see it); only Sarah sets the order; the person who added an item, or Sarah, can remove it.
+
+⁷ Reading also needs appointment access, so Maggie's paused sharing hides the notes from family and caregivers (`canReadNotes()` in `src/data/visitNotes.ts`). Writing is limited to Maggie, Sarah and the person recorded as taking Maggie to that visit; anyone else is refused and audited. Each next step becomes a one-off care task for its owner.
+⁸ Only the family members and caregivers Maggie picks for "Insurance and admin details" in her Privacy Center (`settings.adminTo`, which only she changes, through `setAdminTo`). Everyone else sees a call's organization, date and next step only, and reference numbers show masked to their last 4.
+⁹ Each section only for the people Maggie picks (`AboutSection.sharedWith`, checked by `canSeeSection()` in `src/data/aboutMe.ts`); a new one is shared with no one but its writer until she picks. Only Maggie changes who sees a section. Sarah writes only while Maggie lets her (`aboutMe.sarahCanEdit`), and only sections shared with her or not yet written.
+¹⁰ Only family can be asked to cover, never a paid caregiver. While the person covering has said yes and the dates have started, the alerts Sarah would get that their own role can already read go to them, they take Sarah's place in the SOS order and can finish Sarah's one-off next steps due before the end date (`routeForCover()`, `escalationOrder()` in `src/data/away.ts`). Away mode adds no read rights: settings, approvals and the Privacy Center stay with Sarah and Maggie. Only Sarah sets or ends it, only the person asked answers, and only Maggie asks for someone else; every refusal is audited.
+² Only once Maggie or Sarah adds that caregiver (`state.chat.pros`); switching them off, removing them from the circle or their time limit ending takes them out at once. Pausing sharing also takes family and caregivers out of the chat, like every other non-emergency resource.
 
 ## Rules explained
 
@@ -60,6 +84,8 @@ So emergencies still work (SOS and the emergency card) and people still know who
 
 ### Refused actions are logged
 
+Sprint 12 actions live in `src/data/everydayActions.ts` and use `allowed()` from the store, which does the same check and writes the same `denied` entry.
+
 Most change actions in the store go through `guard()` in `src/data/store.tsx` (recordDose, verifyDose, saveMed, requestMedChange, decide, task actions, sosAcknowledge, saveShift, requestSwap, reviewDoc, invite, revoke, settings, exported — exceptions listed under Coverage gaps): if `can()` returns false, nothing changes and an `audit` entry with action `"denied"` is written. Three denials by one person within 10 minutes raise a security notice to the guardian (CC-35). Read access in the UI is checked with `AccessGuard` / `useCan`, which call the same `can()`.
 
 ### Notable design choices to review
@@ -71,7 +97,7 @@ Most change actions in the store go through `guard()` in `src/data/store.tsx` (r
 
 ## Coverage gaps (prototype)
 
-Closed on 2026-10-19. Every data-changing store action is now checked:
+Closed on 2026-10-19 for the actions below. The CC-10 threat model (2026-11-15) found three that are still open: `acceptInvite` has no check, `invite` accepts any role from the caller, and the review queue at `/app/review` has no route guard. The demo controls (`skipAhead`, `simulate`, `resetDemo`, persona switching) are unguarded on purpose. All of these move to the server in CC-202.
 
 | Action | Check |
 |---|---|

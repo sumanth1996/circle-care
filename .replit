@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web"]
+modules = ["nodejs-22", "web"]
 run = "npm install && npm run dev"
 entrypoint = "src/main.tsx"
 

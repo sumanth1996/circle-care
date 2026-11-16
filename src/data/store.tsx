@@ -1,29 +1,102 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc, Appointment } from "./types";
+import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc, Appointment, AboutKey } from "./types";
 import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo";
-import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, activeSos, member, todayVisit, tasksFor, checkinToday } from "./selectors";
+import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, yesterdayOf, activeSos, member, todayVisit, tasksFor, followUpDoses, checkinFollowUps } from "./selectors";
 import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
-import { hm, uid, ymd, toMin, minutesOfDay, fmtTime } from "../lib/time";
+import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays, greeting } from "../lib/time";
 import { readingsFor, detectEvents } from "../lib/health";
-import { cryptoAvailable, loadEncrypted, saveEncrypted, wipeDevice } from "../lib/secureStorage";
+import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared, inQuietHours, RECAP_NOTIFY_AT, RECAP_LAST_CALL } from "./everyday";
+import { noteSharedSince } from "./everydayActions";
+import * as everyday from "./everydayActions";
+import { cryptoAvailable, deviceKey, encryptForStorage, loadEncrypted, wipeDevice } from "../lib/secureStorage";
+import { createSaver, saveWhenPageGoes } from "./saver";
+import { runReminders, settleDose, snoozeReminder, heldFor, releaseHeld } from "./calmAlerts";
+import * as help from "./help";
+import * as plans from "./comingHome";
+import * as questions from "./visitQuestions";
+import * as visitNotes from "./visitNotes";
+import * as callLog from "./callLog";
+import * as aboutMe from "./aboutMe";
+import * as away from "./away";
 
 export const STATE_KEY = "circle-care-demo";
 
 type Updater = (draft: State) => void;
 
 /** Adds an alert unless one with the same key already exists. */
-export function pushAlert(s: State, a: Omit<Alert, "id" | "at" | "read">, at?: string) {
-  if (a.key && s.alerts.some((x) => x.key === a.key)) return;
-  s.alerts.push({ ...a, id: uid("al"), at: at ?? clock(s).toISOString(), read: [] });
+export function pushAlert(s: State, input: Omit<Alert, "id" | "at" | "read">, at?: string) {
+  if (input.key && s.alerts.some((x) => x.key === input.key)) return;
+  // CC-229: while Sarah is away, what her backup's role can see goes to them instead.
+  const a = away.routeForCover(s, input);
+  // CC-208: in Sarah's quiet hours a non-urgent alert waits for the morning summary instead of a push.
+  const held = heldFor(s, a);
+  s.alerts.push({ ...a, ...(held.length ? { held } : {}), id: uid("al"), at: at ?? clock(s).toISOString(), read: [] });
+}
+
+/**
+ * CC-40 – CC-41 and CC-206: record a dose, then settle its reminders and any missed-dose alert.
+ * `date` is the day the dose was due: today, or yesterday for a late-evening dose marked after midnight (CC-199).
+ * Any other day is ignored and nothing changes. Returns whether the dose was recorded.
+ */
+export function logDose(s: State, by: string, medId: string, time: string, status: DoseStatus, reason?: string, date = todayOf(s)) {
+  if (date !== todayOf(s) && date !== yesterdayOf(s)) return false;
+  if (!allowed(s, by, "write", "doses")) return false;
+  const visit = todayVisit(s, by);
+  const verified = roleOf(s, by) === "pro" && !!visit?.checkIn && !visit?.checkOut;
+  s.doses = s.doses.filter((d) => !(d.medId === medId && d.date === date && d.time === time));
+  s.doses.push({ id: uid("dose"), medId, date, time, status, by, at: clock(s).toISOString(), verified, reason });
+  audit(s, by, "created", `a dose record (${s.meds.find((m) => m.id === medId)?.name})`);
+  settleDose(s, by, medId, time, status, reason, date);
+  return true;
 }
 
 export function audit(s: State, actorId: string, action: AuditEvent["action"], resource: string) {
   append(s.audit, { id: uid("a"), at: clock(s).toISOString(), actorId, action, resource });
 }
 
+/** Permission check (CC-19) for actions that live outside the hook: refusals are audited and change nothing. */
+export function allowed(s: State, who: string, action: Action, resource: Resource) {
+  if (can(s, who, action, resource)) return true;
+  audit(s, who, "denied", `${action} ${resource}`);
+  return false;
+}
+
+/** Settings changes (CC-19), shared by the store and the tests. Refusals change nothing and are audited. */
+export function applySettings(s: State, who: string, patch: Partial<Settings>) {
+  // Maggie's sharing choices change only through their own elder-only actions (setDailySharing,
+  // setHealthSharing), which audit and notify. A general settings write never touches them. (Review F2-13.)
+  if (patch.dailyLog !== undefined) { audit(s, who, "denied", "change check-in sharing"); return; }
+  if (patch.vitals && patch.vitals.shareWithGuardian !== s.settings.vitals.shareWithGuardian) { audit(s, who, "denied", "change health sharing"); return; }
+  // Pausing all sharing is Maggie's alone, so nobody else can pause it or undo her pause. (Review F2-14.)
+  if (patch.sharingPaused !== undefined && who !== ELDER) { audit(s, who, "denied", "change paused sharing"); return; }
+  // What shows on Maggie's home is her choice (CC-165).
+  if (patch.elderChatOnHome !== undefined && who !== ELDER) { audit(s, who, "denied", "change Maggie's home screen"); return; }
+  // CC-211: who sees the help Maggie asks for is hers to choose, through setHelpFrom (which checks and audits).
+  if (patch.helpFrom !== undefined) { audit(s, who, "denied", "change who sees Maggie's help requests"); return; }
+  // CC-226: who sees insurance and admin details is hers to choose, through setAdminTo.
+  if (patch.adminTo !== undefined) { audit(s, who, "denied", "change who sees Maggie's insurance and admin details"); return; }
+  const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
+  if (!(elderOnly && who === ELDER) && !allowed(s, who, "write", "settings")) return;
+  const wasPaused = s.settings.sharingPaused;
+  const wasShared = dailyShared(s);
+  s.settings = { ...s.settings, ...patch };
+  noteSharedSince(s, wasShared);
+  if (patch.sharingPaused !== undefined && patch.sharingPaused !== wasPaused) {
+    pushAlert(s, { to: ["guardian", "caregiver"], severity: "info", title: "Update from Circle Care", detail: patch.sharingPaused ? "Maggie paused sharing. Only emergency alerts are shared until she resumes." : "Maggie resumed sharing with the circle." });
+    audit(s, who, "updated", patch.sharingPaused ? "sharing (paused)" : "sharing (resumed)");
+  }
+}
+
+/** CC-164: leaving the circle ends chat access at once; a caregiver must be added again if they come back. */
+export function leaveChat(s: State, id: string) {
+  s.chat.pros = s.chat.pros.filter((x) => x !== id);
+  delete s.chat.readAt[id];
+  delete s.chat.joinedAt[id];
+}
+
 /** The elder may change her own display, privacy and emergency-card preferences. */
-const ELDER_SETTINGS: (keyof Settings)[] = ["textSize", "highContrast", "readAloud", "sharingPaused", "elderLockMin", "emergencyCard", "toured"];
+const ELDER_SETTINGS: (keyof Settings)[] = ["textSize", "highContrast", "readAloud", "sharingPaused", "elderLockMin", "emergencyCard", "toured", "elderChatOnHome"];
 
 /**
  * The rules engine. In production these run server-side on a scheduler;
@@ -34,45 +107,44 @@ export function evaluate(s: State) {
   const today = ymd(now);
   const nowMin = minutesOfDay(now);
 
-  for (const d of dosesFor(s)) {
+  // CC-229, CC-230: away mode starts, reminds Sarah if nobody has agreed to cover, and hands back at the end.
+  away.runAway(s);
+
+  // Maggie's reminders (CC-39, CC-207): up to the limit Sarah set, with snooze, then they stop.
+  runReminders(s);
+
+  // Missed-dose escalation (CC-42, CC-43): caregiver first, then guardian. Yesterday's late-evening doses whose
+  // escalation was still running at midnight carry on with the same timings, and so does a chain the app slept
+  // through (CC-199). Keys name the day the dose was due, so nothing repeats across midnight.
+  for (const d of [...followUpDoses(s), ...dosesFor(s)]) {
     if (d.log) continue;
-    // Gentle repeat reminder for the elder 10 minutes after the dose time (CC-39).
-    if (d.minutesLate >= 10) {
-      pushAlert(s, {
-        key: `dose-repeat-${today}-${d.key}`, to: ["elder"], severity: "info",
-        title: "You have a reminder from Circle Care",
-        detail: `Time for ${d.med.name} — ${d.med.dose}. ${d.med.instructions}`, link: "/app/elder/next",
-      });
-    }
-    // Missed-dose escalation (CC-42, CC-43): caregiver first, then guardian.
     const th = doseThresholds(s, d.med);
     if (d.minutesLate >= th.caregiver) {
       pushAlert(s, {
-        key: `dose-cg-${today}-${d.key}`, to: ["caregiver"], severity: d.med.critical ? "critical" : "warning",
+        key: `dose-cg-${d.date}-${d.key}`, to: ["caregiver"], severity: d.med.critical ? "critical" : "warning",
         title: "You have a reminder from Circle Care",
         detail: `${d.med.name} ${d.med.strength} (${d.time}) hasn't been confirmed yet.`, link: "/app/caregiver",
       });
     }
     if (d.minutesLate >= th.guardian) {
       pushAlert(s, {
-        key: `dose-g-${today}-${d.key}`, to: ["guardian"], severity: d.med.critical ? "critical" : "warning",
+        key: `dose-g-${d.date}-${d.key}`, to: ["guardian"], severity: d.med.critical ? "critical" : "warning",
         title: "Circle Care needs your attention",
         detail: `${d.med.name} (${d.time}) is ${d.minutesLate} minutes overdue and still unconfirmed.${d.med.critical ? " This is a high-priority medication." : ""}`, link: "/app/guardian",
       });
     }
   }
 
-  // Missed daily check-in (CC-52): one more prompt to the elder, then the guardian 15 minutes later.
-  if (!checkinToday(s)) {
-    const end = toMin(s.settings.checkinWindow.end);
-    if (nowMin > end) {
-      pushAlert(s, { key: `checkin-elder-${today}`, to: ["elder"], severity: "info", title: "You have a reminder from Circle Care", detail: "Good morning, Maggie. Tap “I'm OK” so Sarah knows you're fine.", link: "/app/elder" });
-    }
-    if (nowMin > end + 15) {
+  // Missed daily check-in (CC-52): one more prompt to the elder, then the guardian 15 minutes later. A window
+  // that ends after midnight, or whose guardian prompt does, is followed up under the day it opened (CC-199).
+  for (const w of checkinFollowUps(s)) {
+    // The greeting follows the clock, so a prompt after midnight says "Hello", not "Good morning".
+    pushAlert(s, { key: `checkin-elder-${w.date}`, to: ["elder"], severity: "info", title: "You have a reminder from Circle Care", detail: `${greeting(now)}, Maggie. Tap “I'm OK” so Sarah knows you're fine.`, link: "/app/elder" });
+    if (w.minutesPast > 15) {
       pushAlert(s, {
-        key: `checkin-${today}`, to: ["guardian"], severity: "warning",
+        key: `checkin-${w.date}`, to: ["guardian"], severity: "warning",
         title: "Circle Care needs your attention",
-        detail: `Maggie hasn't checked in today (window ${s.settings.checkinWindow.start}–${s.settings.checkinWindow.end}). Consider calling her.`, link: "/app/guardian",
+        detail: `Maggie hasn't checked in ${w.date === today ? "today" : "last night"} (window ${s.settings.checkinWindow.start}–${s.settings.checkinWindow.end}). Consider calling her.`, link: "/app/guardian",
       });
     }
   }
@@ -90,10 +162,11 @@ export function evaluate(s: State) {
   const sos = activeSos(s);
   if (sos && sos.status === "active") {
     const elapsed = (now.getTime() - new Date(sos.startedAt).getTime()) / 60000;
-    const step = Math.min(s.settings.escalation.length - 1, Math.floor(elapsed / s.settings.escalationDelayMin));
+    const order = away.escalationOrder(s); // CC-229: the backup takes Sarah's place while she's away
+    const step = Math.min(order.length - 1, Math.floor(elapsed / s.settings.escalationDelayMin));
     if (step > sos.step) {
       sos.step = step;
-      const who = nameOf(s, s.settings.escalation[step]);
+      const who = nameOf(s, order[step]);
       pushAlert(s, {
         key: `sos-${sos.id}-step-${step}`, to: ["guardian", "caregiver"], severity: "critical",
         title: "Emergency alert from Circle Care",
@@ -117,10 +190,10 @@ export function evaluate(s: State) {
   for (const e of recent(10)) if (e.action === "denied") denials.set(e.actorId, (denials.get(e.actorId) ?? 0) + 1);
   const bucket = Math.floor(now.getTime() / (10 * 60000));
   for (const [actorId, n] of views) {
-    if (n >= 8) pushAlert(s, { key: `sec-bulk-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", title: "Circle Care security notice", detail: `Unusual activity: ${nameOf(s, actorId)} opened ${n} parts of Maggie's records in 5 minutes. If this wasn't expected, remove their access in Care circle.`, link: "/app/guardian/circle" });
+    if (n >= 8) pushAlert(s, { key: `sec-bulk-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", urgent: true, title: "Circle Care security notice", detail: `Unusual activity: ${nameOf(s, actorId)} opened ${n} parts of Maggie's records in 5 minutes. If this wasn't expected, remove their access in Care circle.`, link: "/app/guardian/circle" });
   }
   for (const [actorId, n] of denials) {
-    if (n >= 3) pushAlert(s, { key: `sec-deny-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", title: "Circle Care security notice", detail: `${nameOf(s, actorId)} tried ${n} times to open information their role doesn't allow.`, link: "/app/guardian/circle" });
+    if (n >= 3) pushAlert(s, { key: `sec-deny-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", urgent: true, title: "Circle Care security notice", detail: `${nameOf(s, actorId)} tried ${n} times to open information their role doesn't allow.`, link: "/app/guardian/circle" });
   }
 
   // Abnormal heart rate or blood oxygen (CC-86, CC-88): the guardian is told, if Maggie shares readings.
@@ -129,39 +202,109 @@ export function evaluate(s: State) {
     for (const e of detectEvents(readings, s.settings.vitals.thresholds)) {
       const o = s.health.overrides.find((x) => x.at === e.at);
       pushAlert(s, {
-        key: `vital-${e.metric}-${e.at}`, to: ["guardian"], severity: e.kind === "high" || e.kind === "low" ? "warning" : "info",
+        // A reading outside Maggie's thresholds still comes at once in quiet hours (CC-208).
+        key: `vital-${e.metric}-${e.at}`, to: ["guardian"], severity: e.kind === "high" || e.kind === "low" ? "warning" : "info", urgent: e.kind === "high" || e.kind === "low",
         title: "Circle Care health notice",
         detail: `${e.label} at ${fmtTime(e.at)}. Open Health to see the trend.`, link: "/app/guardian/health",
       }, o?.addedAt ?? e.at);
     }
   }
 
+  // Low medicine supply (CC-121): one alert per bottle, and an orange refill entry on the
+  // Calendar 3 days before it runs out. Asking for or picking up a refill stops repeats.
+  for (const { med, days, refillOn } of lowSupply(s)) {
+    const bottle = bottleOf(med);
+    pushAlert(s, {
+      key: `supply-${med.id}-${bottle}`, to: ["guardian", "caregiver"], severity: "warning",
+      title: "You have a reminder from Circle Care",
+      detail: `${med.name}: ${days} ${days === 1 ? "day" : "days"} left. Request a refill from ${med.supply!.pharmacy ?? "the pharmacy"}.`, link: "/app/guardian/meds",
+    });
+    const id = autoRefillId(med);
+    const mine = s.appointments.find((a) => a.id === id);
+    // Resumed after a pause: bring back an entry Circle Care cancelled (never one a person cancelled).
+    if (mine?.status === "cancelled" && mine.autoCancelled) { mine.status = "scheduled"; mine.date = refillOn; mine.autoCancelled = undefined; }
+    const covered = s.appointments.some((a) => a.id === id || (a.kind === "refill" && a.status === "scheduled" && a.medIds.includes(med.id) && a.date >= today && a.date <= refillOn));
+    if (!covered) {
+      s.appointments.push({
+        id, date: refillOn, time: "10:00", durationMin: 15, kind: "refill", title: `Refill ${med.name}`,
+        provider: med.supply!.pharmacy ?? "Pharmacy", location: "Call or use the pharmacy app", medIds: [med.id],
+        prep: `About ${days} days of ${med.name} left. Added automatically 3 days before it runs out.`, status: "scheduled", createdBy: "system",
+      });
+    }
+  }
+
+  // A paused or removed medicine doesn't need its automatic refill entry (CC-121).
+  for (const a of s.appointments) {
+    if (!a.id.startsWith("appt-auto-") || a.status !== "scheduled") continue;
+    const med = s.meds.find((m) => a.medIds.includes(m.id));
+    if (!med || med.paused) { a.status = "cancelled"; a.autoCancelled = true; }
+  }
+
+  // Daily check-ins (CC-142): at most one gentle reminder a day, only if Maggie added nothing.
+  if (nowMin >= toMin("19:00") && !hasLoggedToday(s)) {
+    pushAlert(s, { key: `daily-elder-${today}`, to: ["elder"], severity: "info", title: "You have a reminder from Circle Care", detail: "If you like, tap how you feel, your water and your meals. You can skip it.", link: "/app/elder" });
+  }
+  // No meals logged for two days (CC-143): a gentle note to Sarah, only while Maggie shares check-ins.
+  if (dailyShared(s) && mealsGap(s)) {
+    pushAlert(s, { key: `meals-${today}`, to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: "Maggie hasn't logged meals for 2 days. A quick call might help.", link: "/app/guardian/health#wellbeing" });
+  }
+
+  // Evening recap (CC-191): one notification for Sarah at 7 PM, with no health details on the lock screen.
+  // Skipped for the day when she turned it off or her quiet hours cover 7 PM. If the app first runs later that
+  // evening, it catches up until 11 PM, but never inside quiet hours (Review F4-3, F4-13). The card shows either way.
+  if (s.settings.recapNotify !== false && nowMin >= toMin(RECAP_NOTIFY_AT) && nowMin < toMin(RECAP_LAST_CALL) && !inQuietHours(s.settings.quietHours, toMin(RECAP_NOTIFY_AT)) && !inQuietHours(s.settings.quietHours, nowMin)) {
+    pushAlert(s, { key: `recap-${today}`, to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: "Your evening recap is ready.", link: "/app/guardian#recap" });
+  }
+
   // Time-bound access ends automatically (CC-25).
   for (const m of s.members) {
     if (m.expiresOn && m.status === "active" && m.expiresOn < today) {
       m.status = "revoked";
+      leaveChat(s, m.id);
       audit(s, "system", "removed", `${m.name}'s access (time limit ended)`);
     }
   }
+
+  // CC-209, CC-210: the Help board's 24-hour notice and "Did this happen?" question.
+  help.runHelp(s);
+
+  // CC-213, CC-214: the coming-home plan's day-before notice, follow-up reminder and archive.
+  plans.runPlans(s);
+
+  // CC-218: one reminder to whoever went, two days after a visit with no notes.
+  visitNotes.runVisitNotes(s);
+
+  // CC-227: a call's follow-up: a reminder the day before, then Sarah hears if it's past its day.
+  callLog.runCalls(s);
+
+  // CC-208: when quiet hours end, what waited overnight goes out as one morning summary.
+  releaseHeld(s);
+
+  // CC-199 review: the next run can tell which of yesterday's steps came due while the app was asleep.
+  s.lastRunAt = now.toISOString();
+}
+
+/**
+ * The rules engine's 15 second tick (CC-195). It re-runs the time-based rules and keeps the same state object
+ * when nothing changed, so a quiet tick neither re-renders nor saves.
+ */
+export function tick(prev: State): State {
+  const draft = structuredClone(prev);
+  evaluate(draft);
+  return JSON.stringify(draft) === JSON.stringify(prev) ? prev : draft;
 }
 
 function useStoreState(initial: State) {
   const [state, setState] = useState<State>(initial);
   const viewed = useRef<Record<string, number>>({});
-  const saveTimer = useRef<number>(0);
   const latest = useRef(state);
   latest.current = state;
 
-  // Encrypted, debounced save (CC-26). Flushed when the page is hidden or closed.
-  useEffect(() => {
-    window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => { persist(state).catch(() => {}); }, 250);
-  }, [state]);
-  useEffect(() => {
-    const flush = () => { persist(latest.current).catch(() => {}); };
-    window.addEventListener("pagehide", flush);
-    return () => window.removeEventListener("pagehide", flush);
-  }, []);
+  // Encrypted save (CC-26), started as soon as the state changes (CC-195). Also saved when the page is hidden or closed.
+  useEffect(() => { saver.changed(state).catch(() => {}); }, [state]);
+  useEffect(() => saveWhenPageGoes(() => { saver.flush().catch(() => {}); }), []);
+  // Screens that show time (a dose coming due, "5 min ago") re-render on the tick even when the state is unchanged.
+  const [, setBeat] = useState(0);
 
   const update = useCallback((fn: Updater) => {
     setState((prev) => {
@@ -174,10 +317,10 @@ function useStoreState(initial: State) {
 
   // Tick the rules engine so time-based escalations fire while the app is open.
   useEffect(() => {
-    update(() => {});
-    const t = setInterval(() => update(() => {}), 15000);
+    setState(tick);
+    const t = setInterval(() => { setState(tick); setBeat((b) => b + 1); }, 15000);
     return () => clearInterval(t);
-  }, [update]);
+  }, []);
 
   const me = meId(state.persona);
 
@@ -204,23 +347,56 @@ function useStoreState(initial: State) {
         pushAlert(s, { to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, actor(s))} signed out of Circle Care on all devices.` });
       }),
       lockedOut: (p: Persona) => update((s) => {
-        pushAlert(s, { to: [p], severity: "warning", title: "Circle Care security notice", detail: "Sign-in was locked for 15 minutes after 5 incorrect codes. If this wasn't you, change your password." });
+        pushAlert(s, { to: [p], severity: "warning", urgent: true, title: "Circle Care security notice", detail: "Sign-in was locked for 15 minutes after 5 incorrect codes. If this wasn't you, change your password." });
         audit(s, meId(p), "denied", "sign-in (5 incorrect codes)");
       }),
       resetDemo: () => { setState(seed()); viewed.current = {}; },
       /** CC-33: close the circle and delete its data from this device, including the encryption key. */
       closeCircle: async () => {
         if (!can(latest.current, meId(latest.current.persona), "delete", "data")) { update((s) => { audit(s, actor(s), "denied", "delete data"); }); return; }
-        await wipeDevice([STATE_KEY]);
+        // No save may land while the data and key are wiped, or it could bring the circle back (CC-195).
+        saver.pause();
         try {
-          const log = JSON.parse(localStorage.getItem("circle-care-deletions") ?? "[]") as string[];
-          localStorage.setItem("circle-care-deletions", JSON.stringify([...log, new Date().toISOString()]));
-        } catch { /* ignore */ }
-        setState(seed());
-        viewed.current = {};
+          await wipeDevice([STATE_KEY]);
+          try {
+            const log = JSON.parse(localStorage.getItem("circle-care-deletions") ?? "[]") as string[];
+            localStorage.setItem("circle-care-deletions", JSON.stringify([...log, new Date().toISOString()]));
+          } catch { /* ignore */ }
+          setState(seed());
+          viewed.current = {};
+        } finally {
+          saver.resume();
+        }
       },
       skipAhead: (min: number) => update((s) => { s.clockOffsetMin += min; }),
-      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen") => update((s) => {
+      simulate: (what: "late-caregiver" | "missed-checkin" | "missed-dose" | "suspicious-access" | "old-request" | "heart-rate" | "oxygen" | "low-supply" | "no-meals" | "nothing-logged") => update((s) => {
+        if (what === "low-supply") {
+          // CC-121 demo: Metformin down to 7 days (2 a day) on a fresh count.
+          const m = s.meds.find((x) => x.id === "med-metformin")!;
+          m.supply = { perDose: 1, pharmacy: "Fog City Pharmacy", count: 14, countedAt: clock(s).toISOString(), requestedAt: undefined };
+          return;
+        }
+        if (what === "no-meals") {
+          // CC-143 demo: no meals logged yesterday or the day before.
+          for (const d of [1, 2]) {
+            const date = ymd(addDays(clock(s), -d));
+            const at = clock(s).toISOString();
+            s.dailyLogs = [...s.dailyLogs.filter((l) => l.date !== date), { ...(s.dailyLogs.find((l) => l.date === date) ?? { date, water: 0, updatedAt: at }), meals: [] }];
+          }
+          s.alerts = s.alerts.filter((a) => a.key !== `meals-${todayOf(s)}`);
+          // The note waits until 9 AM, so the demo moves the clock there when it's earlier.
+          const min = minutesOfDay(clock(s));
+          if (min < toMin("09:00")) s.clockOffsetMin += toMin("09:00") - min;
+          return;
+        }
+        if (what === "nothing-logged") {
+          // CC-142 demo: Maggie hasn't added anything today, and it's 7 PM.
+          s.dailyLogs = s.dailyLogs.filter((l) => l.date !== todayOf(s));
+          s.alerts = s.alerts.filter((a) => a.key !== `daily-elder-${todayOf(s)}`);
+          const min = minutesOfDay(clock(s));
+          if (min < toMin("19:00")) s.clockOffsetMin += toMin("19:00") - min;
+          return;
+        }
         if (what === "heart-rate" || what === "oxygen") {
           const now = clock(s);
           const latest = readingsFor(todayOf(s), now, s.settings.vitals.intervalMin, s.health.overrides).at(-1);
@@ -262,16 +438,9 @@ function useStoreState(initial: State) {
         viewed.current[resource] = Date.now();
         update((s) => { if (s.persona) audit(s, actor(s), "viewed", resource); });
       },
-      recordDose: (medId: string, time: string, status: DoseStatus, reason?: string) => update((s) => {
-        if (!guard(s, "write", "doses")) return;
-        const today = todayOf(s);
-        const by = actor(s);
-        const visit = todayVisit(s, by);
-        const verified = s.persona === "caregiver" && !!visit?.checkIn && !visit?.checkOut;
-        s.doses = s.doses.filter((d) => !(d.medId === medId && d.date === today && d.time === time));
-        s.doses.push({ id: uid("dose"), medId, date: today, time, status, by, at: clock(s).toISOString(), verified, reason });
-        audit(s, by, "created", `a dose record (${s.meds.find((m) => m.id === medId)?.name})`);
-      }),
+      recordDose: (medId: string, time: string, status: DoseStatus, reason?: string, date?: string) => update((s) => logDose(s, actor(s), medId, time, status, reason, date)),
+      /** CC-207: Maggie snoozes a reminder for 15 minutes. */
+      snoozeDose: (medId: string, time: string, date?: string) => update((s) => { snoozeReminder(s, actor(s), medId, time, date); }),
       verifyDose: (medId: string, time: string) => update((s) => {
         if (!guard(s, "write", "doses")) return;
         const d = s.doses.find((d) => d.medId === medId && d.date === todayOf(s) && d.time === time);
@@ -293,7 +462,7 @@ function useStoreState(initial: State) {
           if (before.paused !== med.paused) changes.push(med.paused ? "paused" : "resumed");
           if (before.critical !== med.critical) changes.push(med.critical ? "marked high-priority" : "high-priority removed");
           if (before.instructions !== med.instructions) changes.push("instructions updated");
-          s.meds[i] = { ...med, history: [...before.history, { ...stamp, change: changes.join("; ") || "Details updated" }] };
+          s.meds[i] = { ...rebaseSupply(s, before, med), history: [...before.history, { ...stamp, change: changes.join("; ") || "Details updated" }] };
           audit(s, by, "updated", `medication ${med.name}`);
         }
         s.approvals.push({ id: uid("ap"), kind: "med-change", title: isNew ? `Added ${med.name}` : `Updated ${med.name}`, detail: "Changed directly by the guardian.", requestedBy: by, at: clock(s).toISOString(), status: "approved", decidedAt: clock(s).toISOString(), elderSeen: s.persona === "elder" });
@@ -322,7 +491,8 @@ function useStoreState(initial: State) {
           if (a.kind === "med-change" && p.med) {
             const med = p.med as Medication;
             const i = s.meds.findIndex((m) => m.id === med.id);
-            if (i >= 0) s.meds[i] = { ...med, history: [...s.meds[i].history, { at: a.decidedAt, by: GUARDIAN, change: `${a.title} (requested by ${nameOf(s, a.requestedBy)})` }] };
+            // Keep today's pill count: the request was made against an older copy of the medicine (CC-120).
+            if (i >= 0) s.meds[i] = { ...rebaseSupply(s, s.meds[i], withCurrentSupply(med, s.meds[i])), history: [...s.meds[i].history, { at: a.decidedAt, by: GUARDIAN, change: `${a.title} (requested by ${nameOf(s, a.requestedBy)})` }] };
           }
           if (a.kind === "med-change" && p.medId) {
             const med = s.meds.find((m) => m.id === p.medId);
@@ -380,7 +550,7 @@ function useStoreState(initial: State) {
         if (activeSos(s)) return;
         const e = { id: uid("sos"), startedAt: clock(s).toISOString(), status: "active" as const, step: 0, via };
         s.sos.push(e);
-        pushAlert(s, { key: `sos-${e.id}-step-0`, to: ["guardian", "caregiver"], severity: "critical", title: "Emergency alert from Circle Care", detail: `Maggie pressed SOS. Alerting ${nameOf(s, s.settings.escalation[0])} first.`, link: "/app/sos" });
+        pushAlert(s, { key: `sos-${e.id}-step-0`, to: ["guardian", "caregiver"], severity: "critical", title: "Emergency alert from Circle Care", detail: `Maggie pressed SOS. Alerting ${nameOf(s, away.escalationOrder(s)[0])} first.`, link: "/app/sos" });
       }),
       sosAcknowledge: () => update((s) => {
         if (!guard(s, "respond", "sos")) return;
@@ -488,6 +658,52 @@ function useStoreState(initial: State) {
         const a = s.appointments.find((x) => x.id === id);
         if (a) { a.status = status; audit(s, actor(s), "updated", `appointment “${a.title}” (${status})`); }
       }),
+      recordRefill: (medId: string, count: number) => update((s) => everyday.recordRefill(s, actor(s), medId, count)),
+      requestRefill: (medId: string) => update((s) => everyday.requestRefill(s, actor(s), medId)),
+      logDaily: (patch: everyday.DailyPatch) => update((s) => everyday.logDaily(s, actor(s), patch)),
+      setDailySharing: (on: boolean) => update((s) => everyday.setDailySharing(s, actor(s), on)),
+      sendChat: (text: string, via?: "voice") => update((s) => { everyday.sendChat(s, actor(s), text, via); }),
+      // CC-209, CC-210: the Help board.
+      postHelp: (input: help.HelpInput) => update((s) => { help.postHelp(s, actor(s), input); }),
+      repostHelp: (id: string) => update((s) => { help.repostHelp(s, actor(s), id); }),
+      cancelHelp: (id: string) => update((s) => { help.cancelHelp(s, actor(s), id); }),
+      claimHelp: (id: string, seenRev: number) => update((s) => { help.claimHelp(s, actor(s), id, seenRev); }),
+      releaseHelp: (id: string) => update((s) => { help.releaseHelp(s, actor(s), id); }),
+      finishHelp: (id: string) => update((s) => { help.finishHelp(s, actor(s), id); }),
+      notYetHelp: (id: string) => update((s) => { help.notYetHelp(s, actor(s), id); }),
+      // Sprint 17 (CC-211 – CC-214, CC-217).
+      askHelp: (input: help.AskInput) => update((s) => { help.askHelp(s, actor(s), input); }),
+      setHelpFrom: (ids: string[]) => update((s) => { help.setHelpFrom(s, actor(s), ids); }),
+      thank: (personId: string) => update((s) => { help.thankFor(s, actor(s), personId); }),
+      startPlan: (date: string) => update((s) => { plans.startPlan(s, actor(s), date); }),
+      renamePlanItem: (planId: string, itemId: string, title: string) => update((s) => { plans.renameItem(s, actor(s), planId, itemId, title); }),
+      addPlanItem: (planId: string, title: string) => update((s) => { plans.addItem(s, actor(s), planId, title); }),
+      removePlanItem: (planId: string, itemId: string) => update((s) => { plans.removeItem(s, actor(s), planId, itemId); }),
+      assignPlanItem: (planId: string, itemId: string, personId: string | null) => update((s) => { plans.assignItem(s, actor(s), planId, itemId, personId); }),
+      setFollowUpDays: (planId: string, days: number) => update((s) => { plans.setFollowUpDays(s, actor(s), planId, days); }),
+      addQuestion: (apptId: string, text: string) => update((s) => { questions.addQuestion(s, actor(s), apptId, text); }),
+      hideQuestion: (apptId: string, qid: string, hidden: boolean) => update((s) => { questions.hideQuestion(s, actor(s), apptId, qid, hidden); }),
+      moveQuestion: (apptId: string, qid: string, dir: -1 | 1) => update((s) => { questions.moveQuestion(s, actor(s), apptId, qid, dir); }),
+      removeQuestion: (apptId: string, qid: string) => update((s) => { questions.removeQuestion(s, actor(s), apptId, qid); }),
+      saveVisitNotes: (apptId: string, input: { answers: Record<string, string>; summary: string }) => update((s) => { visitNotes.saveNotes(s, actor(s), apptId, input); }),
+      addNextStep: (apptId: string, input: { text: string; owner: string; date: string }) => update((s) => { visitNotes.addNextStep(s, actor(s), apptId, input); }),
+      removeNextStep: (apptId: string, stepId: string) => update((s) => { visitNotes.removeNextStep(s, actor(s), apptId, stepId); }),
+      finishNextStep: (taskId: string) => update((s) => { visitNotes.finishNextStep(s, actor(s), taskId); }),
+      saveCall: (input: callLog.CallInput, id?: string) => update((s) => { callLog.saveCall(s, actor(s), input, id); }),
+      deleteCall: (id: string) => update((s) => { callLog.deleteCall(s, actor(s), id); }),
+      revealCallRef: (id: string) => update((s) => { callLog.revealRef(s, actor(s), id); }),
+      setAdminTo: (ids: string[]) => update((s) => { callLog.setAdminTo(s, actor(s), ids); }),
+      saveAboutSection: (key: AboutKey, text: string) => update((s) => { aboutMe.saveSection(s, actor(s), key, text); }),
+      setAboutSharing: (key: AboutKey, ids: string[]) => update((s) => { aboutMe.setSectionSharing(s, actor(s), key, ids); }),
+      setSarahEditing: (on: boolean) => update((s) => { aboutMe.setSarahEditing(s, actor(s), on); }),
+      seenAboutMe: () => update((s) => { aboutMe.markSeen(s, actor(s)); }),
+      setAway: (input: { start: string; end: string; backupId: string }) => update((s) => { away.setAway(s, actor(s), input); }),
+      answerAway: (yes: boolean) => update((s) => { away.answerAway(s, actor(s), yes); }),
+      askOtherBackup: () => update((s) => { away.maggieAsksChange(s, actor(s)); }),
+      imBack: () => update((s) => { away.imBack(s, actor(s)); }),
+      seenAwaySummary: () => update((s) => { away.seenSummary(s, actor(s)); }),
+      readChat: () => update((s) => everyday.readChat(s, actor(s))),
+      setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */
       setHealthSharing: (on: boolean) => update((s) => {
         if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "change health sharing"); return; }
@@ -510,20 +726,11 @@ function useStoreState(initial: State) {
         if (!m || m.role === "elder" || m.role === "guardian") return;
         m.status = "revoked";
         s.settings.escalation = s.settings.escalation.filter((x) => x !== id);
+        leaveChat(s, id);
         pushAlert(s, { to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, actor(s))} removed ${m.name} from the circle.` });
         audit(s, actor(s), "removed", `${m.name}'s access`);
       }),
-      settings: (patch: Partial<Settings>) => update((s) => {
-        const who = actor(s);
-        const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
-        if (!(elderOnly && who === ELDER) && !guard(s, "write", "settings")) return;
-        const wasPaused = s.settings.sharingPaused;
-        s.settings = { ...s.settings, ...patch };
-        if (patch.sharingPaused !== undefined && patch.sharingPaused !== wasPaused) {
-          pushAlert(s, { to: ["guardian", "caregiver"], severity: "info", title: "Update from Circle Care", detail: patch.sharingPaused ? "Maggie paused sharing. Only emergency alerts are shared until she resumes." : "Maggie resumed sharing with the circle." });
-          audit(s, who, "updated", patch.sharingPaused ? "sharing (paused)" : "sharing (resumed)");
-        }
-      }),
+      settings: (patch: Partial<Settings>) => update((s) => { applySettings(s, actor(s), patch); }),
       /** CC-22: consent by the elder, or by her guardian on her behalf with a documented reason. */
       acceptConsent: (onBehalfReason?: string) => update((s) => {
         const who = actor(s);
@@ -542,13 +749,15 @@ function useStoreState(initial: State) {
   return { state, actions, me };
 }
 
-async function persist(state: State) {
-  if (cryptoAvailable()) await saveEncrypted(STATE_KEY, state);
-  else localStorage.setItem(STATE_KEY, JSON.stringify(state));
-}
-
+const saver = createSaver<State>(
+  (state) => (cryptoAvailable() ? encryptForStorage(state) : JSON.stringify(state)),
+  (encoded) => localStorage.setItem(STATE_KEY, encoded),
+);
 async function loadState(): Promise<State> {
   try {
+    // Start loading the device key now, so the first save after a change isn't held up by it (CC-195).
+    // Not awaited: a slow or blocked IndexedDB must not keep the app from opening.
+    if (cryptoAvailable()) deviceKey().catch(() => {});
     const s = cryptoAvailable() ? await loadEncrypted<State>(STATE_KEY) : (JSON.parse(localStorage.getItem(STATE_KEY) ?? "null") as State | null);
     if (s && s.version === STATE_VERSION) return s;
   } catch {

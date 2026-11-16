@@ -4,12 +4,17 @@ import { Sun, Pill, ListChecks, UserRound, Bell, ChevronRight, AlertTriangle, Si
 import { useStore, GUARDIAN } from "../../data/store";
 import { can } from "../../data/policy";
 import { readingsFor, detectEvents } from "../../lib/health";
-import { clock, dosesFor, tasksFor, checkinToday, checkinMissed, caregiverOnShift, alertsFor, pendingApprovals, lateCheckins, coverageGaps, member, nameOf, feed, activeSos, northStar, checkinStreak, todayOf } from "../../data/selectors";
+import { clock, dosesFor, lastNightDoses, tasksFor, checkinToday, checkinMissed, checkinMissedLastNight, caregiverOnShift, alertsFor, pendingApprovals, lateCheckins, coverageGaps, member, nameOf, feed, activeSos, northStar, checkinStreak, todayOf } from "../../data/selectors";
 import { Avatar, Ring } from "../../components/ui";
 import { fmtTime, greeting, fmtShortDay, relative } from "../../lib/time";
+import { PackageOpen } from "lucide-react";
+import { lowSupply, sharedLogFor, feelingOf, recapOpen } from "../../data/everyday";
+import { EveningRecap } from "../../components/guardianEveryday";
 import "./guardian.css";
+import { MyNextSteps } from "../../components/visitNotes";
+import { AwayHome } from "../../components/away";
 
-/** CC-61 "today at a glance" dashboard. */
+/** CC-61 "today at a glance" dashboard. Sprint 12: low supply (CC-121). */
 export default function GuardianHome() {
   const { state, actions } = useStore();
   const now = clock(state);
@@ -19,12 +24,17 @@ export default function GuardianHome() {
   const tasks = tasksFor(state);
   const tasksDone = tasks.filter((t) => t.done).length;
   const ci = checkinToday(state);
+  const ciLastNight = checkinMissedLastNight(state);
+  // CC-143: today's feeling, water and meals, only while Maggie shares them.
+  const log = sharedLogFor(state);
+  const feeling = feelingOf(log?.feeling);
   const cg = caregiverOnShift(state);
   const unread = alertsFor(state, "guardian").filter((a) => !a.read.includes("guardian")).length;
   const elder = member(state, state.elderId);
   const sos = activeSos(state);
 
   useEffect(() => { actions.logView("the dashboard"); }, [actions]);
+  useEffect(() => { if (log) actions.logView("daily check-ins"); }, [actions, !!log]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Health and calendar tiles (CC-84, CC-94).
   const health = (() => {
@@ -38,11 +48,15 @@ export default function GuardianHome() {
   type Attn = { key: string; icon: typeof AlertTriangle; color: string; title: string; sub: string; to: string };
   const attention: Attn[] = [];
   if (sos) attention.push({ key: "sos", icon: Siren, color: "var(--red)", title: "Maggie pressed SOS", sub: `${fmtTime(sos.startedAt)} · ${sos.status === "active" ? "No one has responded yet" : `${nameOf(state, sos.responderId)} is responding`}`, to: "/app/guardian/sos" });
+  // CC-199: last night's doses still being followed up after midnight come first, labelled as from last night.
+  for (const d of lastNightDoses(state).filter((d) => d.state === "escalated" || d.state === "late")) attention.push({ key: `${d.date}-${d.key}`, icon: Pill, color: d.state === "escalated" ? "var(--red)" : "var(--elder)", title: `${d.med.name} not confirmed`, sub: `Due last night at ${fmtTime(d.time)}${d.med.critical ? " · high priority" : ""}`, to: "/app/guardian/feed" });
   for (const d of dosesFor(state).filter((d) => d.state === "escalated" || d.state === "late")) attention.push({ key: d.key, icon: Pill, color: d.state === "escalated" ? "var(--red)" : "var(--elder)", title: `${d.med.name} not confirmed`, sub: `Due ${fmtTime(d.time)} · ${d.minutesLate} min ago${d.med.critical ? " · high priority" : ""}`, to: "/app/guardian/feed" });
+  if (ciLastNight) attention.push({ key: "ci-last-night", icon: Sun, color: "var(--elder)", title: "Maggie didn't check in last night", sub: `Window ended at ${fmtTime(state.settings.checkinWindow.end)} — consider calling`, to: "/app/guardian/feed" });
   if (checkinMissed(state)) attention.push({ key: "ci", icon: Sun, color: "var(--elder)", title: "Maggie hasn't checked in", sub: `Window ended at ${fmtTime(state.settings.checkinWindow.end)} — consider calling`, to: "/app/guardian/feed" });
   for (const s of lateCheckins(state)) attention.push({ key: `late-${s.id}`, icon: Clock3, color: "var(--elder)", title: `${nameOf(state, s.caregiverId)} hasn't arrived`, sub: `Shift started at ${fmtTime(s.start)}`, to: "/app/guardian/schedule" });
   // CC-59: hand-offs nobody has read yet.
   for (const h of state.handoffs.filter((h) => !h.acknowledgedAt && now.getTime() - new Date(h.at).getTime() < 3 * 86400000)) attention.push({ key: `ho-${h.id}`, icon: ClipboardList, color: "var(--care)", title: `${nameOf(state, h.by)}'s hand-off hasn't been read`, sub: `Sent ${relative(h.at, now)} · the next caregiver will see it when they check in`, to: "/app/guardian/feed" });
+  for (const l of lowSupply(state)) attention.push({ key: `supply-${l.med.id}`, icon: PackageOpen, color: "#eb6834", title: `${l.med.name}: ${l.days} ${l.days === 1 ? "day" : "days"} left`, sub: `${!l.calendarOn ? "Not on the Calendar yet" : `Refill on the Calendar for ${l.calendarOn === todayOf(state) ? "today" : fmtShortDay(l.calendarOn)}`} · tap to request it`, to: "/app/guardian/meds" });
   const pend = pendingApprovals(state);
   if (pend.length) attention.push({ key: "ap", icon: ClipboardList, color: "var(--guard)", title: `${pend.length} ${pend.length === 1 ? "request needs" : "requests need"} your approval`, sub: pend.map((p) => p.title).join(" · "), to: "/app/guardian/approvals" });
   const gaps = coverageGaps(state, 7);
@@ -59,11 +73,17 @@ export default function GuardianHome() {
         </div>
       </div>
 
+      <AwayHome />
+
+      <MyNextSteps />
+
       <div className="tiles">
         <Link to="/app/guardian/feed" className="tile-s">
           <span className="row between"><span className="tile-k"><Sun size={16} /> Check-in</span>{ci ? <CheckCircle2 color="var(--green)" size={22} /> : null}</span>
-          <span className="tile-v">{ci ? `I'm OK ${ci.mood ?? ""}` : checkinMissed(state) ? "Missed" : "Not yet"}</span>
-          <span className="tile-sub">{ci ? `at ${fmtTime(ci.at)} · ${checkinStreak(state)}-day streak` : `Window ${fmtTime(state.settings.checkinWindow.start)}–${fmtTime(state.settings.checkinWindow.end)}`}</span>
+          <span className="tile-v">{ci ? "I'm OK" : checkinMissed(state) || ciLastNight ? "Missed" : "Not yet"}</span>
+          <span className="tile-sub">{ci ? `at ${fmtTime(ci.at)} · ${checkinStreak(state)}-day streak` : `${ciLastNight ? "Last night's window" : "Window"} ${fmtTime(state.settings.checkinWindow.start)}–${fmtTime(state.settings.checkinWindow.end)}`}</span>
+          {log && log.private && <span className="tile-sub">Daily check-in not shared today</span>}
+          {log && !log.private && <span className="tile-sub">{feeling ? `Feeling ${feeling.label.toLowerCase()} · ` : ""}{log.water} {log.water === 1 ? "glass" : "glasses"} · {log.meals.length} of 3 meals</span>}
         </Link>
         <Link to="/app/guardian/meds" className="tile-s">
           <span className="tile-k"><Pill size={16} /> Medicines</span>
@@ -100,6 +120,8 @@ export default function GuardianHome() {
           <span className="tile-sub">Notifications never show health details</span>
         </Link>
       </div>
+
+      {recapOpen(state) && <EveningRecap state={state} />}
 
       {attention.length > 0 && (
         <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>

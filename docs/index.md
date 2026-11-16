@@ -14,7 +14,7 @@
 | **Problem** | Care for an older adult at home is split across texts, paper notes, phone calls and memory. Doses get missed or doubled, nobody knows who is covering tonight, and the older adult loses privacy and control. |
 | **Answer** | A shared daily plan, gentle reminders, verified caregiver check-ins, a self-drafting shift hand-off, a hold-to-send SOS that escalates until someone answers, and a Privacy Center where the elder sees and controls access. |
 | **Principles** | Privacy-first · Elder in control · Minimum necessary access. |
-| **Status** | Working prototype **v0.4**. Runs entirely in the browser with encrypted demo data. No backend, no real notifications, not for real patients. |
+| **Status** | Working prototype **v0.4**. Care data runs entirely in the browser with encrypted demo data; an accounts server handles sign-in, profiles and test payment methods. No real notifications, not for real patients. |
 | **North Star** | *Verified care tasks completed on time per week* — shown on the guardian's home screen and weekly digest. |
 
 <figure markdown="span">
@@ -129,7 +129,7 @@ Unfamiliar terms (care circle, POA, PHI, escalation chain, hand-off…) are defi
 
 | Link | Where |
 |---|---|
-| Live demo | Your Replit URL (published as a static deployment from this repo; see [System overview](wiki/architecture/system-overview.md#build-and-deploy)) |
+| Live demo | Your Replit URL (published as an autoscale deployment (staging) from this repo; see [System overview](wiki/architecture/system-overview.md#build-and-deploy)) |
 | Source code | [github.com/sumanth1996/circle-care](https://github.com/sumanth1996/circle-care) |
 | Roadmap, epics and user stories | Notion — *Circle Care — Product Hub* (private workspace; story IDs `CC-n` match this wiki) |
 | Demo MFA code | `482913` |

@@ -11,16 +11,19 @@ These drafts are also published in the **Circle Care Product Wiki** (MkDocs site
 
 | Story | Doc | What it is | Needs human action |
 |---|---|---|---|
-| CC-1 | [research/01-recruiting-screener.md](research/01-recruiting-screener.md) | Recruiting channels, screener per persona, quotas, consent outline, incentive, de-identification, tracker | Yes — recruit, get consent text reviewed, fund incentives |
-| CC-2 | [research/02-interview-guide-elders.md](research/02-interview-guide-elders.md) | Elder interview guide with prototype concept test and hypotheses | Yes — pilot the guide, run 6+ interviews, write safety protocol |
-| CC-3 | [research/03-interview-guide-caregivers.md](research/03-interview-guide-caregivers.md) | Caregiver interview guide (workload, verification) | Yes — get agency permissions, run 6+ interviews |
-| CC-4 | [research/04-interview-guide-guardians.md](research/04-interview-guide-guardians.md) | Guardian interview guide (verification, autonomy, authority) | Yes — run 5+ interviews |
+| CC-1, CC-197 | [research/01-recruiting-screener.md](research/01-recruiting-screener.md) | Recruiting channels, screener per persona, quotas, consent outline, incentive, de-identification, tracker | Yes — recruit, get consent text reviewed, fund incentives |
+| CC-2, CC-197 | [research/02-interview-guide-elders.md](research/02-interview-guide-elders.md) | Elder interview guide with prototype concept tests (including the features built since October) and hypotheses | Yes — pilot the guide, run 6+ interviews, write safety protocol |
+| CC-3, CC-197 | [research/03-interview-guide-caregivers.md](research/03-interview-guide-caregivers.md) | Caregiver interview guide (workload, verification, refills and chat) | Yes — get agency permissions, run 6+ interviews |
+| CC-4, CC-197 | [research/04-interview-guide-guardians.md](research/04-interview-guide-guardians.md) | Guardian interview guide (verification, autonomy, authority, evening recap) | Yes — run 5+ interviews |
 | CC-5 | [research/05-journey-maps.md](research/05-journey-maps.md) | Hypothesis journeys per persona + affinity-mapping synthesis process | Yes — replace hypotheses with evidence after interviews |
 | CC-6 | [research/06-opportunity-solution-tree.md](research/06-opportunity-solution-tree.md) | North Star, opportunities, solutions, assumption tests (mermaid) | Yes — run assumption tests, re-rank after research |
 | CC-7 | [research/07-competitive-teardown.md](research/07-competitive-teardown.md) | Teardown framework, comparison table, positioning gaps | Yes — verify every product fact before publishing |
-| CC-8 | [compliance/08-regulatory-memo.md](compliance/08-regulatory-memo.md) | HIPAA / FTC / state law / TCPA / ADA / guardianship applicability | Yes — counsel review; answer Q1–Q13 |
-| CC-9 | [compliance/09-data-inventory.md](compliance/09-data-inventory.md) | Every data element in `types.ts` + pilot store, classified | Yes — security officer and counsel sign-off on classes and retention |
-| CC-10 | [security/10-threat-model.md](security/10-threat-model.md) | STRIDE threat model with DFD; prototype vs. production | Yes — engineering security review once architecture is chosen |
+| CC-1 | [research/08-outreach-kit.md](research/08-outreach-kit.md), [research/09-recruiting-tracker.csv](research/09-recruiting-tracker.csv) | Outreach templates, flyer, phone script and the ID-only tracker for Sprint 15 recruiting | Yes — name an owner, send outreach |
+| CC-2 to CC-4 | [research/10-fieldwork-plan.md](research/10-fieldwork-plan.md) | Session schedule, run sheet, draft safety protocol, storage | Yes — staff the sessions, review the protocol |
+| CC-5 | [research/11-synthesis-kit.md](research/11-synthesis-kit.md) | Saturation check, hypothesis scorecard, journey-map check script | Yes — run the checks |
+| CC-8 | [compliance/08-regulatory-memo.md](compliance/08-regulatory-memo.md) | HIPAA / FTC / state law / TCPA / ADA / guardianship applicability | Yes — counsel review; answer Q1–Q25 |
+| CC-9 | [compliance/09-data-inventory.md](compliance/09-data-inventory.md) | Every field in `types.ts`, every Postgres column and the pilot store, classified (checked by `classification.test.ts`; reviewed 2026-11-15) | Yes — security officer and counsel sign-off on classes and retention |
+| CC-10 | [security/10-threat-model.md](security/10-threat-model.md) | STRIDE threat model of the architecture as built, per component, with the code behind each control (checked by `threat-model.test.ts`; reviewed 2026-11-15) | Yes — engineering security review and security officer sign-off |
 | CC-18 | [security/permission-matrix.md](security/permission-matrix.md) | Readable rendering of `MATRIX` in `src/data/policy.ts` | Partly — decide open design questions; close coverage gaps; build server-side enforcement |
 | CC-30 | [compliance/30-vendor-baa-register.md](compliance/30-vendor-baa-register.md) | Vendor and BAA register template | Yes — pick vendors, assign owners, sign BAAs |
 | CC-34 | [security/34-incident-response-runbook.md](security/34-incident-response-runbook.md) | Severity levels, roles, playbooks, notification table, tabletop script | Yes — assign roles, confirm timelines with counsel, run tabletop |
@@ -32,9 +35,9 @@ These drafts are also published in the **Circle Care Product Wiki** (MkDocs site
 
 These came from reading the code, not from research:
 
-1. ~~Several store actions bypassed the permission check.~~ **Fixed Oct 19, 2026:** every data-changing action is now checked (a new `handoffs` resource covers hand-offs; elder-only and member-specific actions check the actor). See [permission matrix](security/permission-matrix.md#coverage-gaps-prototype).
+1. ~~Several store actions bypassed the permission check.~~ **Fixed Oct 19, 2026:** most data-changing actions are now checked (a new `handoffs` resource covers hand-offs; elder-only and member-specific actions check the actor). The gaps left (`acceptInvite`, the role passed to `invite`, the review queue) are threat C2-E1 in the threat model and move to CC-202. See [permission matrix](security/permission-matrix.md#coverage-gaps-prototype).
 2. The elder cannot read guardian-only notes (`notes.private`), which conflicts with "her data, her decision" and may conflict with a right of access.
-3. The CSP is a `<meta>` tag, so it can't block framing; clickjacking protection needs an HTTP header from the host (the misleading `vite.config.ts` comment has been corrected).
+3. ~~The CSP is a `<meta>` tag, so it can't block framing.~~ **Fixed:** the server now sends the CSP with `frame-ancestors 'none'` and `X-Frame-Options: DENY` as HTTP headers (`server/app.ts`).
 4. ~~No committed axe-core or Playwright scripts.~~ **Fixed:** `tests/e2e/e2e.py` (29 scenarios) and `tests/e2e/a11y.py` (24 screens) are committed; see `tests/e2e/README.md`.
 5. The `/pilot` form collects name and contact but the prototype discards them; production needs a separate, deletable contact store.
 

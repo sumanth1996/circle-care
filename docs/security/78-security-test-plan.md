@@ -38,7 +38,7 @@ Target: **OWASP ASVS Level 2** for web/API and **OWASP MASVS** (L1 + R where rel
 
 | Check | Result | Evidence | Limits |
 |---|---|---|---|
-| Content Security Policy | Added to production builds via a Vite plugin that injects a `<meta>` CSP and `no-referrer` (`vite.config.ts`): `default-src 'self'`, `script-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `connect-src 'self'` | `vite.config.ts` | Meta CSP cannot set `frame-ancestors`, so anti-framing needs an HTTP header (code comment corrected). `style-src 'unsafe-inline'` remains |
+| Content Security Policy | Added to production builds via a Vite plugin that injects a `<meta>` CSP and `no-referrer` (`vite.config.ts`): `default-src 'self'`, `script-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `connect-src 'self'` | `vite.config.ts` | Meta CSP cannot set `frame-ancestors`, so the server sends the policy as an HTTP header with `frame-ancestors 'none'` (`server/app.ts`). `style-src 'unsafe-inline'` remains |
 | Dependency audit | `npm audit` reported **0 vulnerabilities** on 2026-10-19 | Command output, re-run during this doc's preparation | Point-in-time; add to CI |
 | Unit tests | `vitest` — **180 tests passed** in 4 files (policy, rules, audit, sha256) on 2026-10-19 | `npm test` | Tests the client data layer, not a server |
 | Permission matrix tests | One test per resource × action × role, plus pro on/off shift, revoked users, pause sharing, reviewer | `src/__tests__/policy.test.ts` | Some store actions are not routed through `can()` — see permission matrix "Coverage gaps" |
@@ -94,5 +94,5 @@ Any finding that exposes PHI across circles is treated as Critical regardless of
 
 - [ ] Commission the external pen test once a staging environment exists (not yet commissioned).
 - [ ] Commit axe-core and Playwright test files.
-- [ ] Add CSP as an HTTP header with `frame-ancestors 'none'`.
+- [x] Add CSP as an HTTP header with `frame-ancestors 'none'` (`server/app.ts`).
 - [ ] Add CI security checks.

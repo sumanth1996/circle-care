@@ -88,6 +88,13 @@ nav:
       - Alerts & notifications: wiki/features/alerts-and-notifications.md
       - Pilot & feedback: wiki/features/pilot-and-feedback.md
       - Accounts, identity & payments: wiki/features/accounts-identity-payments.md
+      - Help board: wiki/features/help-board.md
+      - Coming Home: wiki/features/coming-home.md
+      - Visit questions: wiki/features/visit-questions.md
+      - After-visit notes: wiki/features/after-visit-notes.md
+      - Call log: wiki/features/call-log.md
+      - What matters to me: wiki/features/what-matters-to-me.md
+      - Away mode: wiki/features/away-mode.md
   - Architecture & Security:
       - System overview: wiki/architecture/system-overview.md
       - Data model: wiki/architecture/data-model.md
@@ -105,6 +112,9 @@ nav:
           - CC-5 Journey maps: research/05-journey-maps.md
           - CC-6 Opportunity solution tree: research/06-opportunity-solution-tree.md
           - CC-7 Competitive teardown: research/07-competitive-teardown.md
+          - CC-1 Outreach kit: research/08-outreach-kit.md
+          - CC-2 to CC-4 Fieldwork plan: research/10-fieldwork-plan.md
+          - CC-5 Synthesis kit: research/11-synthesis-kit.md
       - Compliance:
           - CC-8 Regulatory memo: compliance/08-regulatory-memo.md
           - CC-9 Data inventory: compliance/09-data-inventory.md
@@ -120,3 +130,16 @@ nav:
   - Contributing:
       - How to contribute: wiki/how-to-contribute.md
       - "Code review: Sprint 11": reviews/2026-10-25-sprint-11-accounts-identity-payments.md
+      - "Code review: Sprint 12, refill tracker": reviews/2026-11-14-sprint-12-refill-tracker.md
+      - "Code review: Sprint 12, daily check-ins": reviews/2026-11-14-sprint-12-daily-checkins.md
+      - "Code review: Sprint 12, family chat": reviews/2026-11-14-sprint-12-family-chat.md
+      - "Code review: Sprint 12, evening recap": reviews/2026-11-14-sprint-12-evening-recap.md
+      - "Code review: Sprint 13, chat check": reviews/2026-11-14-sprint-13-chat-check.md
+      - "Code review: Sprint 13, architecture wiki": reviews/2026-11-14-sprint-13-architecture-wiki.md
+      - "Code review: Sprint 13, browser tests": reviews/2026-11-14-sprint-13-browser-tests.md
+      - "Code review: Sprint 14, data inventory": reviews/2026-11-15-sprint-14-data-inventory.md
+      - "Code review: Sprint 14, threat model": reviews/2026-11-15-sprint-14-threat-model.md
+      - "Code review: Sprint 14, browser tests hardening": reviews/2026-11-15-sprint-14-browser-tests-hardening.md
+      - "Code review: Sprint 14, save before the tab closes": reviews/2026-11-15-sprint-14-save-before-close.md
+      - "Code review: Sprint 14, regulatory memo": reviews/2026-11-15-sprint-14-regulatory-memo.md
+      - "Code review: Sprint 14, research kit": reviews/2026-11-15-sprint-14-research-kit.md

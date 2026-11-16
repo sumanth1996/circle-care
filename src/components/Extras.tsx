@@ -66,6 +66,10 @@ const TOURS: Record<Persona, { title: string; body: string }[]> = {
     { title: "Check in when you arrive", body: "Maggie's care details open when you check in and close again when you leave." },
     { title: "Hand off in a minute", body: "At the end of a shift we draft a summary from what you logged. Review it, add a note and send." },
   ],
+  family: [
+    { title: "Welcome, James", body: "The Help board shows the small things Sarah asks for, like a ride or groceries for Maggie." },
+    { title: "Pick up what you can", body: "Tap “I'll do it” and everyone sees you have it. If plans change, tap “Can't anymore” and it opens again." },
+  ],
   guardian: [
     { title: "Welcome, Sarah", body: "Home shows how Maggie's day is going: check-in, medicines, visits and anything that needs you." },
     { title: "You decide the big things", body: "Changes to medicines, new people and shift swaps come to Approvals. Maggie sees every decision." },

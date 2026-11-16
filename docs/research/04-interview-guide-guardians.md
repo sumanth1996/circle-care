@@ -1,9 +1,9 @@
 # Interview Guide — Legal Guardians and Healthcare POA Holders
 
-Notion story: CC-4 Interview guide: legal guardians
-Status: DRAFT. Not yet piloted or used. No interviews have taken place.
+Notion story: CC-4 Interview guide: legal guardians · CC-197 concept tests of the built features
+Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No interviews have taken place.
 
-> Participants come through the CC-1 screener. Do not ask to see legal documents. Do not ask for the elder's name or diagnoses. Session 45–60 minutes; many guardians work full time, so offer evenings and weekends.
+> Participants come through the CC-1 screener. Do not ask to see legal documents. Do not ask for the elder's name or diagnoses. Session up to 70 minutes (if time is short, drop T5 and T4); many guardians work full time, so offer evenings and weekends.
 
 ## Goals
 
@@ -13,12 +13,16 @@ Status: DRAFT. Not yet piloted or used. No interviews have taken place.
 4. Understand decision-making: what they approve, how they involve the elder, and where they feel the tension between protecting and respecting autonomy.
 5. Learn what proving legal authority has been like (with hospitals, pharmacies, agencies).
 6. React to prototype tasks: today at a glance, approvals, SOS response, and the weekly digest.
+7. React to the everyday features built since October: the evening recap, refill alerts, Maggie's daily check-ins and the family chat.
 
 ## Interviewer reminders
 
 - Guardians often carry guilt and stress. Be warm; allow pauses. Do not offer advice.
 - Ask about the last week, specific events.
 - If they mention a crisis that is ongoing, check they're OK to continue.
+- If they describe neglect, abuse, exploitation or an unsafe situation, pause and follow the [safety protocol](10-fieldwork-plan.md#5-safety-protocol-for-disclosures-of-harm-draft-needs-review).
+- Run the concept tests on the research phone, never the participant's. After the session, tap *Reset demo* in the presenter sheet so nothing carries over to the next person.
+- The demo's medicine names (Metformin, Lisinopril, Vitamin D3, Atorvastatin) belong to the made-up Maggie and are fine in prompts. Never note them as the participant's.
 
 ## 1. Warm-up (5 min)
 
@@ -74,6 +78,19 @@ Use `/#/app` → Sarah. Use presenter controls to set up scenarios before each t
 
 After each: "1–5, how easy?" and "Would this replace something you do today? What?"
 
+## 7b. Concept test — everyday care built since October (10 min)
+
+Same phone, still as Sarah. Use the presenter controls named in each task.
+
+| Task | Prompt | Watch for | Success = |
+|---|---|---|---|
+| T6 Evening recap | (After *Skip to 7 PM for the evening recap*; the card already shows after 6 PM) "It's evening. How did Mom's day go?" | Reads the headline first? With the demo data it isn't a calm day: expect *a look* at a dose or *One refill to sort out.* Does the headline match what they then find? Finds **See the week**; reaction to the 7 PM update and the switch to turn it off | Sums up the day correctly in own words |
+| T7 Running low | (After *Simulate low Metformin supply*) "Something about Mom's medicines needs sorting." | Finds it under *Needs your attention* (Atorvastatin is already low in the demo, so two medicines show); taps **Request refill**; the app then says *asked Fog City Pharmacy for a refill*: do they read that as the app having told the pharmacy? (It only records that Sarah asked.) Notices the Calendar refill entry | Requests a refill for either medicine and says roughly when it runs out |
+| T8 How she's been feeling | "How has Mom been feeling this week?" Then, after *Simulate 2 days with no meals logged*: "What do you make of this?" | Finds *Daily check-ins · 7 days* under Health; reaction to Mom deciding whether it's shared; finds the gentle note about meals in the alerts (it links to Health) | Finds the week view and says what they'd do about the note |
+| T9 Family chat | "Tell James that Mom's Lisinopril went up to 20 mg." (Typed; see the reminder on chat voice.) Then: "Would you add Ana to this chat?" | Reaction to the health-detail check: **Save as a note**, **Send anyway** or **Edit**; finds **People**; who they'd add and why | Makes a choice on the check and finds where to add Ana |
+
+After each: "1–5, how easy?" and "Would this replace something you do today? What?"
+
 ## 8. Wrap-up (3 min)
 
 - What would stop you from inviting the whole family and the caregiver into an app like this?
@@ -93,6 +110,7 @@ Autonomy tension example (summary, de-identified):
 Authority-proof experience:
 Quotes (verbatim, de-identified):
 Task results:  T1 __/5 (secs __)  T2 __/5  T3 __/5  T4 __/5  T5 __/5
+Everyday care:  T6 __/5  T7 __/5  T8 __/5  T9 __/5   Expected the pharmacy to be told? Y/N
 Willingness to pay / who pays:
 Surprises / contradicts a hypothesis:
 ```
@@ -108,3 +126,7 @@ Surprises / contradicts a hypothesis:
 | H-G5 | Guardians are willing for the elder to see every decision made about her care. | 3+ of 5 | Most want some decisions hidden (record which and why) |
 | H-G6 | A weekly digest would reduce sibling/family update calls. | 3+ of 5 | Most say family would still call |
 | H-G7 | "Today at a glance" answers "is Mom OK?" in under 30 seconds. | T1 success for 4+ of 5 | 2 or fewer |
+| H-G8 | The evening recap answers "how was her day?" without opening other screens. | T6 success for 4+ of 5 | 2 or fewer |
+| H-G9 | Guardians understand that **Request refill** records the request and doesn't contact the pharmacy. Correct means: "it notes that I asked the pharmacy myself; Circle Care doesn't contact it." | 3+ of 5 explain it correctly after T7 | Most expect the app to have told the pharmacy (the label or the confirmation needs to change) |
+| H-G10 | Guardians accept that Mom decides whether they see her daily check-ins. | 3+ of 5 | Most want to see them whatever she chooses |
+| H-G11 | The health-detail check in the chat feels helpful, not in the way. | Most of those who did T9 (3+ of 5 if all did) | Most find it gets in the way |

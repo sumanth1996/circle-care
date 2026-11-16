@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { FastForward, Pill, Sun, Clock3, Siren, Lock, RotateCcw, Globe, Check, ShieldAlert, MessageSquareHeart, BarChart3, FileCheck2, Hourglass, HeartPulse, Droplets } from "lucide-react";
+import { FastForward, Pill, Sun, Clock3, Siren, Lock, RotateCcw, Globe, Check, ShieldAlert, MessageSquareHeart, BarChart3, FileCheck2, Hourglass, HeartPulse, Droplets, PackageOpen, Utensils, Moon, Sunset } from "lucide-react";
 import { useStore } from "../data/store";
 import { member, meId, clock } from "../data/selectors";
 import type { Persona } from "../data/types";
@@ -10,6 +10,7 @@ const options: { p: Persona; role: string }[] = [
   { p: "elder", role: "Elder" },
   { p: "caregiver", role: "Caregiver" },
   { p: "guardian", role: "Legal guardian" },
+  { p: "family", role: "Family" },
 ];
 
 /** Approved feature: Persona switcher demo mode. One tap between views, plus presenter controls. */
@@ -25,6 +26,8 @@ export default function PersonaSheet({ onClose }: { onClose: () => void }) {
   };
   const run = (msg: string, fn: () => void) => { fn(); toast(msg); onClose(); };
 
+  // CC-191 demo: jump to just after 7 PM, when the evening recap notification goes out.
+  const toRecap = 19 * 60 + 5 - (clock(state).getHours() * 60 + clock(state).getMinutes());
   return (
     <Sheet title="Demo mode" onClose={onClose}>
       <div className="stack">
@@ -54,6 +57,10 @@ export default function PersonaSheet({ onClose }: { onClose: () => void }) {
           <button className="list-row has-icon" onClick={() => run("Ana's request is now 26 hours old", () => actions.simulate("old-request"))}><Hourglass size={22} color="var(--blue)" /><span className="grow">Simulate a request waiting a day</span></button>
           <button className="list-row has-icon" onClick={() => run("Maggie's watch sent a fast heart-rate reading", () => actions.simulate("heart-rate"))}><HeartPulse size={22} color="var(--red)" /><span className="grow">Simulate a sudden heart-rate change</span></button>
           <button className="list-row has-icon" onClick={() => run("Maggie's watch sent a low oxygen reading", () => actions.simulate("oxygen"))}><Droplets size={22} color="var(--blue)" /><span className="grow">Simulate a low blood-oxygen reading</span></button>
+          <button className="list-row has-icon" onClick={() => run("Metformin is down to about a week", () => actions.simulate("low-supply"))}><PackageOpen size={22} color="#eb6834" /><span className="grow">Simulate low Metformin supply</span></button>
+          <button className="list-row has-icon" onClick={() => run("No meals logged for 2 days", () => actions.simulate("no-meals"))}><Utensils size={22} color="var(--blue)" /><span className="grow">Simulate 2 days with no meals logged</span></button>
+          <button className="list-row has-icon" onClick={() => run("It's 7 PM and Maggie hasn't added anything today", () => actions.simulate("nothing-logged"))}><Moon size={22} color="var(--guard)" /><span className="grow">Simulate no check-ins by 7 PM</span></button>
+          {toRecap > 0 && <button className="list-row has-icon" onClick={() => run(`It's now ${fmtTime("19:05")}`, () => actions.skipAhead(toRecap))}><Sunset size={22} color="var(--guard)" /><span className="grow">Skip to 7 PM for the evening recap</span></button>}
           <button className="list-row has-icon" onClick={() => run("James opened 9 records in a minute", () => actions.simulate("suspicious-access"))}><ShieldAlert size={22} color="var(--orange, #ff9f0a)" /><span className="grow">Simulate suspicious access</span></button>
           <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:lock")); }}><Lock size={22} color="var(--blue)" /><span className="grow">Lock the app now</span></button>
           <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:nps")); }}><MessageSquareHeart size={22} color="var(--blue)" /><span className="grow">Show the feedback survey</span></button>

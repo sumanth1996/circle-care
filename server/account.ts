@@ -7,6 +7,7 @@ import { PERSONA_TABLE, recordFailure, requireUser, type Deps } from "./auth";
 import { decrypt, encrypt, fingerprint, verifyPassword } from "./crypto";
 import type { Queryable } from "./db";
 import { HttpError, route, str } from "./http";
+import { limit } from "./ratelimit";
 
 export type MissingItem = "ssn" | "bank_account";
 
@@ -24,10 +25,12 @@ export interface MeView {
   profileStatus: "complete" | "incomplete";
   missing: MissingItem[];
   createdAt: string;
+  /** CC-200: an authenticator app is set up (required for guardians and caregivers). */
+  mfaEnrolled: boolean;
 }
 
 export async function loadMe(q: Queryable, userId: string): Promise<MeView> {
-  const u = (await q.query<{ id: string; role: Role; email: string; created_at: Date }>("SELECT id, role, email, created_at FROM users WHERE id = $1", [userId])).rows[0];
+  const u = (await q.query<{ id: string; role: Role; email: string; created_at: Date; mfa_enabled_at: Date | null }>("SELECT id, role, email, created_at, mfa_enabled_at FROM users WHERE id = $1", [userId])).rows[0];
   if (!u) throw new HttpError(401, "Please sign in.");
   const p = (await q.query<{ first_name: string; last_name: string; phone: string; email: string; ssn_last4: string | null }>(
     `SELECT first_name, last_name, phone, email, ssn_last4 FROM ${PERSONA_TABLE[u.role]} WHERE user_id = $1`, [userId])).rows[0];
@@ -43,6 +46,7 @@ export async function loadMe(q: Queryable, userId: string): Promise<MeView> {
     profileStatus: missing.length ? "incomplete" : "complete",
     missing,
     createdAt: new Date(u.created_at).toISOString(),
+    mfaEnrolled: !!u.mfa_enabled_at,
   };
 }
 
@@ -57,10 +61,16 @@ export function sniffImage(b: Buffer): "image/jpeg" | "image/png" | "image/webp"
 export function accountRouter(d: Deps): Router {
   const r = Router();
   r.use(requireUser);
+  // Per-account limits on changes (CC-204). Going over answers 429 with Retry-After and
+  // writes one ratelimit.exceeded audit event per window. The SSN limit is the tightest:
+  // it stops a signed-in account testing many numbers to see which are registered (C3-I3).
+  const profileLimit = limit(d, { name: "profile", by: "user", windowMs: 3600_000, max: 30, auditOnExceed: true, message: "Too many profile changes. Please wait a while and try again." });
+  const ssnLimit = limit(d, { name: "ssn", by: "user", windowMs: 3600_000, max: 10, auditOnExceed: true, message: "Too many attempts to save a Social Security number. Please wait an hour and try again." });
+  const photoLimit = limit(d, { name: "photo", by: "user", windowMs: 3600_000, max: 20, auditOnExceed: true, message: "Too many photo changes. Please wait a while and try again." });
 
   r.get("/", route(async (req, res) => { res.json({ me: await loadMe(d.db, req.user!.id) }); }));
 
-  r.patch("/", route(async (req, res) => {
+  r.patch("/", profileLimit, route(async (req, res) => {
     const u = req.user!;
     const b = req.body ?? {};
     const updates: Record<string, string> = {};
@@ -83,7 +93,7 @@ export function accountRouter(d: Deps): Router {
     res.json({ me: await loadMe(d.db, u.id) });
   }));
 
-  r.put("/ssn", route(async (req, res) => {
+  r.put("/ssn", ssnLimit, route(async (req, res) => {
     const u = req.user!;
     const table = PERSONA_TABLE[u.role];
     const checked = checkSsn(str(req.body?.ssn), d.cfg.testData);
@@ -125,7 +135,7 @@ export function accountRouter(d: Deps): Router {
     res.json({ me: await loadMe(d.db, u.id) });
   }));
 
-  r.put("/photo", express.raw({ type: () => true, limit: "2mb" }), route(async (req, res) => {
+  r.put("/photo", photoLimit, express.raw({ type: () => true, limit: "2mb" }), route(async (req, res) => {
     const u = req.user!;
     const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
     const type = sniffImage(body);
@@ -149,7 +159,7 @@ export function accountRouter(d: Deps): Router {
     res.send(decrypt(d.cfg, row.data_enc));
   }));
 
-  r.delete("/photo", route(async (req, res) => {
+  r.delete("/photo", photoLimit, route(async (req, res) => {
     const u = req.user!;
     const now = d.now();
     await d.db.tx(async (q) => {

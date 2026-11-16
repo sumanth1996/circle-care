@@ -96,7 +96,7 @@
 
 ### The permission matrix
 
-The single source of truth is `MATRIX` in `src/data/policy.ts`, read through `can(state, actorId, action, resource)`. Every data-changing store action is guarded; refused actions change nothing and are written to the access log as `denied`. The full table, rules (`pro@shift`, `ALWAYS_SHARED`) and open design questions are in the [Permission matrix](../../security/permission-matrix.md); a summary is in [Security & privacy](../architecture/security-and-privacy.md#permission-model).
+The single source of truth is `MATRIX` in `src/data/policy.ts`, read through `can(state, actorId, action, resource)`. Most data-changing store actions are guarded (`acceptInvite` and the role passed to `invite` aren't checked yet; see threat C2-E1 and CC-202); refused actions change nothing and are written to the access log as `denied`. The full table, rules (`pro@shift`, `ALWAYS_SHARED`) and open design questions are in the [Permission matrix](../../security/permission-matrix.md); a summary is in [Security & privacy](../architecture/security-and-privacy.md#permission-model).
 
 ## Permissions & privacy
 

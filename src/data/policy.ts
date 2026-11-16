@@ -8,7 +8,9 @@ import { todayOf } from "./selectors";
 
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
-  | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data";
+  | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
+  | "supply" | "wellbeing" | "chat" | "help" | "plan" | "questions" | "visitNotes"
+  | "calls" | "calls.admin" | "calls.ref" | "aboutMe" | "away";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -35,6 +37,31 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   emergencyCard:   { read: ["elder", "guardian", "family", "pro"], write: ["elder"], propose: ["guardian"] },
   sos:             { read: ["elder", "guardian", "family", "pro"], write: ["elder"], respond: ["guardian", "family", "pro"] },
   data:            { export: ["elder", "guardian"], delete: ["elder", "guardian"] },
+  // Sprint 12 — Everyday Care (CC-120 – CC-121, CC-142 – CC-143)
+  supply:          { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian", "family", "pro@shift"] },
+  wellbeing:       { read: ["elder", "guardian"], write: ["elder"] },
+  // CC-164: paid caregivers are in the family chat only once Maggie or Sarah adds them (see can()).
+  chat:            { read: ["elder", "guardian", "family", "pro"], write: ["elder", "guardian", "family", "pro"], invite: ["elder", "guardian"] },
+  // Sprint 16 — Help board (CC-209, CC-210). Sarah posts and cancels; the people she picks claim and finish.
+  // Who sees each request is narrowed further to its audience (see canSeeHelp in help.ts).
+  // CC-211: Maggie asks for a hand herself ("propose"), to the people she chose in her Privacy Center.
+  help:            { read: ["elder", "guardian", "family", "pro"], write: ["guardian"], respond: ["guardian", "family", "pro"], propose: ["elder"] },
+  // Sprint 17 — Coming Home plan (CC-213, CC-214). Sarah writes it; others see only items given to them, as help requests.
+  plan:            { read: ["elder", "guardian"], write: ["guardian"] },
+  // CC-217: the shared question list for an appointment. A paid caregiver only while on shift.
+  questions:       { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian", "family", "pro@shift"] },
+  // CC-218: reading follows appointment access. Writing is further limited to Maggie, Sarah and whoever went (visitNotes.ts).
+  visitNotes:      { read: ["elder", "guardian", "family", "pro"], write: ["elder", "guardian", "family", "pro"] },
+  // Sprint 19 — Call log (CC-226 – CC-228). Only Maggie and Sarah add or change calls. Everyone else sees the
+  // organization, the date and the next step; the outcome and the person spoken to need Maggie's
+  // "Insurance and admin details" choice (calls.admin), and only Maggie and Sarah reveal a reference number.
+  calls:           { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian"] },
+  "calls.admin":   { read: ["elder", "guardian", "family", "pro@shift"] },
+  "calls.ref":     { read: ["elder", "guardian"] },
+  // CC-219: Maggie's What matters to me page. Each section is narrowed further to the people she picks (aboutMe.ts).
+  aboutMe:         { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian"] },
+  // Sprint 20 — Away mode (CC-229 – CC-231). Only Sarah sets her dates; Maggie and family see who covers.
+  away:            { read: ["elder", "guardian", "family"], write: ["guardian"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */
@@ -61,6 +88,13 @@ export function can(s: State, actorId: string, action: Action, resource: Resourc
   if (s.settings.sharingPaused && (role === "family" || role === "pro") && !ALWAYS_SHARED.includes(resource)) return false;
   // Health readings reach the guardian only while Maggie chooses to share them (CC-87).
   if (resource === "vitals" && role === "guardian" && action === "read" && !s.settings.vitals.shareWithGuardian) return false;
+  // Feeling, water and meals reach the guardian only while Maggie shares them (CC-143).
+  // Pausing all sharing hides them too: only emergency alerts are shared then.
+  if (resource === "wellbeing" && role === "guardian" && (!s.settings.dailyLog.shareWithGuardian || s.settings.sharingPaused)) return false;
+  // CC-164: a paid caregiver reads and writes in the family chat only after someone adds them.
+  if (resource === "chat" && role === "pro" && !s.chat.pros.includes(actorId)) return false;
+  // CC-226: insurance and admin details reach family and caregivers only when Maggie picks them.
+  if (resource === "calls.admin" && (role === "family" || role === "pro") && !(s.settings.adminTo ?? []).includes(actorId)) return false;
   return true;
 }
 

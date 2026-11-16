@@ -1,166 +1,169 @@
 # Data Inventory
 
 Notion story: CC-9 Data inventory and classification
-Status: DRAFT v1 — derived from the code in `src/data/types.ts`, `src/lib/pilot.ts`, `src/lib/secureStorage.ts` and `src/data/store.tsx` as of 2026-10-19. Production storage, retention and deletion columns describe the **intended** design and need sign-off by the security officer and counsel (CC-8, CC-79).
+Status: DRAFT v4, reviewed against `main` on 2026-11-15 (demo state version 11, the 11 Postgres tables and 2 masked views in `server/migrations/001_init.sql`, and the `schema_migrations` log). v3 and v4 follow two Lead Architect review rounds the same day: the access logs are PHI and sensitive, not operational; readable ids are PHI; and the field check reads the database catalog and the live demo data as well as `types.ts`. v1 was written on 2026-10-19, before Sprints 11 to 13 added accounts, SSNs, bank accounts, cards, profile photos, everyday care and the family chat. Retention and production storage still describe the **intended** design and need sign-off by the security officer and counsel (CC-8, CC-79). All people in the prototype are fictional.
+
+## How this inventory stays true
+
+The classes live in code, in [`src/data/classification.ts`](https://github.com/sumanth1996/circle-care/blob/main/src/data/classification.ts). A unit test, `src/__tests__/classification.test.ts`, fails, naming the field, when:
+
+- a state field in `src/data/types.ts` has no class, or a classified one no longer exists. The reader refuses any declaration or field shape it can't parse (an object inside a union, say) instead of skipping it, and checks its own count of fields;
+- a field in the live demo data (`seed()`, after the alert rules run) has no class. This second check doesn't depend on reading `types.ts`;
+- a column has no class. The test runs every migration on an in-memory Postgres and lists, from Postgres's own catalog, the columns of every table, view, materialized view and foreign table in every schema, so it sees what the database has, however the SQL was written;
+- a record that holds PHI tags who or when as anything but PHI (see the rules below);
+- this document's field tables (below) list a field under a different class than the code, or list an entity twice.
+
+So a new field can't reach `main` without a class here. Re-run the review, and update the status line, whenever a story adds data.
 
 ## Classification key
 
 | Class | Meaning | Handling |
 |---|---|---|
-| **PHI** | Health information about the elder that identifies her. Legally PHI only where HIPAA applies (CC-8); treated as PHI everywhere by design. Also "consumer health data" under state laws. | Encrypted at rest and in transit; role-checked (CC-18/19); every view logged (CC-28); never in notifications, email, SMS, logs or analytics |
-| **PII** | Identifies a person (any circle member) but is not health information on its own | Encrypted; role-checked; not in analytics |
-| **Operational** | Settings, IDs, timestamps, security events needed to run the service | Encrypted with the circle; may appear in security logs by ID only |
-| **De-identified** | Cannot reasonably identify a person; aggregated or stripped | Kept apart from circle data; small-cohort suppression |
+| **PHI** | Health information about Maggie, or something that reveals it (a medicine, a dose, a care task, a visit, a feeling). Legally PHI only where HIPAA applies (CC-8); treated as PHI everywhere by design, and as consumer health data under state laws. | Encrypted at rest and in transit; role-checked by `can()` (CC-18/19); never in lock-screen text, email, SMS, server or debug logs, or analytics. The circle's access log can name medicines and documents, so it is protected as PHI |
+| **PII** | Identifies a person but says nothing about health on its own: names, phone, email, photo, relationship | Encrypted; owner or circle only; not in analytics |
+| **Sensitive financial or identity** | SSNs, bank and card details, payment tokens, password hashes | Never stored in plain text: SSNs only as ciphertext, bank and card numbers only as a vault token and last four; never returned in full by the API; writes audit-logged with last four only; real values refused outside production (CC-182) |
+| **Operational** | Ids, timestamps, settings and flags needed to run the service | May appear in security logs by id only |
 
-"Who can see" names the resource in the permission matrix — see [security/permission-matrix.md](../security/permission-matrix.md).
+Two rules keep the tags consistent, and the test checks both:
 
-## Storage today (prototype) vs. production
+- **Who and when go with the record.** In a record that holds PHI, the member who did it and the time are PHI too, because together they say who cared for Maggie, and when. Each nested object counts as its own record, and a link to another record doesn't make it one, so the chat's read times stay operational though its messages are PHI. This rule doesn't by itself make an id, a status or a flag PHI. The test goes by field name (`by`, `at`, `…By`, `…At` and a short list of member references), so new who or when fields should follow that naming.
+- **Demo ids are readable.** They embed what they are about: `med-lisinopril`, `t-bath`, `ap-metformin`, `s-ana` for a caregiver's shift, `appt-auto-med-lisinopril-…` for an automatic refill, and `b-` plus the count time for a bottle. So `Medication.id`, `CareTask.id`, `Approval.id`, `Shift.id`, `Appointment.id`, `MedSupply.bottleId`, the fields that hold those ids and alert keys built from them are PHI. Production should use opaque ids.
 
-| Store | Prototype (verified in code) | Production (intended) |
+"Who can see" names the permission-matrix resource (`MATRIX` in `src/data/policy.ts`, rendered in the [permission matrix](../security/permission-matrix.md)) and the roles that may read it. `pro@shift` is a paid caregiver while checked in to a visit. When Maggie pauses sharing (CC-81), family and paid caregivers keep only `sos`, `emergencyCard` and `circle`.
+
+## Where data lives
+
+| Store | Today (verified in code) | Production (intended) |
 |---|---|---|
-| Circle state (`State`) | `localStorage["circle-care-demo"]`, AES-256-GCM, fresh IV per save, format `enc:v1:<iv>:<ct>`; key is a non-extractable CryptoKey in IndexedDB `circle-care-keys` (CC-26). Falls back to plain JSON if Web Crypto/IndexedDB is unavailable. | Managed database, encrypted at rest with managed, rotated keys; TLS in transit; server-side policy checks |
-| Document files | IndexedDB `circle-care-files`, each file AES-GCM encrypted (CC-67); PDF/PNG/JPEG by magic bytes; 10 MB limit | Object storage, encrypted, malware scan before storage, signed short-lived URLs |
-| Exports | `.ccexport` file, PBKDF2-SHA256 (250,000 iterations) → AES-256-GCM, user passphrase (CC-32) | Same format, generated server-side or on device |
-| Deletion log | `localStorage["circle-care-deletions"]`: timestamps only | Minimal deletion record |
-| Pilot data | `localStorage["circle-care-pilot-leads"]`, `["circle-care-nps"]` — separate from circle state | Separate research database, no join key to circle data |
-| NPS prompt dismissal | `sessionStorage["cc-nps-dismissed-<persona>"]` | Same (device only) |
+| Demo circle state (`State`) | Browser `localStorage["circle-care-demo"]`, AES-256-GCM, fresh IV per save, `enc:v1:<iv>:<ct>`; key is a non-extractable CryptoKey in IndexedDB `circle-care-keys` (CC-26). Plain JSON only if Web Crypto or IndexedDB is missing. | Server database behind the same `can()` policy |
+| Document files | IndexedDB `circle-care-files`, each file AES-GCM encrypted (CC-67); PDF, PNG or JPEG by magic bytes; 10 MB limit | Object storage, encrypted, malware scan, short-lived signed URLs |
+| Accounts, identity and payments | Postgres (`DATABASE_URL`, or an embedded Postgres in `.data/` for development). Field-level AES-256-GCM `v1.<keyId>.<iv>.<tag>.<ct>` with keys outside the database (`server/crypto.ts`); production refuses to start without them (CC-183) | Same, managed keys with rotation |
+| Payment vault | Simulated vault (`server/vault.ts`), test values only, never in production | Stripe: full numbers go to Stripe, Circle Care keeps tokens |
+| Exports | `.ccexport`, PBKDF2-SHA256 (250,000 iterations) to AES-256-GCM, user passphrase (CC-32); masked audit export `npm run audit:export` (CC-184) | Same |
+| Deletion log | `localStorage["circle-care-deletions"]`, timestamps only | Minimal deletion record |
+| Pilot data | `localStorage["circle-care-pilot-leads"]`, `["circle-care-nps"]`, apart from circle state | Separate research store, no join key |
+| NPS prompt dismissal | `sessionStorage["cc-nps-dismissed-<persona>"]` | Same, device only |
+
+## SSNs, bank accounts, cards and profile photos
+
+| Data | Where it is stored | How it is protected | Who can write | Who can read |
+|---|---|---|---|---|
+| Social Security number | `elders`, `caregivers` or `guardians`: `ssn_enc` (ciphertext) and `ssn_last4`; `ssn_fingerprints.fingerprint` (HMAC-SHA256 with a separate key) to stop one SSN on two accounts; the last four in `audit_events.detail` when it is set or changed | AES-256-GCM with a key version prefix; the full number is decrypted only to check a change, never returned (CC-180, CC-181) | The account holder, `PUT /api/me/ssn`; changing it needs the password again | Nobody in full. The owner sees `•••-••-1234`; the masked audit export and `audit_people_masked` show the same |
+| Bank account | Vault token in `bank_accounts.vault_token` and `vault_tokens`; bank name, holder name, type, last four of account and routing; the last four in `audit_events.detail` | Full numbers go to the vault and are discarded; CHECK constraints allow only four digits in the last-four columns (CC-186) | The legal guardian only (`/vault/v1`, then `/api/me/payment-methods`; others get 403). One per guardian: a new one deletes the old row and inserts the new one in one transaction, and removing the only account is refused (409) | The guardian, as last four; masked audit export |
+| Card | Vault token in `payment_cards.vault_token` and `vault_tokens`; holder name, brand, funding, last four, expiry, primary flag; brand and last four in `audit_events.detail` | The full number and security code reach only the vault endpoint and are never stored. In development the simulated vault runs in the same server process; in production they go to Stripe and never reach Circle Care (CC-187, CC-188) | The legal guardian only; at most 5 cards | The guardian, as brand and last four; masked audit export |
+| Profile photo | `photos.data_enc`, at most 2 MB | Resized to 512 px and re-encoded as JPEG in the browser, which drops location and camera data. The server checks the file signature (JPEG, PNG or WebP) and encrypts it but doesn't re-encode, so a photo sent straight to the API keeps its metadata (CC-179) | The account holder | The account holder only, `Cache-Control: private, no-store`. Demo members' photos (`Member.photo`) are fictional images |
+
+## Chat, check-ins, supply counts and the evening recap
+
+| Data | Can it hold health details? | Who can see it |
+|---|---|---|
+| Family chat messages (`ChatMessage.text`) | **Yes.** It is free text. The health-detail check (`phiHint`, CC-164, CC-192) warns and offers Save as a note, but the sender can still choose Send anyway, so text is PHI. Message alerts say only "{name} wrote in the family chat." | `chat`: Maggie, Sarah and family; a paid caregiver only once Maggie or Sarah adds them, and only messages from when they joined. Hidden from family and caregivers while sharing is paused |
+| Daily check-ins (`DailyLog`: feeling, water, meals) | **Yes.** They describe how Maggie feels and eats | `wellbeing`: Maggie; Sarah only while Maggie shares them and sharing isn't paused. A day logged while not sharing stays private |
+| "I'm OK" check-ins (`Checkin`) | **Yes**, the optional mood | `history`: Maggie, Sarah and family |
+| Supply counts (`MedSupply`) | **Yes.** Pills left and refill requests reveal which medicines Maggie takes | `supply`: Maggie, Sarah, family, and a paid caregiver while on shift. Refill alerts name the medicine only in the in-app detail |
+| Help requests (`HelpRequest.note`) | **Yes.** It is free text, and a request tied to an appointment points at Maggie's record. The health-detail check (`phiHint`) shows before Sarah posts, but she can still post anyway. Alerts say only "New help request in Circle Care" on the lock screen and name the kind of help and the time inside the app, never an appointment's reason or clinic (CC-209) | `help`: Maggie and Sarah, plus the family and caregivers Sarah picks. Hidden from family and caregivers while sharing is paused. Finished and cancelled requests leave the boards after 30 days and stay in the history only Maggie and Sarah see |
+| Coming Home plans (`ComingHome`, `PlanItem`) | **Yes.** A plan says Maggie is coming home from hospital on a day. There is no field for why. Item names are free text and get the health-detail check (CC-213). The follow-up reminder says only that a visit isn't booked yet (CC-214) | `plan`: Maggie and Sarah. Anyone else sees only the item given to them, as a help request on their board. Read-only 30 days after the coming-home day |
+| After-visit notes (`VisitNotes.answers`, `VisitNotes.summary`, `NextStep.text`) | **Yes.** It is what Maggie's doctor said. Next steps get the health-detail check before they become care tasks (CC-218) | `visitNotes`: readable only while Maggie shares appointments with that person; written only by Maggie, Sarah or whoever went. A next step's text is also its owner's care task title |
+| Call log (`CallEntry.outcome`, `CallEntry.contact`, `CallEntry.ref`, `CallStep.text`) | **Yes.** An insurer's or pharmacy's name and what they agreed can reveal care and coverage. The outcome gets the health-detail check before saving (CC-226). Reference numbers show masked; a follow-up's reminder says only "You have a reminder from Circle Care" on the lock screen (CC-227) | `calls`: everyone who can see it gets the organization, the date and the next step; the outcome and the person spoken to only Maggie, Sarah and the people Maggie picks for insurance and admin details. Only Maggie and Sarah add, change or delete calls, or reveal a reference number |
+| What matters to me (`AboutSection.text`) | **Yes.** Maggie's routines, food and how she likes to be helped can describe her health and needs. It is her own words, typed or dictated with her phone's keyboard; no audio is kept (CC-219) | `aboutMe`: each section only for the people Maggie picks, a paid caregiver only on shift. Sarah edits only while Maggie allows it, and Maggie sees what Sarah changed |
+| Visit questions (`VisitQuestion.text`) | **Yes.** It is free text about Maggie's health, for her doctor. The health-detail check reminds people that everyone on the list sees it (CC-217) | `questions`: Maggie, Sarah, family, and a paid caregiver only while on shift, and only with appointment access. An item Maggie hides shows only to her and Sarah, and is left off printouts unless Sarah adds it back |
+| Evening recap | **Yes**, but nothing is stored: `recap()` in `src/data/everyday.ts` works it out from doses, tasks, shifts and visits, check-ins, daily logs, supply counts, appointments and unread chat each time it is shown. `settings.recapNotify` is the only stored field | Sarah only, because the card is shown only on her Home (from 6 PM); no `can()` check guards it. Her day shows as Private when Maggie isn't sharing. The 7 PM alert's lock-screen title is "Update from Circle Care" and its detail is "Your evening recap is ready." |
+
+## Field tables
+
+Each row lists every field of one entity by class; inline objects use dots (`pill.color`). The test checks these rows against `src/data/classification.ts`.
+
+### Demo state (`src/data/types.ts`)
+
+| Entity | PHI | PII | Sensitive financial or identity | Operational | Who can see |
+|---|---|---|---|---|---|
+| `State` | `health.heightCm`, `health.overrides.at`, `health.overrides.hr`, `health.overrides.spo2`, `health.overrides.addedAt` | `health.birthYear` | — | `version`, `persona`, `signedIn`, `clockOffsetMin`, `lastRunAt`, `elderId`, `health.device` | `health` goes with `vitals`: Maggie, Sarah (while Maggie shares) |
+| `Member` | — | `name`, `short`, `role`, `relation`, `phone`, `photo`, `verification` | — | `id`, `color`, `status`, `expiresOn`, `favorite`, `invitedAt` | `circle`: elder, guardian, family, pro. `relation` and `verification` can reveal legal authority |
+| `Medication` | `id`, `name`, `strength`, `dose`, `times`, `instructions`, `prescriber`, `purpose`, `critical`, `paused`, `pill.color`, `pill.shape`, `history.at`, `history.by`, `history.change` | — | — | — | `meds`: elder, guardian, family, pro@shift. Never on the lock screen (CC-31). `id` embeds the drug name |
+| `MedSupply` | `count`, `countedAt`, `perDose`, `bottleId`, `requestedAt`, `requestedBy`, `pharmacy` | — | — | — | `supply`: elder, guardian, family, pro@shift |
+| `DoseLog` | `medId`, `date`, `time`, `status`, `by`, `at`, `verified`, `reason` | — | — | `id` | `doses`: elder, guardian, family, pro@shift. `reason` is free text |
+| `CareTask` | `id`, `title`, `icon`, `time`, `recurrence`, `assignee`, `date`, `apptId`, `callId` | — | — | — | `tasks`: elder, guardian, family, pro@shift. Titles reveal care needs. A one-off next step from visit notes (CC-218) has `recurrence` once, a `date` and the `apptId` it came from; one from a call (CC-227) has the `callId`, and its title is the organization and the step, never the reference number |
+| `TaskLog` | `taskId`, `date`, `by`, `at`, `note` | — | — | — | `tasks`: elder, guardian, family, pro@shift |
+| `Shift` | `id`, `caregiverId`, `days`, `start`, `end` | — | — | `accepted` | `schedule`: elder, guardian, family, pro. Reveals that Maggie gets home care |
+| `Visit` | `shiftId`, `caregiverId`, `date`, `checkIn`, `checkOut`, `manualReason` | — | — | `id` | `schedule`: elder, guardian, family, pro. No location is stored |
+| `Handoff` | `by`, `at`, `mood`, `meals`, `concerns`, `notes`, `summary`, `acknowledgedBy`, `acknowledgedAt`, `skippedReason` | — | — | `id`, `visitId` | `handoffs`: guardian, family, pro; written only by a caregiver on shift |
+| `SosEvent` | `startedAt`, `status`, `responderId`, `acknowledgedAt`, `resolvedAt`, `outcome` | — | — | `id`, `step`, `via` | `sos`: elder, guardian, family, pro, even while sharing is paused |
+| `Checkin` | `date`, `at`, `mood` | — | — | — | `history`: elder, guardian, family |
+| `DailyLog` | `date`, `feeling`, `feelingAt`, `water`, `meals`, `updatedAt` | — | — | `private` | `wellbeing`: elder; guardian while Maggie shares |
+| `ChatMessage` | `by`, `at`, `text` | — | — | `id`, `via` | `chat`: elder, guardian, family, and pros once added |
+| `Chat` | — | — | — | `pros`, `readAt`, `joinedAt` | `chat`: elder, guardian, family, and pros once added |
+| `Approval` | `id`, `title`, `detail`, `requestedBy`, `at`, `decidedAt`, `note`, `payload`, `elderQuestion` | — | — | `kind`, `status`, `elderSeen` | `approvals`: elder, guardian. `payload` holds proposed medicine values |
+| `CareNote` | `by`, `at`, `text` | — | — | `id`, `visibility` | `notes`: elder, guardian, family, pro@shift; guardian-only notes (`notes.private`): guardian |
+| `CareDoc` | `name`, `kind`, `by`, `at`, `rejectReason` | — | — | `id`, `size`, `status`, `fileId`, `mime` | `docs`: elder, guardian, family, pro@shift; legal documents (`docs.legal`): elder, guardian. File names can hold diagnoses; `rejectReason` is the reviewer's free text |
+| `AuditEvent` | `at`, `actorId`, `resource` | — | — | `id`, `action`, `prev`, `hash` | `audit`: elder, guardian. `resource` names what was opened or changed, often a medicine, a document or an appointment, so the log is PHI. Hash-chained (CC-28) |
+| `Alert` | `key`, `at`, `detail`, `items`, `movedToSarah` | — | — | `id`, `to`, `title`, `severity`, `read`, `link`, `urgent`, `held`, `awayId`, `coverLink` | The personas in `to`. `title` is the lock-screen text and never holds health details; `key` embeds medicine ids and vitals metrics. `items` lists the details a quiet-hours morning summary released (CC-208). While Sarah is away, an alert her backup's role can read goes to the backup instead (`awayId`); one still open at hand-back moves to Sarah (`movedToSarah`, CC-230) |
+| `AlertResolution` | `at`, `by`, `outcome`, `reason` | — | — | — | How a missed dose was settled: who marked it, when, and why (CC-206). Shown on the earlier alert to the people who got it |
+| `DoseReminder` | `date`, `key`, `sent`, `nextAt`, `snoozed` | — | — | `limit` | `doses`: elder, guardian, family, pro@shift. The key names the medicine (CC-207) |
+| `HelpRequest` | `kind`, `note`, `date`, `time`, `appointmentId`, `audience`, `by`, `at`, `claimedBy`, `claimedAt`, `doneBy`, `closedAt`, `planItemId`, `title` | — | — | `id`, `status`, `rev`, `remindedUnclaimed`, `askedDone`, `notYet`, `anyTime` | `help`: Maggie and Sarah, plus the family and caregivers Sarah picks (`audience`), or, for a request Maggie asks for herself, the people she chose (`Settings.helpFrom`, CC-211). Hidden from family and caregivers while sharing is paused. Tied to an appointment, it shows only "Appointment" and the time to anyone without appointment access (CC-209). `note` is free text and gets the health-detail check. `title` is a Coming Home item's name (CC-213) |
+| `HelpChange` | `at`, `by`, `change` | — | — | — | `help`: the request's history (posted, claimed, reopened, done, cancelled), kept for Maggie and Sarah |
+| `ComingHome` | `date`, `by`, `at`, `followUpDays`, `followUpReminded` | — | — | `id`, `remindedUnassigned`, `archived` | `plan`: Maggie and Sarah. Says Maggie left hospital on a day, never why (CC-213). Read-only 30 days after that day |
+| `PlanItem` | `kind`, `title`, `assignee` | — | — | `id`, `helpId` | `plan`: Maggie and Sarah. Anyone else sees only an item given to them, as a help request on their board. `title` gets the health-detail check |
+| `VisitQuestion` | `by`, `at`, `text` | — | — | `id`, `hidden` | `questions` and `appointments`: Maggie, Sarah, family, and paid caregivers only while on shift (CC-217). An item Maggie hides shows only to her and Sarah, and is left off printouts unless Sarah adds it back. `text` gets the health-detail check |
+| `Appointment` | `id`, `date`, `time`, `durationMin`, `kind`, `title`, `provider`, `location`, `medIds`, `escortId`, `prep`, `createdBy` | — | — | `status`, `autoCancelled`, `notesReminded` | `appointments`: elder, guardian, family, pro |
+| `VisitNotes` | `answers`, `summary`, `by`, `at`, `updatedBy`, `updatedAt` | — | — | — | `visitNotes` and `appointments`: read by anyone Maggie shares appointments with; written only by Maggie, Sarah or whoever went (CC-218) |
+| `NextStep` | `id`, `text`, `owner`, `date`, `taskId`, `by`, `at` | — | — | — | Same as `VisitNotes`. Each one is also a one-off `CareTask` for its owner. `text` gets the health-detail check |
+| `CallEntry` | `org`, `date`, `contact`, `outcome`, `ref`, `by`, `at`, `updatedBy`, `updatedAt` | — | — | `id` | `calls`: elder, guardian, family, pro@shift; written only by Maggie and Sarah (CC-226). `contact` and `outcome` need `calls.admin`: Maggie, Sarah, and the family and caregivers she picks (`Settings.adminTo`). `ref` shows masked to its last 4; only Maggie and Sarah reveal it (`calls.ref`), and each reveal is audited. Production stores `ref` encrypted. Hidden from family and caregivers while sharing is paused |
+| `CallStep` | `text`, `owner`, `date`, `taskId` | — | — | — | Same as `CallEntry`. Each one is also a one-off `CareTask` for its owner, with a generic reminder the day before (CC-227) |
+| `AboutMe` | — | — | — | `sarahCanEdit`, `elderSeenAt` | `aboutMe`: Maggie decides whether Sarah can edit (CC-219) |
+| `AboutSection` | `text`, `by`, `at`, `changedBy`, `changedAt`, `before` | — | — | `key`, `sharedWith` | `aboutMe`: Maggie, and only the people she picks for each section (`sharedWith`); a paid caregiver only while on shift; family and caregivers see none while sharing is paused. `before` keeps the words Sarah changed until Maggie has seen the change |
+| `Away` | — | `start`, `end`, `backupId`, `by` | — | `id`, `status`, `at`, `updatedAt`, `answeredAt`, `pickReminded`, `maggieAsked`, `startedAt`, `endedAt`, `endedEarly`, `summarySeenAt`, `summaryFor.alerts`, `summaryFor.tasksDone`, `summaryFor.sos`, `summaryFor.open` | `away`: Maggie, Sarah and family. Only Sarah sets or ends it; only the person asked answers. Personal, not health: it says when Sarah is away and who covers. The summary keeps counts only (CC-229, CC-230) |
+| `Settings` | `consent.at`, `consent.by`, `consent.onBehalfReason`, `vitals.thresholds.hrHigh`, `vitals.thresholds.hrLow`, `vitals.thresholds.hrJump`, `vitals.thresholds.spo2Low`, `vitals.thresholds.spo2Drop`, `emergencyCard.allergies`, `emergencyCard.conditions`, `emergencyCard.directives`, `emergencyCard.bloodType`, `emergencyCard.approvedAt` | — | — | `checkinWindow.start`, `checkinWindow.end`, `escalation`, `escalationDelayMin`, `doseEscalation.caregiverMin`, `doseEscalation.guardianMin`, `quietHours.on`, `quietHours.start`, `quietHours.end`, `reminderRepeats`, `channels.push`, `channels.sms`, `channels.email`, `criticalBypass`, `textSize`, `highContrast`, `readAloud`, `sharingPaused`, `consent.version`, `sessionLockMin`, `elderLockMin`, `toured`, `setupCallRequested`, `vitals.intervalMin`, `vitals.shareWithGuardian`, `refillAlertDays`, `dailyLog.shareWithGuardian`, `dailyLog.waterGoal`, `dailyLog.sharedSince`, `recapNotify`, `elderChatOnHome`, `helpFrom`, `adminTo`, `emergencyCard.approvedByElder` | `settings`: elder, guardian; `emergencyCard`: elder, guardian, family, pro. Accessibility settings are operational but can imply vision or hearing needs |
+
+### Postgres (`server/migrations`)
+
+The accounts API serves each person only their own rows (`requireUser`); payment tables are guardian-only. `audit_events` is append-only (a trigger blocks UPDATE and DELETE), and an auditor's read-only role should get only the masked views `audit_people_masked` and `audit_payment_methods_masked`.
+
+| Entity | PHI | PII | Sensitive financial or identity | Operational | Notes |
+|---|---|---|---|---|---|
+| `users` | — | `email` | `password_hash`, `mfa_secret_enc`, `mfa_pending_secret_enc` | `id`, `role`, `failed_attempts`, `first_failed_at`, `locked_until`, `mfa_pending_at`, `mfa_enabled_at`, `totp_last_counter`, `created_at`, `updated_at` | scrypt hash with a per-user salt (CC-173). The authenticator secret is AES-256-GCM encrypted like an SSN and is never returned after set-up; an unconfirmed one is deleted after 15 minutes (CC-200) |
+| `sessions` | — | — | `token_hash` | `user_id`, `created_at`, `last_seen_at`, `expires_at` | SHA-256 of the cookie token, which works as a credential; the token itself is never stored. Expired and idle rows are deleted at start-up and daily (CC-201) |
+| `password_resets` | — | — | `token_hash` | `user_id`, `created_at`, `expires_at`, `used_at` | SHA-256 of a reset link's token; works once, for 30 minutes. Used and expired rows are deleted daily (CC-201) |
+| `mfa_recovery_codes` | — | — | `code_hash` | `id`, `user_id`, `created_at`, `used_at` | HMAC-SHA256 of each recovery code with the server key; the codes are shown once, at set-up (CC-200) |
+| `mfa_challenges` | — | — | `token_hash` | `user_id`, `created_at`, `expires_at` | SHA-256 of the 5-minute token between the password and the code; deleted on use and daily (CC-200) |
+| `rate_limits` | — | — | — | `key`, `reset_at`, `count` | Shared counters; the key is a limit name and a SHA-256 of an address or account id, never the address itself. Expired rows are deleted as the limiter runs and daily (CC-204) |
+| `elders` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
+| `caregivers` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
+| `guardians` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
+| `ssn_fingerprints` | — | — | `fingerprint` | `user_id` | HMAC-SHA256, separate key; read only to detect a duplicate SSN, never returned |
+| `photos` | — | `data_enc` | — | `user_id`, `content_type`, `size_bytes`, `updated_at` | Encrypted image; owner only |
+| `vault_tokens` | — | — | `token`, `metadata` | `kind`, `owner_user_id`, `created_at`, `attached_at`, `revoked_at` | Simulated vault, not in production. `metadata` holds the holder name, bank name, account type and last four of account and routing, or the brand, brand label, funding, last four and expiry |
+| `bank_accounts` | — | `holder_name` | `vault_token`, `bank_name`, `account_type`, `account_last4`, `routing_last4` | `id`, `user_id`, `ach_fee_cents`, `created_at` | Guardian only; one per guardian |
+| `payment_cards` | — | `holder_name` | `vault_token`, `brand`, `funding`, `last4`, `exp_month`, `exp_year` | `id`, `user_id`, `is_primary`, `created_at` | Guardian only; one primary |
+| `audit_events` | — | — | `detail` | `id`, `at`, `actor_user_id`, `subject_user_id`, `action` | `detail` holds SSN, bank and card last fours, card brands and the export operator's name, so it is sensitive. It is masked by the caller, and `audit()` refuses a standalone run of 9 or more digits or a dashed SSN |
+| `schema_migrations` | — | — | — | `version`, `applied_at` | Created by `server/migrate.ts` |
+| `audit_people_masked` | — | `name_masked`, `email_masked`, `phone_masked` | `ssn_masked` | `user_id`, `role`, `created_at` | View for auditors: first name and last initial, masked email and phone, `•••-••-` and last four |
+| `audit_payment_methods_masked` | — | — | `label`, `detail`, `number_masked`, `routing_masked` | `user_id`, `kind`, `is_primary`, `fee_cents`, `created_at` | View for auditors: bank or brand, type or funding, last fours only |
 
 ## Retention and deletion (intended)
 
-- **Close the circle** (elder or guardian, `data.delete`): prototype wipes circle state, destroys the device key and clears the file store (`wipeDevice`, CC-33), so any leftover copy is unreadable. Production: delete within 30 days (as promised on `/privacy`), including backups on their normal rotation.
-- **Audit log:** kept at least 6 years (`RETENTION_YEARS = 6` in `src/data/audit.ts`) — minimal entries only (IDs, action, resource name). Confirm with counsel (CC-8 Q10).
-- **Member removed / time limit ends (CC-25):** access stops immediately; their authored records stay with the circle (they are part of the elder's care record).
+- **Close the circle** (elder or guardian, `data.delete`): the prototype wipes circle state, destroys the device key and clears the file store (`wipeDevice`, CC-33), so any leftover copy is unreadable. Saving is paused during the wipe and any save already under way is dropped, so it can't write the circle back (CC-195). Production: delete within 30 days (as `/privacy` promises), including backups on their normal rotation.
+- **Delete an account:** persona, session, reset link, recovery code, sign-in challenge, photo, fingerprint, vault token, bank and card rows go with the `users` row (`ON DELETE CASCADE`). `audit_events` has no foreign key, so it keeps the masked history. There is no account-deletion endpoint yet, so today this happens only by deleting the row directly. Confirm the design with counsel.
+- **Audit logs:** at least 6 years (`RETENTION_YEARS = 6` in `src/data/audit.ts`). The circle's access log names medicines and documents (PHI) and the server log keeps last fours (sensitive), so both are protected like the data they describe. Confirm with counsel (CC-8 Q10).
+- **Sessions, reset links, sign-in challenges and rate-limit counters:** the server deletes expired and used rows when it starts and once a day (`server/cleanup.ts`, CC-201). Sign out everywhere, a password change and a password reset end sessions at once; a sign-in lock-out leaves existing sessions in place and emails the owner.
+- **Member removed or time limit ends (CC-25):** access stops at once; what they wrote stays with the circle as part of Maggie's care record.
 
-## Entity tables
-
-### State (root)
-
-| Field | Class | Source | Notes |
-|---|---|---|---|
-| `version`, `clockOffsetMin` | Operational | App | Demo clock offset is prototype-only |
-| `persona`, `signedIn` | Operational | App | Session state; production uses server sessions |
-| `elderId` | PII (pointer) | App | — |
-
-### Member (`members`) — who can see: `circle`
-
-| Field | Class | Source | Retention / deletion |
-|---|---|---|---|
-| `id` | Operational | App | Kept in audit log by ID after deletion of circle |
-| `name`, `short`, `phone`, `photo` | PII | Inviter / member | Deleted with circle |
-| `role`, `relation` | PII | Inviter | Relation (e.g., "Healthcare power of attorney") can reveal legal status |
-| `color`, `favorite` | Operational | App / elder | — |
-| `status`, `invitedAt`, `expiresOn` | Operational | Inviter / rules | Time-bound access auto-revokes (CC-25) |
-| `verification` | PII (legal status) | Review team | Verified/pending/none (CC-23/24) |
-
-### Medication (`meds`) — who can see: `meds`
-
-| Field | Class | Source | Notes |
-|---|---|---|---|
-| `name`, `strength`, `dose`, `times`, `instructions`, `purpose`, `prescriber` | PHI | Guardian/elder entry; proposals from family or on-shift caregiver need approval | Never shown on lock screen (CC-31) |
-| `critical`, `paused` | PHI | Guardian | High-priority flag (CC-43) |
-| `pill` (color, shape) | PHI | Guardian | Helps identification; still health info |
-| `history[]` (at, by, change) | PHI | App | Change history (CC-37) |
-
-### DoseLog (`doses`) — who can see: `doses`
-
-| Field | Class | Notes |
-|---|---|---|
-| `medId`, `date`, `time`, `status` (taken/skipped/refused), `reason` | PHI | `reason` is free text — may contain anything |
-| `by`, `at`, `verified` | PHI (links person to care event) | `verified` = caregiver-verified during visit (CC-41) |
-
-### CareTask / TaskLog (`tasks`, `taskLogs`) — who can see: `tasks`
-
-| Field | Class | Notes |
-|---|---|---|
-| `title`, `icon`, `time`, `recurrence`, `assignee` | PHI (reveals care needs, e.g., "shower help") | — |
-| TaskLog `date`, `by`, `at`, `note` | PHI | `note` free text |
-
-### Shift / Visit (`shifts`, `visits`) — who can see: `schedule`
-
-| Field | Class | Notes |
-|---|---|---|
-| Shift `caregiverId`, `days`, `start`, `end`, `accepted` | PII / operational | Reveals that the elder receives home care → treat as PHI in production |
-| Visit `date`, `checkIn`, `checkOut`, `manualReason` | PHI (care event) | Door check-in location is **not stored** in the type today; if added, it is precise location → sensitive under state law (CC-8 Q6) |
-
-### Handoff (`handoffs`) — who can see: no dedicated matrix resource yet (gap: `submitHandoff` is not routed through `can()` in the prototype; add a `handoffs` resource — see permission matrix "Coverage gaps")
-
-| Field | Class | Notes |
-|---|---|---|
-| `mood`, `meals`, `concerns`, `notes`, `summary` | PHI | Free text; auto-drafted summary (CC-82) |
-| `by`, `at`, `acknowledgedBy/At`, `skippedReason` | PHI / operational | Acknowledgment (CC-59) |
-
-### SosEvent (`sos`) — who can see: `sos` (always shared, even when paused)
-
-| Field | Class | Notes |
-|---|---|---|
-| `startedAt`, `status`, `step`, `responderId`, `acknowledgedAt`, `resolvedAt`, `outcome`, `via` | PHI | `outcome` free text; `via` app or SMS fallback |
-
-### Checkin (`checkins`) — who can see: `history`
-
-| Field | Class | Notes |
-|---|---|---|
-| `date`, `at`, `mood` | PHI | Mood is health-adjacent |
-
-### Approval (`approvals`) — who can see: `approvals`
-
-| Field | Class | Notes |
-|---|---|---|
-| `kind`, `title`, `detail`, `payload` | PHI (med changes) / PII (member, shift swap) | `payload` holds proposed values |
-| `requestedBy`, `at`, `status`, `decidedAt`, `note`, `elderSeen`, `elderQuestion` | PHI / operational | Elder sees decisions (CC-65) |
-
-### CareNote (`notes`) — who can see: `notes` or `notes.private`
-
-| Field | Class | Notes |
-|---|---|---|
-| `text` | PHI | Free text — highest risk of over-sharing |
-| `visibility` (everyone / guardian) | Operational | "guardian" notes map to `notes.private`; the elder cannot read them (see CC-8 Q13) |
-| `by`, `at` | Operational | — |
-
-### CareDoc (`docs`) — who can see: `docs`; legal docs: `docs.legal`
-
-| Field | Class | Notes |
-|---|---|---|
-| `name`, `kind`, `size`, `mime`, `fileId` | PHI (care plan, discharge summary) / PII (legal authority) | File names can contain diagnoses — consider renaming on upload |
-| File bytes | PHI / PII (legal) | Encrypted at rest; watermarked viewer, each view logged (CC-67) |
-| `status`, `rejectReason` | Operational | Set by reviewer (CC-24) |
-
-### AuditEvent (`audit`) — who can see: `audit`
-
-| Field | Class | Notes |
-|---|---|---|
-| `id`, `at`, `actorId`, `action`, `resource`, `prev`, `hash` | Operational (security) | Holds identifiers and resource names only — never health values (`src/data/audit.ts`). Hash-chained (CC-28). Retained 6 years. Not deleted with circle (minimal). |
-
-### Alert (`alerts`)
-
-| Field | Class | Notes |
-|---|---|---|
-| `title` | Operational | PHI-free lock-screen text by rule (CC-31) |
-| `detail` | PHI | In-app only, after unlock |
-| `to`, `severity`, `read`, `link`, `key`, `at` | Operational | — |
-
-### Settings (`settings`) — who can see: `settings`; emergency card: `emergencyCard`
-
-| Field | Class | Notes |
-|---|---|---|
-| `checkinWindow`, `escalation`, `escalationDelayMin`, `doseEscalation`, `quietHours`, `channels`, `criticalBypass`, `sessionLockMin`, `elderLockMin`, `toured`, `setupCallRequested` | Operational | Escalation lists member IDs |
-| `textSize`, `highContrast`, `readAloud` | PII-adjacent | Can imply vision/hearing needs — treat as sensitive |
-| `sharingPaused` | Operational | Elder privacy control (CC-81) |
-| `consent` (version, at, by, onBehalfReason) | Operational / legal record | Keep as long as data is processed + retention period |
-| `emergencyCard` (allergies, conditions, directives, bloodType, approvedByElder, approvedAt) | PHI | Shown to responders; always shared even when paused |
-
-## Pilot data — separate, non-PHI store (`src/lib/pilot.ts`)
+## Pilot data: separate, non-PHI store (`src/lib/pilot.ts`)
 
 | Element | Fields kept | Class | Source | Who can see | Retention |
 |---|---|---|---|---|---|
-| Pilot lead | `at`, `role`, `state` (trimmed to 30 chars), `hasPro` | De-identified | `/pilot` form | Pilot team; aggregates on `/app/pilot` | Until pilot recruiting ends, then delete |
-| Lead name and contact | **Not stored** by the prototype (form collects them but `addPilotLead` drops them) | PII | `/pilot` form | — | Production: must be stored to contact people → separate CRM-type store, delete after pilot |
-| NPS response | `at`, `persona`, `score`, `comment` (health words scrubbed by `scrubHealth`, max 500 chars) | De-identified (best effort) | In-app feedback (CC-76) | Pilot team; dashboard hides groups under 5 (`MIN_COHORT`) | 12 months after pilot end (CC-74) |
+| Pilot lead | `at`, `role`, `state` (trimmed to 30 characters), `hasPro` | De-identified | `/pilot` form | Pilot team; totals on `/app/pilot` | Until pilot recruiting ends |
+| Lead name and contact | **Not stored** (the form asks, `addPilotLead` drops them) | PII | `/pilot` form | — | Production needs a separate store, deleted after the pilot |
+| NPS response | `at`, `persona`, `score`, `comment` (health words removed by `scrubHealth`, at most 500 characters) | De-identified (best effort) | In-app feedback (CC-76) | Pilot team; groups under 5 hidden (`MIN_COHORT`) | 12 months after the pilot ends (CC-74) |
 
-Notes: `scrubHealth` is a keyword filter, not a guarantee; comments must still be reviewed before quoting. The pilot dashboard defaults to **synthetic** data in the prototype.
+`scrubHealth` is a keyword filter, not a guarantee, so comments are reviewed before they are quoted. The pilot dashboard shows synthetic data in the prototype.
 
 ## Human actions
 
-- [ ] Security officer and counsel confirm classifications, retention periods and the audit log exception.
-- [ ] Decide whether `relation` and accessibility settings are treated as PHI.
-- [ ] Define production store for pilot contact details.
-- [ ] Re-run this inventory whenever `types.ts` changes.
+- [ ] Security officer and counsel confirm the classes, retention periods and the audit-log exception.
+- [ ] Decide whether `relation`, `verification` and the accessibility settings (operational here, though they can imply vision or hearing needs) are treated as PHI.
+- [ ] Use opaque ids in production, so ids and alert keys stop naming medicines, tasks and approvals.
+- [ ] Re-encode profile photos on the server too, so a photo sent straight to the API loses its location data.
+- [ ] Add a job that purges expired sessions.
+- [ ] Decide whether `health.birthYear` stays PII or becomes PHI once it sits next to health readings.
+- [ ] Define the production store for pilot contact details.
+- [ ] Update this inventory, and its status line, whenever a story adds data (the classification test will fail until it does).

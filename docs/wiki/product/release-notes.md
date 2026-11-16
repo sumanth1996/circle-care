@@ -4,6 +4,7 @@ Prototype versions are derived from the repository history (`git log`). All comm
 
 | Version | Theme | Commits | Tests at release |
 |---|---|---|---|
+| **v0.6** | Everyday Care: refill tracker, daily check-ins, family chat, evening recap | Sprint 12, one pull request per feature | 344 unit/API after feature 1 · 387 after feature 2 · 414 after feature 3 · 438 after feature 4 |
 | **v0.5** | Real accounts: sign-up by role, PostgreSQL, SSN encryption, guardian payments, audit export | Sprint 11 merge (CC-172 – CC-190) | 312 unit/API · 15 account e2e · 29 demo e2e · 28 screens axe-clean |
 | **v0.4** | California localisation and product documentation | `428fa2e` (+ this wiki) | 217 unit · 29 e2e · 24 screens axe-clean |
 | **v0.3** | Health & Calendar for the guardian | `1dc1731`, `dce35c2`, `6c139a3` | 217 unit · 29 e2e · 24 screens axe-clean |
@@ -11,6 +12,59 @@ Prototype versions are derived from the repository history (`git log`). All comm
 | **v0.1** | Initial prototype | `78c70c5`, `ccb1a95`, `e5e532f` | None |
 
 ---
+
+## v0.6 — Everyday Care (Sprint 12)
+
+**Stories:** CC-120, CC-121, CC-142, CC-143, CC-164, CC-165, CC-191 · **Team:** Dev Agent (developer), QA Agent (tester), Release Agent (build & deploy), Lead Architect Agent (approver), Sumanth (PO) · **Design:** [mockups](../../design/sprint-12/README.md)
+
+### Feature 1 — Refill tracker and low-supply alerts (CC-120, CC-121)
+
+- **Pills on hand** for each medicine, counted when a bottle is opened and reduced by each dose marked taken.
+- **Days left** and the day it runs out, on Medications and the caregiver's Today.
+- **Low-supply alert** at a threshold Sarah picks (3 to 14 days), once per bottle, with a **Refill** entry added to the Calendar 3 days before it runs out.
+- **Request refill** and **New bottle** actions, logged on the medicine's history and in the access log.
+- New `supply` resource in the permission matrix: paid caregivers see and update counts only on shift.
+- Review: [approved after three rounds of changes](https://github.com/sumanth1996/circle-care/blob/main/docs/reviews/2026-11-14-sprint-12-refill-tracker.md).
+- Saved demo data moves to version 7 (older saved data is replaced with the new demo seed).
+
+### Feature 2 — One-tap daily check-ins (CC-142, CC-143)
+
+- **My day** card on Maggie's home: how she feels (six drawn faces, no emoji), glasses of water and meals. Every tap saves, and all of it is optional.
+- **One gentle reminder** at 7 PM, only on a day she added nothing.
+- **Daily check-ins · 7 days** in Sarah's Health summary, and today's line on her **Check-in** tile, only while Maggie shares them.
+- **No meals for 2 days** sends Sarah one gentle note.
+- **Share daily check-ins with Sarah** switch in Maggie's Privacy Center. Only she can change it; Sarah is told either way.
+- New `wellbeing` resource in the permission matrix: Maggie writes, Sarah reads only while shared, nobody else sees it.
+- The "I'm OK" check-in no longer stores an emoji mood.
+- Review: [docs/reviews/2026-11-14-sprint-12-daily-checkins.md](../../reviews/2026-11-14-sprint-12-daily-checkins.md).
+- Saved demo data moves to version 8.
+
+### Feature 3 — Private family chat (CC-164, CC-165)
+
+- **Family** chat for Maggie, Sarah and James: one shared conversation, newest at the bottom, with an unread count on Sarah's new **Chat** tab. The header says exactly who can read it.
+- **Lock screen** only says "New message in Circle Care". The words show inside the app.
+- **Health-detail check**: a message that names one of Maggie's medicines, a diagnosis or a dose (like 10 mg) offers **Save as a note**, **Send anyway** or **Edit** first. Only the sender sees the check.
+- Messages are 1 to 1000 characters; longer ones are refused with a count, never cut.
+- **Maggie's view**: 22 point bubbles, one big microphone, and a **You said** card with Send and Try again, so nothing goes until she taps Send. She can type instead, and the typing box opens by itself where the device has no speech recognition. Her messages show **By voice**.
+- **Chat tile on Maggie's home** with the newest message and an **Open chat** button. **Show chat on my home** in her settings hides it; only she can change it, and the chat stays under **Family**.
+- **Paid caregivers** join only when Maggie or Sarah switches them on under **People**, and then get a Chat tab. Switching off, leaving the circle or a time limit ending removes access at once. Attempts from outside the chat are refused and logged.
+- New `chat` resource in the permission matrix. A caregiver who is added sees messages from the time they joined, not the history before.
+- Review: [docs/reviews/2026-11-14-sprint-12-family-chat.md](../../reviews/2026-11-14-sprint-12-family-chat.md).
+- Design: [Figma board](../../design/sprint-12/03-family-chat-figma.png), approved by Sumanth on 2026-11-14.
+- Saved demo data moves to version 10.
+
+### Feature 4 — Evening recap for Sarah (CC-191)
+
+- **Evening recap** card on Sarah's Home from 6 PM: one headline (*"A calm day for Maggie."* only when every dose so far is confirmed, the check-in is done and no refill is open; otherwise what needs a look), then **Medicines**, **Check-in**, **Visits**, **Her day** and **Tomorrow**.
+- **Medicines** gives doses given so far, then names each dose not confirmed, skipped or refused with its time, and any dose due now. On a calm day it gives the next dose.
+- **Her day** shows Maggie's feeling, water and meals only while she shares them, and reads **Private** on a day she keeps to herself.
+- **Tomorrow** shows the first appointment and its prep note, or the first caregiver visit, or *Nothing booked*.
+- A low supply line links to Medicines and gives the refill date when it is on the Calendar, or says it isn't on the Calendar yet. **See the week** opens the weekly digest, and **Review medicines** shows on a day with a dose that needs a look, a dose due now or a refill to sort out.
+- **One update at 7 PM**: the lock screen says only "Update from Circle Care" and the app says "Your evening recap is ready." Sarah can turn it off under **Settings · Evening recap**, and it is skipped for the evening when her quiet hours cover 7 PM. If the app first runs later that evening, the update still goes out until 11 PM, outside quiet hours. The card shows either way.
+- Presenter control **Skip to 7 PM for the evening recap**.
+- Review: [docs/reviews/2026-11-14-sprint-12-evening-recap.md](../../reviews/2026-11-14-sprint-12-evening-recap.md).
+- Design: [Figma board](../../design/sprint-12/04-evening-recap-figma.png), approved by Sumanth on 2026-11-14.
+- Saved demo data moves to version 11.
 
 ## v0.5 — Accounts, identity & payments (Sprint 11)
 

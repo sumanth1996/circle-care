@@ -9,16 +9,19 @@ Working drafts for the backlog stories that need real people, counsel or vendors
 
 | Story | Document | What it is | Needs human action |
 |---|---|---|---|
-| CC-1 | [Recruiting screener](../research/01-recruiting-screener.md) | Recruiting channels, screener per persona, quotas, consent outline, incentive, de-identification, tracker | Yes — recruit, review consent text, fund incentives |
-| CC-2 | [Interview guide — elders](../research/02-interview-guide-elders.md) | Elder interview guide with concept test and hypotheses | Yes — pilot the guide, run 6+ interviews, safety protocol |
-| CC-3 | [Interview guide — caregivers](../research/03-interview-guide-caregivers.md) | Workload and verification | Yes — agency permissions, 6+ interviews |
-| CC-4 | [Interview guide — guardians](../research/04-interview-guide-guardians.md) | Verification, autonomy, authority | Yes — 5+ interviews |
+| CC-1, CC-197 | [Recruiting screener](../research/01-recruiting-screener.md) | Recruiting channels, screener per persona, quotas, consent outline (how notes are kept and deleted), incentive, de-identification, tracker, human steps | Yes — recruit, review consent text, fund incentives |
+| CC-2, CC-197 | [Interview guide — elders](../research/02-interview-guide-elders.md) | Elder interview guide with concept tests (including My day, chat and the evening recap) and hypotheses | Yes — pilot the guide, run 6+ interviews, safety protocol |
+| CC-3, CC-197 | [Interview guide — caregivers](../research/03-interview-guide-caregivers.md) | Workload and verification, with concept tests of refills and the family chat | Yes — agency permissions, 6+ interviews |
+| CC-4, CC-197 | [Interview guide — guardians](../research/04-interview-guide-guardians.md) | Verification, autonomy, authority, with concept tests of the evening recap, refills, check-ins and chat | Yes — 5+ interviews |
 | CC-5 | [Journey maps](../research/05-journey-maps.md) | Hypothesis journeys per persona and synthesis process | Yes — replace hypotheses with evidence |
 | CC-6 | [Opportunity solution tree](../research/06-opportunity-solution-tree.md) | North Star, opportunities, solutions, assumption tests | Yes — run assumption tests, re-rank |
 | CC-7 | [Competitive teardown](../research/07-competitive-teardown.md) | Framework, comparison table, positioning gaps | Yes — verify every product fact |
-| CC-8 | [Regulatory memo](../compliance/08-regulatory-memo.md) | HIPAA, FTC, state law, TCPA, ADA, guardianship applicability | Yes — counsel review |
-| CC-9 | [Data inventory](../compliance/09-data-inventory.md) | Every data element classified | Yes — security officer and counsel sign-off |
-| CC-10 | [Threat model](../security/10-threat-model.md) | STRIDE threat model with data-flow diagram | Yes — engineering security review |
+| CC-1 | [Outreach kit](../research/08-outreach-kit.md) and [recruiting tracker](../research/09-recruiting-tracker.csv) | Recruiting timeline, outreach templates per channel, large-type flyer, phone script, ID-only tracker | Yes — name a recruiting owner and send the outreach |
+| CC-2 to CC-4 | [Fieldwork plan](../research/10-fieldwork-plan.md) | Roles, session schedule (PT), run sheet, draft safety protocol for disclosures of harm, storage and deletion | Yes — moderator, note-taker, review the safety protocol |
+| CC-5 | [Synthesis kit](../research/11-synthesis-kit.md) | What agents may receive, rolling saturation check, hypothesis scorecard, journey-map check script | Yes — run the 5 journey-map checks |
+| CC-8, CC-196 | [Regulatory memo](../compliance/08-regulatory-memo.md) | HIPAA, FTC, state law, TCPA, ADA, guardianship applicability; v2 (2026-11-15) adds SSNs, bank accounts, cards, photos, chat and voice, check-ins, and 25 questions for counsel, checked against the data inventory by a unit test | Yes — counsel review (CC-8) |
+| CC-9 | [Data inventory](../compliance/09-data-inventory.md) | Every state field and Postgres column classified, checked by a unit test; reviewed against `main` on 2026-11-15 | Yes — security officer and counsel sign-off |
+| CC-10 | [Threat model](../security/10-threat-model.md) | STRIDE threat model of the built system, with each control traced to code | Yes — engineering security review and security officer |
 | CC-18 | [Permission matrix](../security/permission-matrix.md) | Readable rendering of `MATRIX` | Partly — open design questions, server enforcement |
 | CC-30 | [Vendor & BAA register](../compliance/30-vendor-baa-register.md) | Vendor and BAA register template | Yes — pick vendors, sign BAAs |
 | CC-34 | [Incident response runbook](../security/34-incident-response-runbook.md) | Severity levels, roles, playbooks, notification table, tabletop | Yes — assign roles, confirm timelines, tabletop |

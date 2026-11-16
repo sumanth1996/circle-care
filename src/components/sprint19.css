@@ -1,0 +1,32 @@
+/* Sprint 19: call log (CC-226 – CC-228) and What matters to me (CC-219). Same glass surfaces as the rest of the app. */
+.calls-intro { margin-top: -8px; }
+.calls-filter > span { display: inline-flex; align-items: center; gap: 6px; }
+.calls-chips { gap: 8px; }
+.calls-chips .chip { border: 0; cursor: pointer; background: rgba(0, 122, 255, 0.08); }
+.calls-chips .chip.on { background: var(--blue); color: #fff; }
+.calls-empty { display: flex; align-items: center; gap: 10px; }
+.calls-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.calls-list li { padding: 14px 16px; }
+.calls-list p { margin: 0; }
+.call-outcome { line-height: 1.45; }
+.call-ref { gap: 8px; align-items: center; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.02em; }
+.call-step { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 14px; background: rgba(0, 122, 255, 0.06); }
+.call-step.late { background: rgba(255, 159, 10, 0.12); }
+.call-step.done { background: rgba(52, 199, 89, 0.1); }
+.call-actions { gap: 8px; }
+.call-step-fields { border: 0; padding: 10px 0 0; margin: 0; border-top: 1px solid rgba(0, 0, 0, 0.06); }
+.elder-calls .calls-list b, .elder-calls .call-outcome { font-size: 1.1em; }
+.elder-calls .call-step { font-size: 1.05em; }
+
+.about-sec { padding: 16px 18px; }
+.about-text-read { margin: 0; line-height: 1.5; white-space: pre-wrap; }
+.elder-about .about-text-read, .elder-about .about-text { font-size: 1.1em; }
+.about-share { padding-top: 10px; border-top: 1px solid rgba(0, 0, 0, 0.06); }
+.about-share.compact { padding-top: 0; border-top: 0; }
+.about-changes { box-shadow: 0 0 0 2px var(--blue), var(--shadow-soft); }
+.about-changes p { margin: 0; }
+.about-before { text-decoration: line-through; text-decoration-color: rgba(0, 0, 0, 0.35); }
+.shift-about { box-shadow: 0 0 0 2px var(--care), var(--shadow-soft); }
+.shift-about p { margin: 0; }
+.pc-about-sec { padding-top: 8px; border-top: 1px solid rgba(0, 0, 0, 0.06); }

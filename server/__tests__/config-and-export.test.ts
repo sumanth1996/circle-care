@@ -10,6 +10,11 @@ import { completeGuardian, harness, signedUp } from "./helpers";
 
 const k1 = Buffer.alloc(32, 1).toString("base64");
 const k2 = Buffer.alloc(32, 2).toString("base64");
+// These tests start a fresh PGlite database and hash passwords with scrypt. Alone they take about 2 s, but the
+// first one also pays PGlite's cold start, and on a shared CI runner with the whole suite in parallel that went past
+// Vitest's 5 s default once (PR #7, run 3). 20 s keeps the check meaningful without failing on a slow runner.
+const SLOW_DB = { timeout: 20_000 };
+
 const prod = { APP_ENV: "production", DATA_ENCRYPTION_KEY: k1, DATA_HMAC_KEY: k2, DATABASE_URL: "postgres://u:p@db.example.com/cc", PAYMENT_PROVIDER: "stripe", STRIPE_SECRET_KEY: "sk_live_abc" };
 
 describe("CC-183 production refuses to start without protection", () => {
@@ -46,7 +51,7 @@ describe("CC-183 production refuses to start without protection", () => {
   it("never allows a live Stripe key outside production", () => {
     expect(() => loadConfig({ APP_ENV: "staging", PAYMENT_PROVIDER: "stripe", STRIPE_SECRET_KEY: "sk_live_x", DATA_ENCRYPTION_KEY: k1, DATA_HMAC_KEY: k2 })).toThrow(/live Stripe key/);
   });
-  it("in production: Secure cookies, HSTS, and no simulated vault", async () => {
+  it("in production: Secure cookies, HSTS, and no simulated vault", SLOW_DB, async () => {
     const h = await harness();
     const app = createApp({ cfg: loadConfig(prod), db: h.db });
     const request = (await import("supertest")).default;
@@ -60,7 +65,7 @@ describe("CC-183 production refuses to start without protection", () => {
 });
 
 describe("CC-184 masked audit export", () => {
-  it("writes masked files with a manifest, and nothing sensitive leaks", async () => {
+  it("writes masked files with a manifest, and nothing sensitive leaks", SLOW_DB, async () => {
     const h = await harness();
     const g = await completeGuardian(h);
     const v = await g.ag.post("/vault/v1/cards", { holderName: "Sarah Lee", number: "4242424242424242", expMonth: 12, expYear: 30, cvc: "123", postalCode: "94114" });
@@ -93,7 +98,7 @@ describe("CC-184 masked audit export", () => {
     expect(ev.length).toBe(1);
     await h.db.close();
   });
-  it("can include full names for a legal hold", async () => {
+  it("can include full names for a legal hold", SLOW_DB, async () => {
     const h = await harness();
     await signedUp(h, "caregiver", { firstName: "Ana", lastName: "Reyes" });
     const out = mkdtempSync(join(tmpdir(), "cc-export-"));
