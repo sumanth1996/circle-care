@@ -38,6 +38,7 @@ import SosResponder from "./pages/shared/SosResponder";
 import Alerts from "./pages/shared/Alerts";
 import Invite from "./pages/Invite";
 import { ChatView } from "./components/chat";
+import { HelpBoard } from "./components/help";
 import Review from "./pages/internal/Review";
 import PilotDashboard from "./pages/internal/PilotDashboard";
 import { AccessGuard } from "./components/Extras";
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="decisions" element={<ElderDecisions />} />
               <Route path="card" element={<EmergencyCard />} />
               <Route path="chat" element={<ChatView large />} />
+              <Route path="help" element={<HelpBoard />} />
             </Route>
             <Route path="/app/caregiver" element={<AppShell persona="caregiver" />}>
               <Route index element={<CaregiverToday />} />
@@ -95,6 +97,15 @@ export default function App() {
               <Route path="alerts" element={<Alerts />} />
               <Route path="sos" element={<SosResponder />} />
               <Route path="chat" element={<ChatView />} />
+              <Route path="help" element={<HelpBoard />} />
+            </Route>
+            {/* CC-209, CC-210: James (family). The Help board is his home. */}
+            <Route path="/app/family" element={<AppShell persona="family" />}>
+              <Route index element={<HelpBoard />} />
+              <Route path="chat" element={<ChatView />} />
+              <Route path="card" element={<EmergencyCard />} />
+              <Route path="alerts" element={<Alerts />} />
+              <Route path="sos" element={<SosResponder />} />
             </Route>
             <Route path="/app/guardian" element={<AppShell persona="guardian" />}>
               <Route index element={<GuardianHome />} />
@@ -113,9 +124,11 @@ export default function App() {
               <Route path="alerts" element={<Alerts />} />
               <Route path="sos" element={<SosResponder />} />
               <Route path="chat" element={<ChatView />} />
+              <Route path="help" element={<HelpBoard />} />
             </Route>
             <Route path="/app/sos" element={<SosRedirect />} />
             <Route path="/app/chat" element={<SosRedirect to="chat" />} />
+            <Route path="/app/help" element={<SosRedirect to="help" />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </AccountProvider>
@@ -126,9 +139,10 @@ export default function App() {
 }
 
 import { useStore } from "./data/store";
-/** Alert links like /app/sos and /app/chat open the same page for whoever is signed in. */
-function SosRedirect({ to = "sos" }: { to?: "sos" | "chat" }) {
+/** Alert links like /app/sos, /app/chat and /app/help open the same page for whoever is signed in. */
+function SosRedirect({ to = "sos" }: { to?: "sos" | "chat" | "help" }) {
   const { state } = useStore();
   const p = state.persona ?? "guardian";
-  return <Navigate to={`/app/${p}/${to}`} replace />;
+  // James's Help board is his home page.
+  return <Navigate to={p === "family" && to === "help" ? "/app/family" : `/app/${p}/${to}`} replace />;
 }

@@ -12,6 +12,7 @@ import * as everyday from "./everydayActions";
 import { cryptoAvailable, deviceKey, encryptForStorage, loadEncrypted, wipeDevice } from "../lib/secureStorage";
 import { createSaver, saveWhenPageGoes } from "./saver";
 import { runReminders, settleDose, snoozeReminder, heldFor, releaseHeld } from "./calmAlerts";
+import * as help from "./help";
 
 export const STATE_KEY = "circle-care-demo";
 
@@ -241,6 +242,9 @@ export function evaluate(s: State) {
       audit(s, "system", "removed", `${m.name}'s access (time limit ended)`);
     }
   }
+
+  // CC-209, CC-210: the Help board's 24-hour notice and "Did this happen?" question.
+  help.runHelp(s);
 
   // CC-208: when quiet hours end, what waited overnight goes out as one morning summary.
   releaseHeld(s);
@@ -625,6 +629,14 @@ function useStoreState(initial: State) {
       logDaily: (patch: everyday.DailyPatch) => update((s) => everyday.logDaily(s, actor(s), patch)),
       setDailySharing: (on: boolean) => update((s) => everyday.setDailySharing(s, actor(s), on)),
       sendChat: (text: string, via?: "voice") => update((s) => { everyday.sendChat(s, actor(s), text, via); }),
+      // CC-209, CC-210: the Help board.
+      postHelp: (input: help.HelpInput) => update((s) => { help.postHelp(s, actor(s), input); }),
+      repostHelp: (id: string) => update((s) => { help.repostHelp(s, actor(s), id); }),
+      cancelHelp: (id: string) => update((s) => { help.cancelHelp(s, actor(s), id); }),
+      claimHelp: (id: string, seenRev: number) => update((s) => { help.claimHelp(s, actor(s), id, seenRev); }),
+      releaseHelp: (id: string) => update((s) => { help.releaseHelp(s, actor(s), id); }),
+      finishHelp: (id: string) => update((s) => { help.finishHelp(s, actor(s), id); }),
+      notYetHelp: (id: string) => update((s) => { help.notYetHelp(s, actor(s), id); }),
       readChat: () => update((s) => everyday.readChat(s, actor(s))),
       setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */

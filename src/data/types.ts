@@ -2,7 +2,7 @@
 // browser; a production build would keep it server-side, encrypted, behind
 // role-based access checks (see Notion: CC-19 "Enforce access rules server-side").
 
-export type Persona = "elder" | "caregiver" | "guardian";
+export type Persona = "elder" | "caregiver" | "guardian" | "family";
 export type Role = "elder" | "guardian" | "family" | "pro";
 
 export interface Member {
@@ -283,6 +283,49 @@ export interface Appointment {
   createdBy: string;
 }
 
+/* ---------------- Sprint 16: Help board (CC-209, CC-210) ---------------- */
+
+export type HelpKind = "ride" | "groceries" | "company" | "visit" | "other";
+export type HelpStatus = "open" | "claimed" | "done" | "cancelled";
+
+export interface HelpChange {
+  at: string;
+  by: string;
+  change: string;
+}
+
+/** A small ask Sarah posts for the people she picks (CC-209), who can claim and finish it (CC-210). */
+export interface HelpRequest {
+  id: string;
+  kind: HelpKind;
+  /** Free text, up to 280 characters. Sarah sees the health-detail hint before it's posted. */
+  note: string;
+  /** When the help is needed. */
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
+  /** Tied to an appointment: people without appointment access see only "Appointment" and the time. */
+  appointmentId?: string;
+  /** Member ids Sarah chose. Maggie and Sarah always see it too. */
+  audience: string[];
+  by: string;
+  at: string;
+  status: HelpStatus;
+  claimedBy?: string;
+  claimedAt?: string;
+  doneBy?: string;
+  /** When it was finished or cancelled; boards drop it 30 days later. */
+  closedAt?: string;
+  /** Server revision: a claim succeeds only on the revision the claimer saw (first claim wins). */
+  rev: number;
+  /** Sarah was told it's still unclaimed 24 hours before it's due. */
+  remindedUnclaimed?: boolean;
+  /** The person who has it was asked once "Did this happen?" */
+  askedDone?: boolean;
+  /** They answered "Not yet". */
+  notYet?: boolean;
+  history: HelpChange[];
+}
+
 export interface Settings {
   checkinWindow: { start: string; end: string };
   escalation: string[]; // ordered member ids
@@ -371,5 +414,7 @@ export interface State {
   alerts: Alert[];
   /** CC-207: today's dose reminders. */
   reminders: DoseReminder[];
+  /** CC-209, CC-210: the Help board. */
+  help: HelpRequest[];
   settings: Settings;
 }

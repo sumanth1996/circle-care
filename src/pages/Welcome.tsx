@@ -48,6 +48,8 @@ export default function Welcome() {
           </button>
         ))}
       </div>
+      {/* CC-209, CC-210: James, Maggie's grandson, sees the Help board. */}
+      <button className="link" onClick={() => go("family")}>Or see the Help board as James, Maggie's grandson</button>
       <div className="welcome-foot">
         <p className="muted small"><ShieldCheck size={16} style={{ verticalAlign: "-3px" }} /> Fictional demo data, stored only in this browser.</p>
         <button className="link" onClick={() => setSignup(true)}>Start a new care circle</button>

@@ -20,6 +20,7 @@ const LINKS = {
   "State.handoffs": "Handoff", "State.sos": "SosEvent", "State.checkins": "Checkin", "State.dailyLogs": "DailyLog",
   "State.chat": "Chat", "Chat.messages": "ChatMessage", "State.approvals": "Approval", "State.notes": "CareNote",
   "State.docs": "CareDoc", "State.appointments": "Appointment", "State.audit": "AuditEvent", "State.alerts": "Alert", "Alert.resolved": "AlertResolution", "State.reminders": "DoseReminder",
+  "State.help": "HelpRequest", "HelpRequest.history": "HelpChange",
   "State.settings": "Settings",
 };
 
