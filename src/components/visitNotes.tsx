@@ -178,7 +178,7 @@ export function MyNextSteps() {
         {steps.map((x) => (
           <li key={x.task.id} aria-label={x.task.title}>
             {x.done ? <CheckCircle2 size={20} color="var(--green)" aria-hidden="true" /> : <CalendarCheck size={20} color={x.overdue ? "#9a6700" : "var(--blue)"} aria-hidden="true" />}
-            <span className="grow"><b>{x.task.title}</b><span className="muted small" style={{ display: "block" }}>{x.task.date === today ? "Today" : fmtShortDay(x.task.date!)}{x.overdue ? " · past its day" : ""}{x.done ? " · Done" : ""}{x.task.apptId ? <> · <Link to={`/app/${state.persona}/visit-notes/${x.task.apptId}`}>From the visit notes</Link></> : x.task.callId ? <> · <Link to={`/app/${state.persona}/calls`}>From the call log</Link></> : null}</span></span>
+            <span className="grow"><b>{x.task.title}</b><span className="muted small" style={{ display: "block" }}>{x.task.date === today ? "Today" : fmtShortDay(x.task.date!)}{x.covering ? " · Covering for Sarah" : ""}{x.overdue ? " · past its day" : ""}{x.done ? " · Done" : ""}{x.task.apptId ? <> · <Link to={`/app/${state.persona}/visit-notes/${x.task.apptId}`}>From the visit notes</Link></> : x.task.callId ? <> · <Link to={`/app/${state.persona}/calls`}>From the call log</Link></> : null}</span></span>
             {!x.done && <button className="btn secondary sm" onClick={() => { actions.finishNextStep(x.task.id); toast("Marked done"); }}><Check size={16} /> Done</button>}
           </li>
         ))}

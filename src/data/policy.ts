@@ -10,7 +10,7 @@ export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
   | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
   | "supply" | "wellbeing" | "chat" | "help" | "plan" | "questions" | "visitNotes"
-  | "calls" | "calls.admin" | "calls.ref" | "aboutMe";
+  | "calls" | "calls.admin" | "calls.ref" | "aboutMe" | "away";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -60,6 +60,8 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   "calls.ref":     { read: ["elder", "guardian"] },
   // CC-219: Maggie's What matters to me page. Each section is narrowed further to the people she picks (aboutMe.ts).
   aboutMe:         { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian"] },
+  // Sprint 20 — Away mode (CC-229 – CC-231). Only Sarah sets her dates; Maggie and family see who covers.
+  away:            { read: ["elder", "guardian", "family"], write: ["guardian"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */

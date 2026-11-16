@@ -139,7 +139,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     resource: null,
     fields: {
       id: O, key: P, at: P, to: O, title: O, detail: P, severity: O, read: O, link: O,
-      urgent: O, held: O, items: P,
+      urgent: O, held: O, items: P, awayId: O, coverLink: O, movedToSarah: P,
     },
   },
   // CC-206: how a missed dose was settled (who marked it, when, and why), shown on the earlier alert.
@@ -202,6 +202,16 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   AboutSection: {
     resource: "aboutMe",
     fields: { key: O, text: P, by: P, at: P, sharedWith: O, changedBy: P, changedAt: P, before: P },
+  },
+  // CC-229: Sarah's away dates and who covers. About Sarah and James, not Maggie's health; the counts in the
+  // summary are just numbers. Personal, because it says when Sarah's home is empty.
+  Away: {
+    resource: "away",
+    fields: {
+      id: O, start: I, end: I, backupId: I, status: O, by: I, at: O, updatedAt: O, answeredAt: O, pickReminded: O,
+      maggieAsked: O, startedAt: O, endedAt: O, endedEarly: O, summarySeenAt: O,
+      "summaryFor.alerts": O, "summaryFor.tasksDone": O, "summaryFor.sos": O, "summaryFor.open": O,
+    },
   },
   // CC-217: questions and observations for a visit describe Maggie's health.
   VisitQuestion: {

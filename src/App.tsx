@@ -45,6 +45,7 @@ import { VisitQuestions, QuestionsPrint } from "./components/questions";
 import { CallLogPage } from "./components/callLog";
 import { AboutMePage } from "./components/aboutMe";
 import { VisitNotesPage } from "./components/visitNotes";
+import { AwayPage } from "./components/away";
 import ElderAsk from "./pages/elder/ElderAsk";
 import ComingHome from "./pages/guardian/ComingHome";
 import Review from "./pages/internal/Review";
@@ -131,6 +132,7 @@ export default function App() {
               <Route path="visit-notes/:id" element={<VisitNotesPage />} />
               <Route path="calls" element={<CallLogPage />} />
               <Route path="about-me" element={<AboutMePage />} />
+              <Route path="away" element={<AwayPage />} />
             </Route>
             <Route path="/app/guardian" element={<AppShell persona="guardian" />}>
               <Route index element={<GuardianHome />} />
@@ -155,6 +157,7 @@ export default function App() {
               <Route path="visit-notes/:id" element={<VisitNotesPage />} />
               <Route path="calls" element={<CallLogPage />} />
               <Route path="about-me" element={<AboutMePage />} />
+              <Route path="away" element={<AwayPage />} />
               <Route path="questions/print/:id" element={<QuestionsPrint />} />
             </Route>
             <Route path="/app/sos" element={<SosRedirect />} />

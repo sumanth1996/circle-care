@@ -1,0 +1,16 @@
+/* Sprint 20: away mode (CC-229 – CC-231). Same glass surfaces as the rest of the app. */
+.away-status.on, .away-banner.on { box-shadow: 0 0 0 2px var(--blue), var(--shadow-soft); }
+.away-status.warn, .away-banner.warn { box-shadow: 0 0 0 2px #ff9f0a, var(--shadow-soft); }
+.away-banner { display: flex; align-items: center; gap: 12px; padding: 14px 16px; color: inherit; text-decoration: none; }
+.away-note { margin: 0; padding: 10px 12px; border-radius: 14px; background: rgba(255, 159, 10, 0.12); }
+.away-who { border: 0; padding: 0; margin: 0; }
+.away-pick { gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px; background: rgba(0, 122, 255, 0.05); cursor: pointer; }
+.away-pick input { width: 18px; height: 18px; accent-color: var(--blue); }
+.away-alerts, .away-sum { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.away-alert { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; padding: 10px 12px; border-radius: 14px; background: rgba(0, 122, 255, 0.05); }
+.away-alert > span:nth-child(2) { flex: 1 1 200px; }
+.away-sum li::before { content: "·"; margin-right: 8px; color: var(--blue); }
+.away-summary { box-shadow: 0 0 0 2px var(--green), var(--shadow-soft); }
+.away-thanks { padding: 12px 14px; border-radius: 14px; background: rgba(52, 199, 89, 0.1); }
+.elder-covering { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; box-shadow: 0 0 0 2px var(--blue), var(--shadow-soft); }
+.elder-covering .covering-line { margin: 0; font-size: 1.25em; font-weight: 600; line-height: 1.35; }

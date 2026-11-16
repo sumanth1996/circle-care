@@ -26,6 +26,7 @@ Every feature area in the Circle Care prototype has its own page. All pages use 
 | F-18 | [After-visit notes](after-visit-notes.md) | Guardian, elder, family, caregiver | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-218 |
 | F-19 | [Call log](call-log.md) | Guardian, elder, family, caregiver | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-226, CC-227, CC-228 |
 | F-20 | [What matters to me](what-matters-to-me.md) | Elder, guardian, family, caregiver | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-219 |
+| F-21 | [Away mode](away-mode.md) | Guardian, family, elder | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-229, CC-230, CC-231 |
 
 ### Status definitions
 

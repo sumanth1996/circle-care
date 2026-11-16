@@ -5,6 +5,7 @@ import { clock, nameOf, personaOf, todayOf } from "./selectors";
 import { questionsFor } from "./visitQuestions";
 import { at as atTime, fmtShortDay, uid, ymd, addDays } from "../lib/time";
 import { ELDER, GUARDIAN } from "./demo";
+import { activeAway } from "./away";
 
 // Sprint 18: after-visit notes and next steps (CC-218). Whoever went to the visit writes down the answers to the
 // circle's questions, anything else the doctor said and the next steps. Each next step becomes a one-off care
@@ -157,11 +158,17 @@ export function nextStepsFor(s: State, personId: string) {
   const today = todayOf(s);
   const weekOut = ymd(addDays(clock(s), 7));
   const assignee = personId === ELDER ? "elder" : personId;
+  // CC-229: while covering for Sarah, her one-off tasks in the away dates are theirs too, if their role sees them.
+  const away = activeAway(s);
+  const covering = away?.backupId === personId ? away : undefined;
+  const coverable = (t: CareTask) =>
+    !!covering && t.assignee === GUARDIAN && t.date! <= covering.end &&
+    (t.apptId ? canReadNotes(s, personId) : t.callId ? can(s, personId, "read", "calls") : true);
   return s.tasks
-    .filter((t) => t.recurrence === "once" && t.assignee === assignee && t.date)
+    .filter((t) => t.recurrence === "once" && t.date && (t.assignee === assignee || coverable(t)))
     .map((t) => {
       const log = s.taskLogs.find((l) => l.taskId === t.id);
-      return { task: t, log, done: !!log, overdue: !log && t.date! < today };
+      return { task: t, log, done: !!log, overdue: !log && t.date! < today, covering: t.assignee !== assignee };
     })
     .filter((x) => (x.done ? x.log!.date === today : x.task.date! <= weekOut))
     .sort((a, b) => a.task.date!.localeCompare(b.task.date!));
@@ -172,7 +179,8 @@ export function finishNextStep(s: State, by: string, taskId: string) {
   const t = s.tasks.find((x) => x.id === taskId && x.recurrence === "once");
   if (!t || !allowed(s, by, "write", "tasks")) return false;
   const owner = t.assignee === "elder" ? ELDER : t.assignee;
-  if (by !== owner && by !== GUARDIAN && by !== ELDER) { audit(s, by, "denied", "finish someone else's next step"); return false; }
+  const cover = owner === GUARDIAN && activeAway(s)?.backupId === by; // CC-229: the backup finishes Sarah's steps
+  if (by !== owner && by !== GUARDIAN && by !== ELDER && !cover) { audit(s, by, "denied", "finish someone else's next step"); return false; }
   if (s.taskLogs.some((l) => l.taskId === t.id)) return false;
   s.taskLogs.push({ taskId: t.id, date: todayOf(s), by, at: clock(s).toISOString() });
   audit(s, by, "updated", "a next step (done)");

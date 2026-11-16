@@ -5,6 +5,7 @@ import { useStore } from "../../data/store";
 import { member } from "../../data/selectors";
 import { Avatar, Sheet, useToast } from "../../components/ui";
 import { fmtShortDay } from "../../lib/time";
+import { escalationOrder } from "../../data/away";
 
 /** CC-53: elder-approved emergency info card for first responders. Every view is logged. */
 export default function EmergencyCard() {
@@ -45,7 +46,7 @@ export default function EmergencyCard() {
         <div><p className="tiny">Current medicines</p><p>{meds.map((m) => `${m.name} ${m.strength}`).join(", ")}</p></div>
         <div><p className="tiny">Decisions</p><p>{card.directives}</p></div>
         <div className="list flat">
-          {state.settings.escalation.slice(0, 2).map((id) => {
+          {escalationOrder(state).slice(0, 2).map((id) => {
             const m = member(state, id);
             return <a key={id} href={`tel:${m?.phone.replace(/[^+\d]/g, "")}`} className="list-row"><Avatar m={m} size={36} /><span className="grow"><b>{m?.name}</b><span className="list-sub" style={{ display: "block" }}>{m?.relation.split(" · ")[0]}</span></span><Phone size={20} color="var(--green)" /></a>;
           })}

@@ -6,6 +6,7 @@ import { activeSos, member, nameOf } from "../../data/selectors";
 import { Avatar, useSpeech } from "../../components/ui";
 import { fmtTime } from "../../lib/time";
 import "./elder.css";
+import { escalationOrder } from "../../data/away";
 
 const HOLD_MS = 2000;
 const CANCEL_S = 10;
@@ -70,7 +71,7 @@ export default function ElderSos() {
         <div className="panel">
           <h2 style={{ fontSize: "1em", marginBottom: 6 }}>Who we're telling</h2>
           <div className="chain">
-            {state.settings.escalation.map((id, i) => {
+            {escalationOrder(state).map((id, i) => {
               const m = member(state, id);
               const st = sos.responderId === id ? "Coming" : i <= sos.step ? "Alerted" : `In ${(i - sos.step) * state.settings.escalationDelayMin} min if no answer`;
               return (

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { NavLink, Navigate, Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import {
   Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, HeartPulse, CalendarHeart, MessageCircleHeart, HandHeart, type LucideIcon,
-  HousePlus, ListChecks, Phone, Heart,
+  HousePlus, ListChecks, Phone, Heart, Plane,
 } from "lucide-react";
 import { useStore } from "../data/store";
 import { activeSos, alertsFor, alertLink, member, meId, nameOf, pendingApprovals, unreadCount, clock } from "../data/selectors";
@@ -13,6 +13,7 @@ import PersonaSheet from "./PersonaSheet";
 import { PrivacyShield, WelcomeTour, NpsCard } from "./Extras";
 import { fmtTime } from "../lib/time";
 import { inChat, unreadChat } from "../data/everyday";
+import { coverView } from "../data/away";
 import "./shell.css";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; badge?: number; tab?: boolean };
@@ -87,6 +88,8 @@ export default function AppShell({ persona }: { persona: Persona }) {
           { to: "/app/guardian/questions", label: "Visit questions", icon: ListChecks },
           { to: "/app/guardian/calls", label: "Call log", icon: Phone },
           { to: "/app/guardian/about-me", label: "What matters to Maggie", icon: Heart },
+          // CC-229: Sarah's away dates and who covers.
+          { to: "/app/guardian/away", label: "Away mode", icon: Plane },
           { to: "/app/guardian/notes", label: "Notes & documents", icon: StickyNote },
           { to: "/app/guardian/card", label: "Emergency card", icon: IdCard },
           { to: "/app/guardian/privacy", label: "Privacy Center", icon: Shield },
@@ -116,6 +119,8 @@ export default function AppShell({ persona }: { persona: Persona }) {
               { to: "/app/family/card", label: "Emergency card", icon: IdCard, tab: true },
               { to: "/app/family/about-me", label: "What matters to Maggie", icon: Heart },
               { to: "/app/family/calls", label: "Call log", icon: Phone },
+              // CC-229: when Sarah asks someone to cover for her.
+              ...(coverView(state, meId("family")) ? [{ to: "/app/family/away", label: "Covering for Sarah", icon: Plane }] : []),
             ]
           : [];
 

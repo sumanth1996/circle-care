@@ -11,7 +11,8 @@ pages = ["/", "/how-it-works", "/features", "/who-its-for", "/privacy", "/pilot"
          "/app/guardian/chat", "/app/elder/chat",  # CC-194: both chat sizes
          "/app/guardian/help", "/app/caregiver/help", "/app/family", "/app/elder/help",  # CC-209, CC-210: the Help board
          "/app/elder/ask", "/app/guardian/coming-home", "/app/guardian/questions", "/app/family/questions", "/app/elder/questions",  # Sprint 17
-         "/app/guardian/calls", "/app/elder/calls", "/app/guardian/about-me", "/app/elder/about-me"]  # Sprint 19
+         "/app/guardian/calls", "/app/elder/calls", "/app/guardian/about-me", "/app/elder/about-me",  # Sprint 19
+         "/app/guardian/away", "/app/family/away"]  # Sprint 20: away mode
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
     ctx = b.new_context(viewport={"width": 1280, "height": 900}, timezone_id="America/New_York", bypass_csp=True)
