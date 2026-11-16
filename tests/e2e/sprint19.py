@@ -60,6 +60,14 @@ with sync_playwright() as p:
         pg.wait_for_url(f"**/app/{persona}", timeout=5000)
         skip_tour()
 
+    def toggle(sw, on):
+        # A toast can sit over a switch near the bottom of a phone screen, so a click may land on the toast.
+        # Space on the focused switch is what a keyboard user does, and nothing can cover it.
+        if sw.is_checked() != on:
+            sw.focus()
+            sw.press("Space")
+        expect(sw).to_be_checked() if on else expect(sw).not_to_be_checked()
+
     def call_item(org):
         return pg.get_by_role("list", name="Calls").get_by_role("listitem", name=re.compile("^" + re.escape(org) + ","))
 
@@ -125,7 +133,7 @@ with sync_playwright() as p:
     def maggie_shares_admin():
         signin("elder")
         pg.goto(B + "/app/elder/privacy")
-        pg.get_by_role("switch", name="James sees insurance and admin details").check(force=True)
+        toggle(pg.get_by_role("switch", name="James sees insurance and admin details"), True)
         expect(pg.get_by_role("switch", name="James sees insurance and admin details")).to_be_checked()
         signin("family")
         pg.goto(B + "/app/family/calls")
@@ -147,7 +155,7 @@ with sync_playwright() as p:
         sec = pg.get_by_role("region", name="Things I don't want")
         expect(sec).to_contain_text(AVOID)
         expect(sec).to_contain_text("Only Maggie sees this")
-        sec.get_by_role("switch", name="Ana sees Things I don't want").check(force=True)
+        toggle(sec.get_by_role("switch", name="Ana sees Things I don't want"), True)
         expect(sec).to_contain_text("Shared with Ana")
         pg.screenshot(path=f"{OUT}/s19-about-me.png", full_page=True)
     step("CC-219 Maggie writes Things I don't want and shares it with Ana only", maggie_writes)
@@ -180,7 +188,7 @@ with sync_playwright() as p:
         expect(ch).to_contain_text("Sarah")
         expect(ch).to_contain_text("My day")
         expect(ch).to_contain_text(NEW_DAY)
-        pg.get_by_role("switch", name="Sarah can help write this").uncheck(force=True)
+        toggle(pg.get_by_role("switch", name="Sarah can help write this"), False)
         signin("guardian")
         pg.goto(B + "/app/guardian/about-me")
         expect(pg.get_by_role("region", name="My day")).to_contain_text(NEW_DAY)
