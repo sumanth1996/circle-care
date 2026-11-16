@@ -11,6 +11,7 @@ import { noteSharedSince } from "./everydayActions";
 import * as everyday from "./everydayActions";
 import { cryptoAvailable, deviceKey, encryptForStorage, loadEncrypted, wipeDevice } from "../lib/secureStorage";
 import { createSaver, saveWhenPageGoes } from "./saver";
+import { runReminders, settleDose, snoozeReminder, heldFor, releaseHeld } from "./calmAlerts";
 
 export const STATE_KEY = "circle-care-demo";
 
@@ -19,7 +20,21 @@ type Updater = (draft: State) => void;
 /** Adds an alert unless one with the same key already exists. */
 export function pushAlert(s: State, a: Omit<Alert, "id" | "at" | "read">, at?: string) {
   if (a.key && s.alerts.some((x) => x.key === a.key)) return;
-  s.alerts.push({ ...a, id: uid("al"), at: at ?? clock(s).toISOString(), read: [] });
+  // CC-208: in Sarah's quiet hours a non-urgent alert waits for the morning summary instead of a push.
+  const held = heldFor(s, a);
+  s.alerts.push({ ...a, ...(held.length ? { held } : {}), id: uid("al"), at: at ?? clock(s).toISOString(), read: [] });
+}
+
+/** CC-40 – CC-41 and CC-206: record a dose, then settle its reminders and any missed-dose alert. */
+export function logDose(s: State, by: string, medId: string, time: string, status: DoseStatus, reason?: string) {
+  if (!allowed(s, by, "write", "doses")) return;
+  const today = todayOf(s);
+  const visit = todayVisit(s, by);
+  const verified = roleOf(s, by) === "pro" && !!visit?.checkIn && !visit?.checkOut;
+  s.doses = s.doses.filter((d) => !(d.medId === medId && d.date === today && d.time === time));
+  s.doses.push({ id: uid("dose"), medId, date: today, time, status, by, at: clock(s).toISOString(), verified, reason });
+  audit(s, by, "created", `a dose record (${s.meds.find((m) => m.id === medId)?.name})`);
+  settleDose(s, by, medId, time, status, reason);
 }
 
 export function audit(s: State, actorId: string, action: AuditEvent["action"], resource: string) {
@@ -74,16 +89,11 @@ export function evaluate(s: State) {
   const today = ymd(now);
   const nowMin = minutesOfDay(now);
 
+  // Maggie's reminders (CC-39, CC-207): up to the limit Sarah set, with snooze, then they stop.
+  runReminders(s);
+
   for (const d of dosesFor(s)) {
     if (d.log) continue;
-    // Gentle repeat reminder for the elder 10 minutes after the dose time (CC-39).
-    if (d.minutesLate >= 10) {
-      pushAlert(s, {
-        key: `dose-repeat-${today}-${d.key}`, to: ["elder"], severity: "info",
-        title: "You have a reminder from Circle Care",
-        detail: `Time for ${d.med.name} — ${d.med.dose}. ${d.med.instructions}`, link: "/app/elder/next",
-      });
-    }
     // Missed-dose escalation (CC-42, CC-43): caregiver first, then guardian.
     const th = doseThresholds(s, d.med);
     if (d.minutesLate >= th.caregiver) {
@@ -157,10 +167,10 @@ export function evaluate(s: State) {
   for (const e of recent(10)) if (e.action === "denied") denials.set(e.actorId, (denials.get(e.actorId) ?? 0) + 1);
   const bucket = Math.floor(now.getTime() / (10 * 60000));
   for (const [actorId, n] of views) {
-    if (n >= 8) pushAlert(s, { key: `sec-bulk-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", title: "Circle Care security notice", detail: `Unusual activity: ${nameOf(s, actorId)} opened ${n} parts of Maggie's records in 5 minutes. If this wasn't expected, remove their access in Care circle.`, link: "/app/guardian/circle" });
+    if (n >= 8) pushAlert(s, { key: `sec-bulk-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", urgent: true, title: "Circle Care security notice", detail: `Unusual activity: ${nameOf(s, actorId)} opened ${n} parts of Maggie's records in 5 minutes. If this wasn't expected, remove their access in Care circle.`, link: "/app/guardian/circle" });
   }
   for (const [actorId, n] of denials) {
-    if (n >= 3) pushAlert(s, { key: `sec-deny-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", title: "Circle Care security notice", detail: `${nameOf(s, actorId)} tried ${n} times to open information their role doesn't allow.`, link: "/app/guardian/circle" });
+    if (n >= 3) pushAlert(s, { key: `sec-deny-${actorId}-${bucket}`, to: ["guardian"], severity: "warning", urgent: true, title: "Circle Care security notice", detail: `${nameOf(s, actorId)} tried ${n} times to open information their role doesn't allow.`, link: "/app/guardian/circle" });
   }
 
   // Abnormal heart rate or blood oxygen (CC-86, CC-88): the guardian is told, if Maggie shares readings.
@@ -169,7 +179,8 @@ export function evaluate(s: State) {
     for (const e of detectEvents(readings, s.settings.vitals.thresholds)) {
       const o = s.health.overrides.find((x) => x.at === e.at);
       pushAlert(s, {
-        key: `vital-${e.metric}-${e.at}`, to: ["guardian"], severity: e.kind === "high" || e.kind === "low" ? "warning" : "info",
+        // A reading outside Maggie's thresholds still comes at once in quiet hours (CC-208).
+        key: `vital-${e.metric}-${e.at}`, to: ["guardian"], severity: e.kind === "high" || e.kind === "low" ? "warning" : "info", urgent: e.kind === "high" || e.kind === "low",
         title: "Circle Care health notice",
         detail: `${e.label} at ${fmtTime(e.at)}. Open Health to see the trend.`, link: "/app/guardian/health",
       }, o?.addedAt ?? e.at);
@@ -230,6 +241,9 @@ export function evaluate(s: State) {
       audit(s, "system", "removed", `${m.name}'s access (time limit ended)`);
     }
   }
+
+  // CC-208: when quiet hours end, what waited overnight goes out as one morning summary.
+  releaseHeld(s);
 }
 
 /**
@@ -295,7 +309,7 @@ function useStoreState(initial: State) {
         pushAlert(s, { to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, actor(s))} signed out of Circle Care on all devices.` });
       }),
       lockedOut: (p: Persona) => update((s) => {
-        pushAlert(s, { to: [p], severity: "warning", title: "Circle Care security notice", detail: "Sign-in was locked for 15 minutes after 5 incorrect codes. If this wasn't you, change your password." });
+        pushAlert(s, { to: [p], severity: "warning", urgent: true, title: "Circle Care security notice", detail: "Sign-in was locked for 15 minutes after 5 incorrect codes. If this wasn't you, change your password." });
         audit(s, meId(p), "denied", "sign-in (5 incorrect codes)");
       }),
       resetDemo: () => { setState(seed()); viewed.current = {}; },
@@ -386,16 +400,9 @@ function useStoreState(initial: State) {
         viewed.current[resource] = Date.now();
         update((s) => { if (s.persona) audit(s, actor(s), "viewed", resource); });
       },
-      recordDose: (medId: string, time: string, status: DoseStatus, reason?: string) => update((s) => {
-        if (!guard(s, "write", "doses")) return;
-        const today = todayOf(s);
-        const by = actor(s);
-        const visit = todayVisit(s, by);
-        const verified = s.persona === "caregiver" && !!visit?.checkIn && !visit?.checkOut;
-        s.doses = s.doses.filter((d) => !(d.medId === medId && d.date === today && d.time === time));
-        s.doses.push({ id: uid("dose"), medId, date: today, time, status, by, at: clock(s).toISOString(), verified, reason });
-        audit(s, by, "created", `a dose record (${s.meds.find((m) => m.id === medId)?.name})`);
-      }),
+      recordDose: (medId: string, time: string, status: DoseStatus, reason?: string) => update((s) => logDose(s, actor(s), medId, time, status, reason)),
+      /** CC-207: Maggie snoozes a reminder for 15 minutes. */
+      snoozeDose: (medId: string, time: string) => update((s) => { snoozeReminder(s, actor(s), medId, time); }),
       verifyDose: (medId: string, time: string) => update((s) => {
         if (!guard(s, "write", "doses")) return;
         const d = s.doses.find((d) => d.medId === medId && d.date === todayOf(s) && d.time === time);

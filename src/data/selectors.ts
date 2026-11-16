@@ -166,8 +166,9 @@ export function activeSos(s: State) {
   return s.sos.find((e) => e.status !== "resolved");
 }
 
+/** Alerts this person has been sent. One held for their quiet hours shows once the morning summary releases it (CC-208). */
 export function alertsFor(s: State, p: Persona) {
-  return s.alerts.filter((a) => a.to.includes(p)).sort((a, b) => b.at.localeCompare(a.at));
+  return s.alerts.filter((a) => a.to.includes(p) && !a.held?.includes(p)).sort((a, b) => b.at.localeCompare(a.at));
 }
 
 export const unreadCount = (s: State, p: Persona) => alertsFor(s, p).filter((a) => !a.read.includes(p)).length;

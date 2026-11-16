@@ -137,7 +137,20 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   Alert: {
     resource: null,
-    fields: { id: O, key: P, at: P, to: O, title: O, detail: P, severity: O, read: O, link: O },
+    fields: {
+      id: O, key: P, at: P, to: O, title: O, detail: P, severity: O, read: O, link: O,
+      urgent: O, held: O, items: P,
+    },
+  },
+  // CC-206: how a missed dose was settled (who marked it, when, and why), shown on the earlier alert.
+  AlertResolution: {
+    resource: null,
+    fields: { at: P, by: P, outcome: P, reason: P },
+  },
+  // CC-207: one dose's reminders today. The key names the medicine, so the record is PHI.
+  DoseReminder: {
+    resource: "doses",
+    fields: { date: P, key: P, limit: O, sent: P, nextAt: P, snoozed: P },
   },
   Appointment: {
     resource: "appointments",
@@ -151,7 +164,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     fields: {
       "checkinWindow.start": O, "checkinWindow.end": O, escalation: O, escalationDelayMin: O,
       "doseEscalation.caregiverMin": O, "doseEscalation.guardianMin": O,
-      "quietHours.on": O, "quietHours.start": O, "quietHours.end": O,
+      "quietHours.on": O, "quietHours.start": O, "quietHours.end": O, reminderRepeats: O,
       "channels.push": O, "channels.sms": O, "channels.email": O, criticalBypass: O,
       textSize: O, highContrast: O, readAloud: O, sharingPaused: O,
       "consent.version": O, "consent.at": P, "consent.by": P, "consent.onBehalfReason": P,

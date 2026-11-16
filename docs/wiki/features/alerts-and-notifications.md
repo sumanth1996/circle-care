@@ -7,8 +7,8 @@
 | **Feature ID / area** | F-12 · Rules engine, alert centre and in-app banners |
 | **Personas** | All — elder (banners only), caregiver and guardian (banners and Alerts list) |
 | **Status** | <span class="cc-badge cc-badge--partial">Partially built</span> — alerts are generated and shown in-app; push, SMS and email delivery are not built |
-| **Related stories** | CC-31 PHI-free notifications · CC-35 suspicious-access detection · CC-39 repeat reminder · CC-42 dose escalation · CC-50 critical alerts · CC-52 missed check-in · CC-57 late caregiver · CC-63 channels & quiet hours · CC-64 approval reminder · CC-86 health alerts · CC-25 access expiry |
-| **Last updated** | 2026-10-19 |
+| **Related stories** | CC-31 PHI-free notifications · CC-35 suspicious-access detection · CC-39 repeat reminder · CC-42 dose escalation · CC-50 critical alerts · CC-52 missed check-in · CC-57 late caregiver · CC-63 channels & quiet hours · CC-64 approval reminder · CC-86 health alerts · CC-25 access expiry · CC-206 all-clear · CC-207 reminder repeats & snooze · CC-208 quiet-hours morning summary |
+| **Last updated** | 2026-11-15 |
 
 </div>
 
@@ -42,7 +42,7 @@
 
 | # | Alert | Rule | To | Severity | Lock-screen title |
 |---|---|---|---|---|---|
-| 1 | Dose repeat reminder | Unconfirmed dose ≥ 10 min past time | Elder | Info | You have a reminder from Circle Care |
+| 1 | Dose reminder (CC-207) | At the dose time, then every 10 min (15 after a snooze) up to Sarah's limit (1–5, default 3). In-app text starts *"Reminder 2 of 3"*. Stops once the dose is marked | Elder | Info | You have a reminder from Circle Care |
 | 2 | Dose — caregiver | ≥ 30 min (15 high-priority) | Caregiver | Warning / Critical* | You have a reminder from Circle Care |
 | 3 | Dose — guardian | ≥ 60 min (30 high-priority) | Guardian | Warning / Critical* | Circle Care needs your attention |
 | 4 | Check-in — elder | No check-in after window end (10:00) | Elder | Info | You have a reminder from Circle Care |
@@ -57,6 +57,8 @@
 | 13 | Unusual health reading | Detection rules, only if Maggie shares | Guardian | Warning (high/low) · Info (sudden) | Circle Care health notice |
 | 14 | Access expired | `expiresOn` < today | — (audit entry only) | — | — |
 | 15 | MFA lockout | 5 wrong codes | The person | Warning | Circle Care security notice |
+| 16a | All-clear (CC-206) | A dose that triggered a missed-dose alert is marked taken. Goes to each person who got that alert (not Ana while sharing is paused). In-app: *"All clear: the 8:00 AM dose was taken at 9:10 AM."* No medicine named | Caregiver, guardian | Info | Update from Circle Care |
+| 16b | Morning summary (CC-208) | Quiet hours end (or Sarah turns them off) and something waited overnight. Lists what waited, in the app only | Guardian | Info | Update from Circle Care |
 | 16 | Evening recap (CC-191) | Once a day at 19:00 (catches up until 23:00 if the app first runs later, never inside quiet hours), unless Sarah turned it off or quiet hours cover 19:00. In-app text: *"Your evening recap is ready."* | Guardian | Info | Update from Circle Care |
 
 \* Critical when the medicine is high-priority.
@@ -94,7 +96,8 @@ Action-driven alerts (new requests, decisions, invitations, shift offers, appoin
 | Setting | Default | Prototype effect |
 |---|---|---|
 | Push / Text messages / Email | On / On / Off | Stored only |
-| Quiet hours | On, 22:00–07:00 — *"Non-urgent alerts wait until morning"* | Stored only |
+| Quiet hours | Off for a new circle; the demo has it on, 22:00–07:00 | Enforced for Sarah (CC-208): non-urgent alerts are held, not listed or bannered, and go out as one morning summary when quiet hours end. Critical alerts (SOS, high-priority medicines), security notices and readings outside Maggie's thresholds still come at once |
+| Reminder repeats | 3 (1–5) | Reminders Maggie gets per dose (CC-207). A change applies from the next dose. Missed-dose timers are unaffected |
 | Emergencies break through silent mode | On | Stored only |
 
 ## Permissions & privacy
@@ -143,6 +146,8 @@ This page *is* the notification reference; see the catalogue above.
 | Unit — `rules.test.ts` | Escalates a missed dose to the caregiver, then the guardian · does not repeat the same alert · missed check-in prompts the elder first, then the guardian 15 minutes later · flags bulk record viewing · flags repeated denials · reminds the guardian about requests older than a day · ends time-limited access automatically |
 | Unit — `health.test.ts` | Detection rules for alerts 13 |
 | E2E | *CC-35 suspicious access alerts the guardian* · *CC-64 24-hour approval reminder* · *CC-86 a sudden heart-rate change alerts the guardian* · *Missed dose escalates…* |
+| Unit — `calm-alerts.test.ts` | Sprint 16: all-clear to each person alerted, none before an alert, Skipped and Refused shown with who and why, reminders cleared, paused sharing, audit · 3 reminders 10 minutes apart then stop, missed-dose timers unchanged, snooze, Sarah's 1–5 setting, high-priority timing · quiet hours hold and summarise at 7 AM, urgent alerts at once, no empty summary, off delivers at once, generic lock-screen line |
+| E2E — `calm.py` | *CC-207 Maggie sees which reminder this is and snoozes it* · *CC-207 Sarah sets how many reminders Maggie gets* · *CC-206 Sarah gets an all-clear naming no medicine* |
 | Gaps | No unit tests for late-caregiver or SOS-escalation alerts |
 
 ## Known limitations & production gaps
@@ -151,7 +156,7 @@ This page *is* the notification reference; see the catalogue above.
 |---|---|
 | Rules run in the browser, only while a tab is open | Server-side scheduler with idempotent jobs |
 | Banners only | Push (APNs/FCM) with iOS critical-alert entitlement, SMS and email via BAA-covered vendors ([R2](../roadmap.md)) |
-| Channels, quiet hours and critical bypass not enforced | Delivery policy per person and severity |
+| Channels and critical bypass not enforced; quiet hours apply to Sarah only | Delivery policy per person and severity |
 | Alerts addressed to personas | Addressed to members, with per-member preferences |
 | English only | Translated notifications ([R2 Language Access](../roadmap.md)) |
 | Fixed security thresholds | Tuned anomaly detection and security-team escalation |
