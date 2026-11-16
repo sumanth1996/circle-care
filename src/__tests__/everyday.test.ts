@@ -972,6 +972,35 @@ describe("fewer false alarms from the chat health-detail check (CC-192)", () => 
     "Pharmacy said add 60 ml of water, shake, keep in fridge",
   ];
 
+  it("warns on covid, strep, antibiotics, the pharmacy and medical scans (Sprint 15)", () => {
+    const s = seed();
+    const health = [
+      "She tested positive for covid",
+      "Mom has COVID-19 again",
+      "Lily has strep throat",
+      "The doctor put her on antibiotics",
+      "Finish the antibiotic course on Friday",
+      "The pharmacy called about her refill",
+      "The pharmacist says to take it with food",
+      "Her CT scan is Thursday",
+      "MRI results are back",
+      "Booked a PET scan for Dad",
+      "X-ray showed no break",
+      "The ultrasound is at 2",
+      "Her mammogram is next week",
+    ];
+    expect(health.filter((w) => phiHint(s, w).length === 0)).toEqual([]);
+    // Everyday senses of the nearby words stay quiet.
+    const everyday = [
+      "Can you scan the school form and send it?",
+      "Scan the receipt for the gutters",
+      "The cat is at the vet for a checkup",
+      "Streaming the game at 7",
+      "Mrs Ortiz is coming by at 4",
+    ];
+    expect(everyday.filter((w) => phiHint(s, w).length > 0)).toEqual([]);
+  });
+
   it("still warns when a health detail sits next to an everyday phrase", () => {
     const s = seed();
     const missed = MIXED.filter((w) => phiHint(s, w).length === 0);
