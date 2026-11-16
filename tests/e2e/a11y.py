@@ -2,6 +2,8 @@ import datetime
 import os
 import sys
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from totp_helper import Authenticator  # standard library only (CC-200)
 B = os.environ.get("E2E_BASE", "http://127.0.0.1:4173") + "/#"
 ACCOUNTS = os.environ.get("E2E_BASE") is not None  # account pages need the real server
 AXE = os.path.join(os.path.dirname(__file__), "..", "..", "node_modules", "axe-core", "axe.min.js")
@@ -28,18 +30,54 @@ with sync_playwright() as p:
     d = pg.get_by_role("dialog", name="Getting started")
     if d.count(): d.get_by_role("button", name="Skip").click()
     out = []
+    WCAG = "{runOnly: {type: 'tag', values: ['wcag2a','wcag2aa','wcag21a','wcag21aa']}}"
+    def audit(page, label):
+        page.add_script_tag(path=AXE)
+        r = page.evaluate(f"axe.run(document, {WCAG}).then(r => r.violations.map(v => v.impact + ' ' + v.id + ' (' + v.nodes.length + '): ' + v.nodes.map(n => n.target.join(' ')).join(' | ')))")
+        out.append(f"{label}: {'OK' if not r else ''}")
+        out.extend("   " + x for x in r)
+    POST = """([url, body]) => fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Requested-With': 'circle-care'}, body: JSON.stringify(body)})
+        .then(async r => ({status: r.status, body: await r.json().catch(() => null)}))"""
+    extra = 0
     if ACCOUNTS:
         import time
-        pages += ["/app/join", "/app/join/guardian", "/app/login"]
-        pg.evaluate("""(email) => fetch('/api/auth/signup', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Requested-With': 'circle-care'},
-            body: JSON.stringify({role: 'guardian', firstName: 'Sarah', lastName: 'Lee', phone: '4155550142', email, password: 'blue-heron-sunrise-42', acceptTerms: true})})""", f"a11y.{int(time.time())}@example.com")
-        pages += ["/app/account"]
+        stamp = int(time.time())
+        pages += ["/app/join", "/app/join/guardian", "/app/login", "/app/forgot-password", "/app/reset-password"]
+        pg.evaluate(POST, ["/api/auth/signup", {"role": "guardian", "firstName": "Sarah", "lastName": "Lee", "phone": "4155550142", "email": f"a11y.{stamp}@example.com", "password": "blue-heron-sunrise-42", "acceptTerms": True}])
+        # CC-200: a guardian sets up an authenticator app before the account page opens.
+        setup = pg.evaluate(POST, ["/api/auth/mfa/enrol/start", {}])
+        done = pg.evaluate(POST, ["/api/auth/mfa/enrol/confirm", {"code": Authenticator(setup["body"]["secret"]).code()}])
+        if done["status"] != 200: out.append(f"/app/account: ERR two-step set-up answered {done['status']}")
+        pages += ["/app/account", "/app/two-step"]
+        # The set-up screens themselves, with a caregiver who hasn't set it up yet, then the code step at sign-in.
+        try:
+            c2 = b.new_context(viewport={"width": 390, "height": 844}, bypass_csp=True); q = c2.new_page()
+            q.goto(B + "/app/login"); q.wait_for_timeout(300)
+            email = f"a11y.cg.{stamp}@example.com"
+            q.evaluate(POST, ["/api/auth/signup", {"role": "caregiver", "firstName": "Ana", "lastName": "Reyes", "phone": "4155550190", "email": email, "password": "kettle-and-compass-9", "acceptTerms": True}])
+            q.goto(B + "/app/two-step"); q.get_by_role("button", name="Set up two-step sign-in").wait_for(); audit(q, "/app/two-step (start)")
+            q.get_by_role("button", name="Set up two-step sign-in").click(); q.locator(".key-groups").wait_for(); audit(q, "/app/two-step (key)")
+            app = Authenticator("".join(q.locator(".key-groups span").all_inner_texts()))
+            q.get_by_label("6-digit code").fill(app.wrong_code()); q.get_by_role("button", name="Turn on two-step sign-in").click()
+            q.locator("#mfa-setup-code-err").wait_for(); audit(q, "/app/two-step (wrong code)")
+            q.get_by_label("6-digit code").fill(app.code()); q.get_by_role("button", name="Turn on two-step sign-in").click()
+            q.get_by_role("list", name="Recovery codes").wait_for(); audit(q, "/app/two-step (recovery codes)")
+            c2.close()
+            c3 = b.new_context(viewport={"width": 390, "height": 844}, bypass_csp=True); q = c3.new_page()
+            q.goto(B + "/app/login"); q.get_by_label("Email").fill(email); q.get_by_label("Password").fill("kettle-and-compass-9")
+            q.get_by_role("button", name="Sign in").click(); q.get_by_label("6-digit code").wait_for(); audit(q, "/app/login (code step)")
+            q.get_by_role("button", name="Use a recovery code instead").click(); q.get_by_label("Recovery code").wait_for(); audit(q, "/app/login (recovery code)")
+            c3.close()
+        except Exception as e:
+            out.append(f"two-step screens: ERR {str(e).splitlines()[0][:120]}")
+        extra = 6
     pg.close()
     for path in pages:
         pg = new_page()
         pg.goto(B + path); pg.wait_for_timeout(900)
         if path == "/app/account":
             pg.get_by_role("button", name="Add a card").click(); pg.wait_for_timeout(200)
+            pg.get_by_role("button", name="Change password").click(); pg.wait_for_timeout(200)  # CC-201
         try:
             pg.add_script_tag(path=AXE)
         except Exception as e:
@@ -77,5 +115,5 @@ with sync_playwright() as p:
     print("\n".join(out))
     b.close()
     bad = [x for x in out if x.startswith("   ") or ": ERR" in x]
-    print(f"\n{len(pages) + 2} screens audited, {len(bad)} problem line(s)")
+    print(f"\n{len(pages) + 2 + extra} screens audited, {len(bad)} problem line(s)")
     sys.exit(1 if bad else 0)

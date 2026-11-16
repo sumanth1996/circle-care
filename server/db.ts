@@ -17,11 +17,56 @@ export interface Db extends Queryable {
   close(): Promise<void>;
 }
 
+const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1", "[::1]"];
+
+/**
+ * True when the database runs on this machine, where TLS isn't needed. It checks the host node-postgres
+ * will actually use: a `host` query parameter wins over the URL's host, and an empty host falls back to
+ * PGHOST (which Replit points at its remote database), then to localhost. A unix socket path is local.
+ */
+export function isLocalDb(url: string, env: Record<string, string | undefined> = process.env): boolean {
+  let u: URL;
+  try { u = new URL(url); } catch { return false; }
+  const host = (u.searchParams.get("host") ?? decodeURIComponent(u.hostname)) || env.PGHOST || "localhost";
+  return host.startsWith("/") || LOCAL_HOSTS.includes(host.toLowerCase());
+}
+
+// Query parameters that would change how node-postgres sets up TLS. They are
+// read from the URL after our own `ssl` option, so a remote URL that says
+// sslmode=no-verify could quietly turn certificate checks off again (CC-203).
+const TLS_PARAMS = ["sslmode", "ssl", "sslcert", "sslkey", "sslrootcert", "sslpassword", "uselibpqcompat"];
+
+/**
+ * How to connect (CC-203): a remote database always uses TLS and the server's
+ * certificate is verified against the system CAs, plus DATABASE_CA_CERT if the
+ * provider uses its own CA. A local database connects without TLS.
+ */
+export function pgConnection(url: string, ca?: string, env: Record<string, string | undefined> = process.env): { connectionString: string; ssl?: { rejectUnauthorized: true; ca?: string } } {
+  if (isLocalDb(url, env)) return { connectionString: url };
+  const u = new URL(url);
+  if (u.searchParams.get("sslmode") === "disable") {
+    throw new Error("DATABASE_URL turns TLS off (sslmode=disable) for a remote database. Remove sslmode=disable: Circle Care only connects to a remote database over verified TLS.");
+  }
+  for (const p of TLS_PARAMS) u.searchParams.delete(p);
+  return { connectionString: u.toString(), ssl: ca ? { rejectUnauthorized: true, ca } : { rejectUnauthorized: true } };
+}
+
+/** Turns a TLS failure at start-up into a message an operator can act on. */
+export function explainConnectError(err: unknown): Error {
+  const e = err as { code?: string; message?: string };
+  const tls = /CERT|SELF_SIGNED|UNABLE_TO_VERIFY|ERR_TLS|DEPTH_ZERO|HOSTNAME/i.test(`${e?.code ?? ""} ${e?.message ?? ""}`);
+  if (tls) return new Error(`The database's TLS certificate couldn't be verified (${e?.code ?? "TLS error"}). Circle Care won't connect to a database it can't verify. If your provider uses its own certificate authority, put its CA certificate (PEM) in DATABASE_CA_CERT.`);
+  return new Error(`Couldn't connect to the database: ${e?.message ?? "unknown error"}`);
+}
+
 export async function openDb(cfg: Config, opts: { memory?: boolean } = {}): Promise<Db> {
   if (cfg.databaseUrl && !opts.memory) {
     const { default: pg } = await import("pg");
-    const ssl = /sslmode=disable/.test(cfg.databaseUrl) || /localhost|127\.0\.0\.1/.test(cfg.databaseUrl) ? undefined : { rejectUnauthorized: false };
-    const pool = new pg.Pool({ connectionString: cfg.databaseUrl, ssl, max: 10 });
+    const conn = pgConnection(cfg.databaseUrl, cfg.databaseCaCert);
+    const pool = new pg.Pool({ ...conn, max: 10 });
+    // Connect once now, so a certificate that can't be verified stops the
+    // server before it listens instead of failing on the first request.
+    try { await pool.query("SELECT 1"); } catch (err) { await pool.end().catch(() => undefined); throw explainConnectError(err); }
     const wrap = (c: { query: (s: string, p?: unknown[]) => Promise<{ rows: unknown[] }> }): Queryable => ({
       query: async <T extends Row>(s: string, p?: unknown[]) => ({ rows: (await c.query(s, p)).rows as T[] }),
       exec: async (s: string) => { await c.query(s); },

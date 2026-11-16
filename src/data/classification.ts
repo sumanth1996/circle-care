@@ -45,7 +45,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   State: {
     resource: null,
     fields: {
-      version: O, persona: O, signedIn: O, clockOffsetMin: O, elderId: O,
+      version: O, persona: O, signedIn: O, clockOffsetMin: O, lastRunAt: O, elderId: O,
       "health.heightCm": P, "health.birthYear": I, "health.device": O,
       "health.overrides.at": P, "health.overrides.hr": P, "health.overrides.spo2": P, "health.overrides.addedAt": P,
     },
@@ -244,8 +244,17 @@ export const DB_CLASSIFICATION: Record<string, Record<string, DataClass>> = {
   users: {
     id: O, email: I, password_hash: S, role: O, failed_attempts: O, first_failed_at: O, locked_until: O,
     created_at: O, updated_at: O,
+    // Two-step sign-in (CC-200): the authenticator secret is encrypted like an SSN.
+    mfa_secret_enc: S, mfa_pending_secret_enc: S, mfa_pending_at: O, mfa_enabled_at: O, totp_last_counter: O,
   },
   sessions: { token_hash: S, user_id: O, created_at: O, last_seen_at: O, expires_at: O },
+  // Forgotten-password links (CC-201): only a hash of each link is kept.
+  password_resets: { token_hash: S, user_id: O, created_at: O, expires_at: O, used_at: O },
+  // Recovery codes and pending second steps (CC-200): hashes only.
+  mfa_recovery_codes: { id: O, user_id: O, code_hash: S, created_at: O, used_at: O },
+  mfa_challenges: { token_hash: S, user_id: O, created_at: O, expires_at: O },
+  // Shared rate-limit counters (CC-204): keys are hashes of an address or account id.
+  rate_limits: { key: O, reset_at: O, count: O },
   elders: { ...persona },
   caregivers: { ...persona },
   guardians: { ...persona },

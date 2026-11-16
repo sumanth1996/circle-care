@@ -24,12 +24,14 @@ HEALTH = "Did Mom take her Lisinopril this morning?"
 SPOKEN = "Sounds lovely, see you on Sunday"
 
 # Maggie's microphone, simulated: the page's speech recognition "hears" SPOKEN once and stops.
-# Real recognition needs a microphone and a network service, neither of which CI has.
+# Real recognition needs a microphone, which CI doesn't have. The fake says on-device recognition
+# is available unless a test sets window.__speechOnDevice, and records what the page asked for (CC-222).
 FAKE_SPEECH = """
 (() => {
   class FakeRecognition {
     constructor() { this.lang = ""; this.interimResults = false; this.continuous = false; this.onresult = null; this.onerror = null; this.onend = null; }
-    start() { setTimeout(() => { this.onresult && this.onresult({ results: [[{ transcript: %s }]] }); this.onend && this.onend(); }, 300); }
+    static available(o) { window.__availableAsked = o; return Promise.resolve(window.__speechOnDevice || "available"); }
+    start() { window.__startedLocally = this.processLocally === true; setTimeout(() => { this.onresult && this.onresult({ results: [[{ transcript: %s }]] }); this.onend && this.onend(); }, 300); }
     stop() { this.onend && this.onend(); }
     abort() {}
   }
@@ -146,7 +148,21 @@ with sync_playwright() as p:
         mine = log().locator(".bubble-row.mine").last
         expect(mine).to_contain_text(SPOKEN)
         expect(mine).to_contain_text("By voice")
+        # CC-222: the page asked for on-device recognition and listened only on the device.
+        assert pg.evaluate("window.__availableAsked && window.__availableAsked.processLocally === true"), "voice didn't ask for on-device recognition"
+        assert pg.evaluate("window.__startedLocally === true"), "voice started without processLocally"
         pg.screenshot(path=f"{OUT}/everyday-maggie-chat.png")
+        # CC-222: where the device can't listen by itself, the sheet opens for typing and never listens.
+        pg.evaluate("window.__speechOnDevice = 'downloadable'; window.__startedLocally = undefined")
+        pg.locator(".elder-compose").get_by_role("button", name="Tap to talk").click()
+        sheet = pg.get_by_role("dialog", name="Talk to your family")
+        expect(sheet.get_by_role("textbox", name="Your message")).to_be_visible()
+        expect(sheet).to_contain_text("This device can't turn speech into text by itself, so you can type your message.")
+        expect(sheet.get_by_role("button", name="Talk instead")).to_have_count(0)
+        assert pg.evaluate("window.__startedLocally === undefined"), "voice listened although on-device recognition isn't available"
+        pg.keyboard.press("Escape")
+        expect(sheet).to_have_count(0)
+        pg.evaluate("window.__speechOnDevice = undefined")
         # Show chat on my home hides and shows the tile; the chat stays under Family.
         pg.goto(B + "/app/elder/settings")
         flip("Show chat on my home", False)

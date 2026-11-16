@@ -117,8 +117,11 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | `/pilot` | `site/Pilot` | Pilot recruitment |
 | `/app` | `Welcome` | Choose a person; sign-up |
 | `/app/join`, `/app/join/:role` | `account/Join` | Create a real account (CC-172, CC-173) |
-| `/app/login` | `account/Login` | Sign in to a real account (CC-174) |
-| `/app/account` | `account/MyAccount` | Profile, identity, photo, payment methods (CC-176 – CC-188) |
+| `/app/login` | `account/Login` | Sign in to a real account (CC-174), then the code or a recovery code (CC-200) |
+| `/app/two-step` | `account/TwoStep` | Set up two-step sign-in; guardians and caregivers are sent here until they do (CC-200) |
+| `/app/forgot-password` | `account/PasswordReset` | Ask for a password-reset link (CC-201) |
+| `/app/reset-password` | `account/PasswordReset` | Choose a new password with the link's token (CC-201) |
+| `/app/account` | `account/MyAccount` | Profile, identity, photo, payment methods (CC-176 – CC-188), sign-in & security (CC-200, CC-201) |
 | `/app/sign-in/:persona` | `SignIn` | Demo sign-in, MFA, consent |
 | `/app/invite/:memberId` | `Invite` | Accept an invitation |
 | `/app/review` | `internal/Review` | Review team console |
@@ -177,6 +180,17 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 
 `AppShell` redirects to `/app/sign-in/<persona>` when that persona is not signed in. On the guardian app, Home, Health, Calendar, Chat and Approvals are tabs on phones; the rest are under **More**. The caregiver app gets a Chat tab only once Maggie or Sarah adds the caregiver to the chat.
 
+### Accounts API (`server/`)
+
+| Prefix | Routes |
+|---|---|
+| `/api/auth` | `signup`, `signin`, `signout`, `signout-everywhere`, `password`, `password-reset/request`, `password-reset/confirm`, `GET me` |
+| `/api/auth/mfa` | `enrol/start`, `enrol/confirm`, `verify` |
+| `/api/me` | Profile, `ssn`, `photo`, `activity`, `payment-methods/*` (guardians and caregivers need two-step sign-in first) |
+| `/vault/v1` | Simulated payment vault, never in production |
+
+The full list with request bodies is on [Accounts, identity & payments](../features/accounts-identity-payments.md#api). Every instance shares its rate limits through the `rate_limits` table, and a daily clean-up deletes expired sessions, reset links, challenges and counters (`server/cleanup.ts`).
+
 ## State model
 
 - **One state object** (`State` in `src/data/types.ts`) holds the whole circle: members, medicines (with pills on hand), doses, tasks, shifts, visits, hand-offs, SOS events, check-ins, daily check-ins, the family chat, approvals, notes, documents, appointments, health settings, audit log, alerts and settings. See [Data model](data-model.md).
@@ -194,8 +208,8 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 
 | Order | Rule | Story |
 |---|---|---|
-| 1 | Dose repeat reminder at +10 min; caregiver and guardian escalation at their thresholds | CC-39, CC-42, CC-43 |
-| 2 | Missed check-in: elder prompt after window end; guardian at +15 min | CC-52 |
+| 1 | Dose repeat reminder at +10 min; caregiver and guardian escalation at their thresholds. A late-evening dose whose escalation runs past midnight carries on the next day under the day it was due | CC-39, CC-42, CC-43, CC-199 |
+| 2 | Missed check-in: elder prompt after window end; guardian at +15 min. A window that ends after midnight, or whose guardian prompt does, is followed up the next day under the day it opened | CC-52, CC-199 |
 | 3 | Late caregiver check-in (> 15 min) | CC-57 |
 | 4 | SOS escalation step every `escalationDelayMin` minutes | CC-48 |
 | 5 | Approval waiting > 24 h | CC-64 |
@@ -249,7 +263,7 @@ Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (elder, guardian an
 
 | Command | What it does |
 |---|---|
-| `npm install` | Install dependencies (Node 20.11+) |
+| `npm install` | Install dependencies (Node 22+) |
 | `npm run dev` | Vite dev server on port **5000**, all hosts (Replit preview); `/api` and `/vault` are served in-process by the accounts server (PGlite unless `DATABASE_URL` is set) |
 | `npm test` | Vitest unit tests (app and server) |
 | `npm run typecheck` | Type-check the app and the server |
@@ -259,7 +273,7 @@ Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (elder, guardian an
 | `npm run audit:export` | Masked audit export (CC-184) |
 | `npm run preview` | Serve `dist/` on port 4173 (no API) |
 
-**Replit.** `.replit` runs `npm install && npm run dev` (Node 20, port 5000 → 80). The deployment target is **autoscale**: build `npm install && npm run build`, run `APP_ENV=staging npm start`. The deployed copy is *staging*: a real server and PostgreSQL database with test data only. It needs `DATA_ENCRYPTION_KEY` and `DATA_HMAC_KEY` in Secrets and a PostgreSQL database. See [Accounts, identity & payments](../features/accounts-identity-payments.md).
+**Replit.** `.replit` runs `npm install && npm run dev` (Node 22, port 5000 → 80). The deployment target is **autoscale**: build `npm install && npm run build`, run `APP_ENV=staging npm start`. The deployed copy is *staging*: a real server and PostgreSQL database with test data only. It needs `DATA_ENCRYPTION_KEY` and `DATA_HMAC_KEY` in Secrets and a PostgreSQL database. See [Accounts, identity & payments](../features/accounts-identity-payments.md).
 
 **This wiki** is built separately with MkDocs (`mkdocs build`, `mkdocs gh-deploy`) — see [How to contribute](../how-to-contribute.md).
 

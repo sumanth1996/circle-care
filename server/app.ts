@@ -9,6 +9,8 @@ import { authRouter, sessionMiddleware, type Deps } from "./auth";
 import type { Config } from "./config";
 import type { Db } from "./db";
 import { errorHandler, HttpError } from "./http";
+import { createMailer, type Mailer } from "./mailer";
+import { MFA_REQUIRED, mfaRouter, requireMfaReady } from "./mfa";
 import { paymentsRouter } from "./payments";
 import { TEST_CARDS, TEST_ROUTING } from "../src/lib/validation";
 import { vaultRouter } from "./vault";
@@ -28,11 +30,25 @@ export const CSP = [
   "frame-ancestors 'none'",
 ].join("; ");
 
-export function createApp(opts: { cfg: Config; db: Db; now?: () => Date; dev?: boolean }): Express {
-  const d: Deps = { cfg: opts.cfg, db: opts.db, now: opts.now ?? (() => new Date()) };
+export function createApp(opts: { cfg: Config; db: Db; now?: () => Date; dev?: boolean; mailer?: Mailer }): Express {
+  // Background tasks run after the response (see Deps.defer). Failures are logged by message only.
+  const pending = new Set<Promise<unknown>>();
+  const defer = (task: () => Promise<unknown>) => {
+    const p: Promise<unknown> = Promise.resolve()
+      .then(task)
+      .catch((e) => console.error("[api] background task failed:", e instanceof Error ? e.message : "unknown"))
+      .finally(() => pending.delete(p));
+    pending.add(p);
+  };
+  const d: Deps = { cfg: opts.cfg, db: opts.db, now: opts.now ?? (() => new Date()), mailer: opts.mailer ?? createMailer(opts.cfg), defer };
   const app = express();
+  /** Waits for background tasks to finish (tests, graceful shutdown). */
+  app.locals.settle = async () => { while (pending.size) await Promise.all([...pending]); };
   app.disable("x-powered-by");
-  app.set("trust proxy", 1); // Replit and most hosts sit behind one proxy
+  // Only the hosting proxy's address is trusted (CC-204): with N hops, Express reads the
+  // client address N entries from the right of X-Forwarded-For, so an entry the client
+  // wrote further left can't choose a rate-limit bucket. Replit sits behind one proxy.
+  app.set("trust proxy", d.cfg.trustProxyHops);
 
   app.use((req, res, next) => {
     if (!opts.dev) res.setHeader("Content-Security-Policy", CSP);
@@ -72,11 +88,14 @@ export function createApp(opts: { cfg: Config; db: Db; now?: () => Date; dev?: b
     });
   });
 
+  app.use("/api/auth/mfa", mfaRouter(d));
   app.use("/api/auth", authRouter(d));
   app.get("/api/auth/me", (req, res) => {
     if (!req.user) { res.status(401).json({ error: "Please sign in.", code: res.locals.sessionExpired ? "session_expired" : "signed_out" }); return; }
-    res.json({ user: req.user });
+    res.json({ user: { ...req.user, mfaRequired: MFA_REQUIRED.includes(req.user.role) } });
   });
+  // CC-200: guardians and caregivers set up a second step before any account, payment or vault route.
+  app.use(["/api/me", "/vault"], requireMfaReady);
   app.use("/api/me/payment-methods", paymentsRouter(d));
   app.use("/api/me", accountRouter(d));
 

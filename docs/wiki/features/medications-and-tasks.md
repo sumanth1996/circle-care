@@ -88,6 +88,10 @@ Thresholds come from guardian **Settings → When a dose isn't confirmed** (`set
 | Alert the caregiver after | **30 min** | 15 / 30 / 45 | Caregiver |
 | Alert you (guardian) after | **60 min** | 45 / 60 / 90 / 120 | Guardian |
 
+**Doses that cross midnight (CC-199).** A late-evening dose whose escalation is still running at midnight (the guardian step falls at or after 00:00, such as a 23:30 dose with the defaults) keeps escalating the next day with the same steps and timings, and its reminders carry on. It stays under the day it was due, so marking it after midnight (`logDose(…, date)`) resolves its alerts and sends the all-clear as usual. Doses that finished escalating before midnight, and earlier days, are never raised again.
+
+**Last night's doses on the screens.** After midnight, such a dose is listed until someone marks it, labelled as from last night with its time: first in Maggie's *What's next* (*"From last night · 11:30 PM"*, *"Let us know if you took it."*), in a **From last night** section above *Medicines* on Ana's *Today* while she is on shift, and in Sarah's *Needs your attention* (*"Metformin not confirmed"*, *"Due last night at 11:30 PM"*). *I took it*, *Given* and *Not given* pass the day it was due, so its alerts settle and the all-clear goes out; Maggie can also snooze its reminder after midnight. `logDose` accepts only today or yesterday as that day and ignores anything else.
+
 ### Verification (CC-41)
 
 | Recorded by | `verified` |
@@ -172,7 +176,7 @@ From `MATRIX` in `src/data/policy.ts`:
 | Refill requested | Guardian or caregiver (the other one) | Info | Update from Circle Care | Sarah asked Fog City Pharmacy to refill Lisinopril. |
 | Request decided | Caregiver | Info | You have an update in Circle Care | Sarah approved your request: *title* |
 
-No lock-screen text names a medicine. Alerts are de-duplicated by key, so each dose slot escalates once per step per day.
+No lock-screen text names a medicine. Alerts are de-duplicated by key, so each dose slot escalates once per step per day, also when its escalation runs past midnight (the key carries the day the dose was due).
 
 ## Accessibility
 
@@ -206,7 +210,7 @@ No lock-screen text names a medicine. Alerts are de-duplicated by key, so each d
 | Type | Test |
 |---|---|
 | E2E | *Missed dose escalates to guardian, caregiver gives it, alert clears* · *CC-45 task note; CC-19 notes open once on shift* · *Guardian approves request; elder sees decision* |
-| Unit | `rules.test.ts` — *escalates a missed dose to the caregiver, then the guardian* (and the elder repeat) · *does not repeat the same alert*. `policy.test.ts` — every `meds`, `doses`, `tasks`, `supply` cell for every role, on and off shift. `everyday.test.ts` — 24 tests for CC-120 and CC-121 (counts, days left morning and evening, pills per dose, threshold, one alert per bottle, Calendar entry and reuse, request and new bottle, pause, approvals keep the count, caregiver off shift refused and audited) |
+| Unit | `rules.test.ts` — *escalates a missed dose to the caregiver, then the guardian* (and the elder repeat) · *does not repeat the same alert* · doses that cross midnight (CC-199): escalation, timings, no repeats, nothing from two nights ago, taken after midnight, reminders and quiet hours. `policy.test.ts` — every `meds`, `doses`, `tasks`, `supply` cell for every role, on and off shift. `everyday.test.ts` — 24 tests for CC-120 and CC-121 (counts, days left morning and evening, pills per dose, threshold, one alert per bottle, Calendar entry and reuse, request and new bottle, pause, approvals keep the count, caregiver off shift refused and audited) |
 | Accessibility | `/app/guardian/meds`, `/app/caregiver`, `/app/elder/next` |
 
 ## Known limitations & production gaps

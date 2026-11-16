@@ -52,9 +52,10 @@ export function relative(iso: string, now: Date) {
   return `${days} days ago`;
 }
 
+/** A greeting for the time of day. Between midnight and 5 AM it is a neutral "Hello", never "Good morning" (CC-199). */
 export const greeting = (d: Date) => {
   const h = d.getHours();
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  return h < 5 ? "Hello" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 };
 
 export const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
