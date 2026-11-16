@@ -2,6 +2,8 @@
 
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 
+// Rate limits moved to a shared Postgres store in CC-204: see ratelimit.ts.
+
 /** An error that is safe to show the user. `field` points the form at the right input. */
 export class HttpError extends Error {
   constructor(public status: number, message: string, public field?: string, public fields?: Record<string, string>) {
@@ -25,24 +27,6 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   // Never log request bodies: they may contain SSNs or account numbers.
   console.error("[api] unexpected error:", err instanceof Error ? err.message : "unknown");
   res.status(500).json({ error: "Something went wrong. Please try again." });
-}
-
-/** Fixed-window rate limiter kept in memory (one instance per server). */
-export function rateLimit(opts: { windowMs: number; max: number; key?: (req: Request) => string; message?: string; now?: () => number }): RequestHandler {
-  const hits = new Map<string, { count: number; reset: number }>();
-  const now = opts.now ?? Date.now;
-  return (req, res, next) => {
-    const k = opts.key ? opts.key(req) : req.ip ?? "unknown";
-    const t = now();
-    const h = hits.get(k);
-    if (!h || h.reset <= t) hits.set(k, { count: 1, reset: t + opts.windowMs });
-    else if (++h.count > opts.max) {
-      res.setHeader("Retry-After", Math.ceil((h.reset - t) / 1000));
-      res.status(429).json({ error: opts.message ?? "Too many requests. Please wait a few minutes and try again." });
-      return;
-    }
-    next();
-  };
 }
 
 /** Reads one cookie without a dependency. */

@@ -31,6 +31,24 @@ export interface Config {
   sessionAbsoluteHours: number;
   /** ACH transfers carry no platform fee. */
   achFeeCents: 0;
+  /**
+   * How many proxies sit in front of the server (CC-204). Express then takes
+   * the client address from that many hops from the right of X-Forwarded-For,
+   * so a client-supplied entry further left can't pick a new rate-limit bucket.
+   */
+  trustProxyHops: number;
+  /** Shared rate limits (CC-204). Only the test environment may turn them off (RATE_LIMITS=off is its default). */
+  rateLimits: boolean;
+  /** Public address of the app, used in emailed links. Never taken from the request's Host header. */
+  publicUrl: string;
+  /**
+   * How account emails go out (CC-201). "outbox" keeps them in memory (development,
+   * test, staging); "none" means no email provider is configured yet (production
+   * until a human connects one), so messages are recorded as undelivered.
+   */
+  mailer: "outbox" | "none";
+  /** Non-fatal start-up notes, printed by the server. */
+  warnings: string[];
 }
 
 export class ConfigError extends Error {}
@@ -81,6 +99,15 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     if (!enc || !hmac) problems.push("DATA_ENCRYPTION_KEY and DATA_HMAC_KEY are required in staging (add them as secrets; generate each with: openssl rand -base64 32).");
     if (!e.DATABASE_URL) problems.push("DATABASE_URL is required in staging (create a PostgreSQL database; the embedded one is lost on every restart).");
   }
+  const hopsRaw = e.TRUST_PROXY_HOPS ?? "1";
+  const trustProxyHops = Number(hopsRaw);
+  if (!/^\d+$/.test(hopsRaw.trim()) || trustProxyHops > 5) problems.push("TRUST_PROXY_HOPS must be a whole number from 0 to 5: the number of proxies in front of the server (1 on Replit).");
+  const rl = (e.RATE_LIMITS ?? "").toLowerCase();
+  if (rl && rl !== "on" && rl !== "off") problems.push('RATE_LIMITS must be "on" or "off".');
+  if (rl === "off" && env !== "test") problems.push("RATE_LIMITS=off is only allowed in the test environment.");
+  const publicUrl = (e.PUBLIC_URL || `http://localhost:${Number(e.PORT) || 5000}`).replace(/\/+$/, "");
+  if (!/^https?:\/\/[^/\s]+$/.test(publicUrl)) problems.push("PUBLIC_URL must be the app's origin, e.g. https://care.example.com (no path).");
+  else if ((isProd || env === "staging") && e.PUBLIC_URL && !publicUrl.startsWith("https://")) problems.push("PUBLIC_URL must use https in staging and production.");
   if (!isProd && /^sk_live_/.test(e.STRIPE_SECRET_KEY ?? "")) {
     problems.push("A live Stripe key can't be used outside production. Use a test key (sk_test_…).");
   }
@@ -97,6 +124,13 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
   const prev = key32("DATA_ENCRYPTION_KEY_PREVIOUS", e.DATA_ENCRYPTION_KEY_PREVIOUS);
   if (prev) keys[e.DATA_ENCRYPTION_KEY_PREVIOUS_ID || "k0"] = prev;
 
+  const warnings: string[] = [];
+  if (isProd) {
+    // CC-201: connecting an email provider (with a signed BAA if messages could mention care) is a human step before launch.
+    warnings.push("No email provider is configured: password-reset and lockout emails are recorded as undelivered, not sent. Connecting one is a launch task (see README).");
+    if (!e.PUBLIC_URL) warnings.push("PUBLIC_URL is not set: emailed links would point at localhost.");
+  }
+
   return {
     env,
     isProd,
@@ -112,5 +146,10 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     sessionIdleMinutes: 30,
     sessionAbsoluteHours: 12,
     achFeeCents: 0,
+    trustProxyHops,
+    rateLimits: env === "test" ? rl === "on" : true,
+    publicUrl,
+    mailer: isProd ? "none" : "outbox",
+    warnings,
   };
 }

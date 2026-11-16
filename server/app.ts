@@ -32,7 +32,10 @@ export function createApp(opts: { cfg: Config; db: Db; now?: () => Date; dev?: b
   const d: Deps = { cfg: opts.cfg, db: opts.db, now: opts.now ?? (() => new Date()) };
   const app = express();
   app.disable("x-powered-by");
-  app.set("trust proxy", 1); // Replit and most hosts sit behind one proxy
+  // Only the hosting proxy's address is trusted (CC-204): with N hops, Express reads the
+  // client address N entries from the right of X-Forwarded-For, so an entry the client
+  // wrote further left can't choose a rate-limit bucket. Replit sits behind one proxy.
+  app.set("trust proxy", d.cfg.trustProxyHops);
 
   app.use((req, res, next) => {
     if (!opts.dev) res.setHeader("Content-Security-Policy", CSP);

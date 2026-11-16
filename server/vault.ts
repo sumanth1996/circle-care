@@ -12,11 +12,12 @@ import { BRAND_LABEL, checkBank, checkCard, TEST_CARDS, type BankInput, type Car
 import { audit } from "./audit";
 import { requireUser, type Deps } from "./auth";
 import { randomToken } from "./crypto";
-import { HttpError, rateLimit, route, str } from "./http";
+import { HttpError, route, str } from "./http";
+import { limit } from "./ratelimit";
 
 export function vaultRouter(d: Deps): Router {
   const r = Router();
-  r.use(requireUser, rateLimit({ windowMs: 600_000, max: 30, key: (req) => req.user?.id ?? req.ip ?? "?" }));
+  r.use(requireUser, limit(d, { name: "vault", by: "user", windowMs: 600_000, max: 30, auditOnExceed: true }));
   r.use((req, _res, next) => (req.user!.role === "guardian" ? next() : next(new HttpError(403, "Only the legal guardian adds payment methods."))));
 
   r.post("/bank-accounts", route(async (req, res) => {

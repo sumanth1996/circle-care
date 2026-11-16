@@ -8,7 +8,7 @@ export const SSN_PATTERN = /(^|[^0-9a-z])\d{9}([^0-9a-z]|$)|\b\d{3}-\d{2}-\d{4}\
 /** Every response body seen in the suite, scanned for full SSNs (CC-181). */
 export const seenBodies: string[] = [];
 
-export interface Harness { cfg: Config; db: Db; app: ReturnType<typeof createApp>; clock: { t: number }; agent: () => Agent }
+export interface Harness { cfg: Config; db: Db; app: ReturnType<typeof createApp>; clock: { t: number }; agent: (ip?: string) => Agent }
 export type Agent = ReturnType<typeof makeAgent>;
 
 export async function harness(env: Record<string, string> = {}): Promise<Harness> {
@@ -17,11 +17,16 @@ export async function harness(env: Record<string, string> = {}): Promise<Harness
   await migrate(db);
   const clock = { t: Date.parse("2026-10-26T15:00:00Z") };
   const app = createApp({ cfg, db, now: () => new Date(clock.t) });
-  return { cfg, db, app, clock, agent: () => makeAgent(app) };
+  return { cfg, db, app, clock, agent: (ip?: string) => makeAgent(app, ip) };
 }
 
-function makeAgent(app: ReturnType<typeof createApp>) {
+/**
+ * A browser-like client. `ip` is sent as the proxy's X-Forwarded-For entry, so with
+ * rate limits on (RATE_LIMITS=on) each agent can come from its own address.
+ */
+export function makeAgent(app: ReturnType<typeof createApp>, ip?: string) {
   const a = request.agent(app);
+  if (ip) a.set("X-Forwarded-For", ip);
   const record = <T extends { text?: string; body?: unknown }>(r: T) => { seenBodies.push(r.text ?? JSON.stringify(r.body ?? "")); return r; };
   return {
     get: (url: string) => a.get(url).then(record),
@@ -47,7 +52,8 @@ export const person = (role: "elder" | "caregiver" | "guardian", over: Record<st
 });
 
 export async function signedUp(h: Harness, role: "elder" | "caregiver" | "guardian", over: Record<string, unknown> = {}) {
-  const ag = h.agent();
+  // With limits on, each new account signs up from its own address so the per-address sign-up limit isn't hit.
+  const ag = h.agent(h.cfg.rateLimits ? `198.51.100.${(n % 250) + 1}` : undefined);
   const body = person(role, over);
   const r = await ag.post("/api/auth/signup", body);
   if (r.status !== 201) throw new Error(`signup failed: ${r.status} ${r.text}`);

@@ -7,6 +7,7 @@ import { PERSONA_TABLE, recordFailure, requireUser, type Deps } from "./auth";
 import { decrypt, encrypt, fingerprint, verifyPassword } from "./crypto";
 import type { Queryable } from "./db";
 import { HttpError, route, str } from "./http";
+import { limit } from "./ratelimit";
 
 export type MissingItem = "ssn" | "bank_account";
 
@@ -57,10 +58,16 @@ export function sniffImage(b: Buffer): "image/jpeg" | "image/png" | "image/webp"
 export function accountRouter(d: Deps): Router {
   const r = Router();
   r.use(requireUser);
+  // Per-account limits on changes (CC-204). Going over answers 429 with Retry-After and
+  // writes one ratelimit.exceeded audit event per window. The SSN limit is the tightest:
+  // it stops a signed-in account testing many numbers to see which are registered (C3-I3).
+  const profileLimit = limit(d, { name: "profile", by: "user", windowMs: 3600_000, max: 30, auditOnExceed: true, message: "Too many profile changes. Please wait a while and try again." });
+  const ssnLimit = limit(d, { name: "ssn", by: "user", windowMs: 3600_000, max: 10, auditOnExceed: true, message: "Too many attempts to save a Social Security number. Please wait an hour and try again." });
+  const photoLimit = limit(d, { name: "photo", by: "user", windowMs: 3600_000, max: 20, auditOnExceed: true, message: "Too many photo changes. Please wait a while and try again." });
 
   r.get("/", route(async (req, res) => { res.json({ me: await loadMe(d.db, req.user!.id) }); }));
 
-  r.patch("/", route(async (req, res) => {
+  r.patch("/", profileLimit, route(async (req, res) => {
     const u = req.user!;
     const b = req.body ?? {};
     const updates: Record<string, string> = {};
@@ -83,7 +90,7 @@ export function accountRouter(d: Deps): Router {
     res.json({ me: await loadMe(d.db, u.id) });
   }));
 
-  r.put("/ssn", route(async (req, res) => {
+  r.put("/ssn", ssnLimit, route(async (req, res) => {
     const u = req.user!;
     const table = PERSONA_TABLE[u.role];
     const checked = checkSsn(str(req.body?.ssn), d.cfg.testData);
@@ -125,7 +132,7 @@ export function accountRouter(d: Deps): Router {
     res.json({ me: await loadMe(d.db, u.id) });
   }));
 
-  r.put("/photo", express.raw({ type: () => true, limit: "2mb" }), route(async (req, res) => {
+  r.put("/photo", photoLimit, express.raw({ type: () => true, limit: "2mb" }), route(async (req, res) => {
     const u = req.user!;
     const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
     const type = sniffImage(body);
@@ -149,7 +156,7 @@ export function accountRouter(d: Deps): Router {
     res.send(decrypt(d.cfg, row.data_enc));
   }));
 
-  r.delete("/photo", route(async (req, res) => {
+  r.delete("/photo", photoLimit, route(async (req, res) => {
     const u = req.user!;
     const now = d.now();
     await d.db.tx(async (q) => {

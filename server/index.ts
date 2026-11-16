@@ -18,6 +18,7 @@ async function main() {
     if (e instanceof ConfigError) { console.error(e.message); process.exit(1); }
     throw e;
   }
+  for (const w of cfg.warnings) console.warn(`[circle-care] warning: ${w}`);
   const db = await openDb(cfg);
   const applied = await migrate(db);
   if (applied.length) console.log(`[db] applied migrations: ${applied.join(", ")}`);

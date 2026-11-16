@@ -6,7 +6,8 @@ import { audit } from "./audit";
 import type { Config } from "./config";
 import { dummyHash, hashPassword, randomToken, sha256, verifyPassword } from "./crypto";
 import type { Db, Queryable } from "./db";
-import { HttpError, rateLimit, readCookie, route, str } from "./http";
+import { HttpError, readCookie, route, str } from "./http";
+import { limit } from "./ratelimit";
 
 export const PERSONA_TABLE: Record<Role, "elders" | "caregivers" | "guardians"> = { elder: "elders", caregiver: "caregivers", guardian: "guardians" };
 export const COOKIE = "cc_session";
@@ -99,10 +100,9 @@ export async function recordFailure(d: Deps, userId: string, now: Date): Promise
 
 export function authRouter(d: Deps): Router {
   const r = Router();
-  // Per-network limits. The automated test suite runs hundreds of sign-ups from one address, so it opts out.
-  const off: RequestHandler = (_req, _res, next) => next();
-  const signupLimit = d.cfg.env === "test" ? off : rateLimit({ windowMs: 3600_000, max: 10, message: "Too many sign-ups from this network. Please try again later." });
-  const signinLimit = d.cfg.env === "test" ? off : rateLimit({ windowMs: 600_000, max: 30 });
+  // Per-address limits in the shared store (CC-204). The test environment turns them off unless RATE_LIMITS=on.
+  const signupLimit = limit(d, { name: "signup", by: "ip", windowMs: 3600_000, max: 10, message: "Too many sign-ups from this network. Please try again later." });
+  const signinLimit = limit(d, { name: "signin", by: "ip", windowMs: 600_000, max: 30 });
 
   r.post("/signup", signupLimit, route(async (req, res) => {
     const b = req.body ?? {};

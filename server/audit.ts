@@ -10,7 +10,8 @@ export type AuditAction =
   | "photo.updated" | "photo.removed"
   | "bank.added" | "bank.replaced"
   | "card.added" | "card.removed" | "card.primary"
-  | "nonprod.blocked" | "audit.exported";
+  | "nonprod.blocked" | "audit.exported"
+  | "ratelimit.exceeded";
 
 /** A standalone run of 9+ digits (SSN, account or card number) or a dashed SSN. Hex hashes don't match. */
 export const LOOKS_SENSITIVE = /(^|[^0-9a-z])\d{9,}([^0-9a-z]|$)|\b\d{3}-\d{2}-\d{4}\b/i;
@@ -24,6 +25,8 @@ export async function audit(q: Queryable, e: { action: AuditAction; actor?: stri
     [e.at ?? new Date(), e.actor ?? null, e.subject ?? e.actor ?? null, e.action, json],
   );
 }
+
+const LIMIT_LABEL: Record<string, string> = { ssn: "Social Security number changes", profile: "profile changes", photo: "photo changes", payments: "payment-method changes", vault: "payment details entered", account: "account changes" };
 
 /** Plain-language descriptions for My account → Security (CC-185). */
 export function describe(action: string, d: Record<string, unknown>): string {
@@ -46,6 +49,7 @@ export function describe(action: string, d: Record<string, unknown>): string {
     case "card.primary": return `${d.brand} ending ${d.last4} is now your primary payment method`;
     case "nonprod.blocked": return `A non-test ${d.field} was blocked in this test environment`;
     case "audit.exported": return "Masked audit export generated";
+    case "ratelimit.exceeded": return `Too many ${LIMIT_LABEL[String(d.limit)] ?? "requests"} in a short time — paused for a while`;
     default: return action;
   }
 }
