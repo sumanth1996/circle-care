@@ -115,12 +115,12 @@ function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial
 
 /* ---------------- The health-detail check (CC-164) ---------------- */
 
-function HealthHint({ text, spotted, canNote, onNote, onSend, onEdit }: { text: string; spotted: string[]; canNote: boolean; onNote: () => void; onSend: () => void; onEdit: () => void }) {
+export function HealthHint({ text, spotted, canNote, onNote, onSend, onEdit, sendLabel = "Send anyway", noNoteText = "You can add notes only while you're on shift, so edit the message or send it anyway.", intro = "Notes keep health details on Maggie's record, where her sharing choices decide who sees them." }: { text: string; spotted: string[]; canNote: boolean; onNote: () => void; onSend: () => void; onEdit: () => void; sendLabel?: string; noNoteText?: string; intro?: string }) {
   return (
     <Sheet title="This looks like a health detail" onClose={onEdit}>
       <div className="hint big-targets stack" style={{ "--gap": "14px" } as CSSProperties}>
         <div className="hint-icon"><StickyNote size={26} /></div>
-        <p>Notes keep health details on Maggie's record, where her sharing choices decide who sees them.</p>
+        <p>{intro}</p>
         <blockquote className="hint-quote">{text}</blockquote>
         <div>
           <span className="k">Spotted</span>
@@ -129,8 +129,8 @@ function HealthHint({ text, spotted, canNote, onNote, onSend, onEdit }: { text: 
         <div className="stack" style={{ "--gap": "10px" } as CSSProperties}>
           {canNote
             ? <button type="button" className="btn lg" onClick={onNote}><StickyNote size={20} /> Save as a note</button>
-            : <p className="small muted">You can add notes only while you're on shift, so edit the message or send it anyway.</p>}
-          <button type="button" className="btn secondary lg" onClick={onSend}>Send anyway</button>
+            : <p className="small muted">{noNoteText}</p>}
+          <button type="button" className="btn secondary lg" onClick={onSend}>{sendLabel}</button>
           <button type="button" className="btn plain" onClick={onEdit}>Edit</button>
         </div>
         {canNote && <p className="tiny">A note can be read by Maggie, Sarah, James and caregivers while they're on shift.</p>}

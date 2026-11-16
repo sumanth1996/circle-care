@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, Dail
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 12;
+export const STATE_VERSION = 13;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -163,10 +163,11 @@ export function seed(now = new Date()): State {
     { id: uid("a"), at: iso(ymd(addDays(now, -1)), "20:02"), actorId: FAMILY, action: "viewed", resource: "care notes" },
   ]);
 
+  const appointments = appointmentsSeed(now);
   return {
     version: STATE_VERSION,
     persona: null,
-    signedIn: { elder: false, caregiver: false, guardian: false },
+    signedIn: { elder: false, caregiver: false, guardian: false, family: false },
     clockOffsetMin: 0,
     elderId: ELDER,
     members: [
@@ -218,7 +219,8 @@ export function seed(now = new Date()): State {
       { id: uid("d"), name: "Hospital discharge summary.pdf", kind: "Discharge summary", by: GUARDIAN, at: iso(ymd(addDays(now, -55)), "15:30"), size: "488 KB" },
       { id: uid("d"), name: "Healthcare power of attorney.pdf", kind: "Legal authority", by: GUARDIAN, at: iso(ymd(addDays(now, -60)), "09:00"), size: "1.1 MB", status: "verified" },
     ],
-    appointments: appointmentsSeed(now),
+    appointments,
+    help: helpSeed(now, appointments),
     health: { heightCm: 163, birthYear: 1946, device: "Maggie's watch", overrides: [] },
     audit,
     alerts: [
@@ -284,5 +286,29 @@ function appointmentsSeed(now: Date): State["appointments"] {
     a(21, "10:00", "review", "Annual medication review", "Dr. Hannah Brooks", "Golden Gate Family Medicine, 2100 Webster St, San Francisco, CA", ["med-lisinopril", "med-metformin", "med-vitd", "med-atorvastatin"], { escortId: GUARDIAN }),
     a(28, "16:00", "refill", "Metformin refill", "Fog City Pharmacy", "1840 Irving St, San Francisco, CA", ["med-metformin"]),
     a(35, "08:30", "lab", "Kidney function test", "Bay Area Lab", "Suite 210, 3801 Sacramento St, San Francisco, CA", ["med-metformin"]),
+  ];
+}
+
+/** CC-209, CC-210: two open requests and one James finished, all fictional. */
+function helpSeed(now: Date, appointments: State["appointments"]): State["help"] {
+  const d = (n: number) => ymd(addDays(now, n));
+  const iso = (date: string, time: string) => atTime(date, time).toISOString();
+  const lab = appointments.find((a) => a.title === "Cholesterol panel");
+  const toSat = ((6 - now.getDay() + 7) % 7) || 7;
+  const posted = iso(d(-1), "19:10");
+  return [
+    {
+      id: "help-ride", kind: "ride", note: "Pick Mom up at 9 and bring her home after.", date: lab?.date ?? d(14), time: "09:00", appointmentId: lab?.id,
+      audience: [FAMILY, CAREGIVER], by: GUARDIAN, at: posted, status: "open", rev: 1, history: [{ at: posted, by: GUARDIAN, change: "Posted" }],
+    },
+    {
+      id: "help-company", kind: "company", note: "Sit with Mom on Saturday afternoon while I'm at work. She'd love a card game.", date: d(toSat), time: "14:00",
+      audience: [FAMILY], by: GUARDIAN, at: posted, status: "open", rev: 1, history: [{ at: posted, by: GUARDIAN, change: "Posted" }],
+    },
+    {
+      id: "help-groceries", kind: "groceries", note: "Milk, bread, bananas and the noodle soup from Clement Street.", date: d(-2), time: "17:00",
+      audience: [FAMILY, CAREGIVER], by: GUARDIAN, at: iso(d(-3), "09:00"), status: "done", claimedBy: FAMILY, claimedAt: iso(d(-3), "09:40"), doneBy: FAMILY, closedAt: iso(d(-2), "17:45"), rev: 3,
+      history: [{ at: iso(d(-3), "09:00"), by: GUARDIAN, change: "Posted" }, { at: iso(d(-3), "09:40"), by: FAMILY, change: "Claimed" }, { at: iso(d(-2), "17:45"), by: FAMILY, change: "Done" }],
+    },
   ];
 }

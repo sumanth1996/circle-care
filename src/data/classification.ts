@@ -152,6 +152,19 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     resource: "doses",
     fields: { date: P, key: P, limit: O, sent: P, nextAt: P, snoozed: P },
   },
+  // CC-209, CC-210: a help request. What, when and the note describe Maggie's care needs, and an
+  // appointment link points at her health record, so the request is PHI. Lock screens show none of it.
+  HelpRequest: {
+    resource: "help",
+    fields: {
+      id: O, kind: P, note: P, date: P, time: P, appointmentId: P, audience: P, by: P, at: P, status: O,
+      claimedBy: P, claimedAt: P, doneBy: P, closedAt: P, rev: O, remindedUnclaimed: O, askedDone: O, notYet: O,
+    },
+  },
+  HelpChange: {
+    resource: "help",
+    fields: { at: P, by: P, change: P },
+  },
   Appointment: {
     resource: "appointments",
     fields: {

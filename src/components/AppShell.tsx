@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { NavLink, Navigate, Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import {
-  Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, HeartPulse, CalendarHeart, MessageCircleHeart, type LucideIcon,
+  Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, HeartPulse, CalendarHeart, MessageCircleHeart, HandHeart, type LucideIcon,
 } from "lucide-react";
 import { useStore } from "../data/store";
-import { activeSos, alertsFor, member, meId, nameOf, pendingApprovals, unreadCount, clock } from "../data/selectors";
+import { activeSos, alertsFor, alertLink, member, meId, nameOf, pendingApprovals, unreadCount, clock } from "../data/selectors";
 import type { Persona, Alert } from "../data/types";
 import { Avatar, Sheet } from "./ui";
 import { Logo } from "./Logo";
@@ -81,6 +81,7 @@ export default function AppShell({ persona }: { persona: Persona }) {
           { to: "/app/guardian/circle", label: "Care circle", icon: Users },
           { to: "/app/guardian/feed", label: "Activity", icon: Activity },
           { to: "/app/guardian/digest", label: "Weekly digest", icon: BarChart3 },
+          { to: "/app/guardian/help", label: "Help board", icon: HandHeart },
           { to: "/app/guardian/notes", label: "Notes & documents", icon: StickyNote },
           { to: "/app/guardian/card", label: "Emergency card", icon: IdCard },
           { to: "/app/guardian/privacy", label: "Privacy Center", icon: Shield },
@@ -94,8 +95,16 @@ export default function AppShell({ persona }: { persona: Persona }) {
             { to: "/app/caregiver/card", label: "Emergency card", icon: IdCard, tab: true },
             // CC-165: Ana gets a Chat tab only once Maggie or Sarah adds her.
             ...(inChat(state, meId("caregiver")) ? [{ to: "/app/caregiver/chat", label: "Chat", icon: MessageCircleHeart, badge: unreadChat(state, meId("caregiver")), tab: true }] : []),
+            // CC-209: the Help board, under More.
+            { to: "/app/caregiver/help", label: "Help board", icon: HandHeart },
           ]
-        : [];
+        : persona === "family"
+          ? [
+              { to: "/app/family", label: "Help", icon: HandHeart, tab: true },
+              { to: "/app/family/chat", label: "Chat", icon: MessageCircleHeart, badge: unreadChat(state, meId("family")), tab: true },
+              { to: "/app/family/card", label: "Emergency card", icon: IdCard, tab: true },
+            ]
+          : [];
 
   const tabs = items.filter((i) => i.tab);
   const extra = items.filter((i) => !i.tab);
@@ -179,12 +188,9 @@ export default function AppShell({ persona }: { persona: Persona }) {
         <div className="banner-stack" aria-live="assertive">
           <button className={`banner ${banner.severity === "critical" ? "critical" : ""}`} onClick={() => {
             setBanner(null);
-            const l = banner.link ?? "";
-            // /app/sos and /app/chat open that page for whoever is signed in.
-            const shared = l === "/app/sos" || l === "/app/chat" ? `/app/${persona}/${l.slice(5)}` : "";
-            if (shared) nav(shared);
-            else if (persona === "elder") nav(l.startsWith("/app/elder") ? l : "/app/elder");
-            else nav(l.startsWith(`/app/${persona}`) ? l : `/app/${persona}/alerts`);
+            // /app/sos, /app/chat and /app/help open that page for whoever is signed in.
+            const to = alertLink(persona, banner.link);
+            nav(to ?? (persona === "elder" ? "/app/elder" : `/app/${persona}/alerts`));
           }}>
             <Logo size={34} />
             <span className="grow">

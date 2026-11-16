@@ -70,6 +70,10 @@ jobs:
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/calm.py
 
+      - name: Help board (help.py)
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: python tests/e2e/help.py
+
       - name: Accessibility audit (a11y.py)
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/a11y.py

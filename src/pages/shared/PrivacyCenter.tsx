@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse, Smile } from "lucide-react";
+import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse, Smile, HandHeart } from "lucide-react";
 import { useStore } from "../../data/store";
 import { dailyShared } from "../../data/everyday";
 import { clock, member, nameOf } from "../../data/selectors";
@@ -14,8 +14,8 @@ import { encryptWithPassphrase, decryptWithPassphrase } from "../../lib/secureSt
 const access: Record<Member["role"], string> = {
   elder: "Everything",
   guardian: "Everything, and approves big decisions",
-  family: "Today's medicines, tasks, notes and alerts",
-  pro: "Today's plan, only during their shifts",
+  family: "Today's medicines, tasks, notes, alerts and the help requests Sarah shares with them",
+  pro: "Today's plan, only during their shifts, and the help requests Sarah shares with them",
 };
 
 /**
@@ -86,6 +86,15 @@ export default function PrivacyCenter() {
           <Smile size={30} color="var(--elder)" style={{ flex: "none" }} />
           <div className="grow"><b>Share daily check-ins with Sarah</b><p className="muted small">How {isElder ? "you feel" : "she feels"}, glasses of water and meals from {isElder ? "your" : "her"} home screen. {!state.settings.dailyLog.shareWithGuardian ? "Not shared right now." : state.settings.sharingPaused ? "Private while sharing is paused." : "Only Sarah can see them. Days logged while not sharing stay private."}</p></div>
           {isElder ? <Toggle checked={state.settings.dailyLog.shareWithGuardian} onChange={(v) => { actions.setDailySharing(v); toast(v ? "Sharing check-ins with Sarah" : "Check-ins are private"); }} label="Share daily check-ins with Sarah" /> : <span className={`badge ${dailyShared(state) ? "green" : "orange"}`}>{!state.settings.dailyLog.shareWithGuardian ? "Private" : state.settings.sharingPaused ? "Paused" : "Shared"}</span>}
+        </div>
+      </section>
+
+      {/* CC-209: help requests are their own kind of data, with their own sharing rule. */}
+      <section className="panel stack" style={{ "--gap": "12px" } as React.CSSProperties} aria-labelledby="pc-help">
+        <div className="row">
+          <HandHeart size={30} color="var(--blue)" style={{ flex: "none" }} />
+          <div className="grow"><b id="pc-help">Help requests</b><p className="muted small">Rides, groceries and visits Sarah asks for. Only the people she picks see each one, and only {isElder ? "you" : "Maggie"} and Sarah see them while sharing is paused. A request for an appointment shows as an appointment only, without the doctor or the reason.</p></div>
+          <button className="btn sm secondary" onClick={() => nav(isElder ? "/app/elder/help" : "/app/guardian/help")}>See them</button>
         </div>
       </section>
 

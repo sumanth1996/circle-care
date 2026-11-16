@@ -6,7 +6,7 @@ const LEADS = "circle-care-pilot-leads";
 const NPS = "circle-care-nps";
 
 export type PilotLead = { at: string; role: string; state: string; hasPro: boolean };
-export type NpsResponse = { at: string; persona: "elder" | "caregiver" | "guardian"; score: number; comment?: string };
+export type NpsResponse = { at: string; persona: "elder" | "caregiver" | "guardian" | "family"; score: number; comment?: string };
 
 function read<T>(key: string): T[] {
   try {

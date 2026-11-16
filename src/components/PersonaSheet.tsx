@@ -10,6 +10,7 @@ const options: { p: Persona; role: string }[] = [
   { p: "elder", role: "Elder" },
   { p: "caregiver", role: "Caregiver" },
   { p: "guardian", role: "Legal guardian" },
+  { p: "family", role: "Family" },
 ];
 
 /** Approved feature: Persona switcher demo mode. One tap between views, plus presenter controls. */
