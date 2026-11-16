@@ -18,6 +18,8 @@ export interface Config {
   testData: boolean;
   port: number;
   databaseUrl?: string;
+  /** PEM CA certificate for a database provider with its own certificate authority (CC-203). */
+  databaseCaCert?: string;
   /** Folder for the embedded development database and generated dev keys. */
   dataDir: string;
   /** Encryption keys by id; `currentKeyId` encrypts, all ids can decrypt (rotation). */
@@ -103,6 +105,7 @@ export function loadConfig(e: NodeJS.ProcessEnv = process.env): Config {
     testData: !isProd,
     port: Number(e.PORT) || 5000,
     databaseUrl: e.DATABASE_URL || undefined,
+    databaseCaCert: e.DATABASE_CA_CERT || undefined,
     dataDir,
     keys,
     currentKeyId,

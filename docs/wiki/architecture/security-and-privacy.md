@@ -10,7 +10,7 @@ This page explains the security and privacy controls that are **real code in the
 | Control | In the prototype | In production (planned) | Story |
 |---|---|---|---|
 | Encryption at rest | AES-256-GCM in the browser; non-extractable key in IndexedDB | Server-side encryption with managed, rotated keys (KMS); device encryption in native apps | CC-26 |
-| Encryption in transit | Care data: N/A (stays in the browser). Accounts API: HTTPS with `Secure` cookies; the database connection uses TLS without certificate checks (CC-203) | TLS 1.2+ everywhere; certificate pinning in native apps | CC-26 |
+| Encryption in transit | Care data: N/A (stays in the browser). Accounts API: HTTPS with `Secure` cookies; the database connection uses TLS and verifies the provider's certificate (CC-203) | TLS 1.2+ everywhere; certificate pinning in native apps | CC-26 |
 | Authentication | Browser demo: simulated password, 6-digit MFA with a fixed code, simulated biometrics. Accounts server: scrypt passwords, 5-failure lockout, per-address sign-in limit, no second factor yet (CC-200) | Real MFA / passkeys, server rate limiting, device binding | CC-11 – 13 |
 | Session management | Browser: inactivity lock (15 min; elder optional), sign out everywhere (local). Server: hashed session tokens, 30-minute idle and 12-hour limits, sign-out of the current session; no sign out everywhere yet (CC-201) | Server sessions with revocation, push-token revocation | CC-14, CC-27 |
 | Authorisation | One matrix and one `can()` check, called by most data-changing actions in the browser (gaps in the threat model, CC-10) | Identical policy enforced in the API | CC-18, CC-19 |
