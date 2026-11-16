@@ -1707,6 +1707,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1935,6 +1941,90 @@
     
   
     CC-7 Competitive teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/08-outreach-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-1 Outreach kit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/10-fieldwork-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-2 to CC-4 Fieldwork plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/11-synthesis-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-5 Synthesis kit
   
 
     
@@ -3182,11 +3272,11 @@
 </tr>
 <tr>
 <td><strong>Related stories</strong></td>
-<td>CC-31 PHI-free notifications · CC-35 suspicious-access detection · CC-39 repeat reminder · CC-42 dose escalation · CC-50 critical alerts · CC-52 missed check-in · CC-57 late caregiver · CC-63 channels &amp; quiet hours · CC-64 approval reminder · CC-86 health alerts · CC-25 access expiry</td>
+<td>CC-31 PHI-free notifications · CC-35 suspicious-access detection · CC-39 repeat reminder · CC-42 dose escalation · CC-50 critical alerts · CC-52 missed check-in · CC-57 late caregiver · CC-63 channels &amp; quiet hours · CC-64 approval reminder · CC-86 health alerts · CC-25 access expiry · CC-206 all-clear · CC-207 reminder repeats &amp; snooze · CC-208 quiet-hours morning summary</td>
 </tr>
 <tr>
 <td><strong>Last updated</strong></td>
-<td>2026-10-19</td>
+<td>2026-11-15</td>
 </tr>
 </tbody>
 </table>
@@ -3225,8 +3315,8 @@
 <tbody>
 <tr>
 <td>1</td>
-<td>Dose repeat reminder</td>
-<td>Unconfirmed dose ≥ 10 min past time</td>
+<td>Dose reminder (CC-207)</td>
+<td>At the dose time, then every 10 min (15 after a snooze) up to Sarah's limit (1–5, default 3). In-app text starts <em>"Reminder 2 of 3"</em>. Stops once the dose is marked</td>
 <td>Elder</td>
 <td>Info</td>
 <td>You have a reminder from Circle Care</td>
@@ -3344,6 +3434,22 @@
 <td>Circle Care security notice</td>
 </tr>
 <tr>
+<td>16a</td>
+<td>All-clear (CC-206)</td>
+<td>A dose that triggered a missed-dose alert is marked taken. Goes to each person who got that alert (not Ana while sharing is paused). In-app: <em>"All clear: the 8:00 AM dose was taken at 9:10 AM."</em> No medicine named</td>
+<td>Caregiver, guardian</td>
+<td>Info</td>
+<td>Update from Circle Care</td>
+</tr>
+<tr>
+<td>16b</td>
+<td>Morning summary (CC-208)</td>
+<td>Quiet hours end (or Sarah turns them off) and something waited overnight. Lists what waited, in the app only</td>
+<td>Guardian</td>
+<td>Info</td>
+<td>Update from Circle Care</td>
+</tr>
+<tr>
 <td>16</td>
 <td>Evening recap (CC-191)</td>
 <td>Once a day at 19:00 (catches up until 23:00 if the app first runs later, never inside quiet hours), unless Sarah turned it off or quiet hours cover 19:00. In-app text: <em>"Your evening recap is ready."</em></td>
@@ -3454,8 +3560,13 @@
 </tr>
 <tr>
 <td>Quiet hours</td>
-<td>On, 22:00–07:00 — <em>"Non-urgent alerts wait until morning"</em></td>
-<td>Stored only</td>
+<td>Off for a new circle; the demo has it on, 22:00–07:00</td>
+<td>Enforced for Sarah (CC-208): non-urgent alerts are held, not listed or bannered, and go out as one morning summary when quiet hours end. Critical alerts (SOS, high-priority medicines), security notices and readings outside Maggie's thresholds still come at once</td>
+</tr>
+<tr>
+<td>Reminder repeats</td>
+<td>3 (1–5)</td>
+<td>Reminders Maggie gets per dose (CC-207). A change applies from the next dose. Missed-dose timers are unaffected</td>
 </tr>
 <tr>
 <td>Emergencies break through silent mode</td>
@@ -3574,6 +3685,14 @@
 <td><em>CC-35 suspicious access alerts the guardian</em> · <em>CC-64 24-hour approval reminder</em> · <em>CC-86 a sudden heart-rate change alerts the guardian</em> · <em>Missed dose escalates…</em></td>
 </tr>
 <tr>
+<td>Unit — <code>calm-alerts.test.ts</code></td>
+<td>Sprint 16: all-clear to each person alerted, none before an alert, Skipped and Refused shown with who and why, reminders cleared, paused sharing, audit · 3 reminders 10 minutes apart then stop, missed-dose timers unchanged, snooze, Sarah's 1–5 setting, high-priority timing · quiet hours hold and summarise at 7 AM, urgent alerts at once, no empty summary, off delivers at once, generic lock-screen line</td>
+</tr>
+<tr>
+<td>E2E — <code>calm.py</code></td>
+<td><em>CC-207 Maggie sees which reminder this is and snoozes it</em> · <em>CC-207 Sarah sets how many reminders Maggie gets</em> · <em>CC-206 Sarah gets an all-clear naming no medicine</em></td>
+</tr>
+<tr>
 <td>Gaps</td>
 <td>No unit tests for late-caregiver or SOS-escalation alerts</td>
 </tr>
@@ -3597,7 +3716,7 @@
 <td>Push (APNs/FCM) with iOS critical-alert entitlement, SMS and email via BAA-covered vendors (<a href="../../roadmap/">R2</a>)</td>
 </tr>
 <tr>
-<td>Channels, quiet hours and critical bypass not enforced</td>
+<td>Channels and critical bypass not enforced; quiet hours apply to Sarah only</td>
 <td>Delivery policy per person and severity</td>
 </tr>
 <tr>

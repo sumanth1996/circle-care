@@ -1478,6 +1478,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1709,6 +1715,90 @@
     
   
     CC-7 Competitive teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/08-outreach-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-1 Outreach kit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/10-fieldwork-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-2 to CC-4 Fieldwork plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/11-synthesis-kit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CC-5 Synthesis kit
   
 
     
@@ -3413,11 +3503,27 @@ Status: DRAFT v4, reviewed against <code>main</code> on 2026-11-15 (demo state v
 </tr>
 <tr>
 <td><code>Alert</code></td>
-<td><code>key</code>, <code>at</code>, <code>detail</code></td>
+<td><code>key</code>, <code>at</code>, <code>detail</code>, <code>items</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>id</code>, <code>to</code>, <code>title</code>, <code>severity</code>, <code>read</code>, <code>link</code></td>
-<td>The personas in <code>to</code>. <code>title</code> is the lock-screen text and never holds health details; <code>key</code> embeds medicine ids and vitals metrics</td>
+<td><code>id</code>, <code>to</code>, <code>title</code>, <code>severity</code>, <code>read</code>, <code>link</code>, <code>urgent</code>, <code>held</code></td>
+<td>The personas in <code>to</code>. <code>title</code> is the lock-screen text and never holds health details; <code>key</code> embeds medicine ids and vitals metrics. <code>items</code> lists the details a quiet-hours morning summary released (CC-208)</td>
+</tr>
+<tr>
+<td><code>AlertResolution</code></td>
+<td><code>at</code>, <code>by</code>, <code>outcome</code>, <code>reason</code></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>How a missed dose was settled: who marked it, when, and why (CC-206). Shown on the earlier alert to the people who got it</td>
+</tr>
+<tr>
+<td><code>DoseReminder</code></td>
+<td><code>date</code>, <code>key</code>, <code>sent</code>, <code>nextAt</code>, <code>snoozed</code></td>
+<td>—</td>
+<td>—</td>
+<td><code>limit</code></td>
+<td><code>doses</code>: elder, guardian, family, pro@shift. The key names the medicine (CC-207)</td>
 </tr>
 <tr>
 <td><code>Appointment</code></td>
@@ -3432,7 +3538,7 @@ Status: DRAFT v4, reviewed against <code>main</code> on 2026-11-15 (demo state v
 <td><code>consent.at</code>, <code>consent.by</code>, <code>consent.onBehalfReason</code>, <code>vitals.thresholds.hrHigh</code>, <code>vitals.thresholds.hrLow</code>, <code>vitals.thresholds.hrJump</code>, <code>vitals.thresholds.spo2Low</code>, <code>vitals.thresholds.spo2Drop</code>, <code>emergencyCard.allergies</code>, <code>emergencyCard.conditions</code>, <code>emergencyCard.directives</code>, <code>emergencyCard.bloodType</code>, <code>emergencyCard.approvedAt</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>checkinWindow.start</code>, <code>checkinWindow.end</code>, <code>escalation</code>, <code>escalationDelayMin</code>, <code>doseEscalation.caregiverMin</code>, <code>doseEscalation.guardianMin</code>, <code>quietHours.on</code>, <code>quietHours.start</code>, <code>quietHours.end</code>, <code>channels.push</code>, <code>channels.sms</code>, <code>channels.email</code>, <code>criticalBypass</code>, <code>textSize</code>, <code>highContrast</code>, <code>readAloud</code>, <code>sharingPaused</code>, <code>consent.version</code>, <code>sessionLockMin</code>, <code>elderLockMin</code>, <code>toured</code>, <code>setupCallRequested</code>, <code>vitals.intervalMin</code>, <code>vitals.shareWithGuardian</code>, <code>refillAlertDays</code>, <code>dailyLog.shareWithGuardian</code>, <code>dailyLog.waterGoal</code>, <code>dailyLog.sharedSince</code>, <code>recapNotify</code>, <code>elderChatOnHome</code>, <code>emergencyCard.approvedByElder</code></td>
+<td><code>checkinWindow.start</code>, <code>checkinWindow.end</code>, <code>escalation</code>, <code>escalationDelayMin</code>, <code>doseEscalation.caregiverMin</code>, <code>doseEscalation.guardianMin</code>, <code>quietHours.on</code>, <code>quietHours.start</code>, <code>quietHours.end</code>, <code>reminderRepeats</code>, <code>channels.push</code>, <code>channels.sms</code>, <code>channels.email</code>, <code>criticalBypass</code>, <code>textSize</code>, <code>highContrast</code>, <code>readAloud</code>, <code>sharingPaused</code>, <code>consent.version</code>, <code>sessionLockMin</code>, <code>elderLockMin</code>, <code>toured</code>, <code>setupCallRequested</code>, <code>vitals.intervalMin</code>, <code>vitals.shareWithGuardian</code>, <code>refillAlertDays</code>, <code>dailyLog.shareWithGuardian</code>, <code>dailyLog.waterGoal</code>, <code>dailyLog.sharedSince</code>, <code>recapNotify</code>, <code>elderChatOnHome</code>, <code>emergencyCard.approvedByElder</code></td>
 <td><code>settings</code>: elder, guardian; <code>emergencyCard</code>: elder, guardian, family, pro. Accessibility settings are operational but can imply vision or hearing needs</td>
 </tr>
 </tbody>
