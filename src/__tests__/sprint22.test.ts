@@ -271,10 +271,13 @@ describe("Report a possible scam in one tap (CC-132)", () => {
     reportScam(s, ELDER, { kind: "text", note, photoId: "photo-scam" });
     for (const who of [FAMILY, CAREGIVER]) expect(can(s, who, "read", "scams")).toBe(false);
     expect(can(s, GUARDIAN, "read", "scams")).toBe(true);
-    expect(JSON.stringify(s.audit)).not.toContain("4417");
-    expect(JSON.stringify(s.audit)).not.toContain("photo-scam");
+    // Only what each entry says, not its hashes: a random hash can happen to contain "4417".
+    const said = JSON.stringify(s.audit.map(({ prev: _p, hash: _h, ...rest }) => rest));
+    expect(said).not.toContain("4417");
+    expect(said).not.toContain("photo-scam");
+    expect(said).not.toContain("they asked for the code");
     expect(lastAudit(s)).toMatchObject({ actorId: ELDER, action: "created", resource: "a scam report" });
-    expect(JSON.stringify(s.alerts)).not.toContain("4417");
+    expect(JSON.stringify(s.alerts.map((a) => [a.title, a.detail]))).not.toContain("4417");
   });
 
   it("only Maggie reports, and only the five kinds", () => {
