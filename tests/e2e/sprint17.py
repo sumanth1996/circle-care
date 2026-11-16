@@ -67,8 +67,11 @@ with sync_playwright() as p:
     def maggie_asks():
         signin("elder")
         pg.get_by_role("link", name=re.compile("I could use a hand")).click()
-        pg.get_by_role("radio", name="Groceries").check()
-        pg.get_by_role("radio", name="Tomorrow").check()
+        # The radios are drawn as big tiles; a tap lands on the tile, which is the radio's label.
+        pg.locator(".ask-kinds label", has_text="Groceries").click()
+        pg.locator(".ask-days label", has_text="Tomorrow").click()
+        expect(pg.get_by_role("radio", name="Groceries")).to_be_checked()
+        expect(pg.get_by_role("radio", name="Tomorrow")).to_be_checked()
         pg.screenshot(path=f"{OUT}/s17-elder-ask.png", full_page=True)
         pg.get_by_role("button", name="Send").click()
         pg.wait_for_url("**/app/elder", timeout=5000)
