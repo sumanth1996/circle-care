@@ -27,7 +27,7 @@ Sessions run up to 70 minutes, with at least 30 minutes after each to reset the 
 
 **Pick the slot by the participant's local time.** Recruiting aims for at least 3 states, so a slot that suits one person may not suit another: 10:00 AM PT is 1:00 PM in the Eastern time zone, and 6:30 PM PT is 9:30 PM there. As a guide, offer elders a daytime slot in their own time zone, caregivers a slot between or after their shifts, and guardians who work full time an evening or Saturday slot. Record every session in the tracker in Pacific time.
 
-Target: the minimums (6 elders, 6 caregivers, 5 guardians) done by Sat Dec 19, with at most 3 sessions a day for one moderator. Mon Dec 14 to Sat Dec 19 has exactly 17 slots, so any cancellation spills into the overflow days unless a second moderator takes some sessions. Then:
+Target: the minimums (6 elders, 6 caregivers, 6 guardians and 2 family helpers, 20 sessions) done by Tue Dec 22, with at most 3 sessions a day for one moderator. Mon Dec 14 to Sat Dec 19 has 17 slots, so the last 3 sessions use the overflow slots on Mon Dec 21 and Tue Dec 22, and any cancellation needs a second moderator to take some sessions. Then:
 
 - **Mon Dec 21, 8:00 to 10:00 AM:** the affinity session for CC-5, with at least 2 people (the [journey maps](05-journey-maps.md#synthesis-process-after-interviews) synthesis process). Overflow interviews after it are folded into the themes the same day.
 - **Tue Dec 22 and Wed Dec 23:** the 15-minute journey-map checks with participants (the [synthesis kit](11-synthesis-kit.md) §4). Keep them separate from any elder §6b follow-up, which needs its own call.

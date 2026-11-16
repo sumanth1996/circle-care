@@ -1,7 +1,7 @@
 # Journey Maps (Hypothesis Journeys)
 
 Notion story: CC-5 Map current-state journeys for each persona
-Status: HYPOTHESIS JOURNEYS — update after interviews. These maps are assumptions written before any research. They are built from the personas and the problem statement, not from participants. Every cell must be confirmed, changed or deleted once CC-2/3/4 interviews are done.
+Status: HYPOTHESIS JOURNEYS, v0.6, revised 2026-11-16 in a POC round with dummy profiles. These maps are still assumptions: they were built from the personas and the problem statement, then revised and checked with dummy participants for a portfolio proof of concept ([POC round](13-poc-research-round.md)). No real person has confirmed them. Every cell must be confirmed, changed or deleted once real CC-2/3/4 interviews are done. Cells marked (POC) changed in the dummy round.
 
 ## How to read these maps
 
@@ -16,7 +16,7 @@ Status: HYPOTHESIS JOURNEYS — update after interviews. These maps are assumpti
 
 | Stage | Morning wake-up | Medicines | Aide visit | Afternoon alone | Something goes wrong | Evening |
 |---|---|---|---|---|---|---|
-| **Actions** | Gets up; daughter calls "just checking" | Uses a weekly pill box; sometimes forgets which day | Aide arrives; helps with shower and lunch; writes in a paper notebook | Watches TV, naps, short walk | Feels dizzy; unsure whether to "bother" anyone | Evening tablet; daughter calls again |
+| **Actions** | Gets up; daughter calls or texts "just checking" (POC) | Uses a weekly pill box, sometimes filled by a spouse (POC); sometimes forgets which day | Aide arrives; helps with shower and lunch; writes in a paper notebook | Watches TV, naps, short walk | Feels dizzy; unsure whether to "bother" anyone | Evening tablet; daughter calls again |
 | **Thoughts** | "She worries too much." | "Did I take the morning one?" | "I could do this myself if my knees were better." | "I don't want to be a burden." | "It's probably nothing." | "Another call. I'm fine." |
 | **Feelings** | Neutral → mildly irritated | Uncertain | Mixed: grateful, a little embarrassed | Calm, sometimes lonely | Anxious | Tired |
 | **Pain points** | Repeated check-in calls feel like being monitored (H-E1) | Double or missed doses; no record | Doesn't know what the aide writes or who reads it (H-E2) | Nobody knows she's OK unless they call | Pendant not worn; hesitates to call (H-E5) | Same questions every call |
@@ -28,11 +28,11 @@ Status: HYPOTHESIS JOURNEYS — update after interviews. These maps are assumpti
 
 | Stage | Before shift | Arrival | Doing the work | Medicines | Communicating | Leaving / hand-off |
 |---|---|---|---|---|---|---|
-| **Actions** | Checks agency app and texts for changes | Clocks in on agency EVV app; texts family "here" | Meals, bathing, tasks from a printed plan | Hands tablets from pill box; notes in notebook | Answers family texts during work | Writes notebook entry; texts summary to daughter; may fill agency form at home |
+| **Actions** | Checks agency app and texts for changes | Agency aides clock in on the EVV app and text the family "here"; private-pay aides only text (POC) | Meals, bathing, tasks from a printed plan | Hands tablets from pill box; notes in notebook | Answers family texts during work | Writes notebook entry; texts summary to daughter; may fill agency form at home |
 | **Thoughts** | "Did anything change since Tuesday?" | "Two check-ins for one arrival." | "Is this the latest plan?" | "If she refuses, who do I tell?" | "I'm answering texts instead of helping." | "Another 15 minutes I'm not paid for." (H-C1) |
 | **Feelings** | Uncertain | Neutral, a bit annoyed | Focused | Responsible, anxious about errors | Stretched | Tired |
-| **Pain points** | Changes arrive through scattered channels | Duplicate check-in (H-C2, H-C6) | Out-of-date paper plan | Med changes not communicated; refusals hard to document | Interruptions; no single channel | Duplicate documentation; next caregiver may never read the notebook |
-| **Opportunities** | Shift card with "what changed" | One check-in that unlocks the plan (H-C3, H-C5) | Live task list with timestamps | Dose list ordered by time with high-priority flags; refusals recorded | Family sees status without texting | Auto-drafted hand-off from what was recorded (H-C4) |
+| **Pain points** | Changes arrive through scattered channels; can't see the plan before the shift (POC, H-C5) | Agency: duplicate check-in (H-C2, H-C6). Private-pay: nothing proves arrival (POC) | Out-of-date paper plan | Med changes not communicated; refusals hard to document | Interruptions; no single channel | Duplicate documentation; next caregiver may never read the notebook |
+| **Opportunities** | Shift card with "what changed", readable the evening before (POC) | One check-in that unlocks the plan (H-C3, H-C5) | Live task list with timestamps | Dose list ordered by time with high-priority flags; refusals recorded | Family sees status without texting | Auto-drafted hand-off from what was recorded (H-C4) |
 
 ---
 
@@ -40,11 +40,11 @@ Status: HYPOTHESIS JOURNEYS — update after interviews. These maps are assumpti
 
 | Stage | Morning | At work | Problem appears | Decision | Coordinating family | End of week |
 |---|---|---|---|---|---|---|
-| **Actions** | Calls Mom; texts the aide | Checks phone between meetings; no news | Hears days later that a dose was missed or a visit was late | Agency asks to change a schedule or a med time; she decides by phone | Updates siblings in a group chat | Tries to piece the week together |
+| **Actions** | Calls Mom; texts the aide | Checks phone between meetings or at lunch (POC); no news | Hears days later that a dose was missed or a visit was late | Agency asks to change a schedule or a med time; she decides by phone, sometimes on a video call with Mom (POC) | Updates siblings in a group chat | Tries to piece the week together |
 | **Thoughts** | "Did she take her pills?" | "No news is… good news?" (H-G1) | "Why didn't anyone tell me?" (H-G2) | "Should I ask Mom first? There's no time." (H-G5) | "I'm repeating myself to three people." | "I don't really know how the week went." |
 | **Feelings** | Anxious | Distracted, guilty | Frustrated, alarmed | Pressured | Drained | Uncertain |
 | **Pain points** | Daily calls irritate Mom | No passive signal she's OK | Late discovery; no escalation | Decisions lack context; Mom left out | Repeated updates; siblings second-guess | No record; hard to talk to doctors |
-| **Opportunities** | "Today at a glance" (H-G7) | Alerts only when something is actually wrong; quiet hours | Escalation timers (caregiver first, then guardian) (H-G3) | Approvals with context; elder notified of every decision | Weekly digest (H-G6); family role with limited access | History and export |
+| **Opportunities** | "Today at a glance" (H-G7) | Alerts only when something is actually wrong; quiet hours | Escalation timers (caregiver first, then guardian) (H-G3); option to be told at the same time (POC) | Approvals with context; elder notified of every decision | Weekly digest (H-G6); family role with limited access | History and export |
 
 ### Guardian side journey: proving authority (one-time)
 
@@ -52,6 +52,20 @@ Status: HYPOTHESIS JOURNEYS — update after interviews. These maps are assumpti
 |---|---|---|---|---|
 | **Pain points (hypothesis)** | Unsure why proof is needed | Scans are blurry; wrong document | Wants access now (H-G4) | Rejection without reason feels insulting |
 | **Opportunities** | Explain why in one sentence | Check file type and readability at upload (CC-67) | Show expected review time; elder still protected meanwhile | Clear rejection reason (CC-24 reasons list) |
+
+---
+
+## Journey 4 — Family helper: James, a weekend (POC)
+
+Added in the POC round from two dummy family helpers (DP-F1, DP-F2) and the practice round's PR-C6. A hypothesis journey like the others.
+
+| Stage | Weekday | Weekend | Hands-on task | Hand-back to the aide |
+|---|---|---|---|---|
+| **Actions** | Works; texts the aide or Grandma once a day | Covers the shift the aide doesn't work | Gives a medicine or helps with a transfer | Texts the aide what was done |
+| **Thoughts** | "Is anything different this week?" | "What did the aide already do?" | "I hope I'm doing this right." (H-C12) | "Will she read it before Monday?" |
+| **Feelings** | Distracted | Responsible | Unsure | Tired |
+| **Pain points** | No view of the week | Doesn't know what's been done today | Never shown how; learned from a video (H-C12) | A task done twice or missed (H-C13) |
+| **Opportunities** | Family-helper view of the day | One shared "who did it" list with the aide | A how-to note on each hands-on task, from the nurse or aide | Hand-off that the aide sees at check-in |
 
 ---
 
@@ -64,6 +78,17 @@ Published research read for the [practice round](12-practice-round.md#sources) (
 - **Journey 2, Communicating and hand-off:** aides are often left out of care planning, leading to "fragmentation, miscommunication, and information gaps" (S4). Supports the scattered-channels pain points.
 - **Journey 3, Morning, At work, Problem appears:** distance caregivers describe anxiety, guilt and uncertainty (S2), and 11% of family caregivers live more than two hours away (S3, dated). Seven in ten family caregivers also work (S1). Supports the anxiety and late-discovery cells.
 - **Missing from all three maps:** a family helper doing medical tasks at home with no training (S1: only 22% trained). Add a row or a fourth map if real interviews show it.
+
+## POC round changes (v0.6, 2026-11-16, dummy profiles)
+
+The [POC round](13-poc-research-round.md) ran 7 dummy map checks (synthesis kit §4). What changed:
+
+- **Journey 1:** morning check-ins can be texts; a spouse may fill the pill box. Missing moment: coming home from a hospital stay.
+- **Journey 2:** the Arrival stage was called wrong for private-pay aides, who have no EVV app, so it was rewritten. Caregivers want the plan before the shift.
+- **Journey 3:** the guardian may decide with Mom on a video call; long-distance guardians want to hear about a missed dose at once. Missing moment: flying in when something goes wrong.
+- **Journey 4:** new, for family helpers.
+
+These are dummy changes for a portfolio POC; the status stays hypothesis journeys.
 
 ## Synthesis process (after interviews)
 

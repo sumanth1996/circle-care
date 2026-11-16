@@ -1,9 +1,9 @@
 # Interview Guide — Elders
 
 Notion story: CC-2 Interview guide: elders · CC-197 concept tests of the built features
-Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No interviews have taken place.
+Status: DRAFT v3, updated 2026-11-16 (CC-197). Not yet used with real participants. No interviews have taken place. v3 leaves time for consent; a POC round with dummy profiles ran against it ([13](13-poc-research-round.md)).
 
-> Participants come through the CC-1 screener. Only interview people who can give their own consent. Session length up to 70 minutes: §1 to §6 take about 54, §6b 10 and the wrap-up 3. Offer breaks. If the session reaches 55 minutes before §6b, or the person tires, move §6b to the 15-minute follow-up.
+> Participants come through the CC-1 screener. Only interview people who can give their own consent. Session length up to 70 minutes: §1 to §6 take about 54, §6b 8 and the wrap-up 3, which leaves about 5 for consent at the start (fieldwork plan §4 step 1). Offer breaks. If the session reaches 55 minutes before §6b, or the person tires, move §6b to the 15-minute follow-up.
 
 ## Goals
 
@@ -82,7 +82,7 @@ Close the concept test with: "Who in your life would you want in a circle like t
 
 Before §6b, turn *Pause sharing* back off: T3 leaves it on. Any *My day* tap while sharing is paused makes that day private, so T5's footer and T8's *Her day* would show it as private. If that happens, tap *Reset demo*, sign in as Maggie again and set their text size again.
 
-## 6b. Concept test — everyday care built since October (10 min)
+## 6b. Concept test — everyday care built since October (8 min)
 
 Same phone, still as Maggie. For T8, switch to Sarah in the presenter sheet (*Demo mode*), so her screens show what the participant just did, then hand the phone back. If they turned check-in sharing off in T6, ask whether to turn it back on before T8. If they keep it off, *Her day* shows as private, and their reaction to that is part of the test.
 

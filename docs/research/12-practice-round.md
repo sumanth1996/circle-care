@@ -81,7 +81,9 @@ Concept tasks T1 to T9: not run.
 
 ## What the dry run found in the guides
 
-These are real findings about the documents, not about people. Each needs the product owner's call before the first session.
+These are real findings about the documents, not about people. Each needed the product owner's call before the first session.
+
+**Update, 2026-11-16:** the product owner chose to finish CC-2 to CC-5 as a portfolio POC with dummy profiles. Findings 1, 2, 3 and 6 are fixed in the guides (v3): every guide now leaves at least 4 minutes for consent, the guardian minimum is 6, family helpers have a quota of 2 and their own part of the caregiver guide, and the caregiver note template asks who showed them each task. See the [POC round](13-poc-research-round.md).
 
 1. **The guardian guide has no time for consent.** Its sections add up to the full 70 minutes, and consent (fieldwork plan §4, step 1) comes before §1. The elder and caregiver guides leave 3 and 2 minutes. Suggested fix: drop T5 and T9 by default, or book guardians for 75 minutes.
 2. **CC-4 asks for 6 guardians; the screener's minimum is 5**, and the guardian hypotheses are written as "3+ of 5". Either the story or the screener should change.
@@ -143,6 +145,8 @@ No hypothesis is tested by this round. The last column says only whether publish
 | H-C9 | not tested | S4: aides are often left out of the family's planning; doesn't say how they'd like to join. |
 | H-C10 | not tested | No source. |
 | H-C11 | not tested | No source. |
+| H-C12 | not tested | S1: only 22% of family caregivers doing medical tasks were trained. |
+| H-C13 | not tested | No source. |
 | H-G1 | not tested | S2: distance caregivers describe anxiety and uncertainty, which fits frequent checking; no count of calls. |
 | H-G2 | not tested | S2: uncertainty at a distance points the same way. |
 | H-G3 | not tested | No source. |
@@ -171,4 +175,4 @@ Nothing in the desk research argues against the MVP. Two points deserve a look b
 | CC-4 guardians | 6+ real interviews (or the story changed to 5), and a decision on finding 1 | Research lead; product owner for the decision |
 | CC-5 synthesis | The three maps rewritten from real notes and checked with at least 5 participants (synthesis kit §4) | Research lead |
 
-Every step in this table needs real people, so none of it can be done by an agent while no one may be contacted.
+Every step in this table needs real people, so none of it can be done by an agent while no one may be contacted. The [POC round](13-poc-research-round.md) closes the stories for a portfolio showcase only, with dummy profiles; this table is still what real research would need.
