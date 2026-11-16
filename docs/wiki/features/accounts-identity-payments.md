@@ -7,7 +7,7 @@
 | **Feature ID / area** | F-14 · Real accounts (`/app/join`, `/app/login`, `/app/account`) · API (`server/`) · PostgreSQL |
 | **Personas** | Maggie (elder), Ana (caregiver), Sarah (legal guardian) — each with their own account and record |
 | **Status** | <span class="cc-badge cc-badge--built">Built</span> — server, database, sign-up, profiles, photo, SSN, guardian bank account and cards. Payments run through a **simulated vault** (Stripe-ready); money doesn't move yet. |
-| **Related stories** | CC-172 role picker · CC-173 sign-up · CC-174 sessions · CC-175 lockout · CC-176 – CC-178 persona profiles · CC-179 photo · CC-180 SSN · CC-181 SSN masking · CC-182 non-production guard · CC-183 production start-up checks · CC-184 masked audit export · CC-185 activity log · CC-186 bank account · CC-187 cards · CC-188 manage cards · CC-189 schema · CC-190 API & Replit · CC-200 two-step sign-in on the server · CC-201 sign out everywhere, password change and reset · CC-204 shared rate limits |
+| **Related stories** | CC-172 role picker · CC-173 sign-up · CC-174 sessions · CC-175 lockout · CC-176 – CC-178 persona profiles · CC-179 photo · CC-180 SSN · CC-181 SSN masking · CC-182 non-production guard · CC-183 production start-up checks · CC-184 masked audit export · CC-185 activity log · CC-186 bank account · CC-187 cards · CC-188 manage cards · CC-189 schema · CC-190 API & Replit · CC-200 two-step sign-in on the server · CC-201 sign out everywhere, password change and reset · CC-204 shared rate limits · CC-235 reset two-step sign-in after a lost phone |
 | **Sprint** | Sprint 11 — Accounts, Identity & Payments (Oct 26 – Nov 8, 2026) |
 | **Team** | PO: Sumanth · Developer: Dev Agent · Tester: QA Agent · Build & Deploy: Release Agent · Approver: Lead Architect Agent |
 | **Last updated** | 2026-11-16 (CC-200, CC-201, CC-204 on branch `feat/server-auth-hardening`, not yet merged) |
@@ -104,6 +104,17 @@ Guardians and caregivers can see care and payment details, so right after creati
 From then on, sign-in takes the password and then **Enter your sign-in code**, with **Use a recovery code instead**. The password alone never starts a session.
 
 Passkeys (WebAuthn) are out of scope for CC-200: they need a WebAuthn library, and this story adds no packages. They are a candidate follow-up.
+
+### 7a. Lost phone and recovery codes (CC-235)
+
+Someone who has lost both their phone and every recovery code can reset two-step sign-in themselves. It uses only what the account already has, the password and the email address, plus time, so it needs no outside service and nobody at Circle Care.
+
+1. At **Enter your sign-in code**, after a correct password, **Lost your phone and your recovery codes?** explains the three steps and offers **Email me a link**. The reply is the same every time, and at most 3 links a day go to one account.
+2. The email's link opens **Reset two-step sign-in?** (`/app/recover-two-step`). The link is taken out of the address bar at once, and nothing happens until **Start the 72-hour wait** is pressed, so a mail scanner that opens links can't start a reset. Links work once, for 30 minutes, and only the newest one works.
+3. A second email says when the wait ends and carries a cancel link (`/app/recover-two-step/cancel`). Any device that's still signed in shows **Someone asked to reset two-step sign-in** on My account with **Cancel the reset**. Changing or resetting the password also cancels it, because whoever asked knew the old password.
+4. After 72 hours, signing in with the password again opens **Your reset is ready**. **Finish the reset** removes the old key and every recovery code, ends every session, and starts a new session that can only set up two-step sign-in again. Elders who had opted in are simply signed in.
+
+Every step is in the account's activity and audit trail, without any link. Like the password reset, this works in production only once an email provider is connected. Two other ways in were considered and left for later: a family admin vouching for the person (server accounts aren't linked into circles yet) and a support-assisted reset (needs staff and an identity check).
 
 ### 8. Sign-in & security on My account (CC-201)
 
@@ -222,6 +233,7 @@ The export reads only the masked database views (`audit_people_masked`, `audit_p
 | `audit_events` | Append-only trail (a trigger blocks UPDATE and DELETE) |
 | `password_resets` | Hash of each reset link, its 30-minute expiry and when it was used (CC-201) |
 | `mfa_recovery_codes`, `mfa_challenges` | Hashed recovery codes and the hashed 5-minute token between the password and the code (CC-200). The authenticator secret is encrypted in `users.mfa_secret_enc` |
+| `mfa_recovery_requests` | Each reset of two-step sign-in: hashes of its confirm and cancel links, when the wait ends, and whether it was cancelled or finished (CC-235) |
 | `rate_limits` | Shared counters for every instance; keys are hashes, never an address (CC-204) |
 
 See [Data model](../architecture/data-model.md) and [Security & privacy](../architecture/security-and-privacy.md).
@@ -234,6 +246,7 @@ See [Data model](../architecture/data-model.md) and [Security & privacy](../arch
 | `POST /api/auth/signup` · `/signin` · `/signout` · `GET /api/auth/me` | Accounts and sessions. For an account with two-step sign-in on, `/signin` sets no cookie and answers `{ mfaRequired: true, challenge, expiresInSeconds: 300 }` |
 | `POST /api/auth/mfa/verify` | `{ challenge, code }` or `{ challenge, recoveryCode }`: checks the second step and starts the session (CC-200) |
 | `POST /api/auth/mfa/enrol/start` · `POST /api/auth/mfa/enrol/confirm` | Set up two-step sign-in: the key and `otpauth://` link once, then `{ code }` turns it on and returns 10 recovery codes once (CC-200) |
+| `POST /api/auth/mfa/recovery/request` · `/confirm` · `/cancel` · `/complete` · `GET /api/auth/mfa/recovery` | Reset two-step sign-in after a lost phone: `{ challenge }` emails a link; `{ token }` starts the 72-hour wait; `{ token }` or a signed-in session cancels it; `{ challenge }` after the wait clears the key and codes and ends every session (CC-235). `/signin` adds `recovery: { readyAt, ready }` while a reset waits |
 | `POST /api/auth/signout-everywhere` | End every session of this account (CC-201) |
 | `POST /api/auth/password` | `{ currentPassword, newPassword }`: change the password and end every other session (CC-201) |
 | `POST /api/auth/password-reset/request` · `POST /api/auth/password-reset/confirm` | `{ email }` always answers the same; `{ token, password }` sets a new password and ends every session (CC-201) |
@@ -278,6 +291,8 @@ All requests that change data must send `X-Requested-With: circle-care`. Togethe
 | `server/__tests__/api.test.ts` (81 tests) | Every sign-up rule, sessions and expiry, CSRF, lockout, profile isolation, completeness, photo checks, SSN rules per environment, duplicate SSN, re-authentication, tamper detection, bank and card rules, token ownership, use-once and expiry, primary-card rules, append-only audit, schema constraints, and regression tests for every Lead Architect review finding (parallel-guess lockout, SSN step-up lockout, ITIN ranges, bank-name digits, malformed cookie). **It also scans every API response in the suite and fails if a full SSN appears.** |
 | `server/__tests__/mfa.test.ts` (27 tests) | RFC 4226, RFC 6238 (SHA-1, SHA-256, SHA-512) and RFC 4648 test vectors; the enrolment gate for guardians and caregivers; nothing stored in the clear; no session from a password alone; challenge hashed, single use and expiring; replayed codes refused; 5 wrong codes in parallel; recovery codes once each; `482913` refused in production, staging and test, and absent from server code |
 | `server/__tests__/sessions.test.ts` (17 tests) | Sign out everywhere; password change rules and lockout; the same reset reply for any email, unaffected by a slow mailer; single-use, parallel-use, expiry and newest-link rules; production with no email provider; the lockout email; the clean-up and its start-up and daily, unref'd schedule |
+| `server/__tests__/mfa-recovery.test.ts` (14 tests) | Needs a live password challenge; the same reply and at most 3 links a day; nothing changes until the link is used; links single use, 30 minutes, newest only, under parallel use; cancel by email link, by a signed-in device and by password change or reset; Finish refused during the wait, then clears the key and codes and ends every session; no link in the audit trail or stored in the clear; production with no email provider; the wait fixed at 72 hours outside tests; clean-up |
+| `tests/e2e/sprint21.py` (7 scenarios, Playwright) | The lost-phone panel, both emailed links and their expired states, the waiting and ready states at sign-in, the warning and Cancel on a signed-in device, and finishing into set-up, each with an axe check. The preview has no API, so the file answers `/api` with a stand-in that follows the server's replies |
 | `server/__tests__/ratelimit.test.ts` (13 tests) | Two app instances share one bucket and let exactly the limit through under parallel requests; window reset and pruning; hashed keys; a forged left-most `X-Forwarded-For` lands in the same bucket; `TRUST_PROXY_HOPS` validation; per-account SSN, profile, photo and payment limits with their audit event |
 | `server/__tests__/config-and-export.test.ts` (14 tests) | Production and staging start-up checks, live-key guard, Secure cookie, HSTS and vault disabled in production. The masked export's contents, manifest and hashes, and that no full number appears in any file. |
 | `tests/e2e/accounts.py` (20 scenarios, Playwright) | The full guardian journey on a phone-sized screen, including two-step set-up, sign-in with a code and with a recovery code, password change, sign out everywhere and the forgotten-password pages; elder journey, duplicate email, wrong password, lockout, cards, activity, profile edit. Also checks that the SSN and account number never appear in the page. Codes come from `tests/e2e/totp_helper.py` (Python standard library). |
@@ -288,7 +303,7 @@ All requests that change data must send `X-Requested-With: circle-care`. Togethe
 - **Payments don't move money yet.** The vault is simulated. Production needs the Stripe adapter (Stripe Elements for cards, Financial Connections or micro-deposits to verify bank accounts) and a BAA review. Until then, adding payment methods in a `stripe` environment returns "not available yet".
 - **Identity is checked for format, not verified with a third party** (e.g. an identity-verification provider). That is a follow-up story.
 - **No email provider is connected.** Reset links and lockout emails are recorded as undelivered in production, so nobody can reset a forgotten password there until one is connected (a human launch task; see the README). Staging has no visible outbox either.
-- **Two-step sign-in can't be turned off, re-enrolled or given new recovery codes yet,** and passkeys aren't offered. Someone who loses their phone and every recovery code needs support. Email verification is still missing.
+- **Two-step sign-in can't be turned off or given new recovery codes yet,** and passkeys aren't offered. Someone who loses their phone and every recovery code can reset it with the password, an emailed link and a 72-hour wait (CC-235), which needs an email provider in production. Email verification is still missing.
 - **Accounts aren't linked into a shared care circle yet.** *Explore the … app* opens the role's demo experience.
 - **The embedded database is single-process.** Use Replit PostgreSQL (`DATABASE_URL`) for anything shared.
 

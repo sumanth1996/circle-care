@@ -82,6 +82,7 @@ E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/accounts.py   # accounts, two-s
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/e2e.py        # demo journeys
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/sprint19.py   # call log, What matters to me
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/sprint20.py   # away mode
+E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/sprint21.py   # sign-in recovery for a lost phone
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/a11y.py       # axe accessibility audit
 ```
 

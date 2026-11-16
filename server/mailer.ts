@@ -14,7 +14,8 @@ import { audit } from "./audit";
 import type { Config } from "./config";
 import type { Queryable } from "./db";
 
-export type MailKind = "password_reset" | "password_changed" | "account_locked" | "mfa_locked";
+export type MailKind = "password_reset" | "password_changed" | "account_locked" | "mfa_locked"
+  | "mfa_reset_confirm" | "mfa_reset_started" | "mfa_reset_cancelled" | "mfa_reset_done";
 
 export interface MailMessage {
   kind: MailKind;
@@ -101,5 +102,26 @@ export const messages = {
     kind: "mfa_locked", to, userId,
     subject: "Someone entered wrong sign-in codes for your Circle Care account",
     text: `Your password was entered correctly, but then 5 wrong two-step sign-in codes. We've stopped accepting codes for ${minutes} minutes.\n\nIf this wasn't you, someone may know your password: change it as soon as you can.${SIGNATURE}`,
+  }),
+  // CC-235: getting back in after losing the authenticator and every recovery code.
+  mfaResetConfirm: (to: string, link: string, userId: string, waitHours: number): MailMessage => ({
+    kind: "mfa_reset_confirm", to, userId,
+    subject: "Confirm resetting two-step sign-in for Circle Care",
+    text: `Someone entered your password and said they lost their phone and recovery codes. If it was you, open this link within 30 minutes to start a ${waitHours}-hour wait, after which you can set up two-step sign-in again:\n\n${link}\n\nThe link works once. If it wasn't you, don't open it, and change your password: someone knows it.${SIGNATURE}`,
+  }),
+  mfaResetStarted: (to: string, userId: string, readyAt: string, cancelLink: string): MailMessage => ({
+    kind: "mfa_reset_started", to, userId,
+    subject: "Two-step sign-in for Circle Care can be reset after a wait",
+    text: `The reset of two-step sign-in was confirmed. From ${readyAt} you can sign in with your password and set it up again on a new phone. Until then, nothing changes.\n\nIf this wasn't you, cancel it now and then change your password:\n\n${cancelLink}\n\nYou can also cancel it from My account on any device where you're still signed in.${SIGNATURE}`,
+  }),
+  mfaResetCancelled: (to: string, userId: string): MailMessage => ({
+    kind: "mfa_reset_cancelled", to, userId,
+    subject: "The reset of two-step sign-in was cancelled",
+    text: `The waiting reset of two-step sign-in for your Circle Care account was cancelled. Your authenticator app and recovery codes keep working as before.${SIGNATURE}`,
+  }),
+  mfaResetDone: (to: string, userId: string): MailMessage => ({
+    kind: "mfa_reset_done", to, userId,
+    subject: "Two-step sign-in was reset for your Circle Care account",
+    text: `Two-step sign-in was reset after the waiting period, and every device was signed out. The old authenticator app and recovery codes no longer work. Set up two-step sign-in again the next time you sign in.\n\nIf this wasn't you, reset your password straight away and contact support.${SIGNATURE}`,
   }),
 };

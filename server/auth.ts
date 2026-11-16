@@ -11,6 +11,7 @@ import type { Db, Queryable } from "./db";
 import { HttpError, readCookie, route, str } from "./http";
 import { deliver, messages, type Mailer } from "./mailer";
 import { createChallenge, CHALLENGE_MINUTES } from "./mfa";
+import { cancelOpenRecovery, recoveryState } from "./mfaRecovery";
 import { bucket, hit, limit } from "./ratelimit";
 
 export const PERSONA_TABLE: Record<Role, "elders" | "caregivers" | "guardians"> = { elder: "elders", caregiver: "caregivers", guardian: "guardians" };
@@ -209,7 +210,9 @@ export function authRouter(d: Deps): Router {
         await audit(q, { action: "auth.challenge", actor: u.id, at: now });
         return createChallenge(q, u.id, now);
       });
-      res.json({ mfaRequired: true, challenge, expiresInSeconds: CHALLENGE_MINUTES * 60 });
+      // CC-235: a waiting reset of two-step sign-in is shown on the code step (the password was right).
+      const recovery = await recoveryState(d.db, u.id, now);
+      res.json({ mfaRequired: true, challenge, expiresInSeconds: CHALLENGE_MINUTES * 60, ...(recovery ? { recovery } : {}) });
       return;
     }
     await d.db.tx(async (q) => {
@@ -272,6 +275,8 @@ export function authRouter(d: Deps): Router {
       const n = (await q.query("DELETE FROM sessions WHERE user_id = $1 AND token_hash <> $2 RETURNING token_hash", [u.id, keep])).rows.length;
       await q.query("DELETE FROM password_resets WHERE user_id = $1", [u.id]);
       await q.query("DELETE FROM mfa_challenges WHERE user_id = $1", [u.id]);
+      // CC-235: whoever asked to reset two-step sign-in knew the old password, so a waiting reset stops.
+      await cancelOpenRecovery(q, u.id, now, "password");
       await audit(q, { action: "password.changed", actor: u.id, detail: { otherSessionsEnded: n }, at: now });
       return n;
     });
@@ -313,6 +318,7 @@ export function authRouter(d: Deps): Router {
       const n = (await q.query("DELETE FROM sessions WHERE user_id = $1 RETURNING token_hash", [row.user_id])).rows.length;
       await q.query("DELETE FROM password_resets WHERE user_id = $1 AND token_hash <> $2", [row.user_id, tokenHash]);
       await q.query("DELETE FROM mfa_challenges WHERE user_id = $1", [row.user_id]);
+      await cancelOpenRecovery(q, row.user_id, now, "password"); // CC-235
       await audit(q, { action: "password.reset", actor: row.user_id, detail: { sessionsEnded: n }, at: now });
       return n;
     });

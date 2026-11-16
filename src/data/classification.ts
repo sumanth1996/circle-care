@@ -263,6 +263,11 @@ export const DB_CLASSIFICATION: Record<string, Record<string, DataClass>> = {
   // Recovery codes and pending second steps (CC-200): hashes only.
   mfa_recovery_codes: { id: O, user_id: O, code_hash: S, created_at: O, used_at: O },
   mfa_challenges: { token_hash: S, user_id: O, created_at: O, expires_at: O },
+  // Resetting two-step sign-in after a lost phone (CC-235): link hashes only.
+  mfa_recovery_requests: {
+    id: O, user_id: O, confirm_hash: S, cancel_hash: S, created_at: O, confirm_expires_at: O,
+    confirmed_at: O, ready_at: O, cancelled_at: O, completed_at: O,
+  },
   // Shared rate-limit counters (CC-204): keys are hashes of an address or account id.
   rate_limits: { key: O, reset_at: O, count: O },
   elders: { ...persona },

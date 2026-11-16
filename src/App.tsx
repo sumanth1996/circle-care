@@ -13,6 +13,7 @@ import Welcome from "./pages/Welcome";
 import SignIn from "./pages/SignIn";
 import TwoStep from "./pages/account/TwoStep";
 import { ForgotPassword, ResetPassword } from "./pages/account/PasswordReset";
+import { CancelTwoStepReset, RecoverTwoStep } from "./pages/account/RecoverTwoStep";
 import AppShell from "./components/AppShell";
 import ElderHome from "./pages/elder/ElderHome";
 import ElderNext from "./pages/elder/ElderNext";
@@ -84,6 +85,8 @@ export default function App() {
             <Route path="/app/two-step" element={<TwoStep />} />
             <Route path="/app/forgot-password" element={<ForgotPassword />} />
             <Route path="/app/reset-password" element={<ResetPassword />} />
+            <Route path="/app/recover-two-step" element={<RecoverTwoStep />} />
+            <Route path="/app/recover-two-step/cancel" element={<CancelTwoStepReset />} />
             <Route path="/app/sign-in/:persona" element={<SignIn />} />
             <Route path="/app/invite/:memberId" element={<Invite />} />
             <Route path="/app/review" element={<Review />} />
