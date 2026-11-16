@@ -47,12 +47,15 @@ Legend: R read · W write · P propose (needs approval) · A approve · I invite
 | `help` | Help board requests (CC-209/210, CC-211) | R P ⁴ | R W S | R S ³ | R S ³ | R S ³ | — |
 | `plan` | Coming Home plan (CC-213/214) | R | R W | — ⁵ | — ⁵ | — ⁵ | — |
 | `questions` | Shared question list for a visit (CC-217) | R W ⁶ | R W ⁶ | R W | R W | — | — |
+| `visitNotes` | After-visit notes and next steps (CC-218) | R W ⁷ | R W ⁷ | R W ⁷ | R W ⁷ | R W ⁷ | — |
 
 ¹ Only while Maggie shares check-ins (`settings.dailyLog.shareWithGuardian`) and hasn't paused all sharing.
 ³ Only the requests Sarah shared with that person (`HelpRequest.audience`, checked by `canSeeHelp()` in `src/data/help.ts`). Respond means claim ("I'll do it"), give it back ("Can't anymore") and mark it done; only the person who claimed a request can give it back or finish it. A request tied to an appointment shows as an appointment only, and as just "Appointment" and the time to anyone without appointment access. Hidden from family and caregivers while sharing is paused.
 ⁴ Propose here means Maggie asks for a hand herself (`askHelp`). It goes to the people she chose in her Privacy Center (`settings.helpFrom`, which only she can change, through `setHelpFrom`), and Sarah is told.
 ⁵ Others never see the plan. An item Sarah gives someone becomes a help request on their board, so they see that item only, under `help`.
 ⁶ Also needs appointment access (`canSeeQuestions()` in `src/data/visitQuestions.ts`). Only Maggie can hide an item (then only she and Sarah see it); only Sarah sets the order; the person who added an item, or Sarah, can remove it.
+
+⁷ Reading also needs appointment access, so Maggie's paused sharing hides the notes from family and caregivers (`canReadNotes()` in `src/data/visitNotes.ts`). Writing is limited to Maggie, Sarah and the person recorded as taking Maggie to that visit; anyone else is refused and audited. Each next step becomes a one-off care task for its owner.
 ² Only once Maggie or Sarah adds that caregiver (`state.chat.pros`); switching them off, removing them from the circle or their time limit ending takes them out at once. Pausing sharing also takes family and caregivers out of the chat, like every other non-emergency resource.
 
 ## Rules explained

@@ -75,7 +75,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   CareTask: {
     resource: "tasks",
-    fields: { id: P, title: P, icon: P, time: P, recurrence: P, assignee: P },
+    fields: { id: P, title: P, icon: P, time: P, recurrence: P, assignee: P, date: P, apptId: P },
   },
   TaskLog: {
     resource: "tasks",
@@ -176,6 +176,15 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     resource: "plan",
     fields: { id: O, kind: P, title: P, assignee: P, helpId: O },
   },
+  // CC-218: what the doctor said and the next steps are about Maggie's health.
+  VisitNotes: {
+    resource: "visitNotes",
+    fields: { answers: P, summary: P, by: P, at: P, updatedBy: P, updatedAt: P },
+  },
+  NextStep: {
+    resource: "visitNotes",
+    fields: { id: P, text: P, owner: P, date: P, taskId: P, by: P, at: P },
+  },
   // CC-217: questions and observations for a visit describe Maggie's health.
   VisitQuestion: {
     resource: "questions",
@@ -185,7 +194,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     resource: "appointments",
     fields: {
       id: P, date: P, time: P, durationMin: P, kind: P, title: P, provider: P, location: P, medIds: P,
-      escortId: P, prep: P, status: O, autoCancelled: O, createdBy: P,
+      escortId: P, prep: P, notesReminded: O, status: O, autoCancelled: O, createdBy: P,
     },
   },
   Settings: {

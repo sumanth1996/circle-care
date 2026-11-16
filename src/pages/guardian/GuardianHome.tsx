@@ -11,6 +11,7 @@ import { PackageOpen } from "lucide-react";
 import { lowSupply, sharedLogFor, feelingOf, recapOpen } from "../../data/everyday";
 import { EveningRecap } from "../../components/guardianEveryday";
 import "./guardian.css";
+import { MyNextSteps } from "../../components/visitNotes";
 
 /** CC-61 "today at a glance" dashboard. Sprint 12: low supply (CC-121). */
 export default function GuardianHome() {
@@ -70,6 +71,8 @@ export default function GuardianHome() {
           <p className="muted">North Star this week: <b style={{ color: "var(--ink)" }}>{northStar(state)}</b> verified care tasks completed on time.</p>
         </div>
       </div>
+
+      <MyNextSteps />
 
       <div className="tiles">
         <Link to="/app/guardian/feed" className="tile-s">

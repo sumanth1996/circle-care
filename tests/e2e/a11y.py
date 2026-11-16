@@ -99,8 +99,20 @@ with sync_playwright() as p:
     except Exception as e:
         out.append(f"/app/guardian (evening recap card): ERR {str(e).splitlines()[0][:120]}")
     pg.close()
+    # CC-218: the after-visit notes screen, opened from the newest past visit (its address carries the visit's id).
+    pg = new_page()
+    try:
+        pg.goto(B + "/app/guardian/questions"); pg.wait_for_timeout(900)
+        pg.get_by_role("link", name="Notes for", exact=False).first.click(); pg.wait_for_url("**/visit-notes/**", timeout=5000); pg.wait_for_timeout(600)
+        pg.add_script_tag(path=AXE)
+        r = pg.evaluate("axe.run(document, {runOnly: {type: 'tag', values: ['wcag2a','wcag2aa','wcag21a','wcag21aa']}}).then(r => r.violations.map(v => v.impact + ' ' + v.id + ' (' + v.nodes.length + '): ' + v.nodes.map(n => n.target.join(' ')).join(' | ')))")
+        out.append(f"/app/guardian/visit-notes (after-visit notes): {'OK' if not r else ''}")
+        out += ["   " + x for x in r]
+    except Exception as e:
+        out.append(f"/app/guardian/visit-notes (after-visit notes): ERR {str(e).splitlines()[0][:120]}")
+    pg.close()
     print("\n".join(out))
     b.close()
     bad = [x for x in out if x.startswith("   ") or ": ERR" in x]
-    print(f"\n{len(pages) + 1 + extra} screens audited, {len(bad)} problem line(s)")
+    print(f"\n{len(pages) + 2 + extra} screens audited, {len(bad)} problem line(s)")
     sys.exit(1 if bad else 0)

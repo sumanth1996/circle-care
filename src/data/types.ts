@@ -73,8 +73,13 @@ export interface CareTask {
   title: string;
   icon: string; // lucide icon key
   time: string; // HH:MM
-  recurrence: "daily" | "weekdays" | "weekends";
+  /** "once" is a next step from an after-visit note (CC-218): it shows only on `date`, for its one assignee. */
+  recurrence: "daily" | "weekdays" | "weekends" | "once";
   assignee: "caregiver" | "elder" | string;
+  /** CC-218: the day of a one-off next step. */
+  date?: string;
+  /** CC-218: the appointment whose notes added this next step. */
+  apptId?: string;
 }
 export interface TaskLog {
   taskId: string;
@@ -279,6 +284,10 @@ export interface Appointment {
   prep?: string;
   /** CC-217: the shared question list. Unset until someone first opens it; the prep note then becomes its first item. */
   questions?: VisitQuestion[];
+  /** CC-218: what the doctor said, written after the visit by Maggie, Sarah or whoever went. */
+  notes?: VisitNotes;
+  /** CC-218: the one reminder to add notes has been sent. */
+  notesReminded?: boolean;
   status: "scheduled" | "done" | "cancelled";
   /** CC-121: cancelled by Circle Care because the medicine was paused (not by a person). */
   autoCancelled?: boolean;
@@ -470,4 +479,29 @@ export interface State {
   /** CC-213: Coming Home plans, newest last. */
   plans: ComingHome[];
   settings: Settings;
+}
+
+/* ---------------- Sprint 18: After-visit notes (CC-218) ---------------- */
+
+/** One next step from a visit. Saving it makes a one-off care task for its owner on its date. */
+export interface NextStep {
+  id: string;
+  text: string;
+  owner: string;
+  date: string;
+  taskId: string;
+  by: string;
+  at: string;
+}
+
+/** The answers to the visit's questions, anything else the doctor said, and the next steps. */
+export interface VisitNotes {
+  /** Question id to answer. */
+  answers: Record<string, string>;
+  summary?: string;
+  nextSteps: NextStep[];
+  by: string;
+  at: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }

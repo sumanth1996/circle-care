@@ -9,7 +9,7 @@ import { todayOf } from "./selectors";
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
   | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
-  | "supply" | "wellbeing" | "chat" | "help" | "plan" | "questions";
+  | "supply" | "wellbeing" | "chat" | "help" | "plan" | "questions" | "visitNotes";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -49,6 +49,8 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   plan:            { read: ["elder", "guardian"], write: ["guardian"] },
   // CC-217: the shared question list for an appointment. A paid caregiver only while on shift.
   questions:       { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian", "family", "pro@shift"] },
+  // CC-218: reading follows appointment access. Writing is further limited to Maggie, Sarah and whoever went (visitNotes.ts).
+  visitNotes:      { read: ["elder", "guardian", "family", "pro"], write: ["elder", "guardian", "family", "pro"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */

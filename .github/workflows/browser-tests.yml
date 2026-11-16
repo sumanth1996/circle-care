@@ -78,6 +78,10 @@ jobs:
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/sprint17.py
 
+      - name: After-visit notes and next steps (sprint18.py)
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: python tests/e2e/sprint18.py
+
       - name: Accessibility audit (a11y.py)
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/a11y.py
