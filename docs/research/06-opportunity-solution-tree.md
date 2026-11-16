@@ -91,7 +91,7 @@ Each test targets the riskiest assumption under a solution. Order by risk × cos
 |---|---|---|---|---|---|---|---|
 | T1 | Reminder + confirm card | Elders understand the card without training | Usability | Task T2 in CC-2 with 6 elders | 5 of 6 succeed unaided | Low | Not started |
 | T2 | Voice confirm | Recognition is reliable enough in real homes | Feasibility | 20 utterances × 3 rooms (quiet, TV on, kitchen) using browsers that support on-device recognition | ≥90% correct, 0 false "taken" | Low | Not started |
-| T3 | Escalation timers | Guardians want the caregiver to get first chance | Desirability | H-G3 questions in CC-4 | 3 of 5 | Low | Not started |
+| T3 | Escalation timers | Guardians want the caregiver to get first chance | Desirability | H-G3 questions in CC-4 | 4 of 6 | Low | Not started |
 | T4 | Self-drafting hand-off | Caregivers trust a drafted summary | Desirability | Task T3 in CC-3; count edits | 4 of 6 send with ≤2 edits | Low | Not started |
 | T5 | Pause sharing | Elders understand that SOS still works when paused | Usability | Task T3 in CC-2; explain-back | 5 of 6 correct | Low | Not started |
 | T6 | Daily I'm OK | Elders keep tapping after novelty wears off | Viability | Pilot week-over-week check-in rate (CC-74) | ≥80% of days in week 8 | Med | Not started |
@@ -104,3 +104,12 @@ Each test targets the riskiest assumption under a solution. Order by risk × cos
 2. Delete opportunities supported by fewer than 3 participants.
 3. Add new opportunities from themes that have no solution yet — do not attach a solution until compared against at least 2 alternatives.
 4. Mark tests done with date and result; prune solutions whose tests failed.
+
+## POC round inputs (dummy profiles, 2026-11-16)
+
+The [POC round](13-poc-research-round.md) ran the update steps above with dummy participants, for a portfolio proof of concept. Nothing in this tree changes on that basis; these are the candidates the round suggests, to be checked with real research:
+
+- **New opportunity:** "I thought the button told the pharmacy." Candidate solution: reword **Request refill** and its confirmation (dummy H-C8 and H-G9 not supported).
+- **New opportunity:** "Let me read the plan the night before." Candidate solution: a next-shift preview the guardian can turn off (dummy H-C5 not supported).
+- **New opportunity:** "Nobody showed me how to do it." Candidate solutions to compare: a family-helper role with a shared "who did it" list, or how-to notes on hands-on tasks (dummy H-C12).
+- **Test T3, escalation timers:** dummy result 4 of 6 for caregiver-first, with both long-distance guardians wanting to be told at once.

@@ -31,13 +31,14 @@ Fill one row per session within 24 hours, in the encrypted copy. Agents draft th
 |---|---|---|---|---|
 | Elders | 0 | 6 | | |
 | Caregivers | 0 | 6 | | |
-| Guardians | 0 | 5 | | |
+| Guardians | 0 | 6 | | |
+| Family helpers | 0 | 2 | | |
 
 Never stop below the minimum, even at saturation.
 
 ## 3. Hypothesis scorecard
 
-One row per hypothesis in the guides: H-E1 to H-E10 ([elders](02-interview-guide-elders.md#hypotheses-to-validate-not-findings)), H-C1 to H-C11 ([caregivers](03-interview-guide-caregivers.md#hypotheses-to-validate-not-findings)) and H-G1 to H-G11 ([guardians](04-interview-guide-guardians.md#hypotheses-to-validate-not-findings)). Mark each one supported, mixed, not supported or not tested, with the participant IDs behind it. Judge each hypothesis by its own *Validated if* and *Invalidated if* columns in its guide (for example, H-E1 needs 4 or more of 6 elders). The 3-participant rule in the journey-map process is for themes, not hypotheses.
+One row per hypothesis in the guides: H-E1 to H-E10 ([elders](02-interview-guide-elders.md#hypotheses-to-validate-not-findings)), H-C1 to H-C13 ([caregivers](03-interview-guide-caregivers.md#hypotheses-to-validate-not-findings)) and H-G1 to H-G11 ([guardians](04-interview-guide-guardians.md#hypotheses-to-validate-not-findings)). Mark each one supported, mixed, not supported or not tested, with the participant IDs behind it. Judge each hypothesis by its own *Validated if* and *Invalidated if* columns in its guide (for example, H-E1 needs 4 or more of 6 elders). The 3-participant rule in the journey-map process is for themes, not hypotheses.
 
 | Hypothesis | Validated if (from the guide) | Supported by | Against | Verdict | What it changes |
 |---|---|---|---|---|---|
