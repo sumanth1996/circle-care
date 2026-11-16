@@ -60,7 +60,7 @@ with sync_playwright() as p:
         return pg.get_by_role("article", name=name, exact=True)
 
     def pick_visit(title):
-        sel = pg.get_by_label("Visit")
+        sel = pg.get_by_label("Visit", exact=True)
         sel.select_option(sel.locator("option", has_text=title).first.get_attribute("value"))
 
     notes_url = {}

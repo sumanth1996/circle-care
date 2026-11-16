@@ -74,7 +74,7 @@ export function VisitQuestions() {
       {visits.length === 0 ? <p className="muted">No upcoming visits.</p> : (
         <>
           <label className="field"><span>Visit</span>
-            <select className="input" value={apptId} onChange={(e) => setParams({ appt: e.target.value })}>
+            <select className="input" aria-label="Visit" value={apptId} onChange={(e) => setParams({ appt: e.target.value })}>
               {visits.map((v) => <option key={v.id} value={v.id}>{v.title}, {fmtShortDay(v.date)} at {fmtTime(v.time)}</option>)}
             </select>
           </label>
