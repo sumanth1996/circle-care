@@ -249,7 +249,7 @@ Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (elder, guardian an
 
 | Command | What it does |
 |---|---|
-| `npm install` | Install dependencies (Node 20.11+) |
+| `npm install` | Install dependencies (Node 22+) |
 | `npm run dev` | Vite dev server on port **5000**, all hosts (Replit preview); `/api` and `/vault` are served in-process by the accounts server (PGlite unless `DATABASE_URL` is set) |
 | `npm test` | Vitest unit tests (app and server) |
 | `npm run typecheck` | Type-check the app and the server |
@@ -259,7 +259,7 @@ Permissions are in `MATRIX` (`src/data/policy.ts`): `supply` (elder, guardian an
 | `npm run audit:export` | Masked audit export (CC-184) |
 | `npm run preview` | Serve `dist/` on port 4173 (no API) |
 
-**Replit.** `.replit` runs `npm install && npm run dev` (Node 20, port 5000 → 80). The deployment target is **autoscale**: build `npm install && npm run build`, run `APP_ENV=staging npm start`. The deployed copy is *staging*: a real server and PostgreSQL database with test data only. It needs `DATA_ENCRYPTION_KEY` and `DATA_HMAC_KEY` in Secrets and a PostgreSQL database. See [Accounts, identity & payments](../features/accounts-identity-payments.md).
+**Replit.** `.replit` runs `npm install && npm run dev` (Node 22, port 5000 → 80). The deployment target is **autoscale**: build `npm install && npm run build`, run `APP_ENV=staging npm start`. The deployed copy is *staging*: a real server and PostgreSQL database with test data only. It needs `DATA_ENCRYPTION_KEY` and `DATA_HMAC_KEY` in Secrets and a PostgreSQL database. See [Accounts, identity & payments](../features/accounts-identity-payments.md).
 
 **This wiki** is built separately with MkDocs (`mkdocs build`, `mkdocs gh-deploy`) — see [How to contribute](../how-to-contribute.md).
 

@@ -83,7 +83,7 @@ E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/e2e.py        # demo journeys
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/a11y.py       # axe accessibility audit
 ```
 
-Requires Node 20.11+.
+Requires Node 22 or later (the same version CI uses).
 
 ---
 
