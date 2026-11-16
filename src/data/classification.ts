@@ -75,7 +75,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   CareTask: {
     resource: "tasks",
-    fields: { id: P, title: P, icon: P, time: P, recurrence: P, assignee: P, date: P, apptId: P },
+    fields: { id: P, title: P, icon: P, time: P, recurrence: P, assignee: P, date: P, apptId: P, callId: P },
   },
   TaskLog: {
     resource: "tasks",
@@ -185,6 +185,24 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     resource: "visitNotes",
     fields: { id: P, text: P, owner: P, date: P, taskId: P, by: P, at: P },
   },
+  // CC-226: which insurer, pharmacy or agency Maggie deals with, and what they agreed, says something about her care.
+  CallEntry: {
+    resource: ["calls", "calls.admin", "calls.ref"],
+    fields: { id: O, org: P, date: P, contact: P, outcome: P, ref: P, by: P, at: P, updatedBy: P, updatedAt: P },
+  },
+  CallStep: {
+    resource: "calls",
+    fields: { text: P, owner: P, date: P, taskId: P },
+  },
+  // CC-219: Maggie's routines, food and how she likes to be helped can describe her health and needs.
+  AboutMe: {
+    resource: "aboutMe",
+    fields: { sarahCanEdit: O, elderSeenAt: O },
+  },
+  AboutSection: {
+    resource: "aboutMe",
+    fields: { key: O, text: P, by: P, at: P, sharedWith: O, changedBy: P, changedAt: P, before: P },
+  },
   // CC-217: questions and observations for a visit describe Maggie's health.
   VisitQuestion: {
     resource: "questions",
@@ -212,7 +230,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
       "vitals.thresholds.spo2Low": P, "vitals.thresholds.spo2Drop": P,
       "vitals.shareWithGuardian": O, refillAlertDays: O,
       "dailyLog.shareWithGuardian": O, "dailyLog.waterGoal": O, "dailyLog.sharedSince": O,
-      recapNotify: O, elderChatOnHome: O, helpFrom: O,
+      recapNotify: O, elderChatOnHome: O, helpFrom: O, adminTo: O,
       "emergencyCard.allergies": P, "emergencyCard.conditions": P, "emergencyCard.directives": P,
       "emergencyCard.bloodType": P, "emergencyCard.approvedByElder": O, "emergencyCard.approvedAt": P,
     },

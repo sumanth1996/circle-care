@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
-import { Phone, Volume2, Shield, Type, Bell, IdCard, Sun, CheckCircle2, MessageCircleHeart, HandHeart, ListChecks } from "lucide-react";
+import { Phone, Volume2, Shield, Type, Bell, IdCard, Sun, CheckCircle2, MessageCircleHeart, HandHeart, ListChecks, Heart, PhoneCall } from "lucide-react";
 import { useStore } from "../../data/store";
 import { DailyCheckins } from "../../components/everyday";
 import { ElderChatTile } from "../../components/chat";
@@ -111,6 +111,8 @@ export default function ElderHome() {
         <Link to="/app/elder/chat"><MessageCircleHeart size={20} /> Family</Link>
         <Link to="/app/elder/decisions"><Bell size={20} /> Updates about me {newDecisions > 0 && <span className="new" aria-label={`${newDecisions} new`} />}</Link>
         <Link to="/app/elder/questions"><ListChecks size={20} /> Questions for the doctor</Link>
+        <Link to="/app/elder/about-me"><Heart size={20} /> What matters to me</Link>
+        <Link to="/app/elder/calls"><PhoneCall size={20} /> Calls about my care</Link>
         <Link to="/app/elder/privacy"><Shield size={20} /> My privacy</Link>
         <Link to="/app/elder/card"><IdCard size={20} /> Emergency card</Link>
         <Link to="/app/elder/settings"><Type size={20} /> Text size</Link>

@@ -128,7 +128,7 @@ describe("Next steps become care tasks (CC-218)", () => {
     expect(addNextStep(s, GUARDIAN, a.id, { text: "Who?", owner: "m-ruth", date: inDays(s, 1) })).toBeNull();
     expect(addNextStep(s, GUARDIAN, a.id, { text: "x".repeat(STEP_MAX + 1), owner: FAMILY, date: inDays(s, 1) })).toBeNull();
     expect(addNextStep(s, GUARDIAN, a.id, { text: "  ", owner: FAMILY, date: inDays(s, 1) })).toBeNull();
-    expect(s.tasks.filter((t) => t.recurrence === "once")).toEqual([]);
+    expect(s.tasks.filter((t) => t.recurrence === "once" && t.apptId)).toEqual([]);
   });
 
   it("only the owner, Sarah or Maggie finish a step; a done step can't be removed", () => {

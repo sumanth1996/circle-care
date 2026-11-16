@@ -40,6 +40,8 @@ import Invite from "./pages/Invite";
 import { ChatView } from "./components/chat";
 import { HelpBoard } from "./components/help";
 import { VisitQuestions, QuestionsPrint } from "./components/questions";
+import { CallLogPage } from "./components/callLog";
+import { AboutMePage } from "./components/aboutMe";
 import { VisitNotesPage } from "./components/visitNotes";
 import ElderAsk from "./pages/elder/ElderAsk";
 import ComingHome from "./pages/guardian/ComingHome";
@@ -94,6 +96,8 @@ export default function App() {
               <Route path="ask" element={<ElderAsk />} />
               <Route path="questions" element={<VisitQuestions />} />
               <Route path="visit-notes/:id" element={<VisitNotesPage />} />
+              <Route path="calls" element={<CallLogPage />} />
+              <Route path="about-me" element={<AboutMePage />} />
               <Route path="questions/print/:id" element={<QuestionsPrint />} />
             </Route>
             <Route path="/app/caregiver" element={<AppShell persona="caregiver" />}>
@@ -108,6 +112,8 @@ export default function App() {
               <Route path="help" element={<HelpBoard />} />
               <Route path="questions" element={<VisitQuestions />} />
               <Route path="visit-notes/:id" element={<VisitNotesPage />} />
+              <Route path="calls" element={<CallLogPage />} />
+              <Route path="about-me" element={<AboutMePage />} />
             </Route>
             {/* CC-209, CC-210: James (family). The Help board is his home. */}
             <Route path="/app/family" element={<AppShell persona="family" />}>
@@ -118,6 +124,8 @@ export default function App() {
               <Route path="sos" element={<SosResponder />} />
               <Route path="questions" element={<VisitQuestions />} />
               <Route path="visit-notes/:id" element={<VisitNotesPage />} />
+              <Route path="calls" element={<CallLogPage />} />
+              <Route path="about-me" element={<AboutMePage />} />
             </Route>
             <Route path="/app/guardian" element={<AppShell persona="guardian" />}>
               <Route index element={<GuardianHome />} />
@@ -140,6 +148,8 @@ export default function App() {
               <Route path="coming-home" element={<ComingHome />} />
               <Route path="questions" element={<VisitQuestions />} />
               <Route path="visit-notes/:id" element={<VisitNotesPage />} />
+              <Route path="calls" element={<CallLogPage />} />
+              <Route path="about-me" element={<AboutMePage />} />
               <Route path="questions/print/:id" element={<QuestionsPrint />} />
             </Route>
             <Route path="/app/sos" element={<SosRedirect />} />

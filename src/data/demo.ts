@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, Dail
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 15;
+export const STATE_VERSION = 16;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -222,6 +222,8 @@ export function seed(now = new Date()): State {
     appointments,
     help: helpSeed(now, appointments),
     plans: [],
+    calls: callsSeed(now, tasks),
+    aboutMe: aboutMeSeed(now),
     health: { heightCm: 163, birthYear: 1946, device: "Maggie's watch", overrides: [] },
     audit,
     alerts: [
@@ -251,6 +253,7 @@ export function seed(now = new Date()): State {
       elderChatOnHome: true,
       recapNotify: true,
       helpFrom: [FAMILY],
+      adminTo: [],
       vitals: { intervalMin: 30, thresholds: { hrHigh: 110, hrLow: 50, hrJump: 25, spo2Low: 92, spo2Drop: 4 }, shareWithGuardian: true },
       emergencyCard: {
         allergies: "Penicillin",
@@ -314,5 +317,32 @@ function helpSeed(now: Date, appointments: State["appointments"]): State["help"]
       audience: [FAMILY, CAREGIVER], by: GUARDIAN, at: iso(d(-3), "09:00"), status: "done", claimedBy: FAMILY, claimedAt: iso(d(-3), "09:40"), doneBy: FAMILY, closedAt: iso(d(-2), "17:45"), rev: 3,
       history: [{ at: iso(d(-3), "09:00"), by: GUARDIAN, change: "Posted" }, { at: iso(d(-3), "09:40"), by: FAMILY, change: "Claimed" }, { at: iso(d(-2), "17:45"), by: FAMILY, change: "Done" }],
     },
+  ];
+}
+
+/** CC-219: Maggie has written two sections and Sarah one; "Things I don't want" is still empty. All fictional. */
+function aboutMeSeed(now: Date): State["aboutMe"] {
+  const iso = (n: number, time: string) => atTime(ymd(addDays(now, n)), time).toISOString();
+  return {
+    sarahCanEdit: true,
+    elderSeenAt: iso(-1, "18:00"),
+    sections: [
+      { key: "day", text: "I wake up around 7 and like my tea before anything else. I nap after lunch, and I like the radio on in the afternoon.", by: ELDER, at: iso(-5, "10:10"), sharedWith: [GUARDIAN, CAREGIVER] },
+      { key: "help", text: "Tell me what you are going to do before you do it. Let me press the buttons myself. Speak up a little, but please don't shout.", by: ELDER, at: iso(-5, "10:20"), sharedWith: [GUARDIAN, CAREGIVER] },
+      { key: "food", text: "Oatmeal with banana in the morning. I love a bowl of soup at lunch. Nothing too spicy.", by: GUARDIAN, at: iso(-4, "19:00"), sharedWith: [GUARDIAN, FAMILY] },
+    ],
+  };
+}
+
+/** CC-226 – CC-227: three calls Sarah logged, two with Maggie's (fictional) insurer, one with a next step. */
+function callsSeed(now: Date, tasks: State["tasks"]): State["calls"] {
+  const d = (n: number) => ymd(addDays(now, n));
+  const iso = (n: number, time: string) => atTime(d(n), time).toISOString();
+  const taskId = "t-call-lab-bill";
+  tasks.push({ id: taskId, title: "Bayside Health Plan: Call back about the lab bill", icon: "phone", time: "10:00", recurrence: "once", date: d(12), assignee: GUARDIAN, callId: "call-3" });
+  return [
+    { id: "call-1", org: "Bayside Health Plan", date: d(-9), contact: "Priya, member services", outcome: "Approved the test strips for another 90 days.", ref: "BHP44712209", by: GUARDIAN, at: iso(-9, "11:20") },
+    { id: "call-2", org: "Fog City Pharmacy", date: d(-4), contact: "Tom, pharmacist", outcome: "Lisinopril moves to mail order from next month.", by: GUARDIAN, at: iso(-4, "15:05") },
+    { id: "call-3", org: "Bayside Health Plan", date: d(-2), contact: "Marcus, claims", outcome: "They will review the lab bill again. Call back if no letter comes.", ref: "CLM88120773", nextStep: { text: "Call back about the lab bill", owner: GUARDIAN, date: d(12), taskId }, by: GUARDIAN, at: iso(-2, "09:40") },
   ];
 }

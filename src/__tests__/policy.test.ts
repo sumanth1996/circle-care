@@ -22,12 +22,15 @@ describe("permission matrix (CC-18/19)", () => {
     for (const [action, rules] of Object.entries(acts) as [Action, string[]][]) {
       for (const role of ["elder", "guardian", "family"] as const) {
         it(`${role} ${rules.includes(role) ? "can" : "cannot"} ${action} ${resource}`, () => {
-          expect(can(seed(), ids[role], action, resource)).toBe(rules.includes(role));
+          // CC-226: insurance and admin details reach family only once Maggie picks them.
+          const st = seed(); if (resource === "calls.admin") st.settings.adminTo = [FAMILY];
+          expect(can(st, ids[role], action, resource)).toBe(rules.includes(role));
         });
       }
       it(`professional caregiver ${action} ${resource} follows shift rules`, () => {
         // CC-164: in the family chat a caregiver has the matrix's rights only once Maggie or Sarah adds them.
-        const added = (s: State) => { if (resource === "chat") s.chat.pros = [CAREGIVER]; return s; };
+        // CC-226: insurance and admin details reach a caregiver only once Maggie picks them.
+        const added = (s: State) => { if (resource === "chat") s.chat.pros = [CAREGIVER]; if (resource === "calls.admin") s.settings.adminTo = [CAREGIVER]; return s; };
         const expectOn = rules.includes("pro") || rules.includes("pro@shift");
         const expectOff = rules.includes("pro");
         expect(can(added(onShift(seed())), CAREGIVER, action, resource)).toBe(expectOn);

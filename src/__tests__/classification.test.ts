@@ -22,6 +22,7 @@ const LINKS = {
   "State.docs": "CareDoc", "State.appointments": "Appointment", "State.audit": "AuditEvent", "State.alerts": "Alert", "Alert.resolved": "AlertResolution", "State.reminders": "DoseReminder",
   "State.help": "HelpRequest", "HelpRequest.history": "HelpChange",
   "State.plans": "ComingHome", "ComingHome.items": "PlanItem", "Appointment.questions": "VisitQuestion", "Appointment.notes": "VisitNotes", "VisitNotes.nextSteps": "NextStep",
+  "State.calls": "CallEntry", "CallEntry.nextStep": "CallStep", "State.aboutMe": "AboutMe", "AboutMe.sections": "AboutSection",
   "State.settings": "Settings",
 };
 
