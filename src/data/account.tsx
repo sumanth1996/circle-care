@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, SESSION_EXPIRED_EVENT, type AppConfig, type Me } from "../lib/api";
+import { api, ApiError, auth, MFA_ENROLMENT_REQUIRED, SESSION_EXPIRED_EVENT, type AppConfig, type Me, type Role } from "../lib/api";
 
 interface AccountCtx {
   me: Me | null;
@@ -12,6 +12,11 @@ interface AccountCtx {
   /** False when this copy of the site has no API (e.g. a static preview). */
   available: boolean;
   setMe: (m: Me | null) => void;
+  /**
+   * CC-200: signed in, but a guardian or caregiver who hasn't set up two-step
+   * sign-in yet. Account pages send them to the setup screen.
+   */
+  needsSetup: Role | null;
   refresh: () => Promise<Me | null>;
   signOut: () => Promise<void>;
   /** Cache-busting key for the profile photo URL. */
@@ -24,6 +29,7 @@ const Ctx = createContext<AccountCtx | null>(null);
 export function AccountProvider({ children }: { children: ReactNode }) {
   const nav = useNavigate();
   const [me, setMe] = useState<Me | null>(null);
+  const [needsSetup, setNeedsSetup] = useState<Role | null>(null);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [ready, setReady] = useState(false);
   const [available, setAvailable] = useState(true);
@@ -33,9 +39,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     try {
       const r = await api<{ me: Me }>("/api/me");
       setMe(r.me);
+      setNeedsSetup(null);
       return r.me;
-    } catch {
+    } catch (e) {
       setMe(null);
+      if (e instanceof ApiError && e.code === MFA_ENROLMENT_REQUIRED) {
+        try { setNeedsSetup((await auth.me()).user.role); } catch { setNeedsSetup(null); }
+      } else setNeedsSetup(null);
       return null;
     }
   }, []);
@@ -57,17 +67,17 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   useEffect(() => {
-    const onExpired = () => { setMe(null); nav("/app/login?expired=1"); };
+    const onExpired = () => { setMe(null); setNeedsSetup(null); nav("/app/login?expired=1"); };
     window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
   }, [nav]);
 
   const signOut = useCallback(async () => {
-    try { await api("/api/auth/signout", { method: "POST", body: {} }); } finally { setMe(null); }
+    try { await api("/api/auth/signout", { method: "POST", body: {} }); } finally { setMe(null); setNeedsSetup(null); }
   }, []);
 
   return (
-    <Ctx.Provider value={{ me, config, ready, available, setMe, refresh, signOut, photoKey, bumpPhoto: () => setPhotoKey(Date.now()) }}>
+    <Ctx.Provider value={{ me, config, ready, available, setMe, needsSetup, refresh, signOut, photoKey, bumpPhoto: () => setPhotoKey(Date.now()) }}>
       {children}
     </Ctx.Provider>
   );
