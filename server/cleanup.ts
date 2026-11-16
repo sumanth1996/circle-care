@@ -21,3 +21,36 @@ export async function cleanupExpired(q: Queryable, cfg: Pick<Config, "sessionIdl
 }
 
 export const CLEANUP_EVERY_MS = 24 * 3600_000;
+
+export interface CleanupSchedule {
+  /** The sweep made at start-up (null if it failed; the failure is logged without details). */
+  first: Promise<CleanupResult | null>;
+  stop(): void;
+}
+
+/**
+ * Sweeps now, then every CLEANUP_EVERY_MS. The timer is unref'd, so it never
+ * keeps the process alive on its own. Used by server/index.ts and server/dev.ts.
+ */
+export function scheduleCleanup(
+  q: Queryable,
+  cfg: Pick<Config, "sessionIdleMinutes">,
+  opts: { now?: () => Date; log?: (line: string) => void } = {},
+): CleanupSchedule {
+  const now = opts.now ?? (() => new Date());
+  const log = opts.log ?? ((line: string) => console.log(line));
+  const sweep = async (): Promise<CleanupResult | null> => {
+    try {
+      const r = await cleanupExpired(q, cfg, now());
+      if (Object.values(r).some((n) => n > 0)) log(`[cleanup] removed ${Object.entries(r).map(([k, v]) => `${v} ${k}`).join(", ")}`);
+      return r;
+    } catch (e) {
+      log(`[cleanup] failed: ${e instanceof Error ? e.message : "unknown"}`);
+      return null;
+    }
+  };
+  const first = sweep();
+  const timer = setInterval(() => { void sweep(); }, CLEANUP_EVERY_MS);
+  timer.unref();
+  return { first, stop: () => clearInterval(timer) };
+}

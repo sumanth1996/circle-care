@@ -66,7 +66,7 @@ Circle Care has two parts: the React website/app and a Node API with a PostgreSQ
 
 ```bash
 npm install
-npm test             # 589 unit + API tests (vitest)
+npm test             # 590 unit + API tests (vitest)
 npm run dev          # app + API on http://localhost:5000 (embedded Postgres in .data/)
 npm run build        # type-check (app + server) + production build into dist/
 npm start            # production-style server: dist/ + API on $PORT

@@ -6,7 +6,7 @@ import express from "express";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { createApp } from "./app";
-import { CLEANUP_EVERY_MS, cleanupExpired } from "./cleanup";
+import { scheduleCleanup } from "./cleanup";
 import { ConfigError, loadConfig } from "./config";
 import { openDb } from "./db";
 import { migrate } from "./migrate";
@@ -25,18 +25,8 @@ async function main() {
   if (applied.length) console.log(`[db] applied migrations: ${applied.join(", ")}`);
 
   // CC-201: delete expired sessions, reset tokens, sign-in challenges and rate-limit
-  // buckets now and once a day. unref() so the timer never keeps the process alive.
-  const sweep = async () => {
-    try {
-      const r = await cleanupExpired(db, cfg, new Date());
-      const total = Object.values(r).reduce((a, b) => a + b, 0);
-      if (total) console.log(`[cleanup] removed ${Object.entries(r).map(([k, v]) => `${v} ${k}`).join(", ")}`);
-    } catch (e) {
-      console.error("[cleanup] failed:", e instanceof Error ? e.message : "unknown");
-    }
-  };
-  await sweep();
-  setInterval(() => { void sweep(); }, CLEANUP_EVERY_MS).unref();
+  // buckets now and once a day, on a timer that never keeps the process alive.
+  await scheduleCleanup(db, cfg).first;
 
   const app = createApp({ cfg, db });
   const dist = join(process.cwd(), "dist");

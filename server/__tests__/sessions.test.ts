@@ -4,7 +4,7 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../app";
 import { RESET_REPLY } from "../auth";
-import { cleanupExpired } from "../cleanup";
+import { CLEANUP_EVERY_MS, cleanupExpired, scheduleCleanup } from "../cleanup";
 import { loadConfig } from "../config";
 import { sha256 } from "../crypto";
 import { createMailer, NoProviderMailer, OutboxMailer, type Mailer, type MailMessage } from "../mailer";
@@ -269,5 +269,34 @@ describe("CC-201 cleanup of expired rows", () => {
     // Running it again finds nothing more.
     expect(Object.values(await cleanupExpired(c.db, c.cfg, now)).every((n) => n === 0)).toBe(true);
     await c.db.close();
+  });
+
+  it("sweeps at start-up, then once a day on a timer that doesn't keep the process alive", SLOW, async () => {
+    const c = await harness();
+    const start = c.clock.t;
+    await c.db.query("INSERT INTO rate_limits (key, reset_at, count) VALUES ('old', $1, 1), ('later', $2, 1)", [new Date(start - 60_000), new Date(start + 3600_000)]);
+    const spy = vi.spyOn(globalThis, "setInterval");
+    const lines: string[] = [];
+    const s = scheduleCleanup(c.db, c.cfg, { now: () => new Date(c.clock.t), log: (l) => lines.push(l) });
+    try {
+      // At start-up: the expired bucket goes, the live one stays.
+      expect(await s.first).toMatchObject({ rateLimits: 1 });
+      expect(lines).toEqual(["[cleanup] removed 0 sessions, 0 passwordResets, 0 mfaChallenges, 0 mfaPendingSetups, 1 rateLimits"]);
+      expect((await c.db.query<{ key: string }>("SELECT key FROM rate_limits")).rows.map((x) => x.key)).toEqual(["later"]);
+      // Then daily, unref'd.
+      const i = spy.mock.calls.findIndex(([, ms]) => ms === CLEANUP_EVERY_MS);
+      expect(i).toBeGreaterThanOrEqual(0);
+      expect(CLEANUP_EVERY_MS).toBe(24 * 3600_000);
+      const timer = spy.mock.results[i].value as NodeJS.Timeout;
+      expect(timer.hasRef()).toBe(false);
+      // A day later the timer's sweep removes what has expired since.
+      c.clock.t = start + CLEANUP_EVERY_MS;
+      (spy.mock.calls[i][0] as () => void)();
+      await vi.waitFor(async () => expect((await c.db.query("SELECT key FROM rate_limits")).rows).toEqual([]));
+    } finally {
+      s.stop();
+      spy.mockRestore();
+      await c.db.close();
+    }
   });
 });
