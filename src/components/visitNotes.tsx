@@ -145,14 +145,14 @@ function NextSteps({ apptId, canWrite }: { apptId: string; canWrite: boolean }) 
       )}
       {canWrite && (
         <form className="stack notes-add" style={{ "--gap": "10px" } as CSSProperties} onSubmit={(e) => { e.preventDefault(); submit(); }}>
-          <label className="field"><span>Next step</span><input className="input" maxLength={STEP_MAX} value={text} onChange={(e) => setText(e.target.value)} placeholder="e.g. Book the eye exam" /></label>
+          <label className="field"><span>Next step</span><input className="input" aria-label="Next step" maxLength={STEP_MAX} value={text} onChange={(e) => setText(e.target.value)} placeholder="e.g. Book the eye exam" /></label>
           <div className="row wrap" style={{ "--gap": "10px" } as CSSProperties}>
             <label className="field grow"><span>Who</span>
-              <select className="input" value={owner} onChange={(e) => setOwner(e.target.value)}>
+              <select className="input" aria-label="Who" value={owner} onChange={(e) => setOwner(e.target.value)}>
                 {owners.map((m) => <option key={m.id} value={m.id}>{label(m.id)}</option>)}
               </select>
             </label>
-            <label className="field grow"><span>When</span><input className="input" type="date" min={todayOf(state)} value={date} onChange={(e) => setDate(e.target.value)} required /></label>
+            <label className="field grow"><span>When</span><input className="input" aria-label="When" type="date" min={todayOf(state)} value={date} onChange={(e) => setDate(e.target.value)} required /></label>
           </div>
           <button className="btn secondary" disabled={!text.trim() || !date} style={{ alignSelf: "flex-start" }}><Plus size={18} /> Add step</button>
           <p className="tiny">Each step becomes a task for that person on that day.</p>
