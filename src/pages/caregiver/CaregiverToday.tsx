@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, LogIn, LogOut, Check, X, BadgeCheck, Sun, AlertTriangle, ClipboardCheck, Pencil, Lock, MessageSquarePlus } from "lucide-react";
 import { useStore } from "../../data/store";
-import { clock, dosesFor, tasksFor, todayVisit, member, nameOf, checkinToday, isOpen, type DoseSlot } from "../../data/selectors";
+import { clock, todayOf, dosesFor, lastNightDoses, tasksFor, todayVisit, member, nameOf, checkinToday, isOpen, type DoseSlot } from "../../data/selectors";
 import { Avatar, PillArt, Sheet, IconTile, taskIcons, useToast, Segmented } from "../../components/ui";
 import { fmtDay, fmtTime, toMin } from "../../lib/time";
 import type { Medication } from "../../data/types";
@@ -30,6 +30,8 @@ export default function CaregiverToday() {
   const prevHandoff = [...state.handoffs].filter((h) => h.visitId !== visit?.id).sort((a, b) => b.at.localeCompare(a.at))[0];
   const needsAck = prevHandoff && !prevHandoff.acknowledgedBy && !prevHandoff.skippedReason;
   const doses = dosesFor(state);
+  // CC-199: last night's doses still open after midnight, so they can be marked and their alerts settle.
+  const lastNight = lastNightDoses(state);
   const tasks = tasksFor(state).filter((t) => t.task.assignee === "caregiver" || t.task.assignee === me);
   const [checkInSheet, setCheckInSheet] = useState(false);
   const [notGiven, setNotGiven] = useState<DoseSlot | null>(null);
@@ -41,6 +43,39 @@ export default function CaregiverToday() {
   const given = shiftDoses.filter((d) => d.state === "taken").length;
 
   useEffect(() => { if (onShift) actions.logView("today's care plan"); }, [actions, onShift]);
+
+  /** One dose row. `d.date` is the day it was due, so one from last night settles its own alerts (CC-199). */
+  const doseRow = (d: DoseSlot) => {
+    const [tone, label] = stateBadge[d.state];
+    const open = isOpen(d);
+    const lastNightDose = d.date !== todayOf(state);
+    return (
+      <div key={`${d.date}-${d.key}`} className={`list-row dose-row ${open ? "open" : ""}`}>
+        <PillArt med={d.med} size={44} />
+        <div className="grow">
+          <div className="row wrap" style={{ "--gap": "6px" } as React.CSSProperties}>
+            <span className="list-title">{d.med.name} {d.med.strength}</span>
+            {d.med.critical && <span className="badge red">High priority</span>}
+          </div>
+          <p className="list-sub">{lastNightDose ? `Last night, ${fmtTime(d.time)}` : fmtTime(d.time)} · {d.med.dose} · {d.med.instructions}</p>
+          {d.log && <p className="tiny">{d.log.status === "taken" ? "Given" : d.log.status === "skipped" ? "Skipped" : "Declined"} by {nameOf(state, d.log.by)} at {fmtTime(d.log.at)}{d.log.reason ? ` — “${d.log.reason}”` : ""} {d.log.verified && <BadgeCheck size={13} color="var(--care)" style={{ verticalAlign: "-2px" }} />}</p>}
+        </div>
+        <div className="dose-actions">
+          {open ? (
+            <>
+              <button className="btn sm" style={{ background: "var(--green)" }} onClick={() => { actions.recordDose(d.med.id, d.time, "taken", undefined, d.date); toast(`${d.med.name} marked as given`); }}><Check size={16} /> Given</button>
+              <button className="btn sm plain" onClick={() => setNotGiven(d)}>Not given</button>
+            </>
+          ) : d.log?.status === "taken" && !d.log.verified ? (
+            <button className="btn sm secondary" onClick={() => { actions.verifyDose(d.med.id, d.time); toast("Verified"); }}><BadgeCheck size={16} /> Verify</button>
+          ) : (
+            <span className={`badge ${tone}`}>{label}</span>
+          )}
+          <button className="btn sm ghost" aria-label={`Request a change to ${d.med.name}`} onClick={() => setChange(d.med)}><Pencil size={15} /></button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="page stack">
@@ -87,40 +122,17 @@ export default function CaregiverToday() {
             <span className={`badge ${ci ? "green" : "yellow"}`}><Sun size={14} /> {ci ? `Maggie checked in at ${fmtTime(ci.at)}` : "Maggie hasn't checked in yet"}</span>
           </div>
 
+          {lastNight.length > 0 && (
+            <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties} aria-label="From last night">
+              <h2 className="section-title">From last night</h2>
+              <p className="small muted">Not confirmed yet. Marking them lets Sarah know.</p>
+              <div className="list">{lastNight.map(doseRow)}</div>
+            </section>
+          )}
+
           <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>
             <h2 className="section-title">Medicines</h2>
-            <div className="list">
-              {doses.map((d) => {
-                const [tone, label] = stateBadge[d.state];
-                const open = isOpen(d);
-                return (
-                  <div key={d.key} className={`list-row dose-row ${open ? "open" : ""}`}>
-                    <PillArt med={d.med} size={44} />
-                    <div className="grow">
-                      <div className="row wrap" style={{ "--gap": "6px" } as React.CSSProperties}>
-                        <span className="list-title">{d.med.name} {d.med.strength}</span>
-                        {d.med.critical && <span className="badge red">High priority</span>}
-                      </div>
-                      <p className="list-sub">{fmtTime(d.time)} · {d.med.dose} · {d.med.instructions}</p>
-                      {d.log && <p className="tiny">{d.log.status === "taken" ? "Given" : d.log.status === "skipped" ? "Skipped" : "Declined"} by {nameOf(state, d.log.by)} at {fmtTime(d.log.at)}{d.log.reason ? ` — “${d.log.reason}”` : ""} {d.log.verified && <BadgeCheck size={13} color="var(--care)" style={{ verticalAlign: "-2px" }} />}</p>}
-                    </div>
-                    <div className="dose-actions">
-                      {open ? (
-                        <>
-                          <button className="btn sm" style={{ background: "var(--green)" }} onClick={() => { actions.recordDose(d.med.id, d.time, "taken"); toast(`${d.med.name} marked as given`); }}><Check size={16} /> Given</button>
-                          <button className="btn sm plain" onClick={() => setNotGiven(d)}>Not given</button>
-                        </>
-                      ) : d.log?.status === "taken" && !d.log.verified ? (
-                        <button className="btn sm secondary" onClick={() => { actions.verifyDose(d.med.id, d.time); toast("Verified"); }}><BadgeCheck size={16} /> Verify</button>
-                      ) : (
-                        <span className={`badge ${tone}`}>{label}</span>
-                      )}
-                      <button className="btn sm ghost" aria-label={`Request a change to ${d.med.name}`} onClick={() => setChange(d.med)}><Pencil size={15} /></button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <div className="list">{doses.map(doseRow)}</div>
           </section>
 
           {/* CC-120: count pills when a new bottle arrives; low ones first. */}
@@ -160,7 +172,7 @@ export default function CaregiverToday() {
         <CheckInSheet onClose={() => setCheckInSheet(false)} onDone={(reason) => { actions.visitCheckIn(reason); setCheckInSheet(false); toast("Checked in — Sarah can see you're here"); }} />
       )}
       {notGiven && (
-        <NotGivenSheet slot={notGiven} onClose={() => setNotGiven(null)} onDone={(status, reason) => { actions.recordDose(notGiven.med.id, notGiven.time, status, reason); setNotGiven(null); toast("Recorded"); }} />
+        <NotGivenSheet slot={notGiven} onClose={() => setNotGiven(null)} onDone={(status, reason) => { actions.recordDose(notGiven.med.id, notGiven.time, status, reason, notGiven.date); setNotGiven(null); toast("Recorded"); }} />
       )}
       {noteFor && (
         <Sheet title={noteFor.title} onClose={() => setNoteFor(null)}>

@@ -229,6 +229,10 @@ const HEALTH_WORDS = [
   "blood pressure", "blood sugar", "a1c", "glucose", "heart rate", "heart condition",
   "dementia", "cancer", "arthritis", "kidney disease", "kidney function",
   "surgery", "symptom", "test result", "lab result", "biopsy", "biopsies", "remission",
+  // Sprint 15 follow-up from the CC-192 review. Plain "scan" stays out ("scan the receipt"), so only the
+  // medical scans are named.
+  "covid*", "strep", "antibiotic*", "pharmac*",
+  "ct scan", "cat scan", "pet scan", "mri", "x-ray", "xray", "ultrasound", "mammogram",
 ];
 
 /**

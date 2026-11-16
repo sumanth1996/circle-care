@@ -281,7 +281,7 @@ Since Sprint 12, `src/data/everyday.ts` also derives pills left, days left and t
 
 ## Server database (PostgreSQL) — accounts, identity & payments {#server-database}
 
-Since Sprint 11 (CC-189), real accounts live in PostgreSQL, separately from the browser-only demo state described above. The schema is in `server/migrations/001_init.sql` and is applied by versioned migrations.
+Since Sprint 11 (CC-189), real accounts live in PostgreSQL, separately from the browser-only demo state described above. The schema is in `server/migrations/` (`001_init.sql`, then `002_rate_limits.sql`, `003_password_resets.sql` and `004_mfa.sql`) and is applied by versioned migrations.
 
 ```mermaid
 erDiagram
@@ -295,12 +295,19 @@ erDiagram
   users ||--o{ payment_cards : "guardian: up to 5, one primary"
   users ||--o{ vault_tokens : "created"
   users ||--o{ audit_events : "subject of"
+  users ||--o{ password_resets : "resets with"
+  users ||--o{ mfa_recovery_codes : "has 10"
+  users ||--o| mfa_challenges : "between password and code"
 ```
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `users` | `id`, `email` (unique, lower-case), `password_hash` (scrypt), `role`, `failed_attempts`, `locked_until` | Sign-in identity |
-| `sessions` | `token_hash` (SHA-256), `user_id`, `last_seen_at`, `expires_at` | The raw token exists only in the cookie |
+| `users` | `id`, `email` (unique, lower-case), `password_hash` (scrypt), `role`, `failed_attempts`, `locked_until`, `mfa_secret_enc`, `mfa_enabled_at`, `totp_last_counter` | Sign-in identity. The authenticator secret is AES-256-GCM ciphertext; `totp_last_counter` stops a code being used twice (CC-200) |
+| `sessions` | `token_hash` (SHA-256), `user_id`, `last_seen_at`, `expires_at` | The raw token exists only in the cookie; expired rows deleted daily (CC-201) |
+| `password_resets` | `token_hash` (SHA-256, PK), `user_id`, `expires_at` (30 min), `used_at` | One live link per user; used once (CC-201) |
+| `mfa_recovery_codes` | `user_id`, `code_hash` (HMAC-SHA256), `used_at` | 10 per user, each used once (CC-200) |
+| `mfa_challenges` | `token_hash` (SHA-256, PK), `user_id`, `expires_at` (5 min) | Issued after a correct password; deleted when used (CC-200) |
+| `rate_limits` | `key` (limit name + SHA-256 of the address or user id), `reset_at`, `count` | Shared by every server instance; updated with one atomic upsert (CC-204) |
 | `elders` / `caregivers` / `guardians` | `user_id` (unique), `first_name`, `last_name`, `phone` (`+1XXXXXXXXXX`), `email`, `ssn_enc`, `ssn_last4` | **Separate table per persona**; `ssn_enc` is AES-256-GCM ciphertext |
 | `ssn_fingerprints` | `fingerprint` (HMAC-SHA256, PK), `user_id` (unique) | Duplicate-SSN detection without decrypting |
 | `photos` | `user_id`, `content_type`, `data_enc`, `size_bytes ≤ 2 MB` | Encrypted image |

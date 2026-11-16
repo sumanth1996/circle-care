@@ -6,7 +6,7 @@
 |---|---|
 | **Feature ID / area** | F-02 · Elder app (`/app/elder`) |
 | **Personas** | Maggie (elder) |
-| **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> — voice depends on browser support for on-device speech recognition |
+| **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> — voice, in the dose check and the family chat, works only where the browser can recognize speech on the device; elsewhere it opens for typing |
 | **Related stories** | CC-39 reminder card · CC-40 taken / skipped / refused · CC-48 SOS-list suggestion · CC-52 daily check-in · CC-65 decisions visible to the elder · CC-68 three-action home · CC-69 call my person · CC-70 text size & contrast · CC-71 colour contrast · CC-72 read-aloud · CC-73 voice confirmation · CC-14 elder lock option · CC-142 one-tap daily check-ins (Sprint 12) |
 | **Last updated** | 2026-11-14 |
 
@@ -22,8 +22,8 @@
 
 ## User journey
 
-1. Maggie opens the app and sees today's date and a greeting — *"Good morning, Maggie"* (before noon), *"Good afternoon"* (until 5 PM), *"Good evening"*.
-2. From one hour before the check-in window opens until she checks in, a banner asks **"How are you this morning?"** — *"Let Sarah know you're OK."* She taps **I'm OK**. Toast and spoken confirmation: *"Sarah will see you're OK"*. The banner becomes *"You checked in at 8:40 AM"*.
+1. Maggie opens the app and sees today's date and a greeting — *"Hello, Maggie"* (midnight to 5 AM), *"Good morning"* (until noon), *"Good afternoon"* (until 5 PM), *"Good evening"*.
+2. From one hour before the check-in window opens until she checks in, a banner asks **"How are you this morning?"** (**"How are you doing?"** outside the morning). For a window that ends after midnight it stays until the window ends, and while last night's window is being followed up. — *"Let Sarah know you're OK."* She taps **I'm OK**. Toast and spoken confirmation: *"Sarah will see you're OK"*. The banner becomes *"You checked in at 8:40 AM"*.
 3. The **What's next** tile shows the single most important item, e.g. *"Up next · 6:00 PM — Metformin — 1 tablet. Take with food."* A speaker button reads it aloud.
 4. She taps the tile to open the **reminder card** (see below) and answers **I took it**, **Skip this time** or **I don't want to take it**.
 5. The red **SOS** tile opens the hold-to-send screen ([SOS & emergency](sos-and-emergency.md)).

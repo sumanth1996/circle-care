@@ -7,6 +7,7 @@ import { CHAT_MAX, chatMembers, chatMessages, inChat, lastChatMessage, phiHint, 
 import { clock, member, meId, nameOf } from "../data/selectors";
 import { Avatar, Sheet, Toggle, useToast } from "./ui";
 import { fmtTime, fmtShortDay, ymd } from "../lib/time";
+import { voiceSupport } from "../lib/voice";
 import "./chat.css";
 
 // CC-164 – CC-165: the circle's private family chat, as designed in Figma
@@ -20,7 +21,7 @@ const listNames = (names: string[]) => (names.length < 2 ? names.join("") : `${n
 
 type RecError = { error?: string };
 type Recognition = {
-  lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; abort: () => void;
+  lang: string; interimResults: boolean; continuous: boolean; processLocally?: boolean; start: () => void; stop: () => void; abort: () => void;
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: ((e: RecError) => void) | null; onend: (() => void) | null;
 };
 function recognitionClass(): (new () => Recognition) | undefined {
@@ -35,19 +36,29 @@ function newRecognition(): Recognition | null {
 /** Errors that mean voice can't work here at all; anything else (silence, a restart) just stops listening. */
 const BLOCKED = ["not-allowed", "service-not-allowed", "audio-capture", "language-not-supported"];
 
+/** CC-222: shown when the browser could only turn speech into text by sending it to an online service. */
+export const NOT_ON_DEVICE = "This device can't turn speech into text by itself, so you can type your message.";
+
 /**
  * CC-165: Maggie talks, the words appear in a "You said" card, and nothing is sent until she taps Send.
  * Where the device has no speech recognition, or she chooses to, she types instead. Only words that
  * came from speech, unedited, are marked "By voice".
+ * CC-222: voice is used only when the browser can recognise speech on the device itself
+ * (`processLocally`), the same rule as the dose check-in (CC-73). Otherwise she types, and no audio
+ * ever goes to an online speech service.
  */
 function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial?: string; typing?: boolean; onSend: (text: string, spoken: boolean) => void; onClose: () => void }) {
   const [supported] = useState(() => !!recognitionClass());
+  // "checking" until the browser says whether it can listen on the device; voice never starts before that.
+  const [onDevice, setOnDevice] = useState<"checking" | "yes" | "no">(supported ? "checking" : "no");
   const [text, setText] = useState(initial);
   const [mode, setMode] = useState<"voice" | "type">(typing || !supported ? "type" : "voice");
   const [spoken, setSpoken] = useState(false);
   const [listening, setListening] = useState(false);
   const [note, setNote] = useState(typing || supported ? "" : "Voice isn't available on this device, so you can type your message.");
   const rec = useRef<Recognition | null>(null);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
 
   const stop = () => {
     const r = rec.current;
@@ -63,6 +74,7 @@ function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial
     if (!r) { setMode("type"); return; }
     rec.current = r;
     r.lang = "en-US"; r.interimResults = true; r.continuous = false;
+    r.processLocally = true; // never send her voice to an online service (CC-222)
     r.onresult = (e) => { setText(Array.from(e.results).map((x) => x[0].transcript).join(" ")); setSpoken(true); };
     r.onerror = (e) => {
       setListening(false);
@@ -75,7 +87,20 @@ function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial
     try { r.start(); } catch { setListening(false); setMode("type"); }
   };
   const typeInstead = () => { stop(); setSpoken(false); setMode("type"); };
-  useEffect(() => { if (mode === "voice") start(); return stop; }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    let alive = true;
+    if (supported) {
+      void voiceSupport("en-US").then((s) => {
+        if (!alive) return;
+        const ok = s === "on-device";
+        setOnDevice(ok ? "yes" : "no");
+        if (modeRef.current !== "voice") return;
+        if (ok) start();
+        else { setMode("type"); setNote(NOT_ON_DEVICE); }
+      });
+    }
+    return () => { alive = false; stop(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const t = text.trim();
   const tooLong = t.length > CHAT_MAX;
@@ -92,17 +117,17 @@ function VoiceReply({ initial = "", typing = false, onSend, onClose }: { initial
             <div className="you-said-actions">
               <button type="button" className="btn lg" disabled={!t || tooLong} onClick={() => { stop(); onSend(t, spoken && mode === "voice"); }}><Send size={24} /> Send</button>
               {mode === "voice"
-                ? <button type="button" className="btn secondary lg" onClick={start}><RotateCcw size={24} /> Try again</button>
-                : supported && <button type="button" className="btn secondary lg" onClick={() => { setMode("voice"); start(); }}><Mic size={24} /> Talk instead</button>}
+                ? <button type="button" className="btn secondary lg" disabled={onDevice !== "yes"} onClick={start}><RotateCcw size={24} /> Try again</button>
+                : onDevice === "yes" && <button type="button" className="btn secondary lg" onClick={() => { setMode("voice"); start(); }}><Mic size={24} /> Talk instead</button>}
             </div>
           </div>
         )}
         {mode === "voice" && (
           <>
-            <button type="button" className={`mic-big ${listening ? "on" : ""}`} onClick={() => (listening ? rec.current?.stop() : start())} aria-label={listening ? "Stop listening" : "Tap to talk"}>
+            <button type="button" className={`mic-big ${listening ? "on" : ""}`} disabled={onDevice !== "yes"} onClick={() => (listening ? rec.current?.stop() : start())} aria-label={listening ? "Stop listening" : "Tap to talk"}>
               <Mic size={44} />
             </button>
-            <p className="center muted" aria-live="polite">{listening ? "Listening. Speak now." : note || "Tap to talk"}</p>
+            <p className="center muted" aria-live="polite">{onDevice === "checking" ? "Getting voice ready." : listening ? "Listening. Speak now." : note || "Tap to talk"}</p>
             <button type="button" className="btn plain" onClick={typeInstead}>Type instead</button>
           </>
         )}

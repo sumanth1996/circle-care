@@ -81,3 +81,22 @@ fieldset.field legend { margin-bottom: 6px; }
 .activity li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
 .activity li:last-child { border-bottom: 0; }
 .activity time { white-space: nowrap; }
+
+/* Sign-in & security (CC-200, CC-201) */
+.acct-card .otp, .acct-grid .otp { font-size: 28px; letter-spacing: 0.35em; text-align: center; font-weight: 600; }
+.check-row { min-height: 44px; align-items: center; cursor: pointer; }
+.setup-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.setup-list li { display: flex; gap: 8px; align-items: flex-start; }
+.setup-list svg { flex: none; margin-top: 3px; }
+.key-groups { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 0; padding: 14px 16px; border-radius: 14px; background: var(--mist); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 20px; font-weight: 600; letter-spacing: 0.06em; }
+.otpauth { border: 1px solid var(--line); border-radius: 14px; padding: 0 14px; }
+.otpauth summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; color: var(--accent); }
+.otpauth[open] { padding-bottom: 14px; }
+.otpauth a { display: inline-flex; align-items: center; min-height: 44px; }
+.otpauth-uri { display: block; font-size: 13px; word-break: break-all; overflow-wrap: anywhere; background: var(--mist); padding: 10px 12px; border-radius: 10px; }
+.recovery-codes { margin: 0; padding: 14px 16px 14px 44px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; border-radius: 14px; background: var(--mist); }
+@media (max-width: 420px) { .recovery-codes { grid-template-columns: 1fr; } }
+.recovery-codes code { font-size: 17px; font-weight: 600; letter-spacing: 0.04em; }
+.sub-form { padding: 14px; border: 1px solid var(--line); border-radius: 14px; }
+.confirm-row { padding: 14px; border-radius: 14px; background: var(--red-soft); display: grid; gap: 10px; }
+.confirm-row p { margin: 0; }

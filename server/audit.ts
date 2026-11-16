@@ -10,7 +10,10 @@ export type AuditAction =
   | "photo.updated" | "photo.removed"
   | "bank.added" | "bank.replaced"
   | "card.added" | "card.removed" | "card.primary"
-  | "nonprod.blocked" | "audit.exported";
+  | "nonprod.blocked" | "audit.exported"
+  | "ratelimit.exceeded"
+  | "auth.signout_all" | "password.changed" | "password.reset_requested" | "password.reset" | "email.undeliverable"
+  | "auth.challenge" | "auth.mfa_failed" | "mfa.locked" | "mfa.enrolled" | "mfa.recovery_used" | "mfa.enrol_password_wrong";
 
 /** A standalone run of 9+ digits (SSN, account or card number) or a dashed SSN. Hex hashes don't match. */
 export const LOOKS_SENSITIVE = /(^|[^0-9a-z])\d{9,}([^0-9a-z]|$)|\b\d{3}-\d{2}-\d{4}\b/i;
@@ -25,11 +28,19 @@ export async function audit(q: Queryable, e: { action: AuditAction; actor?: stri
   );
 }
 
+const LIMIT_LABEL: Record<string, string> = { ssn: "Social Security number changes", profile: "profile changes", photo: "photo changes", payments: "payment-method changes", vault: "payment details entered", account: "account changes" };
+
 /** Plain-language descriptions for My account → Security (CC-185). */
 export function describe(action: string, d: Record<string, unknown>): string {
   switch (action) {
     case "account.created": return "Account created";
-    case "auth.signin": return "Signed in";
+    case "auth.signin": return d.secondStep === "recovery_code" ? "Signed in with a recovery code" : d.secondStep ? "Signed in with a code from your authenticator app" : "Signed in";
+    case "auth.challenge": return "Password accepted — waiting for the sign-in code";
+    case "auth.mfa_failed": return "Wrong sign-in code entered";
+    case "mfa.locked": return "Sign-in codes paused for 15 minutes after 5 wrong codes";
+    case "mfa.enrolled": return "Two-step sign-in turned on (authenticator app)";
+    case "mfa.enrol_password_wrong": return "Wrong password entered while setting up two-step sign-in";
+    case "mfa.recovery_used": return `A recovery code was used — ${d.remaining} left`;
     case "auth.failed": return "Sign-in attempt with a wrong password";
     case "auth.locked": return "Sign-in locked for 15 minutes after too many attempts";
     case "auth.signout": return "Signed out";
@@ -46,6 +57,12 @@ export function describe(action: string, d: Record<string, unknown>): string {
     case "card.primary": return `${d.brand} ending ${d.last4} is now your primary payment method`;
     case "nonprod.blocked": return `A non-test ${d.field} was blocked in this test environment`;
     case "audit.exported": return "Masked audit export generated";
+    case "auth.signout_all": return `Signed out everywhere (${d.sessions} ${d.sessions === 1 ? "device" : "devices"})`;
+    case "password.changed": return "Password changed — other devices signed out";
+    case "password.reset_requested": return "Someone asked for a password reset link";
+    case "password.reset": return "Password reset with an emailed link — every device signed out";
+    case "email.undeliverable": return "An account email couldn't be sent";
+    case "ratelimit.exceeded": return `Too many ${LIMIT_LABEL[String(d.limit)] ?? "requests"} in a short time — paused for a while`;
     default: return action;
   }
 }

@@ -77,7 +77,7 @@ Data assets: see [CC-9 data inventory](09-data-inventory.md). System assets:
 | Audit controls | Demo: hash-chained audit log |
 | Integrity | Demo: GCM authentication, audit chain |
 | Person or entity authentication | Demo MFA only |
-| Transmission security | Accounts API over HTTPS with `Secure` cookies; database TLS without a certificate check (CC-203); care data has no backend yet |
+| Transmission security | Accounts API over HTTPS with `Secure` cookies; database TLS with the provider's certificate verified (CC-203); care data has no backend yet |
 
 ## 6. Treatment plan priorities
 

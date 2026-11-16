@@ -85,7 +85,7 @@ with sync_playwright() as p:
         pg.get_by_label("6-digit code").fill("482913")
         pg.get_by_role("button", name="Sign in").click()
         assert tour(finish=True), "tour did not show on first visit"
-        expect(pg.get_by_text("Good morning, Sarah").or_(pg.get_by_text("Good afternoon, Sarah")).or_(pg.get_by_text("Good evening, Sarah"))).to_be_visible()
+        expect(pg.get_by_text("Good morning, Sarah").or_(pg.get_by_text("Good afternoon, Sarah")).or_(pg.get_by_text("Good evening, Sarah")).or_(pg.get_by_text("Hello, Sarah"))).to_be_visible()
     step("Guardian sign-in with MFA", signin_guardian)
 
     def mfa_lockout():

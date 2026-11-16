@@ -42,6 +42,8 @@ export type Role = "elder" | "caregiver" | "guardian";
 export interface Me {
   id: string; role: Role; loginEmail: string; firstName: string; lastName: string; phone: string; email: string;
   ssnLast4: string | null; hasPhoto: boolean; profileStatus: "complete" | "incomplete"; missing: ("ssn" | "bank_account")[]; createdAt: string;
+  /** CC-200: an authenticator app is set up. Required for guardians and caregivers. */
+  mfaEnrolled: boolean;
 }
 export interface AppConfig {
   env: string; testData: boolean; paymentProvider: string; achFeeCents: number;
@@ -51,3 +53,29 @@ export interface BankAccount { id: string; bankName: string; holderName: string;
 export interface Card { id: string; holderName: string; brand: string; brandLabel: string; funding: string; last4: string; expMonth: number; expYear: number; isPrimary: boolean; createdAt: string }
 export interface PaymentMethods { bankAccount: BankAccount | null; cards: Card[]; fees: { achCents: number; note: string }; maxCards: number; promoted?: { brandLabel: string; last4: string } | null }
 export interface ActivityEvent { at: string; action: string; text: string }
+
+/* ---------- Sign-in security (CC-200, CC-201) ---------- */
+
+/** Who is signed in, even before the second step is set up. */
+export interface AuthUser { id: string; role: Role; email: string; mfaEnrolled: boolean; mfaRequired: boolean }
+/** A correct password either signs in, or (with two-step sign-in on) asks for a code. */
+export type SignInResult = { user: { id: string; role: Role } } | { mfaRequired: true; challenge: string; expiresInSeconds: number };
+export interface MfaSetup { secret: string; otpauthUri: string; issuer: string; account: string }
+
+/** Error code the server sends when a guardian or caregiver must set up two-step sign-in first. */
+export const MFA_ENROLMENT_REQUIRED = "mfa_enrolment_required";
+
+export const auth = {
+  me: () => api<{ user: AuthUser }>("/api/auth/me"),
+  signIn: (email: string, password: string) => api<SignInResult>("/api/auth/signin", { body: { email, password } }),
+  /** Send either the 6-digit code or a recovery code with the challenge from signIn(). */
+  verify: (challenge: string, answer: { code: string } | { recoveryCode: string }) =>
+    api<{ user: { id: string; role: Role }; recoveryCodesLeft?: number }>("/api/auth/mfa/verify", { body: { challenge, ...answer } }),
+  /** A sign-in older than 10 minutes must send the password again (code "reauth_required"). */
+  startSetup: (password?: string) => api<MfaSetup>("/api/auth/mfa/enrol/start", { method: "POST", body: password ? { password } : {} }),
+  confirmSetup: (code: string) => api<{ recoveryCodes: string[] }>("/api/auth/mfa/enrol/confirm", { body: { code } }),
+  signOutEverywhere: () => api<{ sessionsEnded: number }>("/api/auth/signout-everywhere", { method: "POST", body: {} }),
+  changePassword: (currentPassword: string, newPassword: string) => api<{ otherSessionsEnded: number }>("/api/auth/password", { body: { currentPassword, newPassword } }),
+  requestReset: (email: string) => api<{ message: string }>("/api/auth/password-reset/request", { body: { email } }),
+  confirmReset: (token: string, password: string) => api<{ ok: true }>("/api/auth/password-reset/confirm", { body: { token, password } }),
+};
