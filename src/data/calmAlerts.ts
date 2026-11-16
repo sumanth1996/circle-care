@@ -1,6 +1,6 @@
 import type { State, Alert, Persona, DoseStatus, DoseReminder } from "./types";
 import { audit, pushAlert, allowed } from "./store";
-import { clock, dosesFor, nameOf, todayOf } from "./selectors";
+import { clock, dosesFor, nameOf, todayOf, yesterdayOf, overnightDoses } from "./selectors";
 import { inQuietHours } from "./everyday";
 import { at as atTime, fmtTime, hm, minutesOfDay, toMin } from "../lib/time";
 
@@ -30,24 +30,31 @@ export function reminderFor(s: State, key: string): DoseReminder | undefined {
  * CC-207: Maggie's dose reminders. The first comes at the dose time, then one every 10 minutes
  * (15 after a snooze) until the limit; then they stop. Missed-dose alerts to Ana and Sarah keep
  * their own timers (CC-42, CC-43), so stopping reminders never delays them.
+ * CC-199: a late-evening dose's reminders carry on past midnight while its escalation is still running,
+ * or while its next reminder is due after midnight. Earlier reminders and days are dropped.
  */
 export function runReminders(s: State) {
   const now = clock(s);
   const today = todayOf(s);
+  const yesterday = yesterdayOf(s);
   const nowMin = minutesOfDay(now);
-  s.reminders = (s.reminders ?? []).filter((r) => r.date === today);
-  for (const d of dosesFor(s)) {
-    if (d.log || toMin(d.time) > nowMin) continue;
-    let r = s.reminders.find((x) => x.key === d.key);
+  const midnight = atTime(today, "00:00").getTime();
+  const overnight = overnightDoses(s).map((d) => d.key);
+  s.reminders = (s.reminders ?? []).filter((r) => r.date === today
+    || (r.date === yesterday && (overnight.includes(r.key) || (r.sent < r.limit && new Date(r.nextAt).getTime() >= midnight))));
+  const fromYesterday = dosesFor(s, yesterday).filter((d) => overnight.includes(d.key) || s.reminders.some((r) => r.date === yesterday && r.key === d.key));
+  for (const d of [...fromYesterday, ...dosesFor(s)]) {
+    if (d.log || (d.date === today && toMin(d.time) > nowMin)) continue;
+    let r = s.reminders.find((x) => x.date === d.date && x.key === d.key);
     if (!r) {
       // The limit is fixed when a dose's reminders start, so a new setting applies from the next dose.
-      r = { date: today, key: d.key, limit: reminderLimit(s), sent: 0, nextAt: atTime(today, d.time).toISOString() };
+      r = { date: d.date, key: d.key, limit: reminderLimit(s), sent: 0, nextAt: atTime(d.date, d.time).toISOString() };
       s.reminders.push(r);
     }
     while (r.sent < r.limit && now.getTime() >= new Date(r.nextAt).getTime()) {
       r.sent += 1;
       pushAlert(s, {
-        key: remKey(today, d.key, r.sent), to: ["elder"], severity: "info",
+        key: remKey(d.date, d.key, r.sent), to: ["elder"], severity: "info",
         title: "You have a reminder from Circle Care",
         detail: `Reminder ${r.sent} of ${r.limit}. Time for ${d.med.name}, ${d.med.dose}. ${d.med.instructions}`, link: "/app/elder/next",
       }, r.nextAt);
@@ -72,22 +79,22 @@ export function snoozeReminder(s: State, by: string, medId: string, time: string
  * CC-206: settle a dose's reminders and missed-dose alerts once someone marks it.
  * Taken: each person who got a missed-dose alert gets an all-clear that names no medicine.
  * Skipped or refused: the alert shows that, who marked it and why, and no all-clear goes out.
+ * `date` is the day the dose was due, so a dose due before midnight settles the same way after it (CC-199).
  */
-export function settleDose(s: State, by: string, medId: string, time: string, status: DoseStatus, reason?: string) {
-  const today = todayOf(s);
+export function settleDose(s: State, by: string, medId: string, time: string, status: DoseStatus, reason?: string, date = todayOf(s)) {
   const key = `${medId}@${time}`;
   const at = clock(s).toISOString();
   const resolution = { at, by, outcome: status, ...(reason ? { reason } : {}) };
 
   // Maggie's repeat reminder clears from her screen, and no more come (criterion 5).
   for (const a of s.alerts) {
-    if (!a.key?.startsWith(`dose-rem-${today}-${key}-`)) continue;
+    if (!a.key?.startsWith(`dose-rem-${date}-${key}-`)) continue;
     if (!a.read.includes("elder")) a.read.push("elder");
     a.resolved ??= resolution;
   }
-  s.reminders = (s.reminders ?? []).filter((r) => !(r.date === today && r.key === key));
+  s.reminders = (s.reminders ?? []).filter((r) => !(r.date === date && r.key === key));
 
-  const missed = s.alerts.filter((a) => a.key && missedKeys(today, key).includes(a.key) && !a.resolved);
+  const missed = s.alerts.filter((a) => a.key && missedKeys(date, key).includes(a.key) && !a.resolved);
   if (!missed.length) return; // No alert went out, so there's nothing to clear (criterion 2).
   for (const a of missed) a.resolved = resolution;
   audit(s, by, "updated", `a missed-dose alert (${status === "taken" ? "resolved: taken" : `resolved: ${status}`})`);
@@ -97,7 +104,7 @@ export function settleDose(s: State, by: string, medId: string, time: string, st
   const to = [...new Set(missed.flatMap((a) => a.to))].filter((p) => p !== "caregiver" || !s.settings.sharingPaused);
   if (!to.length) return;
   pushAlert(s, {
-    key: `dose-clear-${today}-${key}`, to, severity: "info",
+    key: `dose-clear-${date}-${key}`, to, severity: "info",
     title: "Update from Circle Care",
     detail: `All clear: the ${fmtTime(time)} dose was taken at ${fmtTime(hm(clock(s)))}.`,
     link: to.includes("guardian") ? "/app/guardian" : "/app/caregiver",

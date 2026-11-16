@@ -79,6 +79,8 @@
 16. If Maggie has not tapped **I'm OK** by the end of her check-in window (default 10:00 AM), she gets one more gentle prompt.
 17. Fifteen minutes later, Sarah is alerted and her home screen shows **Maggie hasn't checked in** — *"Window ended at 10:00 AM — consider calling."*
 
+A window belongs to the day it opens (CC-199). If it ends after midnight (for example 22:00–00:30), or Sarah's prompt falls after midnight, Maggie and then Sarah are prompted the next day as usual, and Sarah's alert reads *"Maggie hasn't checked in last night"*. A check-in Maggie makes once her button shows for that window, before or after midnight, covers it. Only the previous evening's window is followed up; earlier ones never are.
+
 ## Functional details & business rules
 
 ### SOS timing
@@ -176,7 +178,7 @@ Critical banners are visually distinct (red). The guardian setting **Emergencies
 | Type | Test |
 |---|---|
 | E2E | *Elder holds SOS, countdown, sends* (2.3 s mouse hold → *Sending for help in* → **Send now** → *Help is on the way*) · *Guardian acknowledges SOS, elder sees responder, resolves* (*Sarah is coming* → **I'm OK now**) · *CC-14 elder lock option; CC-48 elder suggests SOS-list change* |
-| Unit | `rules.test.ts` — missed check-in prompts the elder first, then the guardian 15 minutes later (CC-52). `policy.test.ts` — `sos` and `emergencyCard` permissions for every role, and that they survive *Pause sharing* |
+| Unit | `rules.test.ts` — missed check-in prompts the elder first, then the guardian 15 minutes later (CC-52); windows that cross midnight, no follow-up after a check-in before midnight, nothing from two nights ago (CC-199). `policy.test.ts` — `sos` and `emergencyCard` permissions for every role, and that they survive *Pause sharing* |
 | Gap | No unit test asserts the SOS escalation step timing; it is exercised only manually and through the UI |
 
 ## Known limitations & production gaps

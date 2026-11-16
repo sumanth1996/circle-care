@@ -4,6 +4,8 @@ import { CAREGIVER, ELDER, GUARDIAN } from "./demo";
 
 export const clock = (s: State) => nowFrom(s.clockOffsetMin);
 export const todayOf = (s: State) => ymd(clock(s));
+/** The day before today on the demo clock (CC-199). */
+export const yesterdayOf = (s: State) => ymd(addDays(clock(s), -1));
 
 export const member = (s: State, id?: string | null): Member | undefined => s.members.find((m) => m.id === id);
 export const nameOf = (s: State, id?: string | null) => member(s, id)?.short ?? "Someone";
@@ -13,6 +15,8 @@ export const meId = (p: Persona | null) => (p === "elder" ? ELDER : p === "careg
 
 export type DoseState = "taken" | "skipped" | "refused" | "upcoming" | "due" | "late" | "escalated";
 export interface DoseSlot {
+  /** The day the dose was due (YYYY-MM-DD). */
+  date: string;
   key: string;
   med: Medication;
   time: string;
@@ -29,13 +33,15 @@ export function doseThresholds(s: State, med: Medication) {
 export function dosesFor(s: State, date = todayOf(s)): DoseSlot[] {
   const now = clock(s);
   const isToday = date === ymd(now);
+  const isYesterday = date === ymd(addDays(now, -1));
   const nowMin = minutesOfDay(now);
   const slots: DoseSlot[] = [];
   for (const med of s.meds) {
     if (med.paused) continue;
     for (const time of med.times) {
       const log = s.doses.find((d) => d.medId === med.id && d.date === date && d.time === time);
-      const late = isToday ? nowMin - toMin(time) : date < ymd(now) ? 9999 : -9999;
+      // Yesterday's doses count their minutes across midnight, so a late-evening dose escalates on time (CC-199).
+      const late = isToday ? nowMin - toMin(time) : isYesterday ? nowMin + 1440 - toMin(time) : date < ymd(now) ? 9999 : -9999;
       const th = doseThresholds(s, med);
       let state: DoseState;
       if (log) state = log.status;
@@ -43,10 +49,19 @@ export function dosesFor(s: State, date = todayOf(s)): DoseSlot[] {
       else if (late < th.caregiver) state = "due";
       else if (late < th.guardian) state = "late";
       else state = "escalated";
-      slots.push({ key: `${med.id}@${time}`, med, time, log, state, minutesLate: Math.max(0, late) });
+      slots.push({ date, key: `${med.id}@${time}`, med, time, log, state, minutesLate: Math.max(0, late) });
     }
   }
   return slots.sort((a, b) => toMin(a.time) - toMin(b.time));
+}
+
+/**
+ * CC-199: yesterday's unconfirmed doses whose escalation was still running at midnight, because the guardian step
+ * falls at or after 00:00 (a 23:30 dose alerts Sarah at 00:30). They escalate across midnight like any other dose.
+ * Doses that finished escalating before midnight, and every earlier day, are never looked at again.
+ */
+export function overnightDoses(s: State): DoseSlot[] {
+  return dosesFor(s, yesterdayOf(s)).filter((d) => !d.log && toMin(d.time) + doseThresholds(s, d.med).guardian >= 1440);
 }
 
 export const isOpen = (d: DoseSlot) => d.state === "due" || d.state === "late" || d.state === "escalated";
@@ -125,6 +140,33 @@ export function coverageGaps(s: State, days = 14) {
 
 export function checkinToday(s: State) {
   return s.checkins.find((c) => c.date === todayOf(s));
+}
+
+/**
+ * Missed daily check-in follow-ups (CC-52, CC-199): each check-in window still waiting for Maggie, with the minutes
+ * since it ended. A window belongs to the day it opens. One that ends after midnight (22:00–00:30), or whose
+ * prompt to Sarah falls after midnight, is followed up the next day too; earlier windows are never looked at again.
+ */
+export function checkinFollowUps(s: State): { date: string; minutesPast: number }[] {
+  const now = clock(s);
+  const nowMin = minutesOfDay(now);
+  const { start, end } = s.settings.checkinWindow;
+  const wraps = toMin(end) < toMin(start);
+  // Minutes from the opening day's midnight to the window's end.
+  const endsAt = toMin(end) + (wraps ? 1440 : 0);
+  const out: { date: string; minutesPast: number }[] = [];
+  // Yesterday's window, only when Sarah's prompt (15 minutes after the end) could not go out before midnight.
+  if (endsAt + 15 >= 1439) {
+    const date = yesterdayOf(s);
+    // Any check-in that day counts, as for today's window, and so does one after midnight. For a window that
+    // ends after midnight, only one made once her button showed (an hour before the start) counts, so an early
+    // check-in for the night before never covers it.
+    const opened = at(date, start).getTime() - 60 * 60000;
+    const done = s.checkins.some((c) => (!wraps && c.date === date) || new Date(c.at).getTime() >= opened);
+    if (!done && nowMin + 1440 > endsAt) out.push({ date, minutesPast: nowMin + 1440 - endsAt });
+  }
+  if (!checkinToday(s) && nowMin > endsAt) out.push({ date: ymd(now), minutesPast: nowMin - endsAt });
+  return out;
 }
 
 export function checkinMissed(s: State) {
