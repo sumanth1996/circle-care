@@ -6,7 +6,8 @@ B = os.environ.get("E2E_BASE", "http://127.0.0.1:4173") + "/#"
 ACCOUNTS = os.environ.get("E2E_BASE") is not None  # account pages need the real server
 AXE = os.path.join(os.path.dirname(__file__), "..", "..", "node_modules", "axe-core", "axe.min.js")
 pages = ["/", "/how-it-works", "/features", "/who-its-for", "/privacy", "/pilot", "/app", "/app/elder", "/app/elder/next", "/app/elder/privacy", "/app/elder/settings", "/app/guardian", "/app/guardian/meds", "/app/guardian/approvals", "/app/guardian/privacy", "/app/guardian/notes", "/app/guardian/settings", "/app/guardian/circle", "/app/guardian/digest", "/app/guardian/health", "/app/guardian/calendar", "/app/caregiver", "/app/pilot", "/app/review",
-         "/app/guardian/chat", "/app/elder/chat"]  # CC-194: both chat sizes
+         "/app/guardian/chat", "/app/elder/chat",  # CC-194: both chat sizes
+         "/app/guardian/help", "/app/caregiver/help", "/app/family", "/app/elder/help"]  # CC-209, CC-210: the Help board
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
     ctx = b.new_context(viewport={"width": 1280, "height": 900}, timezone_id="America/New_York", bypass_csp=True)
@@ -17,7 +18,7 @@ with sync_playwright() as p:
     pg = new_page()
     pg.goto(B + "/app"); pg.wait_for_timeout(500)
     # sign in all three via UI
-    for who in ["guardian", "caregiver"]:
+    for who in ["guardian", "caregiver", "family"]:
         pg.goto(B + f"/app/sign-in/{who}"); pg.get_by_role("button", name="Continue").click(); pg.get_by_label("6-digit code").fill("482913"); pg.get_by_role("button", name="Sign in").click(); pg.wait_for_timeout(800)
         d = pg.get_by_role("dialog", name="Getting started")
         if d.count(): d.get_by_role("button", name="Skip").click()

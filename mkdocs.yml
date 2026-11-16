@@ -88,6 +88,7 @@ nav:
       - Alerts & notifications: wiki/features/alerts-and-notifications.md
       - Pilot & feedback: wiki/features/pilot-and-feedback.md
       - Accounts, identity & payments: wiki/features/accounts-identity-payments.md
+      - Help board: wiki/features/help-board.md
   - Architecture & Security:
       - System overview: wiki/architecture/system-overview.md
       - Data model: wiki/architecture/data-model.md

@@ -44,8 +44,10 @@ Legend: R read · W write · P propose (needs approval) · A approve · I invite
 | `supply` | Pills on hand, refill requests (CC-120/121) | R W | R W | R W | R W | — | — |
 | `wellbeing` | Daily check-ins: feeling, water, meals (CC-142/143) | R W | R ¹ | — | — | — | — |
 | `chat` | Private family chat (CC-164/165) | R W I | R W I | R W | R W ² | R W ² | — |
+| `help` | Help board requests (CC-209/210) | R | R W S | R S ³ | R S ³ | R S ³ | — |
 
 ¹ Only while Maggie shares check-ins (`settings.dailyLog.shareWithGuardian`) and hasn't paused all sharing.
+³ Only the requests Sarah shared with that person (`HelpRequest.audience`, checked by `canSeeHelp()` in `src/data/help.ts`). Respond means claim ("I'll do it"), give it back ("Can't anymore") and mark it done; only the person who claimed a request can give it back or finish it. A request tied to an appointment shows as an appointment only, and as just "Appointment" and the time to anyone without appointment access. Hidden from family and caregivers while sharing is paused.
 ² Only once Maggie or Sarah adds that caregiver (`state.chat.pros`); switching them off, removing them from the circle or their time limit ending takes them out at once. Pausing sharing also takes family and caregivers out of the chat, like every other non-emergency resource.
 
 ## Rules explained

@@ -1,0 +1,30 @@
+/* CC-209, CC-210: Help board. Light, quiet surfaces in the app's glass style; one accent per state. */
+.help-stats { display: flex; gap: 8px; }
+.help-stats span { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 6px; border-radius: 14px; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(12px); box-shadow: var(--shadow-soft); font-size: 13px; color: var(--muted); }
+.help-stats b { font-size: 22px; color: var(--ink); letter-spacing: -0.02em; }
+.help-h { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 6px 2px 0; }
+.help-empty { margin: 0 2px; }
+.help-card { padding: 18px; }
+.help-icon { flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--blue-soft); color: var(--blue); }
+.help-title { font-size: 17px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 2px; }
+.help-note { margin: 0; color: var(--ink-2); }
+.help-place { display: flex; align-items: center; gap: 6px; color: var(--ink-2); margin: 0; }
+.help-has { display: flex; align-items: center; gap: 8px; margin: 0; }
+.help-warn { color: #9a6700; margin: 0; }
+.help-ask { padding: 12px; border-radius: 14px; background: var(--blue-soft); }
+.help-paused { align-items: flex-start; background: var(--elder-soft); box-shadow: none; }
+.help-week { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.help-week li { display: flex; align-items: center; gap: 10px; }
+.help-history summary { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
+.help-history summary .tiny { margin-left: auto; font-weight: 400; }
+.help-history ul { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.help-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 0; padding: 0; margin: 0; }
+.help-legend { font-size: 14px; font-weight: 600; color: var(--ink-2); margin-bottom: 8px; padding: 0; }
+.help-kinds label { position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: #f5f5f7; cursor: pointer; font-weight: 500; font-size: 15px; }
+.help-kinds label svg { color: var(--blue); }
+.help-kinds label.on { background: var(--blue-soft); box-shadow: inset 0 0 0 2px var(--blue); }
+.help-kinds label:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
+.help-kinds input { position: absolute; opacity: 0; pointer-events: none; }
+.help-who .segmented { display: flex; flex-wrap: wrap; }
+.help-who .segmented button { flex: 1 1 auto; }
+.help-masked { margin: -6px 0 0; }

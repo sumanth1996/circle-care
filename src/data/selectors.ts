@@ -1,6 +1,6 @@
 import type { State, Medication, DoseLog, CareTask, Member, Persona, Shift } from "./types";
 import { ymd, toMin, minutesOfDay, nowFrom, addDays, at } from "../lib/time";
-import { CAREGIVER, ELDER, GUARDIAN } from "./demo";
+import { CAREGIVER, ELDER, FAMILY, GUARDIAN } from "./demo";
 
 export const clock = (s: State) => nowFrom(s.clockOffsetMin);
 export const todayOf = (s: State) => ymd(clock(s));
@@ -9,7 +9,9 @@ export const member = (s: State, id?: string | null): Member | undefined => s.me
 export const nameOf = (s: State, id?: string | null) => member(s, id)?.short ?? "Someone";
 
 /** Which member the current persona signs in as in the demo. */
-export const meId = (p: Persona | null) => (p === "elder" ? ELDER : p === "caregiver" ? CAREGIVER : GUARDIAN);
+export const meId = (p: Persona | null) => (p === "elder" ? ELDER : p === "caregiver" ? CAREGIVER : p === "family" ? FAMILY : GUARDIAN);
+/** The demo app view a member signs in to, if they have one. */
+export const personaOf = (id: string): Persona | undefined => (id === ELDER ? "elder" : id === GUARDIAN ? "guardian" : id === CAREGIVER ? "caregiver" : id === FAMILY ? "family" : undefined);
 
 export type DoseState = "taken" | "skipped" | "refused" | "upcoming" | "due" | "late" | "escalated";
 export interface DoseSlot {
@@ -196,4 +198,12 @@ export function feed(s: State) {
   for (const e of s.sos) items.push({ at: e.startedAt, kind: "sos", by: ELDER, tone: e.status === "resolved" ? "warn" : "bad", text: e.status === "resolved" ? `SOS resolved — ${e.outcome ?? ""}` : "SOS is active" });
   for (const a of s.approvals) if (a.decidedAt) items.push({ at: a.decidedAt, kind: "approval", by: GUARDIAN, text: `${a.status === "approved" ? "Approved" : "Declined"}: ${a.title}` });
   return items.filter((i) => i.at <= clock(s).toISOString()).sort((a, b) => b.at.localeCompare(a.at));
+}
+
+/** Where an alert's link opens for one person. /app/sos, /app/chat and /app/help open that page in their own view. */
+export function alertLink(p: Persona, link?: string) {
+  const l = link ?? "";
+  if (l === "/app/help") return p === "family" ? "/app/family" : `/app/${p}/help`;
+  if (l === "/app/sos" || l === "/app/chat") return `/app/${p}/${l.slice(5)}`;
+  return l.startsWith(`/app/${p}`) ? l : undefined;
 }
