@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc, Appointment } from "./types";
+import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc, Appointment, AboutKey } from "./types";
 import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo";
 import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, activeSos, member, todayVisit, tasksFor, checkinToday } from "./selectors";
 import { append } from "./audit";
@@ -16,6 +16,8 @@ import * as help from "./help";
 import * as plans from "./comingHome";
 import * as questions from "./visitQuestions";
 import * as visitNotes from "./visitNotes";
+import * as callLog from "./callLog";
+import * as aboutMe from "./aboutMe";
 
 export const STATE_KEY = "circle-care-demo";
 
@@ -64,6 +66,8 @@ export function applySettings(s: State, who: string, patch: Partial<Settings>) {
   if (patch.elderChatOnHome !== undefined && who !== ELDER) { audit(s, who, "denied", "change Maggie's home screen"); return; }
   // CC-211: who sees the help Maggie asks for is hers to choose, through setHelpFrom (which checks and audits).
   if (patch.helpFrom !== undefined) { audit(s, who, "denied", "change who sees Maggie's help requests"); return; }
+  // CC-226: who sees insurance and admin details is hers to choose, through setAdminTo.
+  if (patch.adminTo !== undefined) { audit(s, who, "denied", "change who sees Maggie's insurance and admin details"); return; }
   const elderOnly = Object.keys(patch).every((k) => ELDER_SETTINGS.includes(k as keyof Settings));
   if (!(elderOnly && who === ELDER) && !allowed(s, who, "write", "settings")) return;
   const wasPaused = s.settings.sharingPaused;
@@ -256,6 +260,9 @@ export function evaluate(s: State) {
 
   // CC-218: one reminder to whoever went, two days after a visit with no notes.
   visitNotes.runVisitNotes(s);
+
+  // CC-227: a call's follow-up: a reminder the day before, then Sarah hears if it's past its day.
+  callLog.runCalls(s);
 
   // CC-208: when quiet hours end, what waited overnight goes out as one morning summary.
   releaseHeld(s);
@@ -666,6 +673,14 @@ function useStoreState(initial: State) {
       addNextStep: (apptId: string, input: { text: string; owner: string; date: string }) => update((s) => { visitNotes.addNextStep(s, actor(s), apptId, input); }),
       removeNextStep: (apptId: string, stepId: string) => update((s) => { visitNotes.removeNextStep(s, actor(s), apptId, stepId); }),
       finishNextStep: (taskId: string) => update((s) => { visitNotes.finishNextStep(s, actor(s), taskId); }),
+      saveCall: (input: callLog.CallInput, id?: string) => update((s) => { callLog.saveCall(s, actor(s), input, id); }),
+      deleteCall: (id: string) => update((s) => { callLog.deleteCall(s, actor(s), id); }),
+      revealCallRef: (id: string) => update((s) => { callLog.revealRef(s, actor(s), id); }),
+      setAdminTo: (ids: string[]) => update((s) => { callLog.setAdminTo(s, actor(s), ids); }),
+      saveAboutSection: (key: AboutKey, text: string) => update((s) => { aboutMe.saveSection(s, actor(s), key, text); }),
+      setAboutSharing: (key: AboutKey, ids: string[]) => update((s) => { aboutMe.setSectionSharing(s, actor(s), key, ids); }),
+      setSarahEditing: (on: boolean) => update((s) => { aboutMe.setSarahEditing(s, actor(s), on); }),
+      seenAboutMe: () => update((s) => { aboutMe.markSeen(s, actor(s)); }),
       readChat: () => update((s) => everyday.readChat(s, actor(s))),
       setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */

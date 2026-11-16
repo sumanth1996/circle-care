@@ -80,6 +80,8 @@ export interface CareTask {
   date?: string;
   /** CC-218: the appointment whose notes added this next step. */
   apptId?: string;
+  /** CC-227: the call log entry whose next step this is. */
+  callId?: string;
 }
 export interface TaskLog {
   taskId: string;
@@ -428,6 +430,8 @@ export interface Settings {
   elderChatOnHome: boolean;
   /** CC-211: the people Maggie lets see the help she asks for herself. */
   helpFrom: string[];
+  /** CC-226: the people Maggie lets see insurance and admin details (call outcomes, contacts, reference numbers). Sarah always does. */
+  adminTo: string[];
   emergencyCard: {
     allergies: string;
     conditions: string;
@@ -476,6 +480,10 @@ export interface State {
   help: HelpRequest[];
   /** CC-213: Coming Home plans, newest last. */
   plans: ComingHome[];
+  /** CC-226 – CC-228: calls with insurers, pharmacies and agencies. */
+  calls: CallEntry[];
+  /** CC-219: Maggie's What matters to me page. */
+  aboutMe: AboutMe;
   settings: Settings;
 }
 
@@ -502,4 +510,55 @@ export interface VisitNotes {
   at: string;
   updatedBy?: string;
   updatedAt?: string;
+}
+
+/** CC-226: one call Sarah or Maggie made to an insurer, a pharmacy or an agency. */
+export interface CallEntry {
+  id: string;
+  org: string;
+  date: string;
+  /** The person spoken to. An insurance and admin detail. */
+  contact?: string;
+  /** What they agreed. An insurance and admin detail. */
+  outcome?: string;
+  /** Reference number. Masked to its last 4 in lists; only Maggie and Sarah can reveal it. Encrypted at rest in production. */
+  ref?: string;
+  /** CC-227: the follow-up, which becomes its owner's care task. */
+  nextStep?: CallStep;
+  by: string;
+  at: string;
+  updatedBy?: string;
+  updatedAt?: string;
+}
+
+/** CC-227: a call's next step and the care task it became. */
+export interface CallStep {
+  text: string;
+  owner: string;
+  date: string;
+  taskId: string;
+}
+
+export type AboutKey = "day" | "food" | "help" | "avoid";
+
+/** CC-219: one section of Maggie's What matters to me page, in her words. */
+export interface AboutSection {
+  key: AboutKey;
+  text: string;
+  by: string;
+  at: string;
+  /** Who Maggie lets see it, besides her and whoever first wrote it. Empty until she picks. */
+  sharedWith: string[];
+  /** CC-219 criterion 5: the last change someone else made, so Maggie sees what changed. */
+  changedBy?: string;
+  changedAt?: string;
+  before?: string;
+}
+
+export interface AboutMe {
+  sections: AboutSection[];
+  /** Maggie can turn off Sarah's editing; Sarah still reads what's shared with her. */
+  sarahCanEdit: boolean;
+  /** When Maggie last opened the page, so she sees changes made since. */
+  elderSeenAt?: string;
 }

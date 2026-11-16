@@ -10,6 +10,7 @@ import type { Member } from "../../data/types";
 import Consent from "../elder/Consent";
 import { verifyChain, RETENTION_YEARS } from "../../data/audit";
 import { helpCandidates, helpFromPeople } from "../../data/help";
+import { PrivacyAboutAndAdmin } from "../../components/aboutMe";
 import { encryptWithPassphrase, decryptWithPassphrase } from "../../lib/secureStorage";
 
 const access: Record<Member["role"], string> = {
@@ -115,6 +116,9 @@ export default function PrivacyCenter() {
           <p className="tiny">{isElder ? "Sarah always sees them." : "Only Maggie can change this. You always see them."}</p>
         </div>
       </section>
+
+      {/* CC-219, CC-226: What matters to me, one entry per section, and insurance and admin details. */}
+      <PrivacyAboutAndAdmin />
 
       <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>
         <h2 className="section-title">Who can see {isElder ? "your" : "her"} information</h2>

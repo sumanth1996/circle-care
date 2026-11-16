@@ -10,6 +10,7 @@ import { SupplyRow } from "../../components/guardianEveryday";
 import { lowSupply } from "../../data/everyday";
 import "./caregiver.css";
 import { MyNextSteps } from "../../components/visitNotes";
+import { ShiftAboutMe } from "../../components/aboutMe";
 
 const stateBadge: Record<DoseSlot["state"], [string, string]> = {
   taken: ["green", "Given"], skipped: ["yellow", "Skipped"], refused: ["yellow", "Declined"],
@@ -69,6 +70,9 @@ export default function CaregiverToday() {
       )}
 
       <MyNextSteps />
+
+      {/* CC-219: what Maggie shares with Ana, only while she's on shift. */}
+      {onShift && <ShiftAboutMe />}
 
       {!onShift ? (
         <div className="panel center stack" style={{ "--gap": "8px", padding: 36 } as React.CSSProperties}>

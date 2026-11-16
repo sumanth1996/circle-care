@@ -9,7 +9,8 @@ import { todayOf } from "./selectors";
 export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
   | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
-  | "supply" | "wellbeing" | "chat" | "help" | "plan" | "questions" | "visitNotes";
+  | "supply" | "wellbeing" | "chat" | "help" | "plan" | "questions" | "visitNotes"
+  | "calls" | "calls.admin" | "calls.ref" | "aboutMe";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -51,6 +52,14 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   questions:       { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian", "family", "pro@shift"] },
   // CC-218: reading follows appointment access. Writing is further limited to Maggie, Sarah and whoever went (visitNotes.ts).
   visitNotes:      { read: ["elder", "guardian", "family", "pro"], write: ["elder", "guardian", "family", "pro"] },
+  // Sprint 19 — Call log (CC-226 – CC-228). Only Maggie and Sarah add or change calls. Everyone else sees the
+  // organization, the date and the next step; the outcome and the person spoken to need Maggie's
+  // "Insurance and admin details" choice (calls.admin), and only Maggie and Sarah reveal a reference number.
+  calls:           { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian"] },
+  "calls.admin":   { read: ["elder", "guardian", "family", "pro@shift"] },
+  "calls.ref":     { read: ["elder", "guardian"] },
+  // CC-219: Maggie's What matters to me page. Each section is narrowed further to the people she picks (aboutMe.ts).
+  aboutMe:         { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */
@@ -82,6 +91,8 @@ export function can(s: State, actorId: string, action: Action, resource: Resourc
   if (resource === "wellbeing" && role === "guardian" && (!s.settings.dailyLog.shareWithGuardian || s.settings.sharingPaused)) return false;
   // CC-164: a paid caregiver reads and writes in the family chat only after someone adds them.
   if (resource === "chat" && role === "pro" && !s.chat.pros.includes(actorId)) return false;
+  // CC-226: insurance and admin details reach family and caregivers only when Maggie picks them.
+  if (resource === "calls.admin" && (role === "family" || role === "pro") && !(s.settings.adminTo ?? []).includes(actorId)) return false;
   return true;
 }
 

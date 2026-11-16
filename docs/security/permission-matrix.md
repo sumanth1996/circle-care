@@ -48,6 +48,10 @@ Legend: R read · W write · P propose (needs approval) · A approve · I invite
 | `plan` | Coming Home plan (CC-213/214) | R | R W | — ⁵ | — ⁵ | — ⁵ | — |
 | `questions` | Shared question list for a visit (CC-217) | R W ⁶ | R W ⁶ | R W | R W | — | — |
 | `visitNotes` | After-visit notes and next steps (CC-218) | R W ⁷ | R W ⁷ | R W ⁷ | R W ⁷ | R W ⁷ | — |
+| `calls` | Call log: organization, date, next step (CC-226 to CC-228) | R W | R W | R | R | — | — |
+| `calls.admin` | Call outcome and person spoken to | R | R | R ⁸ | R ⁸ | — | — |
+| `calls.ref` | Reveal a call's reference number in full | R | R | — | — | — | — |
+| `aboutMe` | What matters to me sections (CC-219) | R W ⁹ | R W ⁹ | R ⁹ | R ⁹ | — | — |
 
 ¹ Only while Maggie shares check-ins (`settings.dailyLog.shareWithGuardian`) and hasn't paused all sharing.
 ³ Only the requests Sarah shared with that person (`HelpRequest.audience`, checked by `canSeeHelp()` in `src/data/help.ts`). Respond means claim ("I'll do it"), give it back ("Can't anymore") and mark it done; only the person who claimed a request can give it back or finish it. A request tied to an appointment shows as an appointment only, and as just "Appointment" and the time to anyone without appointment access. Hidden from family and caregivers while sharing is paused.
@@ -56,6 +60,8 @@ Legend: R read · W write · P propose (needs approval) · A approve · I invite
 ⁶ Also needs appointment access (`canSeeQuestions()` in `src/data/visitQuestions.ts`). Only Maggie can hide an item (then only she and Sarah see it); only Sarah sets the order; the person who added an item, or Sarah, can remove it.
 
 ⁷ Reading also needs appointment access, so Maggie's paused sharing hides the notes from family and caregivers (`canReadNotes()` in `src/data/visitNotes.ts`). Writing is limited to Maggie, Sarah and the person recorded as taking Maggie to that visit; anyone else is refused and audited. Each next step becomes a one-off care task for its owner.
+⁸ Only the family members and caregivers Maggie picks for "Insurance and admin details" in her Privacy Center (`settings.adminTo`, which only she changes, through `setAdminTo`). Everyone else sees a call's organization, date and next step only, and reference numbers show masked to their last 4.
+⁹ Each section only for the people Maggie picks (`AboutSection.sharedWith`, checked by `canSeeSection()` in `src/data/aboutMe.ts`); a new one is shared with no one but its writer until she picks. Only Maggie changes who sees a section. Sarah writes only while Maggie lets her (`aboutMe.sarahCanEdit`), and only sections shared with her or not yet written.
 ² Only once Maggie or Sarah adds that caregiver (`state.chat.pros`); switching them off, removing them from the circle or their time limit ending takes them out at once. Pausing sharing also takes family and caregivers out of the chat, like every other non-emergency resource.
 
 ## Rules explained
