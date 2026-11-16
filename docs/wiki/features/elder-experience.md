@@ -6,7 +6,7 @@
 |---|---|
 | **Feature ID / area** | F-02 · Elder app (`/app/elder`) |
 | **Personas** | Maggie (elder) |
-| **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> — voice depends on browser support for on-device speech recognition |
+| **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> — voice, in the dose check and the family chat, works only where the browser can recognize speech on the device; elsewhere it opens for typing |
 | **Related stories** | CC-39 reminder card · CC-40 taken / skipped / refused · CC-48 SOS-list suggestion · CC-52 daily check-in · CC-65 decisions visible to the elder · CC-68 three-action home · CC-69 call my person · CC-70 text size & contrast · CC-71 colour contrast · CC-72 read-aloud · CC-73 voice confirmation · CC-14 elder lock option · CC-142 one-tap daily check-ins (Sprint 12) |
 | **Last updated** | 2026-11-14 |
 
