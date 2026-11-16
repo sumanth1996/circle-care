@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, Dail
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 11;
+export const STATE_VERSION = 12;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -225,12 +225,14 @@ export function seed(now = new Date()): State {
       { id: uid("al"), at: iso(ymd(addDays(now, -1)), "17:30"), to: ["guardian"], title: "You have a new request in Circle Care", detail: "James asked to add Ruth Okafor as a respite caregiver for 2 weeks.", severity: "info", read: [], link: "/app/guardian/approvals" },
       { id: uid("al"), at: iso(today, "08:20"), to: ["guardian"], title: "You have a new request in Circle Care", detail: "Ana asked to move evening Metformin to 6:30 PM.", severity: "info", read: [], link: "/app/guardian/approvals" },
     ],
+    reminders: [],
     settings: {
       checkinWindow: { start: "08:00", end: "10:00" },
       escalation: [GUARDIAN, CAREGIVER, FAMILY],
       escalationDelayMin: 2,
       doseEscalation: { caregiverMin: 30, guardianMin: 60 },
       quietHours: { on: true, start: "22:00", end: "07:00" },
+      reminderRepeats: 3,
       channels: { push: true, sms: true, email: false },
       criticalBypass: true,
       textSize: "xl",

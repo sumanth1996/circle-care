@@ -4,7 +4,7 @@ import { Toggle, Sheet, useToast } from "../../components/ui";
 import { member, nameOf } from "../../data/selectors";
 import { fmtShortDay } from "../../lib/time";
 
-/** CC-191 evening recap · CC-63 alert channels & quiet hours · CC-52 check-in window · CC-42 dose escalation timers · CC-14 session lock · CC-50 critical alerts. */
+/** CC-191 evening recap · CC-63 alert channels & quiet hours (CC-208 morning summary) · CC-207 reminder repeats · CC-52 check-in window · CC-42 dose escalation timers · CC-14 session lock · CC-50 critical alerts. */
 export default function GuardianSettings() {
   const { state, actions } = useStore();
   const s = state.settings;
@@ -23,13 +23,19 @@ export default function GuardianSettings() {
           {(["push", "sms", "email"] as const).map((c) => (
             <label key={c} className="list-row" style={row}><span className="grow">{{ push: "Push notifications", sms: "Text messages", email: "Email" }[c]}</span><Toggle checked={s.channels[c]} onChange={(v) => actions.settings({ channels: { ...s.channels, [c]: v } })} label={c} /></label>
           ))}
-          <label className="list-row" style={row}><span className="grow">Quiet hours<span className="list-sub" style={{ display: "block" }}>Non-urgent alerts wait until morning</span></span><Toggle checked={s.quietHours.on} onChange={(v) => actions.settings({ quietHours: { ...s.quietHours, on: v } })} label="Quiet hours" /></label>
+          <label className="list-row" style={row}><span className="grow">Quiet hours<span className="list-sub" style={{ display: "block" }}>Non-urgent alerts wait for one summary in the morning. SOS, falls and high-priority medicines still come at once.</span></span><Toggle checked={s.quietHours.on} onChange={(v) => actions.settings({ quietHours: { ...s.quietHours, on: v } })} label="Quiet hours" /></label>
           {s.quietHours.on && (
             <div className="list-row" style={row}>
               <span className="grow">From</span><input type="time" className="input" style={{ width: 130 }} value={s.quietHours.start} onChange={(e) => actions.settings({ quietHours: { ...s.quietHours, start: e.target.value } })} aria-label="Quiet hours start" />
               <span>to</span><input type="time" className="input" style={{ width: 130 }} value={s.quietHours.end} onChange={(e) => actions.settings({ quietHours: { ...s.quietHours, end: e.target.value } })} aria-label="Quiet hours end" />
             </div>
           )}
+          <label className="list-row" style={row}>
+            <span className="grow">Reminder repeats<span className="list-sub" style={{ display: "block" }}>Reminders Maggie gets for one dose, 10 minutes apart. Your missed-dose alerts keep their own timing.</span></span>
+            <select className="input" style={{ width: 90 }} value={s.reminderRepeats ?? 3} onChange={(e) => actions.settings({ reminderRepeats: Number(e.target.value) })} aria-label="Reminder repeats">
+              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
           <label className="list-row" style={row}><span className="grow">Emergencies break through silent mode<span className="list-sub" style={{ display: "block" }}>SOS and missed high-priority doses always alert you</span></span><Toggle checked={s.criticalBypass} onChange={(v) => actions.settings({ criticalBypass: v })} label="Critical alerts" /></label>
         </div>
       </section>

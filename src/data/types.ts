@@ -231,6 +231,33 @@ export interface Alert {
   severity: "info" | "warning" | "critical";
   read: Persona[];
   link?: string;
+  /** CC-208: delivered at once even in quiet hours (SOS, falls, high-priority medicines and security notices). */
+  urgent?: boolean;
+  /** CC-208: held for these people's quiet hours. Not pushed or listed until the morning summary releases it. */
+  held?: Persona[];
+  /** CC-208: the morning summary lists what waited overnight (in-app only). */
+  items?: string[];
+  /** CC-206: a missed-dose alert or reminder that was settled when the dose was marked. */
+  resolved?: AlertResolution;
+}
+
+/** CC-206: how a missed dose was settled, shown on the earlier alert. */
+export interface AlertResolution {
+  at: string;
+  by: string;
+  outcome: DoseStatus;
+  reason?: string;
+}
+
+/** CC-207: one dose's reminders today. Reminder 1 comes at the dose time, then every 10 minutes (or 15 after a snooze). */
+export interface DoseReminder {
+  date: string; // YYYY-MM-DD
+  key: string; // medId@HH:MM
+  /** Reminders allowed for this dose, set when its first reminder went out. */
+  limit: number;
+  sent: number;
+  nextAt: string; // ISO
+  snoozed?: boolean;
 }
 
 /** Medication-related appointments on the guardian Calendar (CC-94 – CC-98). */
@@ -262,6 +289,8 @@ export interface Settings {
   escalationDelayMin: number;
   doseEscalation: { caregiverMin: number; guardianMin: number };
   quietHours: { on: boolean; start: string; end: string };
+  /** CC-207: how many reminders Maggie gets for one dose, 1 to 5. Default 3. */
+  reminderRepeats: number;
   channels: { push: boolean; sms: boolean; email: boolean };
   criticalBypass: boolean;
   textSize: "large" | "xl" | "xxl";
@@ -340,5 +369,7 @@ export interface State {
   };
   audit: AuditEvent[];
   alerts: Alert[];
+  /** CC-207: today's dose reminders. */
+  reminders: DoseReminder[];
   settings: Settings;
 }

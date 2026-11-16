@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Volume2, Check, Clock, X, CheckCircle2, Mic } from "lucide-react";
+import { ArrowLeft, Volume2, Check, Clock, X, CheckCircle2, Mic, BellOff } from "lucide-react";
 import { useStore } from "../../data/store";
 import { nextUp, dosesFor, tasksFor, isOpen } from "../../data/selectors";
+import { reminderState, SNOOZE_MIN } from "../../data/calmAlerts";
 import { PillArt, IconTile, taskIcons, useSpeech, useToast } from "../../components/ui";
 import { fmtTime } from "../../lib/time";
 import { voiceSupport, voiceMaybe, listenOnce, intentOf } from "../../lib/voice";
 import "./elder.css";
 
-/** CC-39 reminder card · CC-40 taken / skipped / refused (the elder's choice is respected). */
+/** CC-39 reminder card · CC-40 taken / skipped / refused (the elder's choice is respected) · CC-207 reminder count and snooze. */
 export default function ElderNext() {
   const { state, actions } = useStore();
   const nav = useNavigate();
@@ -60,6 +61,7 @@ export default function ElderNext() {
         const d = n.slot;
         const due = isOpen(d);
         const text = `${d.med.name}, ${d.med.strength}. Take ${d.med.dose}. ${d.med.instructions} This is for your ${d.med.purpose.toLowerCase()}.`;
+        const rem = due ? reminderState(state, d.med.id, d.time) : undefined;
         return (
           <div className="panel stack" style={{ "--gap": "18px", borderRadius: 32, padding: 28 } as React.CSSProperties}>
             <div className="row between">
@@ -75,11 +77,13 @@ export default function ElderNext() {
             </div>
             <p style={{ fontSize: "1.05em" }}>{d.med.instructions}</p>
             <p className="muted">For your {d.med.purpose.toLowerCase()}. Prescribed by {d.med.prescriber}.</p>
+            {rem && <p className="muted" role="status" style={{ fontWeight: 600 }}>Reminder {rem.sent} of {rem.limit}{rem.snoozed ? `. Next reminder in ${SNOOZE_MIN} minutes.` : rem.canSnooze ? "" : ". This was the last reminder."}</p>}
 
             {!refusing ? (
               <div className="big-actions">
                 <button className="btn" style={{ background: "var(--green)" }} onClick={() => record("taken")}><Check size={30} /> I took it</button>
                 <button className="btn plain" onClick={() => record("skipped")}><Clock size={26} /> Skip this time</button>
+                {rem?.canSnooze && !rem.snoozed && <button className="btn plain" onClick={() => { actions.snoozeDose(d.med.id, d.time); const msg = `OK, I'll remind you again in ${SNOOZE_MIN} minutes`; toast(msg); if (state.settings.readAloud) speak(msg); back(); }}><BellOff size={24} /> Remind me in {SNOOZE_MIN} minutes</button>}
                 <button className="btn ghost" style={{ minHeight: 56, color: "var(--muted)" }} onClick={() => setRefusing(true)}><X size={22} /> I don't want to take it</button>
                 {voiceMaybe() && !voiceOff && <button className="btn secondary" onClick={listen} disabled={listening} aria-live="polite"><Mic size={24} /> {listening ? "Listening… say “I took it” or “skip”" : "Answer with my voice"}</button>}
                 {heard && <p role="status" style={{ fontSize: "0.9em" }}>{heard}</p>}

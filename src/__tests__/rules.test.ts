@@ -22,7 +22,7 @@ describe("rules engine", () => {
     med.times = [minsAgo(s, 70)];
     s.doses = s.doses.filter((d) => !(d.medId === med.id && d.date === todayOf(s)));
     evaluate(s);
-    expect(s.alerts.some((a) => a.key?.startsWith("dose-repeat") && a.to.includes("elder"))).toBe(true);
+    expect(s.alerts.some((a) => a.key?.startsWith("dose-rem") && a.to.includes("elder"))).toBe(true);
     expect(s.alerts.some((a) => a.key?.startsWith("dose-cg") && a.to.includes("caregiver"))).toBe(true);
     expect(s.alerts.some((a) => a.key?.startsWith("dose-g") && a.to.includes("guardian"))).toBe(true);
   });
