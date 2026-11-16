@@ -102,8 +102,12 @@ The accounts API serves each person only their own rows (`requireUser`); payment
 
 | Entity | PHI | PII | Sensitive financial or identity | Operational | Notes |
 |---|---|---|---|---|---|
-| `users` | — | `email` | `password_hash` | `id`, `role`, `failed_attempts`, `first_failed_at`, `locked_until`, `created_at`, `updated_at` | scrypt hash with a per-user salt (CC-173) |
-| `sessions` | — | — | `token_hash` | `user_id`, `created_at`, `last_seen_at`, `expires_at` | SHA-256 of the cookie token, which works as a credential; the token itself is never stored. Expired rows stay until that cookie comes back, on sign-out, or on a lock-out at the password check before an SSN change |
+| `users` | — | `email` | `password_hash`, `mfa_secret_enc`, `mfa_pending_secret_enc` | `id`, `role`, `failed_attempts`, `first_failed_at`, `locked_until`, `mfa_pending_at`, `mfa_enabled_at`, `totp_last_counter`, `created_at`, `updated_at` | scrypt hash with a per-user salt (CC-173). The authenticator secret is AES-256-GCM encrypted like an SSN and is never returned after set-up; an unconfirmed one is deleted after 15 minutes (CC-200) |
+| `sessions` | — | — | `token_hash` | `user_id`, `created_at`, `last_seen_at`, `expires_at` | SHA-256 of the cookie token, which works as a credential; the token itself is never stored. Expired and idle rows are deleted at start-up and daily (CC-201) |
+| `password_resets` | — | — | `token_hash` | `user_id`, `created_at`, `expires_at`, `used_at` | SHA-256 of a reset link's token; works once, for 30 minutes. Used and expired rows are deleted daily (CC-201) |
+| `mfa_recovery_codes` | — | — | `code_hash` | `id`, `user_id`, `created_at`, `used_at` | HMAC-SHA256 of each recovery code with the server key; the codes are shown once, at set-up (CC-200) |
+| `mfa_challenges` | — | — | `token_hash` | `user_id`, `created_at`, `expires_at` | SHA-256 of the 5-minute token between the password and the code; deleted on use and daily (CC-200) |
+| `rate_limits` | — | — | — | `key`, `reset_at`, `count` | Shared counters; the key is a limit name and a SHA-256 of an address or account id, never the address itself. Expired rows are deleted as the limiter runs and daily (CC-204) |
 | `elders` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
 | `caregivers` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
 | `guardians` | — | `first_name`, `last_name`, `phone`, `email` | `ssn_enc`, `ssn_last4` | `id`, `user_id`, `created_at`, `updated_at` | Owner only |
@@ -120,9 +124,9 @@ The accounts API serves each person only their own rows (`requireUser`); payment
 ## Retention and deletion (intended)
 
 - **Close the circle** (elder or guardian, `data.delete`): the prototype wipes circle state, destroys the device key and clears the file store (`wipeDevice`, CC-33), so any leftover copy is unreadable. Saving is paused during the wipe and any save already under way is dropped, so it can't write the circle back (CC-195). Production: delete within 30 days (as `/privacy` promises), including backups on their normal rotation.
-- **Delete an account:** persona, session, photo, fingerprint, vault token, bank and card rows go with the `users` row (`ON DELETE CASCADE`). `audit_events` has no foreign key, so it keeps the masked history. There is no account-deletion endpoint yet, so today this happens only by deleting the row directly. Confirm the design with counsel.
+- **Delete an account:** persona, session, reset link, recovery code, sign-in challenge, photo, fingerprint, vault token, bank and card rows go with the `users` row (`ON DELETE CASCADE`). `audit_events` has no foreign key, so it keeps the masked history. There is no account-deletion endpoint yet, so today this happens only by deleting the row directly. Confirm the design with counsel.
 - **Audit logs:** at least 6 years (`RETENTION_YEARS = 6` in `src/data/audit.ts`). The circle's access log names medicines and documents (PHI) and the server log keeps last fours (sensitive), so both are protected like the data they describe. Confirm with counsel (CC-8 Q10).
-- **Sessions:** expire after 12 hours, but nothing purges expired rows yet: each is deleted only when its cookie comes back, on sign-out, or on a lock-out at the password check before an SSN change (a sign-in lock-out leaves existing sessions in place). A purge job is needed before production.
+- **Sessions, reset links, sign-in challenges and rate-limit counters:** the server deletes expired and used rows when it starts and once a day (`server/cleanup.ts`, CC-201). Sign out everywhere, a password change and a password reset end sessions at once; a sign-in lock-out leaves existing sessions in place and emails the owner.
 - **Member removed or time limit ends (CC-25):** access stops at once; what they wrote stays with the circle as part of Maggie's care record.
 
 ## Pilot data: separate, non-PHI store (`src/lib/pilot.ts`)

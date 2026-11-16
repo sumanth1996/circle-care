@@ -7,10 +7,10 @@
 | **Feature ID / area** | F-14 · Real accounts (`/app/join`, `/app/login`, `/app/account`) · API (`server/`) · PostgreSQL |
 | **Personas** | Maggie (elder), Ana (caregiver), Sarah (legal guardian) — each with their own account and record |
 | **Status** | <span class="cc-badge cc-badge--built">Built</span> — server, database, sign-up, profiles, photo, SSN, guardian bank account and cards. Payments run through a **simulated vault** (Stripe-ready); money doesn't move yet. |
-| **Related stories** | CC-172 role picker · CC-173 sign-up · CC-174 sessions · CC-175 lockout · CC-176 – CC-178 persona profiles · CC-179 photo · CC-180 SSN · CC-181 SSN masking · CC-182 non-production guard · CC-183 production start-up checks · CC-184 masked audit export · CC-185 activity log · CC-186 bank account · CC-187 cards · CC-188 manage cards · CC-189 schema · CC-190 API & Replit |
+| **Related stories** | CC-172 role picker · CC-173 sign-up · CC-174 sessions · CC-175 lockout · CC-176 – CC-178 persona profiles · CC-179 photo · CC-180 SSN · CC-181 SSN masking · CC-182 non-production guard · CC-183 production start-up checks · CC-184 masked audit export · CC-185 activity log · CC-186 bank account · CC-187 cards · CC-188 manage cards · CC-189 schema · CC-190 API & Replit · CC-200 two-step sign-in on the server · CC-201 sign out everywhere, password change and reset · CC-204 shared rate limits |
 | **Sprint** | Sprint 11 — Accounts, Identity & Payments (Oct 26 – Nov 8, 2026) |
 | **Team** | PO: Sumanth · Developer: Dev Agent · Tester: QA Agent · Build & Deploy: Release Agent · Approver: Lead Architect Agent |
-| **Last updated** | 2026-10-25 |
+| **Last updated** | 2026-11-16 (CC-200, CC-201, CC-204 on branch `feat/server-auth-hardening`, not yet merged) |
 
 </div>
 
@@ -93,7 +93,25 @@ Photo, name, role and **Profile complete** (or a list of what's missing). Sectio
   <figcaption>Payments: one bank account for ACH, up to five cards with one primary.</figcaption>
 </figure>
 
-### 7. Sign in (CC-174, CC-175)
+### 7. Two-step sign-in (CC-200)
+
+Guardians and caregivers can see care and payment details, so right after creating the account they set up a second step: a 6-digit code from an authenticator app. Until they do, the server answers every account, payment and vault request with `403 mfa_enrolment_required`, and the app sends them to **Set up two-step sign-in** (`/app/two-step`). Elders can turn it on from My account but don't have to.
+
+1. **Set up two-step sign-in** asks the server for a new key. The key is shown once, in groups of four (`ABCD EFGH …`), with **Copy key**, and an `otpauth://` link under *On this phone? Use the setup link instead* (as a link and as text).
+2. The person adds the key to their app and enters the code it shows. **Turn on two-step sign-in** checks it on the server.
+3. The server answers with **10 recovery codes**, shown once, with **Copy codes**. **Continue** stays disabled until *I've saved my recovery codes somewhere safe* is ticked.
+
+From then on, sign-in takes the password and then **Enter your sign-in code**, with **Use a recovery code instead**. The password alone never starts a session.
+
+Passkeys (WebAuthn) are out of scope for CC-200: they need a WebAuthn library, and this story adds no packages. They are a candidate follow-up.
+
+### 8. Sign-in & security on My account (CC-201)
+
+- **Change password** asks for the current password and a new one that meets the same rules as sign-up. Other devices are signed out; this one stays signed in. The owner gets an email.
+- **Sign out everywhere** asks once more, then ends every session, including this one, and returns to sign-in with "You've been signed out on every device."
+- **Forgot your password?** on the sign-in page asks for an email and always gives the same answer: *"If an account uses that email, we've sent it a link to reset the password. The link works once, for 30 minutes."* The link opens **Choose a new password** (`/app/reset-password`); the token is taken out of the address bar as soon as the page reads it. A reset ends every session and is emailed.
+
+### 9. Sign in (CC-174, CC-175)
 
 Email and password. A wrong password and an unknown email give the same message. After five wrong passwords in 15 minutes, sign-in is paused for 15 minutes.
 
@@ -202,6 +220,9 @@ The export reads only the masked database views (`audit_people_masked`, `audit_p
 | `bank_accounts`, `payment_cards` | Tokens and display details only (`CHECK` constraints stop full numbers being stored) |
 | `vault_tokens` | The simulated vault's token register (last four only) |
 | `audit_events` | Append-only trail (a trigger blocks UPDATE and DELETE) |
+| `password_resets` | Hash of each reset link, its 30-minute expiry and when it was used (CC-201) |
+| `mfa_recovery_codes`, `mfa_challenges` | Hashed recovery codes and the hashed 5-minute token between the password and the code (CC-200). The authenticator secret is encrypted in `users.mfa_secret_enc` |
+| `rate_limits` | Shared counters for every instance; keys are hashes, never an address (CC-204) |
 
 See [Data model](../architecture/data-model.md) and [Security & privacy](../architecture/security-and-privacy.md).
 
@@ -210,13 +231,20 @@ See [Data model](../architecture/data-model.md) and [Security & privacy](../arch
 | Method & path | Purpose |
 |---|---|
 | `GET /api/health` · `GET /api/config` | Health check · environment and test values |
-| `POST /api/auth/signup` · `/signin` · `/signout` · `GET /api/auth/me` | Accounts and sessions |
+| `POST /api/auth/signup` · `/signin` · `/signout` · `GET /api/auth/me` | Accounts and sessions. For an account with two-step sign-in on, `/signin` sets no cookie and answers `{ mfaRequired: true, challenge, expiresInSeconds: 300 }` |
+| `POST /api/auth/mfa/verify` | `{ challenge, code }` or `{ challenge, recoveryCode }`: checks the second step and starts the session (CC-200) |
+| `POST /api/auth/mfa/enrol/start` · `POST /api/auth/mfa/enrol/confirm` | Set up two-step sign-in: the key and `otpauth://` link once, then `{ code }` turns it on and returns 10 recovery codes once (CC-200) |
+| `POST /api/auth/signout-everywhere` | End every session of this account (CC-201) |
+| `POST /api/auth/password` | `{ currentPassword, newPassword }`: change the password and end every other session (CC-201) |
+| `POST /api/auth/password-reset/request` · `POST /api/auth/password-reset/confirm` | `{ email }` always answers the same; `{ token, password }` sets a new password and ends every session (CC-201) |
 | `GET/PATCH /api/me` | My profile |
 | `PUT /api/me/ssn` | Set or change SSN (change needs `password`) |
 | `PUT/GET/DELETE /api/me/photo` | Photo (raw image body, ≤ 2 MB) |
 | `GET /api/me/activity` | Last 20 audit events in plain language |
 | `GET /api/me/payment-methods` · `POST …/bank-account` · `POST …/cards` · `POST …/cards/:id/primary` · `DELETE …/cards/:id` | Guardian payment methods (tokens only) |
 | `POST /vault/v1/bank-accounts` · `POST /vault/v1/cards` | Simulated vault (absent in production) |
+
+Guardians and caregivers who haven't set up two-step sign-in get `403` with `code: "mfa_enrolment_required"` from every `/api/me` and `/vault` route. Going over a rate limit answers `429` with `code: "rate_limited"` and a `Retry-After` header.
 
 All requests that change data must send `X-Requested-With: circle-care`. Together with the `SameSite=Strict` session cookie, this blocks cross-site requests that change data.
 
@@ -225,9 +253,12 @@ All requests that change data must send `X-Requested-With: circle-care`. Togethe
 | Control | Detail |
 |---|---|
 | Passwords | scrypt (N=16384, r=8, p=1), 16-byte salt, constant-time comparison. Unknown emails are checked against a dummy hash so timing doesn't reveal which accounts exist. |
-| Sessions | 32-byte random token in an `HttpOnly; SameSite=Strict` cookie (`Secure` in production). Only its SHA-256 is stored. Expires after 30 idle minutes and 12 hours absolute. |
-| Lockout | 5 failures in 15 minutes locks the account for 15 minutes. Failures are counted with one atomic database update, so parallel guesses can't slip past the limit. Wrong passwords on the SSN-change step count too; reaching the limit there also signs the account out everywhere. |
-| Rate limits | Sign-up 10 per hour and sign-in 30 per 10 minutes per network; vault 30 per 10 minutes per user. |
+| Sessions | 32-byte random token in an `HttpOnly; SameSite=Strict` cookie (`Secure` in production). Only its SHA-256 is stored. Expires after 30 idle minutes and 12 hours absolute. Sign out everywhere, a password change (other devices) and a reset (all devices) end sessions at once; expired sessions, reset links and challenges are deleted at start-up and once a day (CC-201). |
+| Two-step sign-in | TOTP to RFC 6238 (SHA-1, 6 digits, 30 seconds, one step either side), checked in constant time on the server. The secret is AES-256-GCM encrypted and never returned after set-up; each time step works once per account. The step between password and code is a hashed, single-use token that lasts 5 minutes. Recovery codes are HMAC-SHA256 hashed and work once, and each use is audited. 5 wrong codes in 15 minutes stop codes for 15 minutes, are audited without the code and email the owner. The browser demo's fixed code means nothing to the server (CC-200). |
+| Password reset | The answer and its timing don't depend on whether the email has an account: the reply goes out before the lookup. Links are 32 random bytes, stored as SHA-256, work once for 30 minutes, and only the newest link works; at most 3 reset emails an hour per account (CC-201). |
+| Email | Sent through a `Mailer` interface. Development and test keep messages in an in-memory outbox (development also prints them to the server console). Production has no email provider yet: each email is recorded as `email.undeliverable` in the audit log, and the server warns at start-up. Connecting a provider is a launch task. |
+| Lockout | 5 failures in 15 minutes locks the account for 15 minutes and emails the owner; existing sessions stay, so a locked-out attacker can't sign the owner out. Failures are counted with one atomic database update, so parallel guesses can't slip past the limit. Wrong passwords on the SSN-change and password-change steps count too; reaching the limit there also signs the account out everywhere. |
+| Rate limits | Counted in one Postgres table every instance shares, with an atomic upsert (CC-204). Per network: sign-up 10 an hour, sign-in 30 per 10 minutes, code checks 30 per 10 minutes, reset requests 10 an hour. Per account: SSN saves 10 an hour, profile changes 30, photo changes 20, payment-method changes 30, password changes 10, vault 30 per 10 minutes. Going over answers 429 with `Retry-After`, and the per-account limits write a `ratelimit.exceeded` audit event naming only the limit. The network address is the one `TRUST_PROXY_HOPS` proxies forwarded (default 1), so a forged `X-Forwarded-For` can't pick a fresh bucket. Expired counters are deleted as the limiter runs and daily. |
 | Encryption | AES-256-GCM with a key id in every ciphertext (`v1.<keyId>.…`) for rotation (`DATA_ENCRYPTION_KEY_PREVIOUS`). Tampered data fails to decrypt. |
 | Headers | CSP with `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: no-referrer`, HSTS in production, `Cache-Control: no-store` on the API. |
 | Uploads | File signature checked (JPEG/PNG/WebP). The `Content-Type` header isn't trusted. 2 MB limit. |
@@ -238,21 +269,26 @@ All requests that change data must send `X-Requested-With: circle-care`. Togethe
 - Role choices and all buttons are at least 48 px tall and work by keyboard. The step indicator uses `aria-current="step"`.
 - The masked SSN is read as "Social Security number ending in 1 2 3 4".
 - All new screens pass the axe WCAG 2.1 AA audit: `/app/join`, `/app/join/guardian`, `/app/login`, `/app/account` with the card form open. Layouts work at 375 px with no sideways scrolling.
+- Two-step sign-in and password screens (CC-200, CC-201) use the same labelled fields and linked errors, 44 px or larger targets, and move focus to the recovery-codes heading when the codes appear. The key is read out group by group, and the code field uses `autocomplete="one-time-code"` and a numeric keypad. `a11y.py` audits them against the real server.
 
 ## Test coverage
 
 | Suite | What it proves |
 |---|---|
 | `server/__tests__/api.test.ts` (81 tests) | Every sign-up rule, sessions and expiry, CSRF, lockout, profile isolation, completeness, photo checks, SSN rules per environment, duplicate SSN, re-authentication, tamper detection, bank and card rules, token ownership, use-once and expiry, primary-card rules, append-only audit, schema constraints, and regression tests for every Lead Architect review finding (parallel-guess lockout, SSN step-up lockout, ITIN ranges, bank-name digits, malformed cookie). **It also scans every API response in the suite and fails if a full SSN appears.** |
+| `server/__tests__/mfa.test.ts` (27 tests) | RFC 4226, RFC 6238 (SHA-1, SHA-256, SHA-512) and RFC 4648 test vectors; the enrolment gate for guardians and caregivers; nothing stored in the clear; no session from a password alone; challenge hashed, single use and expiring; replayed codes refused; 5 wrong codes in parallel; recovery codes once each; `482913` refused in production, staging and test, and absent from server code |
+| `server/__tests__/sessions.test.ts` (16 tests) | Sign out everywhere; password change rules and lockout; the same reset reply for any email, unaffected by a slow mailer; single-use, parallel-use, expiry and newest-link rules; production with no email provider; the lockout email; the daily clean-up |
+| `server/__tests__/ratelimit.test.ts` (13 tests) | Two app instances share one bucket and let exactly the limit through under parallel requests; window reset and pruning; hashed keys; a forged left-most `X-Forwarded-For` lands in the same bucket; `TRUST_PROXY_HOPS` validation; per-account SSN, profile, photo and payment limits with their audit event |
 | `server/__tests__/config-and-export.test.ts` (14 tests) | Production and staging start-up checks, live-key guard, Secure cookie, HSTS and vault disabled in production. The masked export's contents, manifest and hashes, and that no full number appears in any file. |
-| `tests/e2e/accounts.py` (15 scenarios, Playwright) | The full guardian journey on a phone-sized screen, elder journey, duplicate email, wrong password, lockout, cards, activity, profile edit. Also checks that the SSN and account number never appear in the page. |
-| `tests/e2e/a11y.py` | axe audit including the four new screens |
+| `tests/e2e/accounts.py` (20 scenarios, Playwright) | The full guardian journey on a phone-sized screen, including two-step set-up, sign-in with a code and with a recovery code, password change, sign out everywhere and the forgotten-password pages; elder journey, duplicate email, wrong password, lockout, cards, activity, profile edit. Also checks that the SSN and account number never appear in the page. Codes come from `tests/e2e/totp_helper.py` (Python standard library). |
+| `tests/e2e/a11y.py` | axe audit including the account screens and, against the real server, the two-step, code-step and password pages |
 
 ## Known limitations & production gaps
 
 - **Payments don't move money yet.** The vault is simulated. Production needs the Stripe adapter (Stripe Elements for cards, Financial Connections or micro-deposits to verify bank accounts) and a BAA review. Until then, adding payment methods in a `stripe` environment returns "not available yet".
 - **Identity is checked for format, not verified with a third party** (e.g. an identity-verification provider). That is a follow-up story.
-- **No MFA, password reset or email verification for real accounts yet.** The demo shows the intended MFA design. These are the next stories in the Accounts epic.
+- **No email provider is connected.** Reset links and lockout emails are recorded as undelivered in production, so nobody can reset a forgotten password there until one is connected (a human launch task; see the README). Staging has no visible outbox either.
+- **Two-step sign-in can't be turned off, re-enrolled or given new recovery codes yet,** and passkeys aren't offered. Someone who loses their phone and every recovery code needs support. Email verification is still missing.
 - **Accounts aren't linked into a shared care circle yet.** *Explore the … app* opens the role's demo experience.
 - **The embedded database is single-process.** Use Replit PostgreSQL (`DATABASE_URL`) for anything shared.
 

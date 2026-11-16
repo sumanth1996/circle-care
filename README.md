@@ -66,7 +66,7 @@ Circle Care has two parts: the React website/app and a Node API with a PostgreSQ
 
 ```bash
 npm install
-npm test             # 312 unit + API tests (vitest)
+npm test             # 589 unit + API tests (vitest)
 npm run dev          # app + API on http://localhost:5000 (embedded Postgres in .data/)
 npm run build        # type-check (app + server) + production build into dist/
 npm start            # production-style server: dist/ + API on $PORT
@@ -78,12 +78,24 @@ End-to-end tests (Playwright, Python):
 
 ```bash
 npm run build && APP_ENV=test PORT=4180 npx tsx server/index.ts &
-E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/accounts.py   # accounts, identity, payments
+E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/accounts.py   # accounts, two-step sign-in, sessions, identity, payments
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/e2e.py        # demo journeys
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/a11y.py       # axe accessibility audit
 ```
 
 Requires Node 20.11+.
+
+### Server settings
+
+| Variable | Default | What it does |
+|---|---|---|
+| `TRUST_PROXY_HOPS` | `1` | How many proxies stand in front of the server (1 on Replit). The server takes the visitor's address from the `X-Forwarded-For` entry that many hops back, so rate limits can't be dodged by forging the header. A whole number from 0 to 5; anything else stops start-up. Set it to match the deploy. |
+| `RATE_LIMITS` | `on` (`off` in `APP_ENV=test`) | Shared rate limits for sign-in, sign-up, codes, password resets and account changes, counted in the `rate_limits` table so every instance sees the same numbers. Only the test environment may turn them off. |
+| `PUBLIC_URL` | `http://localhost:$PORT` | The app's origin (no path), used in password-reset links. Must be `https://` in staging and production. |
+
+Guardians and caregivers must set up two-step sign-in (an authenticator app) before they can use their account; elders can choose to. Sign out everywhere, password change and forgotten-password reset are on **My account** and the sign-in page.
+
+> **Before launch: connect an email provider (a human step).** Password-reset links, "your password was changed" notices and lockout warnings go through `server/mailer.ts`. Development and test keep them in an in-memory outbox (development also prints them to the server console); production has **no email provider yet**, so it records each one as undelivered in the audit log, prints a warning at start-up, and still gives the same reply to a reset request. Until a provider is chosen (with a BAA if it will carry anything about care) and wired into `createMailer`, nobody can reset a forgotten password in production.
 
 ---
 
@@ -140,6 +152,7 @@ The prototype runs entirely in the browser. A real deployment must add:
 - signed BAAs with every vendor that touches health data;
 - real push/SMS delivery and critical-alert entitlements;
 - identity and document verification;
+- an email provider for password-reset and lockout emails (see *Before launch* above);
 - breach response;
 - a third-party penetration test.
 
