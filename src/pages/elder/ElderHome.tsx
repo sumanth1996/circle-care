@@ -4,9 +4,9 @@ import { Phone, Volume2, Shield, Type, Bell, IdCard, Sun, CheckCircle2, MessageC
 import { useStore } from "../../data/store";
 import { DailyCheckins } from "../../components/everyday";
 import { ElderChatTile } from "../../components/chat";
-import { nextUp, clock, checkinToday, member, isOpen } from "../../data/selectors";
+import { nextUp, clock, checkinToday, checkinButtonShows, member, isOpen, todayOf } from "../../data/selectors";
 import { Avatar, PillArt, taskIcons, IconTile, useSpeech, useToast } from "../../components/ui";
-import { fmtTime, fmtDay, greeting, toMin, minutesOfDay } from "../../lib/time";
+import { fmtTime, fmtDay, greeting } from "../../lib/time";
 import "./elder.css";
 
 /** CC-68: elder home with three big actions — What's next, SOS, Call my person.
@@ -20,10 +20,10 @@ export default function ElderHome() {
   const favorites = state.members.filter((m) => m.favorite && m.status === "active");
   const first = favorites[0];
   const newDecisions = state.approvals.filter((a) => a.status !== "pending" && a.elderSeen === false).length;
-  const nowMin = minutesOfDay(now);
-  const w = state.settings.checkinWindow;
-  const showCheckin = !checkinToday(state) && nowMin >= toMin(w.start) - 60;
+  // Shows from an hour before her window, until a window that ends after midnight has ended (CC-199).
+  const showCheckin = checkinButtonShows(state);
   const done = checkinToday(state);
+  const hour = now.getHours();
 
   useEffect(() => { actions.logView("her home screen"); }, [actions]);
 
@@ -36,11 +36,14 @@ export default function ElderHome() {
   if (n.kind === "dose") {
     const d = n.slot;
     late = isOpen(d);
-    label = late ? `Time for your medicine · ${fmtTime(d.time)}` : `Up next · ${fmtTime(d.time)}`;
+    const lastNight = d.date !== todayOf(state);
+    label = lastNight ? `From last night · ${fmtTime(d.time)}` : late ? `Time for your medicine · ${fmtTime(d.time)}` : `Up next · ${fmtTime(d.time)}`;
     title = d.med.name;
-    sub = `${d.med.dose}. ${d.med.instructions}`;
+    sub = lastNight ? "Let us know if you took it." : `${d.med.dose}. ${d.med.instructions}`;
     art = <PillArt med={d.med} size={64} />;
-    say = `${late ? "It's time for" : "Next is"} ${d.med.name}, ${d.med.dose}, at ${fmtTime(d.time)}. ${d.med.instructions}`;
+    say = lastNight
+      ? `${d.med.name} was due last night at ${fmtTime(d.time)}. Let us know if you took it.`
+      : `${late ? "It's time for" : "Next is"} ${d.med.name}, ${d.med.dose}, at ${fmtTime(d.time)}. ${d.med.instructions}`;
   } else if (n.kind === "task") {
     label = `Up next · ${fmtTime(n.task.time)}`;
     title = n.task.title;
@@ -59,7 +62,7 @@ export default function ElderHome() {
       {showCheckin && (
         <div className="elder-checkin" role="region" aria-label="Daily check-in">
           <Sun size={40} color="var(--elder)" style={{ flex: "none" }} />
-          <div className="grow"><b>How are you this morning?</b><p className="muted" style={{ fontSize: "0.85em" }}>Let Sarah know you're OK.</p></div>
+          <div className="grow"><b>{hour >= 5 && hour < 12 ? "How are you this morning?" : "How are you doing?"}</b><p className="muted" style={{ fontSize: "0.85em" }}>Let Sarah know you're OK.</p></div>
           <button className="btn lg" style={{ background: "var(--elder)" }} onClick={() => { actions.elderCheckin(); toast("Sarah will see you're OK"); if (state.settings.readAloud) speak("Thank you. Sarah will see you're OK."); }}>I'm OK</button>
         </div>
       )}

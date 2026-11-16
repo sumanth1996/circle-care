@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc, Appointment } from "./types";
 import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo";
-import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, activeSos, member, todayVisit, tasksFor, overnightDoses, checkinFollowUps } from "./selectors";
+import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, yesterdayOf, activeSos, member, todayVisit, tasksFor, overnightDoses, checkinFollowUps } from "./selectors";
 import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
-import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays } from "../lib/time";
+import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays, greeting } from "../lib/time";
 import { readingsFor, detectEvents } from "../lib/health";
 import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared, inQuietHours, RECAP_NOTIFY_AT, RECAP_LAST_CALL } from "./everyday";
 import { noteSharedSince } from "./everydayActions";
@@ -29,15 +29,18 @@ export function pushAlert(s: State, a: Omit<Alert, "id" | "at" | "read">, at?: s
 /**
  * CC-40 – CC-41 and CC-206: record a dose, then settle its reminders and any missed-dose alert.
  * `date` is the day the dose was due: today, or yesterday for a late-evening dose marked after midnight (CC-199).
+ * Any other day is ignored and nothing changes. Returns whether the dose was recorded.
  */
 export function logDose(s: State, by: string, medId: string, time: string, status: DoseStatus, reason?: string, date = todayOf(s)) {
-  if (!allowed(s, by, "write", "doses")) return;
+  if (date !== todayOf(s) && date !== yesterdayOf(s)) return false;
+  if (!allowed(s, by, "write", "doses")) return false;
   const visit = todayVisit(s, by);
   const verified = roleOf(s, by) === "pro" && !!visit?.checkIn && !visit?.checkOut;
   s.doses = s.doses.filter((d) => !(d.medId === medId && d.date === date && d.time === time));
   s.doses.push({ id: uid("dose"), medId, date, time, status, by, at: clock(s).toISOString(), verified, reason });
   audit(s, by, "created", `a dose record (${s.meds.find((m) => m.id === medId)?.name})`);
   settleDose(s, by, medId, time, status, reason, date);
+  return true;
 }
 
 export function audit(s: State, actorId: string, action: AuditEvent["action"], resource: string) {
@@ -120,7 +123,8 @@ export function evaluate(s: State) {
   // Missed daily check-in (CC-52): one more prompt to the elder, then the guardian 15 minutes later. A window
   // that ends after midnight, or whose guardian prompt does, is followed up under the day it opened (CC-199).
   for (const w of checkinFollowUps(s)) {
-    pushAlert(s, { key: `checkin-elder-${w.date}`, to: ["elder"], severity: "info", title: "You have a reminder from Circle Care", detail: "Good morning, Maggie. Tap “I'm OK” so Sarah knows you're fine.", link: "/app/elder" });
+    // The greeting follows the clock, so a prompt after midnight says "Hello", not "Good morning".
+    pushAlert(s, { key: `checkin-elder-${w.date}`, to: ["elder"], severity: "info", title: "You have a reminder from Circle Care", detail: `${greeting(now)}, Maggie. Tap “I'm OK” so Sarah knows you're fine.`, link: "/app/elder" });
     if (w.minutesPast > 15) {
       pushAlert(s, {
         key: `checkin-${w.date}`, to: ["guardian"], severity: "warning",
@@ -408,7 +412,7 @@ function useStoreState(initial: State) {
       },
       recordDose: (medId: string, time: string, status: DoseStatus, reason?: string, date?: string) => update((s) => logDose(s, actor(s), medId, time, status, reason, date)),
       /** CC-207: Maggie snoozes a reminder for 15 minutes. */
-      snoozeDose: (medId: string, time: string) => update((s) => { snoozeReminder(s, actor(s), medId, time); }),
+      snoozeDose: (medId: string, time: string, date?: string) => update((s) => { snoozeReminder(s, actor(s), medId, time, date); }),
       verifyDose: (medId: string, time: string) => update((s) => {
         if (!guard(s, "write", "doses")) return;
         const d = s.doses.find((d) => d.medId === medId && d.date === todayOf(s) && d.time === time);

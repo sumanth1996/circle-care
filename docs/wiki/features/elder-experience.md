@@ -22,8 +22,8 @@
 
 ## User journey
 
-1. Maggie opens the app and sees today's date and a greeting — *"Good morning, Maggie"* (before noon), *"Good afternoon"* (until 5 PM), *"Good evening"*.
-2. From one hour before the check-in window opens until she checks in, a banner asks **"How are you this morning?"** — *"Let Sarah know you're OK."* She taps **I'm OK**. Toast and spoken confirmation: *"Sarah will see you're OK"*. The banner becomes *"You checked in at 8:40 AM"*.
+1. Maggie opens the app and sees today's date and a greeting — *"Hello, Maggie"* (midnight to 5 AM), *"Good morning"* (until noon), *"Good afternoon"* (until 5 PM), *"Good evening"*.
+2. From one hour before the check-in window opens until she checks in, a banner asks **"How are you this morning?"** (**"How are you doing?"** outside the morning). For a window that ends after midnight it stays until the window ends, and while last night's window is being followed up. — *"Let Sarah know you're OK."* She taps **I'm OK**. Toast and spoken confirmation: *"Sarah will see you're OK"*. The banner becomes *"You checked in at 8:40 AM"*.
 3. The **What's next** tile shows the single most important item, e.g. *"Up next · 6:00 PM — Metformin — 1 tablet. Take with food."* A speaker button reads it aloud.
 4. She taps the tile to open the **reminder card** (see below) and answers **I took it**, **Skip this time** or **I don't want to take it**.
 5. The red **SOS** tile opens the hold-to-send screen ([SOS & emergency](sos-and-emergency.md)).

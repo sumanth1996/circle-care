@@ -68,6 +68,12 @@ export function overnightDoses(s: State): DoseSlot[] {
 
 export const isOpen = (d: DoseSlot) => d.state === "due" || d.state === "late" || d.state === "escalated";
 
+/**
+ * Last night's doses still open after midnight: the ones in `overnightDoses`, which the rules engine is still
+ * following up. Screens list them, labelled as from last night, so they can be marked and their alerts settle.
+ */
+export const lastNightDoses = (s: State): DoseSlot[] => overnightDoses(s).filter(isOpen);
+
 export function tasksFor(s: State, date = todayOf(s)) {
   const d = new Date(`${date}T12:00:00`).getDay();
   const now = clock(s);
@@ -90,7 +96,8 @@ export type NextUp =
 /** The single "What's next" item on the elder's home screen. */
 export function nextUp(s: State): NextUp {
   const doses = dosesFor(s);
-  const open = doses.find(isOpen);
+  // A dose from last night that is still being followed up comes first, so Maggie can say whether she took it.
+  const open = lastNightDoses(s)[0] ?? doses.find(isOpen);
   if (open) return { kind: "dose", slot: open };
   const nowMin = minutesOfDay(clock(s));
   const upcomingDose = doses.find((d) => d.state === "upcoming");
@@ -152,27 +159,52 @@ export function checkinToday(s: State) {
 export function checkinFollowUps(s: State): { date: string; minutesPast: number }[] {
   const now = clock(s);
   const nowMin = minutesOfDay(now);
-  const { start, end } = s.settings.checkinWindow;
-  const wraps = toMin(end) < toMin(start);
   // Minutes from the opening day's midnight to the window's end.
-  const endsAt = toMin(end) + (wraps ? 1440 : 0);
+  const endsAt = toMin(s.settings.checkinWindow.end) + (wrapsMidnight(s) ? 1440 : 0);
   const out: { date: string; minutesPast: number }[] = [];
   // Yesterday's window, only when Sarah's prompt (15 minutes after the end) could not go out before midnight.
   if (endsAt + 15 >= 1439) {
     const date = yesterdayOf(s);
-    // Any check-in that day counts, as for today's window, and so does one after midnight. For a window that
-    // ends after midnight, only one made once her button showed (an hour before the start) counts, so an early
-    // check-in for the night before never covers it.
-    const opened = at(date, start).getTime() - 60 * 60000;
-    const done = s.checkins.some((c) => (!wraps && c.date === date) || new Date(c.at).getTime() >= opened);
-    if (!done && nowMin + 1440 > endsAt) out.push({ date, minutesPast: nowMin + 1440 - endsAt });
+    if (!checkedInFor(s, date) && nowMin + 1440 > endsAt) out.push({ date, minutesPast: nowMin + 1440 - endsAt });
   }
   if (!checkinToday(s) && nowMin > endsAt) out.push({ date: ymd(now), minutesPast: nowMin - endsAt });
   return out;
 }
 
+const wrapsMidnight = (s: State) => toMin(s.settings.checkinWindow.end) < toMin(s.settings.checkinWindow.start);
+
+/**
+ * Whether Maggie has checked in for the window that opens on `date`. Any check-in that day counts, and so does one
+ * made later. For a window that ends after midnight, only one made once her button showed (an hour before the
+ * start) counts, so an early check-in for the night before never covers it (CC-199).
+ */
+function checkedInFor(s: State, date: string) {
+  const opened = at(date, s.settings.checkinWindow.start).getTime() - 60 * 60000;
+  return s.checkins.some((c) => (!wrapsMidnight(s) && c.date === date) || new Date(c.at).getTime() >= opened);
+}
+
+/** Today's window ended without a check-in. Same rule as `checkinFollowUps`, so a window that ends after midnight is never missed before it ends. */
 export function checkinMissed(s: State) {
-  return !checkinToday(s) && minutesOfDay(clock(s)) > toMin(s.settings.checkinWindow.end);
+  return checkinFollowUps(s).some((w) => w.date === todayOf(s));
+}
+
+/** Last night's window, which ended after midnight or too late for Sarah's prompt to go out before it, was missed (CC-199). */
+export function checkinMissedLastNight(s: State) {
+  return checkinFollowUps(s).some((w) => w.date === yesterdayOf(s));
+}
+
+/**
+ * Whether Maggie's "I'm OK" button shows. It shows from an hour before her window starts. For a window that ends
+ * after midnight it keeps showing until the window ends, and it shows while last night's window is being followed
+ * up, so her answer to that reminder is one tap. Same rules as `checkinFollowUps` (CC-199).
+ */
+export function checkinButtonShows(s: State) {
+  if (checkinMissedLastNight(s)) return true;
+  const nowMin = minutesOfDay(clock(s));
+  const { start, end } = s.settings.checkinWindow;
+  if (!wrapsMidnight(s)) return !checkinToday(s) && nowMin >= toMin(start) - 60;
+  if (nowMin <= toMin(end)) return !checkedInFor(s, yesterdayOf(s)); // last night's window, still open after midnight
+  return nowMin >= toMin(start) - 60 && !checkedInFor(s, todayOf(s));
 }
 
 export function checkinStreak(s: State) {

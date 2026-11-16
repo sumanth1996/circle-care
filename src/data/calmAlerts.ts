@@ -21,9 +21,9 @@ export function reminderLimit(s: State) {
 const remKey = (date: string, key: string, n: number) => `dose-rem-${date}-${key}-${n}`;
 const missedKeys = (date: string, key: string) => [`dose-cg-${date}-${key}`, `dose-g-${date}-${key}`];
 
-/** Today's reminder record for one dose slot, if its reminders have started. */
-export function reminderFor(s: State, key: string): DoseReminder | undefined {
-  return (s.reminders ?? []).find((r) => r.date === todayOf(s) && r.key === key);
+/** The reminder record for one dose slot on `date` (default today), if its reminders have started. */
+export function reminderFor(s: State, key: string, date = todayOf(s)): DoseReminder | undefined {
+  return (s.reminders ?? []).find((r) => r.date === date && r.key === key);
 }
 
 /**
@@ -64,10 +64,13 @@ export function runReminders(s: State) {
   }
 }
 
-/** CC-207: Snooze puts the next reminder 15 minutes away. It still counts toward the limit. */
-export function snoozeReminder(s: State, by: string, medId: string, time: string) {
+/**
+ * CC-207: Snooze puts the next reminder 15 minutes away. It still counts toward the limit.
+ * `date` is the day the dose was due (default today), so last night's reminder can be snoozed after midnight (CC-199).
+ */
+export function snoozeReminder(s: State, by: string, medId: string, time: string, date = todayOf(s)) {
   if (!allowed(s, by, "write", "doses")) return false;
-  const r = reminderFor(s, `${medId}@${time}`);
+  const r = reminderFor(s, `${medId}@${time}`, date);
   if (!r || r.sent >= r.limit) return false;
   r.nextAt = new Date(clock(s).getTime() + SNOOZE_MIN * 60000).toISOString();
   r.snoozed = true;
@@ -154,9 +157,9 @@ export function resolutionText(s: State, a: Alert) {
   return `${word}: marked by ${nameOf(s, r.by)} at ${when}${r.reason ? `. Reason: ${r.reason}` : ""}.`;
 }
 
-/** The elder's open reminder for a dose, for "Reminder 2 of 3" and Snooze on her screen. */
-export function reminderState(s: State, medId: string, time: string) {
-  const r = reminderFor(s, `${medId}@${time}`);
+/** The elder's open reminder for a dose due on `date` (default today), for "Reminder 2 of 3" and Snooze on her screen. */
+export function reminderState(s: State, medId: string, time: string, date = todayOf(s)) {
+  const r = reminderFor(s, `${medId}@${time}`, date);
   if (!r || r.sent === 0) return undefined;
   return { sent: r.sent, limit: r.limit, canSnooze: r.sent < r.limit, snoozed: !!r.snoozed, nextAt: r.nextAt };
 }

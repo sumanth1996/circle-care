@@ -90,6 +90,8 @@ Thresholds come from guardian **Settings → When a dose isn't confirmed** (`set
 
 **Doses that cross midnight (CC-199).** A late-evening dose whose escalation is still running at midnight (the guardian step falls at or after 00:00, such as a 23:30 dose with the defaults) keeps escalating the next day with the same steps and timings, and its reminders carry on. It stays under the day it was due, so marking it after midnight (`logDose(…, date)`) resolves its alerts and sends the all-clear as usual. Doses that finished escalating before midnight, and earlier days, are never raised again.
 
+**Last night's doses on the screens.** After midnight, such a dose is listed until someone marks it, labelled as from last night with its time: first in Maggie's *What's next* (*"From last night · 11:30 PM"*, *"Let us know if you took it."*), in a **From last night** section above *Medicines* on Ana's *Today* while she is on shift, and in Sarah's *Needs your attention* (*"Metformin not confirmed"*, *"Due last night at 11:30 PM"*). *I took it*, *Given* and *Not given* pass the day it was due, so its alerts settle and the all-clear goes out; Maggie can also snooze its reminder after midnight. `logDose` accepts only today or yesterday as that day and ignores anything else.
+
 ### Verification (CC-41)
 
 | Recorded by | `verified` |
