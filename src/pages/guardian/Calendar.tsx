@@ -7,6 +7,7 @@ import { Avatar, Sheet, useToast } from "../../components/ui";
 import type { Appointment, AppointmentKind } from "../../data/types";
 import { addDays, fmtDay, fmtTime, fromMin, pad, toMin, ymd } from "../../lib/time";
 import "./calendar.css";
+import { hasPassed } from "../../data/visitNotes";
 
 // Categorical colors in fixed order (dataviz validator: all checks pass on light; contrast WARN
 // is relieved by an icon + text label on every chip and in the legend).
@@ -159,6 +160,8 @@ export default function Calendar() {
                   </ul>
                   {/* CC-217: the shared question list for this visit. */}
                   {a.status === "scheduled" && a.date >= today && <Link className="btn sm secondary appt-q" to={`/app/guardian/questions?appt=${a.id}`}><ListChecks size={16} /> Questions{a.questions ? ` (${a.questions.length})` : a.prep ? " (1)" : ""}</Link>}
+                  {/* CC-218: after the visit, the notes and next steps. */}
+                  {hasPassed(state, a) && <Link className="btn sm secondary appt-q" to={`/app/guardian/visit-notes/${a.id}`}><ClipboardList size={16} /> {a.notes ? "Visit notes" : "Add visit notes"}</Link>}
                   {canEdit && a.status === "scheduled" && (
                     <div className="row wrap" style={{ "--gap": "8px" } as CSSProperties}>
                       <button className="btn sm plain" onClick={() => setEditing(a)}>Edit</button>

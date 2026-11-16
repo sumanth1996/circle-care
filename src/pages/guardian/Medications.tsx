@@ -66,7 +66,7 @@ export default function Medications() {
       <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>
         <div className="section-head"><h2 className="section-title">Daily routines</h2><button className="btn sm secondary" onClick={() => setTaskSheet(true)}><Plus size={16} /> Add routine</button></div>
         <div className="list">
-          {state.tasks.map((t) => (
+          {state.tasks.filter((t) => t.recurrence !== "once").map((t) => (
             <div key={t.id} className="list-row has-icon">
               <IconTile icon={taskIcons[t.icon]} color="var(--care)" />
               <span className="grow"><span className="list-title" style={{ display: "block" }}>{t.title}</span><span className="list-sub">{fmtTime(t.time)} · {t.recurrence === "daily" ? "Every day" : t.recurrence === "weekdays" ? "Weekdays" : "Weekends"} · {t.assignee === "caregiver" ? "Caregiver on shift" : t.assignee === "elder" ? "Maggie" : nameOf(state, t.assignee)}</span></span>

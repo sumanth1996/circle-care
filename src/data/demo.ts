@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, Dail
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 14;
+export const STATE_VERSION = 15;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -271,7 +271,9 @@ function appointmentsSeed(now: Date): State["appointments"] {
   const toThu = ((4 - now.getDay() + 7) % 7) || 7;
   const a = (n: number, time: string, kind: State["appointments"][number]["kind"], title: string, provider: string, location: string, medIds: string[], extra: Partial<State["appointments"][number]> = {}) => ({
     id: uid("appt"), date: d(n), time, durationMin: kind === "refill" ? 15 : kind === "lab" ? 20 : 45, kind, title, provider, location, medIds,
-    status: (n < 0 ? "done" : "scheduled") as "done" | "scheduled", createdBy: GUARDIAN, ...extra,
+    status: (n < 0 ? "done" : "scheduled") as "done" | "scheduled", createdBy: GUARDIAN,
+    // CC-218: the demo starts with past visits already reminded about, so loading it doesn't fire old reminders.
+    ...(n < 0 ? { notesReminded: true } : {}), ...extra,
   });
   return [
     a(-12, "16:00", "refill", "Pick up Atorvastatin refill", "Fog City Pharmacy", "1840 Irving St, San Francisco, CA", ["med-atorvastatin"], { escortId: FAMILY }),

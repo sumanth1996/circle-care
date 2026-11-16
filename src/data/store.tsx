@@ -15,6 +15,7 @@ import { runReminders, settleDose, snoozeReminder, heldFor, releaseHeld } from "
 import * as help from "./help";
 import * as plans from "./comingHome";
 import * as questions from "./visitQuestions";
+import * as visitNotes from "./visitNotes";
 
 export const STATE_KEY = "circle-care-demo";
 
@@ -252,6 +253,9 @@ export function evaluate(s: State) {
 
   // CC-213, CC-214: the coming-home plan's day-before notice, follow-up reminder and archive.
   plans.runPlans(s);
+
+  // CC-218: one reminder to whoever went, two days after a visit with no notes.
+  visitNotes.runVisitNotes(s);
 
   // CC-208: when quiet hours end, what waited overnight goes out as one morning summary.
   releaseHeld(s);
@@ -658,6 +662,10 @@ function useStoreState(initial: State) {
       hideQuestion: (apptId: string, qid: string, hidden: boolean) => update((s) => { questions.hideQuestion(s, actor(s), apptId, qid, hidden); }),
       moveQuestion: (apptId: string, qid: string, dir: -1 | 1) => update((s) => { questions.moveQuestion(s, actor(s), apptId, qid, dir); }),
       removeQuestion: (apptId: string, qid: string) => update((s) => { questions.removeQuestion(s, actor(s), apptId, qid); }),
+      saveVisitNotes: (apptId: string, input: { answers: Record<string, string>; summary: string }) => update((s) => { visitNotes.saveNotes(s, actor(s), apptId, input); }),
+      addNextStep: (apptId: string, input: { text: string; owner: string; date: string }) => update((s) => { visitNotes.addNextStep(s, actor(s), apptId, input); }),
+      removeNextStep: (apptId: string, stepId: string) => update((s) => { visitNotes.removeNextStep(s, actor(s), apptId, stepId); }),
+      finishNextStep: (taskId: string) => update((s) => { visitNotes.finishNextStep(s, actor(s), taskId); }),
       readChat: () => update((s) => everyday.readChat(s, actor(s))),
       setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */

@@ -12,6 +12,7 @@ import { Avatar, Segmented, Sheet, useToast } from "./ui";
 import { HealthHint } from "./chat";
 import { addDays, fmtShortDay, fmtTime, hm, toMin, fromMin, ymd } from "../lib/time";
 import "./help.css";
+import { MyNextSteps } from "./visitNotes";
 
 const KIND_ICON: Record<HelpKind, typeof Car> = { ride: Car, groceries: ShoppingBasket, company: Coffee, visit: Home, phone: Smartphone, other: Sparkles };
 const STATUS_LABEL: Record<HelpRequest["status"], string> = { open: "Open", claimed: "Taken", done: "Done", cancelled: "Cancelled" };
@@ -63,6 +64,9 @@ export function HelpBoard() {
         <div><p className="page-kicker">Maggie's circle</p><h1>Help board</h1></div>
         {isGuardian && <button className="btn" onClick={() => setCompose(true)}><Plus size={18} /> New request</button>}
       </div>
+
+      {/* CC-218: James's next steps from visit notes sit at the top of his board. */}
+      {state.persona === "family" && <MyNextSteps />}
 
       {paused ? (
         <section className="panel stack help-paused" style={{ "--gap": "8px" } as CSSProperties}>
