@@ -45,7 +45,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   State: {
     resource: null,
     fields: {
-      version: O, persona: O, signedIn: O, clockOffsetMin: O, lastRunAt: O, elderId: O,
+      version: O, persona: O, signedIn: O, clockOffsetMin: O, lastRunAt: O, elderId: O, filesToDelete: O,
       "health.heightCm": P, "health.birthYear": I, "health.device": O,
       "health.overrides.at": P, "health.overrides.hr": P, "health.overrides.spo2": P, "health.overrides.addedAt": P,
     },
@@ -212,6 +212,35 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
       maggieAsked: O, startedAt: O, endedAt: O, endedEarly: O, summarySeenAt: O,
       "summaryFor.alerts": O, "summaryFor.tasksDone": O, "summaryFor.sos": O, "summaryFor.open": O,
     },
+  },
+  // CC-129: Maggie's resting or away days. Personal, not health: no reason is asked or kept, but it says when she
+  // may not be home.
+  QuietDay: {
+    resource: "quietDays",
+    fields: { id: O, kind: I, from: I, until: I, by: I, at: O, endedAt: O },
+  },
+  // CC-138, CC-139: a note to help Maggie remember says something about her memory, so the note, its photo and
+  // who wrote or read it when are health data.
+  MemoryAid: {
+    resource: "memoryAids",
+    fields: {
+      id: O, text: P, photoId: P, kind: O, date: O, time: O, by: P, at: P, updatedAt: P, offAt: P, seenAt: P,
+      hiddenOn: O, spokenAt: P,
+    },
+  },
+  // CC-132, CC-133: what Maggie shares about a possible scam can hold account or card details, so the note and photo
+  // are sensitive. Guardians and Maggie only; never the audit log. The photo goes 30 days after it's resolved.
+  ScamReport: {
+    resource: "scams",
+    fields: {
+      id: O, kind: I, note: S, photoId: S, by: I, at: I, checked: O, status: O, resolvedBy: I, resolvedAt: O,
+      reply: I, elderSeenAt: O, photoRemovedAt: O,
+    },
+  },
+  // CC-134: which weekly tips Maggie has finished.
+  ScamTips: {
+    resource: "tips",
+    fields: { "done.id": O, "done.at": O, week: O, notNow: O, hiddenOn: O },
   },
   // CC-217: questions and observations for a visit describe Maggie's health.
   VisitQuestion: {

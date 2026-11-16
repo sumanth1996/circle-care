@@ -47,6 +47,7 @@ import { CallLogPage } from "./components/callLog";
 import { AboutMePage } from "./components/aboutMe";
 import { VisitNotesPage } from "./components/visitNotes";
 import { AwayPage } from "./components/away";
+import { ElderScamPage, MemoryAidsPage, ScamReportPage } from "./components/confident";
 import ElderAsk from "./pages/elder/ElderAsk";
 import ComingHome from "./pages/guardian/ComingHome";
 import Review from "./pages/internal/Review";
@@ -103,6 +104,7 @@ export default function App() {
               <Route path="chat" element={<ChatView large />} />
               <Route path="help" element={<HelpBoard />} />
               <Route path="ask" element={<ElderAsk />} />
+              <Route path="scam" element={<ElderScamPage />} />
               <Route path="questions" element={<VisitQuestions />} />
               <Route path="visit-notes/:id" element={<VisitNotesPage />} />
               <Route path="calls" element={<CallLogPage />} />
@@ -123,6 +125,7 @@ export default function App() {
               <Route path="visit-notes/:id" element={<VisitNotesPage />} />
               <Route path="calls" element={<CallLogPage />} />
               <Route path="about-me" element={<AboutMePage />} />
+              <Route path="memory-aids" element={<MemoryAidsPage />} />
             </Route>
             {/* CC-209, CC-210: James (family). The Help board is his home. */}
             <Route path="/app/family" element={<AppShell persona="family" />}>
@@ -136,6 +139,7 @@ export default function App() {
               <Route path="calls" element={<CallLogPage />} />
               <Route path="about-me" element={<AboutMePage />} />
               <Route path="away" element={<AwayPage />} />
+              <Route path="memory-aids" element={<MemoryAidsPage />} />
             </Route>
             <Route path="/app/guardian" element={<AppShell persona="guardian" />}>
               <Route index element={<GuardianHome />} />
@@ -161,6 +165,8 @@ export default function App() {
               <Route path="calls" element={<CallLogPage />} />
               <Route path="about-me" element={<AboutMePage />} />
               <Route path="away" element={<AwayPage />} />
+              <Route path="memory-aids" element={<MemoryAidsPage />} />
+              <Route path="scams/:id" element={<ScamReportPage />} />
               <Route path="questions/print/:id" element={<QuestionsPrint />} />
             </Route>
             <Route path="/app/sos" element={<SosRedirect />} />

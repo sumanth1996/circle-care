@@ -23,6 +23,7 @@ const LINKS = {
   "State.help": "HelpRequest", "HelpRequest.history": "HelpChange",
   "State.plans": "ComingHome", "ComingHome.items": "PlanItem", "Appointment.questions": "VisitQuestion", "Appointment.notes": "VisitNotes", "VisitNotes.nextSteps": "NextStep",
   "State.calls": "CallEntry", "CallEntry.nextStep": "CallStep", "State.aboutMe": "AboutMe", "State.aways": "Away", "AboutMe.sections": "AboutSection",
+  "State.quietDays": "QuietDay", "State.memoryAids": "MemoryAid", "State.scams": "ScamReport", "State.scamTips": "ScamTips",
   "State.settings": "Settings",
 };
 

@@ -518,7 +518,91 @@ export interface State {
   aboutMe: AboutMe;
   /** CC-229: Sarah's away periods, newest last. */
   aways: Away[];
+  /** CC-129: Maggie's resting and away days, newest last. */
+  quietDays: QuietDay[];
+  /** CC-138, CC-139: notes from family shown on Maggie's home. */
+  memoryAids: MemoryAid[];
+  /** CC-132, CC-133: Maggie's "Is this a scam?" reports, newest last. */
+  scams: ScamReport[];
+  /** CC-134: Maggie's weekly scam-awareness tips. */
+  scamTips: ScamTips;
+  /** Encrypted photos to remove from this device's file store (a deleted memory aid, an old scam photo). */
+  filesToDelete: string[];
   settings: Settings;
+}
+
+/* ---------------- Sprint 22: Confident at Home (CC-129, CC-132 – CC-134, CC-138, CC-139) ---------------- */
+
+/** CC-129: Maggie says she's resting today, or away until a date. Check-in alerts pause; medicine and SOS alerts don't. */
+export interface QuietDay {
+  id: string;
+  kind: "resting" | "away";
+  /** First day paused, YYYY-MM-DD. */
+  from: string;
+  /** Last day paused, YYYY-MM-DD. */
+  until: string;
+  by: string;
+  at: string;
+  /** Maggie tapped I'm back, at this time. Check-ins count again from her next window. */
+  endedAt?: string;
+}
+
+/** CC-138, CC-139: a short note from family, with an optional photo, shown on Maggie's home and read aloud. */
+export interface MemoryAid {
+  id: string;
+  text: string;
+  /** The photo, encrypted in this device's file store (CC-67). */
+  photoId?: string;
+  /** Always on Maggie's home, or once at a date and time. */
+  kind: "always" | "once";
+  date?: string;
+  time?: string;
+  by: string;
+  at: string;
+  updatedAt?: string;
+  /** Maggie turned it off in Settings, at this time. */
+  offAt?: string;
+  /** Maggie's last "Got it", which the writer sees as "Seen at …". */
+  seenAt?: string;
+  /** An always note Maggie tapped Got it on stays off her home for the rest of that day. */
+  hiddenOn?: string;
+  /** It was read aloud once when it first showed. */
+  spokenAt?: string;
+}
+
+export type ScamKind = "call" | "text" | "email" | "door" | "payment";
+
+/** CC-132, CC-133: Maggie asks "Is this a scam?"; her guardians work through a checklist and tell her she's safe. */
+export interface ScamReport {
+  id: string;
+  kind: ScamKind;
+  /** What Maggie typed. Guardian-only, never in the audit log. */
+  note?: string;
+  /** The photo, encrypted in this device's file store. Removed 30 days after the report is resolved. */
+  photoId?: string;
+  by: string;
+  at: string;
+  /** Checklist items a guardian ticked, shared by every guardian. */
+  checked: string[];
+  status: "open" | "resolved";
+  resolvedBy?: string;
+  resolvedAt?: string;
+  /** What the guardian told Maggie when marking it resolved. */
+  reply?: string;
+  /** Maggie read the answer. */
+  elderSeenAt?: string;
+  photoRemovedAt?: string;
+}
+
+/** CC-134: which tips Maggie has finished, and this week's card. */
+export interface ScamTips {
+  done: { id: string; at: string }[];
+  /** The Monday of the week the card's Not now count belongs to. */
+  week?: string;
+  /** How many times Maggie tapped Not now this week. */
+  notNow: number;
+  /** The day she last tapped Not now; the card comes back the next day. */
+  hiddenOn?: string;
 }
 
 /* ---------------- Sprint 18: After-visit notes (CC-218) ---------------- */

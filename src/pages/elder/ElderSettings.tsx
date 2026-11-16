@@ -5,6 +5,7 @@ import { useStore } from "../../data/store";
 import { Toggle, useToast } from "../../components/ui";
 import { nameOf } from "../../data/selectors";
 import type { Settings } from "../../data/types";
+import { ElderAidSettings } from "../../components/confident";
 import "./elder.css";
 
 const sizes: { v: Settings["textSize"]; label: string; px: number }[] = [
@@ -61,6 +62,8 @@ export default function ElderSettings() {
         <textarea id="suggest" className="input" style={{ fontSize: "inherit" }} placeholder="For example: call Ruth before James" value={suggest} onChange={(e) => setSuggest(e.target.value)} />
         <button className="btn lg block" disabled={!suggest.trim()}>Send suggestion</button>
       </form>
+      {/* CC-138: Maggie can turn any note off. */}
+      <ElderAidSettings />
     </div>
   );
 }
