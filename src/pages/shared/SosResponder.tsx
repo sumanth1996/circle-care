@@ -5,6 +5,7 @@ import { useStore } from "../../data/store";
 import { activeSos, member, nameOf, clock } from "../../data/selectors";
 import { Avatar, useToast } from "../../components/ui";
 import { fmtTime, relative } from "../../lib/time";
+import { escalationOrder } from "../../data/away";
 
 /** CC-49: acknowledge an SOS ("I'm responding"), then resolve it with an outcome note. */
 export default function SosResponder() {
@@ -60,7 +61,7 @@ export default function SosResponder() {
 
       <section className="panel">
         <h2 className="t-sm" style={{ marginBottom: 6 }}>Escalation</h2>
-        {state.settings.escalation.map((id, i) => (
+        {escalationOrder(state).map((id, i) => (
           <div key={id} className="list-row" style={{ padding: "10px 0" }}>
             <Avatar m={member(state, id)} size={36} />
             <span className="grow">{nameOf(state, id)}</span>

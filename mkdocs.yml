@@ -94,6 +94,7 @@ nav:
       - After-visit notes: wiki/features/after-visit-notes.md
       - Call log: wiki/features/call-log.md
       - What matters to me: wiki/features/what-matters-to-me.md
+      - Away mode: wiki/features/away-mode.md
   - Architecture & Security:
       - System overview: wiki/architecture/system-overview.md
       - Data model: wiki/architecture/data-model.md

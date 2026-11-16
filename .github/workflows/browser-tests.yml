@@ -86,6 +86,10 @@ jobs:
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/sprint19.py
 
+      - name: Away mode (sprint20.py)
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: python tests/e2e/sprint20.py
+
       - name: Accessibility audit (a11y.py)
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/a11y.py

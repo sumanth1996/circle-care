@@ -12,6 +12,7 @@ import { Avatar, Segmented, Sheet, useToast } from "./ui";
 import { HealthHint } from "./chat";
 import { addDays, fmtShortDay, fmtTime, hm, toMin, fromMin, ymd } from "../lib/time";
 import "./help.css";
+import { CoverCard } from "./away";
 import { MyNextSteps } from "./visitNotes";
 
 const KIND_ICON: Record<HelpKind, typeof Car> = { ride: Car, groceries: ShoppingBasket, company: Coffee, visit: Home, phone: Smartphone, other: Sparkles };
@@ -66,6 +67,7 @@ export function HelpBoard() {
       </div>
 
       {/* CC-218: James's next steps from visit notes sit at the top of his board. */}
+      {state.persona === "family" && <CoverCard />}
       {state.persona === "family" && <MyNextSteps />}
 
       {paused ? (

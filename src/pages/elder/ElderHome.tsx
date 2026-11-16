@@ -9,6 +9,8 @@ import { Avatar, PillArt, taskIcons, IconTile, useSpeech, useToast } from "../..
 import { fmtTime, fmtDay, greeting, toMin, minutesOfDay } from "../../lib/time";
 import { elderHelpLines } from "../../data/help";
 import { MyNextSteps } from "../../components/visitNotes";
+import { ElderCovering } from "../../components/away";
+import { activeAway } from "../../data/away";
 import "./elder.css";
 
 /** CC-68: elder home with three big actions — What's next, SOS, Call my person.
@@ -19,7 +21,10 @@ export default function ElderHome() {
   const toast = useToast();
   const now = clock(state);
   const n = nextUp(state);
-  const favorites = state.members.filter((m) => m.favorite && m.status === "active");
+  // CC-231: while Sarah is away, the person covering is who Maggie calls first.
+  const cover = activeAway(state)?.backupId;
+  const favAll = state.members.filter((m) => m.status === "active" && (m.favorite || m.id === cover));
+  const favorites = [...favAll.filter((m) => m.id === cover), ...favAll.filter((m) => m.id !== cover)];
   const first = favorites[0];
   const newDecisions = state.approvals.filter((a) => a.status !== "pending" && a.elderSeen === false).length;
   const nowMin = minutesOfDay(now);
@@ -67,6 +72,8 @@ export default function ElderHome() {
         </div>
       )}
       {!showCheckin && done && <p className="small muted" style={{ marginTop: -8 }}><CheckCircle2 size={16} color="var(--green)" style={{ verticalAlign: "-3px" }} /> You checked in at {fmtTime(done.at)}</p>}
+
+      <ElderCovering />
 
       <div className="elder-tiles">
         <div style={{ position: "relative" }}>

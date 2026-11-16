@@ -246,6 +246,36 @@ export interface Alert {
   items?: string[];
   /** CC-206: a missed-dose alert or reminder that was settled when the dose was marked. */
   resolved?: AlertResolution;
+  /** CC-229: sent to the backup in Sarah's place while she was away (the away period's id). */
+  awayId?: string;
+  /** CC-229: where the alert led for Sarah. */
+  coverLink?: string;
+  /** CC-230: still open at hand-back, so it moved to Sarah at this time. */
+  movedToSarah?: string;
+}
+
+/** CC-229 – CC-231: Sarah's away dates and who covers. */
+export interface Away {
+  id: string;
+  start: string; // YYYY-MM-DD, first day away
+  end: string; // YYYY-MM-DD, last day away
+  backupId: string;
+  status: "asked" | "accepted" | "declined" | "ended" | "cancelled";
+  by: string;
+  at: string;
+  updatedAt?: string;
+  answeredAt?: string;
+  /** Sarah was reminded a day before that nobody had accepted yet. */
+  pickReminded?: boolean;
+  /** CC-231: Maggie asked for someone else, at this time. */
+  maggieAsked?: string;
+  startedAt?: string;
+  endedAt?: string;
+  /** Sarah tapped I'm back before the end date. */
+  endedEarly?: boolean;
+  /** CC-230: what Sarah's summary counts, kept at hand-back. */
+  summaryFor?: { alerts: number; tasksDone: number; sos: number; open: string[] };
+  summarySeenAt?: string;
 }
 
 /** CC-206: how a missed dose was settled, shown on the earlier alert. */
@@ -484,6 +514,8 @@ export interface State {
   calls: CallEntry[];
   /** CC-219: Maggie's What matters to me page. */
   aboutMe: AboutMe;
+  /** CC-229: Sarah's away periods, newest last. */
+  aways: Away[];
   settings: Settings;
 }
 

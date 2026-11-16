@@ -81,6 +81,7 @@ npm run build && APP_ENV=test PORT=4180 npx tsx server/index.ts &
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/accounts.py   # accounts, identity, payments
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/e2e.py        # demo journeys
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/sprint19.py   # call log, What matters to me
+E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/sprint20.py   # away mode
 E2E_BASE=http://127.0.0.1:4180 python3 tests/e2e/a11y.py       # axe accessibility audit
 ```
 
@@ -129,7 +130,7 @@ Requires Node 20.11+.
 - **Session lock:** caregiver and guardian apps lock after inactivity; the elder can opt in.
 - **Content Security Policy** on production builds; voice confirmation uses on-device speech only.
 - **Health readings are the elder's to share:** heart rate, blood oxygen, activity and sleep reach the guardian only while Maggie keeps "Share health readings with Sarah" on.
-- **Accessible:** 0 axe-core WCAG 2.1 AA violations across 41 screens.
+- **Accessible:** 0 axe-core WCAG 2.1 AA violations across 43 screens.
 
 ### What a production build still needs
 

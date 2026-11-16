@@ -18,14 +18,17 @@ import * as questions from "./visitQuestions";
 import * as visitNotes from "./visitNotes";
 import * as callLog from "./callLog";
 import * as aboutMe from "./aboutMe";
+import * as away from "./away";
 
 export const STATE_KEY = "circle-care-demo";
 
 type Updater = (draft: State) => void;
 
 /** Adds an alert unless one with the same key already exists. */
-export function pushAlert(s: State, a: Omit<Alert, "id" | "at" | "read">, at?: string) {
-  if (a.key && s.alerts.some((x) => x.key === a.key)) return;
+export function pushAlert(s: State, input: Omit<Alert, "id" | "at" | "read">, at?: string) {
+  if (input.key && s.alerts.some((x) => x.key === input.key)) return;
+  // CC-229: while Sarah is away, what her backup's role can see goes to them instead.
+  const a = away.routeForCover(s, input);
   // CC-208: in Sarah's quiet hours a non-urgent alert waits for the morning summary instead of a push.
   const held = heldFor(s, a);
   s.alerts.push({ ...a, ...(held.length ? { held } : {}), id: uid("al"), at: at ?? clock(s).toISOString(), read: [] });
@@ -99,6 +102,9 @@ export function evaluate(s: State) {
   const today = ymd(now);
   const nowMin = minutesOfDay(now);
 
+  // CC-229, CC-230: away mode starts, reminds Sarah if nobody has agreed to cover, and hands back at the end.
+  away.runAway(s);
+
   // Maggie's reminders (CC-39, CC-207): up to the limit Sarah set, with snooze, then they stop.
   runReminders(s);
 
@@ -150,10 +156,11 @@ export function evaluate(s: State) {
   const sos = activeSos(s);
   if (sos && sos.status === "active") {
     const elapsed = (now.getTime() - new Date(sos.startedAt).getTime()) / 60000;
-    const step = Math.min(s.settings.escalation.length - 1, Math.floor(elapsed / s.settings.escalationDelayMin));
+    const order = away.escalationOrder(s); // CC-229: the backup takes Sarah's place while she's away
+    const step = Math.min(order.length - 1, Math.floor(elapsed / s.settings.escalationDelayMin));
     if (step > sos.step) {
       sos.step = step;
-      const who = nameOf(s, s.settings.escalation[step]);
+      const who = nameOf(s, order[step]);
       pushAlert(s, {
         key: `sos-${sos.id}-step-${step}`, to: ["guardian", "caregiver"], severity: "critical",
         title: "Emergency alert from Circle Care",
@@ -534,7 +541,7 @@ function useStoreState(initial: State) {
         if (activeSos(s)) return;
         const e = { id: uid("sos"), startedAt: clock(s).toISOString(), status: "active" as const, step: 0, via };
         s.sos.push(e);
-        pushAlert(s, { key: `sos-${e.id}-step-0`, to: ["guardian", "caregiver"], severity: "critical", title: "Emergency alert from Circle Care", detail: `Maggie pressed SOS. Alerting ${nameOf(s, s.settings.escalation[0])} first.`, link: "/app/sos" });
+        pushAlert(s, { key: `sos-${e.id}-step-0`, to: ["guardian", "caregiver"], severity: "critical", title: "Emergency alert from Circle Care", detail: `Maggie pressed SOS. Alerting ${nameOf(s, away.escalationOrder(s)[0])} first.`, link: "/app/sos" });
       }),
       sosAcknowledge: () => update((s) => {
         if (!guard(s, "respond", "sos")) return;
@@ -681,6 +688,11 @@ function useStoreState(initial: State) {
       setAboutSharing: (key: AboutKey, ids: string[]) => update((s) => { aboutMe.setSectionSharing(s, actor(s), key, ids); }),
       setSarahEditing: (on: boolean) => update((s) => { aboutMe.setSarahEditing(s, actor(s), on); }),
       seenAboutMe: () => update((s) => { aboutMe.markSeen(s, actor(s)); }),
+      setAway: (input: { start: string; end: string; backupId: string }) => update((s) => { away.setAway(s, actor(s), input); }),
+      answerAway: (yes: boolean) => update((s) => { away.answerAway(s, actor(s), yes); }),
+      askOtherBackup: () => update((s) => { away.maggieAsksChange(s, actor(s)); }),
+      imBack: () => update((s) => { away.imBack(s, actor(s)); }),
+      seenAwaySummary: () => update((s) => { away.seenSummary(s, actor(s)); }),
       readChat: () => update((s) => everyday.readChat(s, actor(s))),
       setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */
