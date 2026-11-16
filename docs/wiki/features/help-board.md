@@ -5,16 +5,16 @@
 | | |
 |---|---|
 | **Feature ID / area** | F-15 · Help requests the circle can pick up |
-| **Personas** | Sarah (posts and manages requests), James and Ana (pick them up), Maggie (sees everything) |
+| **Personas** | Sarah (posts and manages requests), James and Ana (pick them up), Maggie (asks for a hand herself and sees everything) |
 | **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> — alerts and "first claim wins" are simulated in the browser |
-| **Related stories** | CC-209 post a help request to the circle · CC-210 claim and finish a help request |
-| **Last updated** | 2026-11-16 (Sprint 16) |
+| **Related stories** | CC-209 post a help request to the circle · CC-210 claim and finish a help request · CC-211 Maggie asks for a hand · CC-212 who did what this week |
+| **Last updated** | 2026-11-16 (Sprint 17) |
 
 </div>
 
 ## Overview
 
-**What.** Sarah posts the everyday help Maggie needs: **a ride, groceries, company, a visit or something else**, with a date, a time and an optional note. She picks who sees it. Anyone she picked taps **I'll do it**, and everyone sees who has it. When it's done it moves to **Done** and counts in **Who helped this week**.
+**What.** Sarah posts the everyday help Maggie needs: **a ride, groceries, company, a visit, help with a phone or something else**, with a date, a time and an optional note. She picks who sees it. Anyone she picked taps **I'll do it**, and everyone sees who has it. When it's done it moves to **Done** and counts in **Who helped this week**.
 
 **Why.** Family care runs on group texts that get lost, and the same person ends up doing everything. A shared board makes the asks visible and makes it easy for others to step in.
 
@@ -36,13 +36,27 @@
 7. **Open** cards show **I'll do it**. The first tap wins; anyone tapping at the same moment sees *"James already has this"*.
 8. **Taken** cards show *"You have this"* with **Mark done** and **Can't anymore** (which reopens it, after a confirm).
 9. An hour after the time, the person who has it is asked once **Did this happen?** with **Yes** and **Not yet**.
-10. **Done** lists finished requests for 30 days. **Who helped this week** lists names A to Z with what each did. *"Nobody is ranked."*
+10. **Done** lists finished requests for 30 days.
+
+### Maggie asks for a hand (CC-211)
+
+11. Maggie's home has a large tile, **I could use a hand**. It opens one screen at her text size: **What do you need?** (*Groceries, A ride, Company, Help with my phone, Something else*) and **Which day?** (*Today, Tomorrow*, then weekday names). *Something else* takes typed or dictated words.
+12. **Send** posts it for the whole day (no time), to the people Maggie allowed in her Privacy Center under **Who sees help I ask for**. Sarah is told *"Maggie asked for help: Groceries, Thu."* With read-aloud on, Maggie hears *"Sent. James will see you asked for groceries tomorrow."*
+13. Her home then shows **Help you asked for**: *"You asked for groceries Thu. No one has it yet."* until someone takes it, then *"James is bringing groceries Thu."*
+14. If no one is allowed yet, the screen says *"Ask Sarah to set up who can help"* with **Call Sarah** and **Choose people**. Only Maggie can change who sees her asks; Sarah sees the choice in the Privacy Center.
+
+### Who did what this week (CC-212)
+
+15. Sarah sees **Who did what this week** and Maggie sees **Who helped you this week**: everyone who finished a help request, logged a care task or checked out of a visit in the last 7 days, A to Z, with counts like *"1 help request, 5 care tasks"*. *"Nobody is ranked."* Nothing is counted as missed.
+16. Maggie's version has a **Thank** button per person. It sends *"Thank you, James, for all your help this week."* in the family chat. Someone who has left the circle still shows, marked *no longer in the circle*, without a button. James and Ana keep the shorter **Who helped this week** list.
 
 ## Functional details & business rules
 
 | Rule | Value |
 |---|---|
 | Note length | 280 characters |
+| Maggie's asks | Any day in the next week, no time. Due at the end of that day. Audience is Settings `helpFrom`, set only by Maggie |
+| Who did what | Last 7 days: help finished, task logs by anyone but Maggie, visits checked out. A to Z, no ranking |
 | Who can be picked | Active members whose role may read help requests, other than Maggie and Sarah. Maggie and Sarah always see every request |
 | First claim wins | Each request carries a revision number. A claim from a screen showing an older revision fails and shows who has it |
 | Unclaimed notice | Still open 24 hours before it's due, and posted more than 24 hours ahead: Sarah is told once, with **Post again** on the card or **I'll do it myself** |
@@ -52,7 +66,7 @@
 
 ## Permissions & privacy
 
-`MATRIX.help` in `src/data/policy.ts`: read for elder, guardian, family and pro; write (post, post again, cancel) for the guardian; respond (claim, give back, finish) for guardian, family and pro. Only people in a request's audience see it.
+`MATRIX.help` in `src/data/policy.ts`: read for elder, guardian, family and pro; write (post, post again, cancel) for the guardian; propose (ask for a hand) for the elder; respond (claim, give back, finish) for guardian, family and pro. Only people in a request's audience see it.
 
 | Viewer | Request tied to an appointment shows |
 |---|---|
@@ -82,7 +96,7 @@ Kind choice is a radio group, audience is a labelled button group, each card is 
 
 ## Data captured
 
-`HelpRequest` (`id, kind, note, date, time, appointmentId, audience, by, at, status, claimedBy, claimedAt, doneBy, closedAt, rev, remindedUnclaimed, askedDone, notYet, history`) and `HelpChange` (`at, by, change`). Classified in `src/data/classification.ts` and listed in the [data inventory](../../compliance/09-data-inventory.md). Posting, claiming, giving back, finishing and cancelling are written to the access log.
+`HelpRequest` (`id, kind, note, date, time, anyTime, appointmentId, planItemId, title, audience, by, at, status, claimedBy, claimedAt, doneBy, closedAt, rev, remindedUnclaimed, askedDone, notYet, history`) and `HelpChange` (`at, by, change`), plus Settings `helpFrom` (who sees the help Maggie asks for). Classified in `src/data/classification.ts` and listed in the [data inventory](../../compliance/09-data-inventory.md). Posting, claiming, giving back, finishing and cancelling are written to the access log.
 
 ## Edge cases & error states
 
@@ -96,7 +110,9 @@ Kind choice is a radio group, audience is a labelled button group, each card is 
 | Suite | Covers |
 |---|---|
 | Unit — `help-board.test.ts` | 20 tests: alerts to the audience only, masked appointment view, health hint, unclaimed notice, cancel, paused sharing, 30-day board and history, audit chain, claim tells Sarah, first claim wins, give back, done and Who helped this week, Did this happen? once, demo seed |
+| Unit — `sprint17.test.ts` | Maggie's asks: audience, day only, Sarah told, home lines, nobody set up; who did what: A to Z, no ranking, only Sarah and Maggie, Thank sends one chat line, not for someone who left |
 | E2E — `help.py` | *Health hint before posting* · *Sarah posts a visit for family only* · *James gets the alert, takes it and marks it done* · *Sarah is told* · *Ana sees the ride as an appointment only, takes it and gives it back* |
+| E2E — `sprint17.py` | *Maggie asks for groceries tomorrow* · *James takes it and Maggie's home says so* · *Maggie sees who helped and thanks James in the family chat* |
 
 ## Known limitations & production gaps
 

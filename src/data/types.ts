@@ -277,6 +277,8 @@ export interface Appointment {
   /** Member taking Maggie, if any. */
   escortId?: string;
   prep?: string;
+  /** CC-217: the shared question list. Unset until someone first opens it; the prep note then becomes its first item. */
+  questions?: VisitQuestion[];
   status: "scheduled" | "done" | "cancelled";
   /** CC-121: cancelled by Circle Care because the medicine was paused (not by a person). */
   autoCancelled?: boolean;
@@ -285,7 +287,7 @@ export interface Appointment {
 
 /* ---------------- Sprint 16: Help board (CC-209, CC-210) ---------------- */
 
-export type HelpKind = "ride" | "groceries" | "company" | "visit" | "other";
+export type HelpKind = "ride" | "groceries" | "company" | "visit" | "phone" | "other";
 export type HelpStatus = "open" | "claimed" | "done" | "cancelled";
 
 export interface HelpChange {
@@ -324,6 +326,51 @@ export interface HelpRequest {
   /** They answered "Not yet". */
   notYet?: boolean;
   history: HelpChange[];
+  /** CC-211: Maggie picked a day, not a time. */
+  anyTime?: boolean;
+  /** CC-213: the Coming Home plan item this request was made from; its title is the request's name. */
+  planItemId?: string;
+  title?: string;
+}
+
+/* ---------------- Sprint 17: Coming Home, visit questions (CC-213, CC-214, CC-217) ---------------- */
+
+export type PlanItemKind = "meds" | "followup" | "home" | "night" | "custom";
+export interface PlanItem {
+  id: string;
+  kind: PlanItemKind;
+  title: string;
+  /** Who has it: Sarah herself, or the person it went to as a help request. */
+  assignee?: string;
+  /** The help request this item became when Sarah gave it to someone (CC-213). */
+  helpId?: string;
+}
+/** CC-213: Sarah's plan for the first days after Maggie leaves hospital. There is no field for why she was there. */
+export interface ComingHome {
+  id: string;
+  /** The day Maggie comes home. */
+  date: string;
+  by: string;
+  at: string;
+  items: PlanItem[];
+  /** CC-214: the first follow-up visit should be within this many days of coming home (7 by default). */
+  followUpDays: number;
+  /** CC-213: Sarah was told items were still unassigned a day before. */
+  remindedUnassigned?: boolean;
+  /** CC-214: days Sarah got the 9 AM follow-up reminder. */
+  followUpReminded: string[];
+  /** CC-213: read-only 30 days after coming home. */
+  archived?: boolean;
+}
+
+/** CC-217: one question or observation on an appointment's shared list. */
+export interface VisitQuestion {
+  id: string;
+  by: string;
+  at: string;
+  text: string;
+  /** Maggie hid it: only Maggie and Sarah see it, and it's left off printouts unless Sarah adds it back. */
+  hidden?: boolean;
 }
 
 export interface Settings {
@@ -370,6 +417,8 @@ export interface Settings {
   recapNotify: boolean;
   /** CC-165: Maggie can hide the family chat from her home screen. It stays under Family. */
   elderChatOnHome: boolean;
+  /** CC-211: the people Maggie lets see the help she asks for herself. */
+  helpFrom: string[];
   emergencyCard: {
     allergies: string;
     conditions: string;
@@ -416,5 +465,7 @@ export interface State {
   reminders: DoseReminder[];
   /** CC-209, CC-210: the Help board. */
   help: HelpRequest[];
+  /** CC-213: Coming Home plans, newest last. */
+  plans: ComingHome[];
   settings: Settings;
 }

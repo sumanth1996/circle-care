@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
-import { Phone, Volume2, Shield, Type, Bell, IdCard, Sun, CheckCircle2, MessageCircleHeart } from "lucide-react";
+import { Phone, Volume2, Shield, Type, Bell, IdCard, Sun, CheckCircle2, MessageCircleHeart, HandHeart, ListChecks } from "lucide-react";
 import { useStore } from "../../data/store";
 import { DailyCheckins } from "../../components/everyday";
 import { ElderChatTile } from "../../components/chat";
 import { nextUp, clock, checkinToday, member, isOpen } from "../../data/selectors";
 import { Avatar, PillArt, taskIcons, IconTile, useSpeech, useToast } from "../../components/ui";
 import { fmtTime, fmtDay, greeting, toMin, minutesOfDay } from "../../lib/time";
+import { elderHelpLines } from "../../data/help";
 import "./elder.css";
 
 /** CC-68: elder home with three big actions — What's next, SOS, Call my person.
@@ -24,6 +25,7 @@ export default function ElderHome() {
   const w = state.settings.checkinWindow;
   const showCheckin = !checkinToday(state) && nowMin >= toMin(w.start) - 60;
   const done = checkinToday(state);
+  const asked = elderHelpLines(state);
 
   useEffect(() => { actions.logView("her home screen"); }, [actions]);
 
@@ -85,7 +87,18 @@ export default function ElderHome() {
           <span className="grow"><span className="k" style={{ display: "block", color: "#1a7f37" }}>Call my person</span><span className="v" style={{ display: "block" }}>{first?.short ?? "Family"}{favorites.length > 1 ? ` and ${favorites.length - 1} more` : ""}</span></span>
           <Phone size={32} />
         </Link>
+        {/* CC-211: ask the circle for a hand. */}
+        <Link to="/app/elder/ask" className="elder-tile hand">
+          <HandHeart size={56} aria-hidden="true" />
+          <span className="grow"><span className="v" style={{ display: "block" }}>I could use a hand</span><span className="s" style={{ display: "block" }}>Groceries, a ride, company</span></span>
+        </Link>
       </div>
+
+      {asked.length > 0 && (
+        <section className="panel stack elder-asked" style={{ "--gap": "10px" } as React.CSSProperties} aria-label="Help you asked for">
+          {asked.map((l) => <p key={l.id} className={l.claimed ? "yes" : ""}>{l.claimed ? <CheckCircle2 size={22} color="var(--green)" aria-hidden="true" /> : <HandHeart size={22} aria-hidden="true" />} {l.text}</p>)}
+        </section>
+      )}
 
       <ElderChatTile />
 
@@ -94,6 +107,7 @@ export default function ElderHome() {
       <nav className="elder-links" aria-label="More">
         <Link to="/app/elder/chat"><MessageCircleHeart size={20} /> Family</Link>
         <Link to="/app/elder/decisions"><Bell size={20} /> Updates about me {newDecisions > 0 && <span className="new" aria-label={`${newDecisions} new`} />}</Link>
+        <Link to="/app/elder/questions"><ListChecks size={20} /> Questions for the doctor</Link>
         <Link to="/app/elder/privacy"><Shield size={20} /> My privacy</Link>
         <Link to="/app/elder/card"><IdCard size={20} /> Emergency card</Link>
         <Link to="/app/elder/settings"><Type size={20} /> Text size</Link>

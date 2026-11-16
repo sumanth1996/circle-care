@@ -74,6 +74,10 @@ jobs:
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/help.py
 
+      - name: Ask for a hand, Coming Home, visit questions (sprint17.py)
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: python tests/e2e/sprint17.py
+
       - name: Accessibility audit (a11y.py)
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/a11y.py

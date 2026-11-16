@@ -159,11 +159,27 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     fields: {
       id: O, kind: P, note: P, date: P, time: P, appointmentId: P, audience: P, by: P, at: P, status: O,
       claimedBy: P, claimedAt: P, doneBy: P, closedAt: P, rev: O, remindedUnclaimed: O, askedDone: O, notYet: O,
+      anyTime: O, planItemId: P, title: P,
     },
   },
   HelpChange: {
     resource: "help",
     fields: { at: P, by: P, change: P },
+  },
+  // CC-213, CC-214: the Coming Home plan says Maggie left hospital on a given day, so all of it is PHI,
+  // though it never says why she was there.
+  ComingHome: {
+    resource: "plan",
+    fields: { id: O, date: P, by: P, at: P, followUpDays: P, remindedUnassigned: O, followUpReminded: P, archived: O },
+  },
+  PlanItem: {
+    resource: "plan",
+    fields: { id: O, kind: P, title: P, assignee: P, helpId: O },
+  },
+  // CC-217: questions and observations for a visit describe Maggie's health.
+  VisitQuestion: {
+    resource: "questions",
+    fields: { id: O, by: P, at: P, text: P, hidden: O },
   },
   Appointment: {
     resource: "appointments",
@@ -187,7 +203,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
       "vitals.thresholds.spo2Low": P, "vitals.thresholds.spo2Drop": P,
       "vitals.shareWithGuardian": O, refillAlertDays: O,
       "dailyLog.shareWithGuardian": O, "dailyLog.waterGoal": O, "dailyLog.sharedSince": O,
-      recapNotify: O, elderChatOnHome: O,
+      recapNotify: O, elderChatOnHome: O, helpFrom: O,
       "emergencyCard.allergies": P, "emergencyCard.conditions": P, "emergencyCard.directives": P,
       "emergencyCard.bloodType": P, "emergencyCard.approvedByElder": O, "emergencyCard.approvedAt": P,
     },
