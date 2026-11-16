@@ -13,6 +13,7 @@ import { EveningRecap } from "../../components/guardianEveryday";
 import "./guardian.css";
 import { MyNextSteps } from "../../components/visitNotes";
 import { AwayHome } from "../../components/away";
+import { GuardianScams, QuietNotice } from "../../components/confident";
 
 /** CC-61 "today at a glance" dashboard. Sprint 12: low supply (CC-121). */
 export default function GuardianHome() {
@@ -74,6 +75,10 @@ export default function GuardianHome() {
       </div>
 
       <AwayHome />
+
+      {/* CC-132, CC-133: scam checks. CC-129: resting or away. */}
+      <GuardianScams />
+      <QuietNotice />
 
       <MyNextSteps />
 

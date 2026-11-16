@@ -10,7 +10,8 @@ export type Resource =
   | "meds" | "doses" | "tasks" | "notes" | "notes.private" | "docs" | "docs.legal" | "approvals"
   | "handoffs" | "vitals" | "appointments" | "circle" | "schedule" | "history" | "digest" | "audit" | "settings" | "emergencyCard" | "sos" | "data"
   | "supply" | "wellbeing" | "chat" | "help" | "plan" | "questions" | "visitNotes"
-  | "calls" | "calls.admin" | "calls.ref" | "aboutMe" | "away";
+  | "calls" | "calls.admin" | "calls.ref" | "aboutMe" | "away"
+  | "quietDays" | "memoryAids" | "scams" | "tips";
 export type Action = "read" | "write" | "propose" | "approve" | "invite" | "revoke" | "export" | "delete" | "review" | "respond";
 
 /** A rule is a role, or "pro@shift": a professional caregiver currently checked in. */
@@ -62,6 +63,14 @@ export const MATRIX: Record<Resource, Partial<Record<Action, Rule[]>>> = {
   aboutMe:         { read: ["elder", "guardian", "family", "pro@shift"], write: ["elder", "guardian"] },
   // Sprint 20 — Away mode (CC-229 – CC-231). Only Sarah sets her dates; Maggie and family see who covers.
   away:            { read: ["elder", "guardian", "family"], write: ["guardian"] },
+  // Sprint 22 — Confident at Home. CC-129: only Maggie says she's resting or away; Sarah and family see it.
+  quietDays:       { read: ["elder", "guardian", "family"], write: ["elder"] },
+  // CC-138, CC-139: family write notes for Maggie; a caregiver reads them only while on shift. Maggie turns any off.
+  memoryAids:      { read: ["elder", "guardian", "family", "pro@shift"], write: ["guardian", "family"] },
+  // CC-132, CC-133: Maggie's scam reports reach her guardians only, never family or caregivers.
+  scams:           { read: ["elder", "guardian"], write: ["elder"], respond: ["guardian"] },
+  // CC-134: Maggie's own progress through the tips.
+  tips:            { read: ["elder"], write: ["elder"] },
 };
 
 /** Even when sharing is paused, these stay available to family and caregivers. */

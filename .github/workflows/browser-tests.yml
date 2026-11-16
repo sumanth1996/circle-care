@@ -94,6 +94,10 @@ jobs:
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/sprint21.py
 
+      - name: Confident at home (sprint22.py)
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: python tests/e2e/sprint22.py
+
       - name: Accessibility audit (a11y.py)
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: python tests/e2e/a11y.py

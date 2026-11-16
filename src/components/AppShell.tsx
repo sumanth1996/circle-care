@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { NavLink, Navigate, Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import {
   Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, HeartPulse, CalendarHeart, MessageCircleHeart, HandHeart, type LucideIcon,
-  HousePlus, ListChecks, Phone, Heart, Plane,
+  HousePlus, ListChecks, Phone, Heart, Plane, NotebookPen,
 } from "lucide-react";
 import { useStore } from "../data/store";
 import { activeSos, alertsFor, alertLink, member, meId, nameOf, pendingApprovals, unreadCount, clock } from "../data/selectors";
@@ -88,6 +88,8 @@ export default function AppShell({ persona }: { persona: Persona }) {
           { to: "/app/guardian/questions", label: "Visit questions", icon: ListChecks },
           { to: "/app/guardian/calls", label: "Call log", icon: Phone },
           { to: "/app/guardian/about-me", label: "What matters to Maggie", icon: Heart },
+          // CC-138: notes on Maggie's home.
+          { to: "/app/guardian/memory-aids", label: "Memory aids", icon: NotebookPen },
           // CC-229: Sarah's away dates and who covers.
           { to: "/app/guardian/away", label: "Away mode", icon: Plane },
           { to: "/app/guardian/notes", label: "Notes & documents", icon: StickyNote },
@@ -110,6 +112,7 @@ export default function AppShell({ persona }: { persona: Persona }) {
             // CC-219, CC-226: during shifts, what Maggie shares with Ana.
             { to: "/app/caregiver/about-me", label: "What matters to Maggie", icon: Heart },
             { to: "/app/caregiver/calls", label: "Call log", icon: Phone },
+            { to: "/app/caregiver/memory-aids", label: "Memory aids", icon: NotebookPen },
           ]
         : persona === "family"
           ? [
@@ -119,6 +122,7 @@ export default function AppShell({ persona }: { persona: Persona }) {
               { to: "/app/family/card", label: "Emergency card", icon: IdCard, tab: true },
               { to: "/app/family/about-me", label: "What matters to Maggie", icon: Heart },
               { to: "/app/family/calls", label: "Call log", icon: Phone },
+              { to: "/app/family/memory-aids", label: "Memory aids", icon: NotebookPen },
               // CC-229: when Sarah asks someone to cover for her.
               ...(coverView(state, meId("family")) ? [{ to: "/app/family/away", label: "Covering for Sarah", icon: Plane }] : []),
             ]

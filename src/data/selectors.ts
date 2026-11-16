@@ -1,5 +1,5 @@
 import type { State, Medication, DoseLog, CareTask, Member, Persona, Shift } from "./types";
-import { ymd, toMin, minutesOfDay, nowFrom, addDays, at } from "../lib/time";
+import { ymd, toMin, minutesOfDay, nowFrom, addDays, at, fmtShortDay } from "../lib/time";
 import { CAREGIVER, ELDER, FAMILY, GUARDIAN } from "./demo";
 
 export const clock = (s: State) => nowFrom(s.clockOffsetMin);
@@ -201,7 +201,23 @@ export function checkinFollowUps(s: State): { date: string; minutesPast: number 
     if (!checkedInFor(s, date) && nowMin + 1440 > endsAt) out.push({ date, minutesPast: nowMin + 1440 - endsAt });
   }
   if (!checkinToday(s) && nowMin > endsAt) out.push({ date: ymd(now), minutesPast: nowMin - endsAt });
-  return out;
+  // CC-129: a window on a day Maggie said she's resting or away isn't followed up.
+  return out.filter((w) => !quietFor(s, w.date));
+}
+
+/**
+ * CC-129: the resting or away day that covers the check-in window opening on `date`, if any. After Maggie taps
+ * I'm back, only windows that opened before she came back stay paused, so check-ins count from her next window.
+ */
+export function quietFor(s: State, date: string) {
+  const opens = at(date, s.settings.checkinWindow.start).getTime();
+  return (s.quietDays ?? []).find((q) => q.from <= date && date <= q.until && (!q.endedAt || opens < new Date(q.endedAt).getTime()));
+}
+
+/** CC-129: Maggie's resting or away day that is on now: today is within its dates and she hasn't said she's back. */
+export function currentQuiet(s: State) {
+  const today = todayOf(s);
+  return (s.quietDays ?? []).find((q) => !q.endedAt && q.from <= today && today <= q.until);
 }
 
 const wrapsMidnight = (s: State) => toMin(s.settings.checkinWindow.end) < toMin(s.settings.checkinWindow.start);
@@ -302,6 +318,11 @@ export function feed(s: State) {
   for (const h of s.handoffs) items.push({ at: h.at, kind: "handoff", by: h.by, text: h.skippedReason ? `Hand-off skipped — ${h.skippedReason}` : `Hand-off note: ${h.notes || h.summary}` });
   for (const n of s.notes) items.push({ at: n.at, kind: "note", by: n.by, text: n.text });
   for (const c of s.checkins) items.push({ at: c.at, kind: "checkin", by: ELDER, tone: "good", text: "Checked in: “I'm OK”" });
+  // CC-129: Maggie's resting and away days show in the history, with when she came back.
+  for (const q of s.quietDays ?? []) {
+    items.push({ at: q.at, kind: "checkin", by: q.by, text: q.kind === "resting" ? "Resting today. Check-in reminders paused" : `Away until ${fmtShortDay(q.until)}. Check-in reminders paused` });
+    if (q.endedAt) items.push({ at: q.endedAt, kind: "checkin", by: q.by, text: "Back. Check-in reminders are on again" });
+  }
   for (const e of s.sos) items.push({ at: e.startedAt, kind: "sos", by: ELDER, tone: e.status === "resolved" ? "warn" : "bad", text: e.status === "resolved" ? `SOS resolved — ${e.outcome ?? ""}` : "SOS is active" });
   for (const a of s.approvals) if (a.decidedAt) items.push({ at: a.decidedAt, kind: "approval", by: GUARDIAN, text: `${a.status === "approved" ? "Approved" : "Declined"}: ${a.title}` });
   return items.filter((i) => i.at <= clock(s).toISOString()).sort((a, b) => b.at.localeCompare(a.at));

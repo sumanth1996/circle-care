@@ -7,6 +7,7 @@ import { api, ApiError, type Me, type PaymentMethods } from "../../lib/api";
 import {
   BRAND_LABEL, cardBrand, checkBank, checkCard, checkSsn, formatCardInput, formatSsnInput, maskSsn, passwordRules, type BankInput, type CardInput,
 } from "../../lib/validation";
+import { preparePhoto } from "../../lib/photos";
 
 /* ---------------- Form plumbing ---------------- */
 
@@ -158,20 +159,6 @@ export function SsnForm({ me, onSaved, submitLabel = "Save" }: { me: Me; onSaved
 const MAX_INPUT = 10 * 1024 * 1024;
 
 /** Center-crops to a square, scales to ≤ 512 px and re-encodes as JPEG — which drops EXIF/GPS data. */
-async function preparePhoto(file: File): Promise<Blob> {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("bad image")); i.src = url; });
-    const side = Math.min(img.naturalWidth, img.naturalHeight);
-    const out = Math.min(512, side);
-    const c = document.createElement("canvas");
-    c.width = out; c.height = out;
-    const ctx = c.getContext("2d")!;
-    ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, out, out);
-    return await new Promise<Blob>((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("encode"))), "image/jpeg", 0.86));
-  } finally { URL.revokeObjectURL(url); }
-}
-
 export function PhotoField({ me, onSaved, onSkip, compact }: { me: Me; onSaved: (m: Me) => void; onSkip?: () => void; compact?: boolean }) {
   const { bumpPhoto } = useAccount();
   const [blob, setBlob] = useState<Blob | null>(null);
