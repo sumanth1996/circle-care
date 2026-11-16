@@ -9,6 +9,7 @@ import { authRouter, sessionMiddleware, type Deps } from "./auth";
 import type { Config } from "./config";
 import type { Db } from "./db";
 import { errorHandler, HttpError } from "./http";
+import { createMailer, type Mailer } from "./mailer";
 import { paymentsRouter } from "./payments";
 import { TEST_CARDS, TEST_ROUTING } from "../src/lib/validation";
 import { vaultRouter } from "./vault";
@@ -28,9 +29,20 @@ export const CSP = [
   "frame-ancestors 'none'",
 ].join("; ");
 
-export function createApp(opts: { cfg: Config; db: Db; now?: () => Date; dev?: boolean }): Express {
-  const d: Deps = { cfg: opts.cfg, db: opts.db, now: opts.now ?? (() => new Date()) };
+export function createApp(opts: { cfg: Config; db: Db; now?: () => Date; dev?: boolean; mailer?: Mailer }): Express {
+  // Background tasks run after the response (see Deps.defer). Failures are logged by message only.
+  const pending = new Set<Promise<unknown>>();
+  const defer = (task: () => Promise<unknown>) => {
+    const p: Promise<unknown> = Promise.resolve()
+      .then(task)
+      .catch((e) => console.error("[api] background task failed:", e instanceof Error ? e.message : "unknown"))
+      .finally(() => pending.delete(p));
+    pending.add(p);
+  };
+  const d: Deps = { cfg: opts.cfg, db: opts.db, now: opts.now ?? (() => new Date()), mailer: opts.mailer ?? createMailer(opts.cfg), defer };
   const app = express();
+  /** Waits for background tasks to finish (tests, graceful shutdown). */
+  app.locals.settle = async () => { while (pending.size) await Promise.all([...pending]); };
   app.disable("x-powered-by");
   // Only the hosting proxy's address is trusted (CC-204): with N hops, Express reads the
   // client address N entries from the right of X-Forwarded-For, so an entry the client

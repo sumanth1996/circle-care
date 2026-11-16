@@ -6,7 +6,7 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 
 /** An error that is safe to show the user. `field` points the form at the right input. */
 export class HttpError extends Error {
-  constructor(public status: number, message: string, public field?: string, public fields?: Record<string, string>) {
+  constructor(public status: number, message: string, public field?: string, public fields?: Record<string, string>, public code?: string) {
     super(message);
   }
 }
@@ -16,7 +16,7 @@ export const route = (fn: (req: Request, res: Response) => Promise<unknown>): Re
 
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
   if (err instanceof HttpError) {
-    res.status(err.status).json({ error: err.message, field: err.field, fields: err.fields });
+    res.status(err.status).json({ error: err.message, field: err.field, fields: err.fields, code: err.code });
     return;
   }
   const e = err as { type?: string; status?: number; code?: string };

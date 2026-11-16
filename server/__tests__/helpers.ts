@@ -2,13 +2,20 @@ import request from "supertest";
 import { createApp } from "../app";
 import { loadConfig, type Config } from "../config";
 import { openDb, type Db } from "../db";
+import { OutboxMailer } from "../mailer";
 import { migrate } from "../migrate";
 
 export const SSN_PATTERN = /(^|[^0-9a-z])\d{9}([^0-9a-z]|$)|\b\d{3}-\d{2}-\d{4}\b/i;
 /** Every response body seen in the suite, scanned for full SSNs (CC-181). */
 export const seenBodies: string[] = [];
 
-export interface Harness { cfg: Config; db: Db; app: ReturnType<typeof createApp>; clock: { t: number }; agent: (ip?: string) => Agent }
+export interface Harness {
+  cfg: Config; db: Db; app: ReturnType<typeof createApp>; clock: { t: number }; agent: (ip?: string) => Agent;
+  /** Emails the server "sent" (CC-201). */
+  mail: OutboxMailer;
+  /** Waits for work the server does after replying (emails, reset tokens). */
+  settle: () => Promise<void>;
+}
 export type Agent = ReturnType<typeof makeAgent>;
 
 export async function harness(env: Record<string, string> = {}): Promise<Harness> {
@@ -16,8 +23,9 @@ export async function harness(env: Record<string, string> = {}): Promise<Harness
   const db = await openDb(cfg, { memory: true });
   await migrate(db);
   const clock = { t: Date.parse("2026-10-26T15:00:00Z") };
-  const app = createApp({ cfg, db, now: () => new Date(clock.t) });
-  return { cfg, db, app, clock, agent: (ip?: string) => makeAgent(app, ip) };
+  const mail = new OutboxMailer();
+  const app = createApp({ cfg, db, now: () => new Date(clock.t), mailer: mail });
+  return { cfg, db, app, clock, mail, settle: () => app.locals.settle(), agent: (ip?: string) => makeAgent(app, ip) };
 }
 
 /**

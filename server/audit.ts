@@ -11,7 +11,8 @@ export type AuditAction =
   | "bank.added" | "bank.replaced"
   | "card.added" | "card.removed" | "card.primary"
   | "nonprod.blocked" | "audit.exported"
-  | "ratelimit.exceeded";
+  | "ratelimit.exceeded"
+  | "auth.signout_all" | "password.changed" | "password.reset_requested" | "password.reset" | "email.undeliverable";
 
 /** A standalone run of 9+ digits (SSN, account or card number) or a dashed SSN. Hex hashes don't match. */
 export const LOOKS_SENSITIVE = /(^|[^0-9a-z])\d{9,}([^0-9a-z]|$)|\b\d{3}-\d{2}-\d{4}\b/i;
@@ -49,6 +50,11 @@ export function describe(action: string, d: Record<string, unknown>): string {
     case "card.primary": return `${d.brand} ending ${d.last4} is now your primary payment method`;
     case "nonprod.blocked": return `A non-test ${d.field} was blocked in this test environment`;
     case "audit.exported": return "Masked audit export generated";
+    case "auth.signout_all": return `Signed out everywhere (${d.sessions} ${d.sessions === 1 ? "device" : "devices"})`;
+    case "password.changed": return "Password changed — other devices signed out";
+    case "password.reset_requested": return "Someone asked for a password reset link";
+    case "password.reset": return "Password reset with an emailed link — every device signed out";
+    case "email.undeliverable": return "An account email couldn't be sent";
     case "ratelimit.exceeded": return `Too many ${LIMIT_LABEL[String(d.limit)] ?? "requests"} in a short time — paused for a while`;
     default: return action;
   }
