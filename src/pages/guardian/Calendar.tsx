@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { ChevronLeft, ChevronRight, Plus, Stethoscope, FlaskConical, Pill, ClipboardList, MapPin, Car, Info, CheckCircle2, XCircle, CalendarDays, type LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Plus, Stethoscope, FlaskConical, Pill, ClipboardList, MapPin, Car, Info, CheckCircle2, XCircle, CalendarDays, ListChecks, type LucideIcon } from "lucide-react";
 import { useStore, useCan } from "../../data/store";
 import { clock, nameOf, todayOf } from "../../data/selectors";
 import { Avatar, Sheet, useToast } from "../../components/ui";
@@ -156,6 +157,8 @@ export default function Calendar() {
                     {a.escortId && <li><Car size={15} aria-hidden="true" /> <Avatar m={state.members.find((m) => m.id === a.escortId)} size={20} /> {nameOf(state, a.escortId)} is taking her</li>}
                     {a.prep && <li className="prep"><Info size={15} aria-hidden="true" /> {a.prep}</li>}
                   </ul>
+                  {/* CC-217: the shared question list for this visit. */}
+                  {a.status === "scheduled" && a.date >= today && <Link className="btn sm secondary appt-q" to={`/app/guardian/questions?appt=${a.id}`}><ListChecks size={16} /> Questions{a.questions ? ` (${a.questions.length})` : a.prep ? " (1)" : ""}</Link>}
                   {canEdit && a.status === "scheduled" && (
                     <div className="row wrap" style={{ "--gap": "8px" } as CSSProperties}>
                       <button className="btn sm plain" onClick={() => setEditing(a)}>Edit</button>

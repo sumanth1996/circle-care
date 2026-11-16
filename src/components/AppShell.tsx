@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { NavLink, Navigate, Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import {
   Bell, Home, Pill, CheckCircle2, Users, CalendarDays, Activity, BarChart3, StickyNote, Shield, Settings, MoreHorizontal, IdCard, Siren, Lock, ScanFace, PauseCircle, ChevronDown, HeartPulse, CalendarHeart, MessageCircleHeart, HandHeart, type LucideIcon,
+  HousePlus, ListChecks,
 } from "lucide-react";
 import { useStore } from "../data/store";
 import { activeSos, alertsFor, alertLink, member, meId, nameOf, pendingApprovals, unreadCount, clock } from "../data/selectors";
@@ -82,6 +83,8 @@ export default function AppShell({ persona }: { persona: Persona }) {
           { to: "/app/guardian/feed", label: "Activity", icon: Activity },
           { to: "/app/guardian/digest", label: "Weekly digest", icon: BarChart3 },
           { to: "/app/guardian/help", label: "Help board", icon: HandHeart },
+          { to: "/app/guardian/coming-home", label: "Coming home", icon: HousePlus },
+          { to: "/app/guardian/questions", label: "Visit questions", icon: ListChecks },
           { to: "/app/guardian/notes", label: "Notes & documents", icon: StickyNote },
           { to: "/app/guardian/card", label: "Emergency card", icon: IdCard },
           { to: "/app/guardian/privacy", label: "Privacy Center", icon: Shield },
@@ -97,11 +100,14 @@ export default function AppShell({ persona }: { persona: Persona }) {
             ...(inChat(state, meId("caregiver")) ? [{ to: "/app/caregiver/chat", label: "Chat", icon: MessageCircleHeart, badge: unreadChat(state, meId("caregiver")), tab: true }] : []),
             // CC-209: the Help board, under More.
             { to: "/app/caregiver/help", label: "Help board", icon: HandHeart },
+            // CC-217: the visit question list, while on shift.
+            { to: "/app/caregiver/questions", label: "Visit questions", icon: ListChecks },
           ]
         : persona === "family"
           ? [
               { to: "/app/family", label: "Help", icon: HandHeart, tab: true },
               { to: "/app/family/chat", label: "Chat", icon: MessageCircleHeart, badge: unreadChat(state, meId("family")), tab: true },
+              { to: "/app/family/questions", label: "Questions", icon: ListChecks, tab: true },
               { to: "/app/family/card", label: "Emergency card", icon: IdCard, tab: true },
             ]
           : [];

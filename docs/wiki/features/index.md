@@ -20,7 +20,9 @@ Every feature area in the Circle Care prototype has its own page. All pages use 
 | F-12 | [Alerts & notifications](alerts-and-notifications.md) | All | <span class="cc-badge cc-badge--partial">Partially built</span> | CC-31, 35, 42, 50, 63 |
 | F-13 | [Pilot & feedback](pilot-and-feedback.md) | Prospects, internal team | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-74 – 77, CC-80 |
 | F-14 | [Accounts, identity & payments](accounts-identity-payments.md) | Everyone; payments for the legal guardian | <span class="cc-badge cc-badge--built">Built</span> | CC-172 – 190 |
-| F-15 | [Help board](help-board.md) | Guardian, family, caregiver, elder | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-209, 210 |
+| F-15 | [Help board](help-board.md) | Guardian, family, caregiver, elder | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-209 – 212 |
+| F-16 | [Coming Home](coming-home.md) | Guardian, family, caregiver | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-213, 214 |
+| F-17 | [Visit questions](visit-questions.md) | Guardian, elder, family, caregiver | <span class="cc-badge cc-badge--built">Built in prototype</span> | CC-217 |
 
 ### Status definitions
 
