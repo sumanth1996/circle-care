@@ -10,6 +10,7 @@ import { dummyHash, hashPassword, randomToken, sha256, verifyPassword } from "./
 import type { Db, Queryable } from "./db";
 import { HttpError, readCookie, route, str } from "./http";
 import { deliver, messages, type Mailer } from "./mailer";
+import { createChallenge, CHALLENGE_MINUTES } from "./mfa";
 import { bucket, hit, limit } from "./ratelimit";
 
 export const PERSONA_TABLE: Record<Role, "elders" | "caregivers" | "guardians"> = { elder: "elders", caregiver: "caregivers", guardian: "guardians" };
@@ -32,7 +33,7 @@ export interface Deps {
    */
   defer: (task: () => Promise<unknown>) => void;
 }
-export interface AuthedUser { id: string; role: Role; email: string }
+export interface AuthedUser { id: string; role: Role; email: string; /** CC-200: an authenticator app is set up. */ mfaEnrolled: boolean }
 
 declare module "express-serve-static-core" {
   interface Request { user?: AuthedUser }
@@ -47,7 +48,7 @@ export function clearCookie(res: Response, cfg: Config) {
   res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${cfg.isProd || cfg.env === "staging" ? "; Secure" : ""}`);
 }
 
-async function startSession(d: Deps, q: Queryable, res: Response, userId: string) {
+export async function startSession(d: Deps, q: Queryable, res: Response, userId: string) {
   const token = randomToken();
   const now = d.now();
   const expires = new Date(now.getTime() + d.cfg.sessionAbsoluteHours * 3600_000);
@@ -65,14 +66,14 @@ async function loadSession(d: Deps, req: Request, res: Response) {
     const token = readCookie(req, COOKIE);
     if (token) {
       const now = d.now();
-      const { rows } = await d.db.query<{ user_id: string; role: Role; email: string; last_seen_at: Date; expires_at: Date }>(
-        "SELECT s.user_id, s.last_seen_at, s.expires_at, u.role, u.email FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1",
+      const { rows } = await d.db.query<{ user_id: string; role: Role; email: string; last_seen_at: Date; expires_at: Date; mfa_enabled_at: Date | null }>(
+        "SELECT s.user_id, s.last_seen_at, s.expires_at, u.role, u.email, u.mfa_enabled_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1",
         [sha256(token)],
       );
       const s = rows[0];
       const idleLimit = now.getTime() - d.cfg.sessionIdleMinutes * 60_000;
       if (s && new Date(s.expires_at).getTime() > now.getTime() && new Date(s.last_seen_at).getTime() > idleLimit) {
-        req.user = { id: s.user_id, role: s.role, email: s.email };
+        req.user = { id: s.user_id, role: s.role, email: s.email, mfaEnrolled: !!s.mfa_enabled_at };
         if (now.getTime() - new Date(s.last_seen_at).getTime() > 30_000) await d.db.query("UPDATE sessions SET last_seen_at = $1 WHERE token_hash = $2", [now, sha256(token)]);
       } else {
         if (s) await d.db.query("DELETE FROM sessions WHERE token_hash = $1", [sha256(token)]);
@@ -186,8 +187,8 @@ export function authRouter(d: Deps): Router {
     const email = normEmail(str(req.body?.email)).value ?? "";
     const password = str(req.body?.password);
     const now = d.now();
-    const { rows } = await d.db.query<{ id: string; password_hash: string; role: Role; failed_attempts: number; first_failed_at: Date | null; locked_until: Date | null }>(
-      "SELECT id, password_hash, role, failed_attempts, first_failed_at, locked_until FROM users WHERE email = $1", [email]);
+    const { rows } = await d.db.query<{ id: string; password_hash: string; role: Role; failed_attempts: number; first_failed_at: Date | null; locked_until: Date | null; mfa_enabled_at: Date | null }>(
+      "SELECT id, password_hash, role, failed_attempts, first_failed_at, locked_until, mfa_enabled_at FROM users WHERE email = $1", [email]);
     const u = rows[0];
     const wrong = new HttpError(401, "Email or password is incorrect.");
     if (!u) { await verifyPassword(password, await dummyHash()); throw wrong; }
@@ -199,6 +200,17 @@ export function authRouter(d: Deps): Router {
       const locked = await recordFailure(d, u.id, now);
       if (locked) throw new HttpError(429, `Too many attempts. Try again in ${LOCK_MINUTES} minutes.`);
       throw wrong;
+    }
+    if (u.mfa_enabled_at) {
+      // CC-200: the password was right, but no session yet. The browser gets a short-lived,
+      // single-use challenge to send with the code from the authenticator app.
+      const challenge = await d.db.tx(async (q) => {
+        await q.query("UPDATE users SET failed_attempts = 0, first_failed_at = NULL, locked_until = NULL WHERE id = $1", [u.id]);
+        await audit(q, { action: "auth.challenge", actor: u.id, at: now });
+        return createChallenge(q, u.id, now);
+      });
+      res.json({ mfaRequired: true, challenge, expiresInSeconds: CHALLENGE_MINUTES * 60 });
+      return;
     }
     await d.db.tx(async (q) => {
       await q.query("UPDATE users SET failed_attempts = 0, first_failed_at = NULL, locked_until = NULL WHERE id = $1", [u.id]);
@@ -223,6 +235,7 @@ export function authRouter(d: Deps): Router {
     const now = d.now();
     const ended = await d.db.tx(async (q) => {
       const n = (await q.query("DELETE FROM sessions WHERE user_id = $1 RETURNING token_hash", [u.id])).rows.length;
+      await q.query("DELETE FROM mfa_challenges WHERE user_id = $1", [u.id]);
       await audit(q, { action: "auth.signout_all", actor: u.id, detail: { sessions: n }, at: now });
       return n;
     });
@@ -258,6 +271,7 @@ export function authRouter(d: Deps): Router {
       // Every other session ends; this one stays so the person isn't thrown out mid-task.
       const n = (await q.query("DELETE FROM sessions WHERE user_id = $1 AND token_hash <> $2 RETURNING token_hash", [u.id, keep])).rows.length;
       await q.query("DELETE FROM password_resets WHERE user_id = $1", [u.id]);
+      await q.query("DELETE FROM mfa_challenges WHERE user_id = $1", [u.id]);
       await audit(q, { action: "password.changed", actor: u.id, detail: { otherSessionsEnded: n }, at: now });
       return n;
     });
@@ -298,6 +312,7 @@ export function authRouter(d: Deps): Router {
       await q.query("UPDATE users SET password_hash = $2, failed_attempts = 0, first_failed_at = NULL, locked_until = NULL, updated_at = $3 WHERE id = $1", [row.user_id, hash, now]);
       const n = (await q.query("DELETE FROM sessions WHERE user_id = $1 RETURNING token_hash", [row.user_id])).rows.length;
       await q.query("DELETE FROM password_resets WHERE user_id = $1 AND token_hash <> $2", [row.user_id, tokenHash]);
+      await q.query("DELETE FROM mfa_challenges WHERE user_id = $1", [row.user_id]);
       await audit(q, { action: "password.reset", actor: row.user_id, detail: { sessionsEnded: n }, at: now });
       return n;
     });

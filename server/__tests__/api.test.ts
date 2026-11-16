@@ -1,7 +1,7 @@
 // API tests for Sprint 11 — Accounts, Identity & Payments (CC-173 – CC-190).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { decrypt } from "../crypto";
-import { completeGuardian, harness, person, seenBodies, signedUp, SSN_PATTERN, type Harness } from "./helpers";
+import { completeGuardian, harness, nextCode, person, seenBodies, signedUp, SSN_PATTERN, type Harness } from "./helpers";
 
 let h: Harness;
 beforeAll(async () => { h = await harness(); });
@@ -86,9 +86,12 @@ describe("CC-173 sign-up", () => {
 
 describe("CC-174 sign-in and sessions", () => {
   it("signs in, reports me, and signs out", async () => {
-    const { body } = await signedUp(h, "guardian");
+    const { body, secret } = await signedUp(h, "guardian");
     const a = h.agent();
-    const r = await a.post("/api/auth/signin", { email: body.email, password: body.password });
+    const pw = await a.post("/api/auth/signin", { email: body.email, password: body.password });
+    expect(pw.status).toBe(200);
+    expect(pw.body.mfaRequired).toBe(true); // CC-200: a guardian's session starts only after the code
+    const r = await a.post("/api/auth/mfa/verify", { challenge: pw.body.challenge, code: nextCode(h, secret!) });
     expect(r.status).toBe(200);
     const cookie = String(r.headers["set-cookie"]);
     expect(cookie).toMatch(/cc_session=.+HttpOnly; SameSite=Strict/);

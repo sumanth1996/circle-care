@@ -10,6 +10,7 @@ import type { Config } from "./config";
 import type { Db } from "./db";
 import { errorHandler, HttpError } from "./http";
 import { createMailer, type Mailer } from "./mailer";
+import { MFA_REQUIRED, mfaRouter, requireMfaReady } from "./mfa";
 import { paymentsRouter } from "./payments";
 import { TEST_CARDS, TEST_ROUTING } from "../src/lib/validation";
 import { vaultRouter } from "./vault";
@@ -87,11 +88,14 @@ export function createApp(opts: { cfg: Config; db: Db; now?: () => Date; dev?: b
     });
   });
 
+  app.use("/api/auth/mfa", mfaRouter(d));
   app.use("/api/auth", authRouter(d));
   app.get("/api/auth/me", (req, res) => {
     if (!req.user) { res.status(401).json({ error: "Please sign in.", code: res.locals.sessionExpired ? "session_expired" : "signed_out" }); return; }
-    res.json({ user: req.user });
+    res.json({ user: { ...req.user, mfaRequired: MFA_REQUIRED.includes(req.user.role) } });
   });
+  // CC-200: guardians and caregivers set up a second step before any account, payment or vault route.
+  app.use(["/api/me", "/vault"], requireMfaReady);
   app.use("/api/me/payment-methods", paymentsRouter(d));
   app.use("/api/me", accountRouter(d));
 

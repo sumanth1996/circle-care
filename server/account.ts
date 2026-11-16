@@ -25,10 +25,12 @@ export interface MeView {
   profileStatus: "complete" | "incomplete";
   missing: MissingItem[];
   createdAt: string;
+  /** CC-200: an authenticator app is set up (required for guardians and caregivers). */
+  mfaEnrolled: boolean;
 }
 
 export async function loadMe(q: Queryable, userId: string): Promise<MeView> {
-  const u = (await q.query<{ id: string; role: Role; email: string; created_at: Date }>("SELECT id, role, email, created_at FROM users WHERE id = $1", [userId])).rows[0];
+  const u = (await q.query<{ id: string; role: Role; email: string; created_at: Date; mfa_enabled_at: Date | null }>("SELECT id, role, email, created_at, mfa_enabled_at FROM users WHERE id = $1", [userId])).rows[0];
   if (!u) throw new HttpError(401, "Please sign in.");
   const p = (await q.query<{ first_name: string; last_name: string; phone: string; email: string; ssn_last4: string | null }>(
     `SELECT first_name, last_name, phone, email, ssn_last4 FROM ${PERSONA_TABLE[u.role]} WHERE user_id = $1`, [userId])).rows[0];
@@ -44,6 +46,7 @@ export async function loadMe(q: Queryable, userId: string): Promise<MeView> {
     profileStatus: missing.length ? "incomplete" : "complete",
     missing,
     createdAt: new Date(u.created_at).toISOString(),
+    mfaEnrolled: !!u.mfa_enabled_at,
   };
 }
 

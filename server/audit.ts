@@ -12,7 +12,8 @@ export type AuditAction =
   | "card.added" | "card.removed" | "card.primary"
   | "nonprod.blocked" | "audit.exported"
   | "ratelimit.exceeded"
-  | "auth.signout_all" | "password.changed" | "password.reset_requested" | "password.reset" | "email.undeliverable";
+  | "auth.signout_all" | "password.changed" | "password.reset_requested" | "password.reset" | "email.undeliverable"
+  | "auth.challenge" | "auth.mfa_failed" | "mfa.locked" | "mfa.enrolled" | "mfa.recovery_used";
 
 /** A standalone run of 9+ digits (SSN, account or card number) or a dashed SSN. Hex hashes don't match. */
 export const LOOKS_SENSITIVE = /(^|[^0-9a-z])\d{9,}([^0-9a-z]|$)|\b\d{3}-\d{2}-\d{4}\b/i;
@@ -33,7 +34,12 @@ const LIMIT_LABEL: Record<string, string> = { ssn: "Social Security number chang
 export function describe(action: string, d: Record<string, unknown>): string {
   switch (action) {
     case "account.created": return "Account created";
-    case "auth.signin": return "Signed in";
+    case "auth.signin": return d.secondStep === "recovery_code" ? "Signed in with a recovery code" : d.secondStep ? "Signed in with a code from your authenticator app" : "Signed in";
+    case "auth.challenge": return "Password accepted — waiting for the sign-in code";
+    case "auth.mfa_failed": return "Wrong sign-in code entered";
+    case "mfa.locked": return "Sign-in codes paused for 15 minutes after 5 wrong codes";
+    case "mfa.enrolled": return "Two-step sign-in turned on (authenticator app)";
+    case "mfa.recovery_used": return `A recovery code was used — ${d.remaining} left`;
     case "auth.failed": return "Sign-in attempt with a wrong password";
     case "auth.locked": return "Sign-in locked for 15 minutes after too many attempts";
     case "auth.signout": return "Signed out";
