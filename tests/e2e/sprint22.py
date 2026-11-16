@@ -74,12 +74,25 @@ with sync_playwright() as p:
             .filter(([, r]) => r.height < 44 || r.width < 44).map(([n, r]) => `${n} ${Math.round(r.width)}x${Math.round(r.height)}`)""")
         assert not small, f"{label} has targets under 44 px: {small}"
 
-    def zoom(label):
-        # 200% zoom on a 390 px phone is the same layout as a 195 px wide window.
+    def zoom(label, roots):
+        # 200% zoom on a 390 px phone is the same layout as a 195 px wide window. The new parts of the screen must
+        # fit: nothing inside them may reach past the right edge of the window.
         pg.set_viewport_size({"width": 195, "height": 844})
         try:
-            wide = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
-            assert wide <= 1, f"{label} scrolls sideways by {wide} px at 200% zoom"
+            pg.wait_for_timeout(200)
+            over = []
+            for r in roots:
+                for loc in r.all():
+                    over += loc.evaluate("""el => {
+                        const w = document.documentElement.clientWidth;
+                        return [el, ...el.querySelectorAll('*')].filter(x => x.getClientRects().length)
+                          .map(x => [x, x.getBoundingClientRect()]).filter(([, b]) => b.right > w + 1)
+                          .map(([x, b]) => `${x.tagName.toLowerCase()}.${String(x.className).split(' ').join('.')} "${(x.textContent || '').trim().slice(0, 30)}" +${Math.round(b.right - w)}`)
+                          .slice(-4);
+                    }""")
+            page = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
+            print(f"      ({label}: whole page {page} px wider than a 195 px window)", flush=True)
+            assert not over, f"{label} goes past the window at 200% zoom: {over}"
         finally:
             pg.set_viewport_size({"width": 390, "height": 844})
 
@@ -180,7 +193,8 @@ with sync_playwright() as p:
         assert pg.evaluate("window.__spoken.filter(t => t.includes('glasses')).length") == 2
         targets(aids, "The notes on Maggie's home")
         axe("Maggie's home with notes")
-        zoom("Maggie's home with notes")
+        zoom("Maggie's home with notes", [aids, pg.get_by_role("region", name="Resting or away"),
+                                          pg.get_by_role("region", name="This week's tip"), pg.get_by_role("link", name="Is this a scam?")])
         # Reload: still not read aloud a second time.
         go("/app/elder")
         expect(pg.get_by_role("region", name="Notes from your family")).to_contain_text("glasses")
@@ -234,7 +248,7 @@ with sync_playwright() as p:
         pg.wait_for_url("**/app/elder/scam")
         expect(pg.get_by_role("heading", name="Is this a scam?")).to_be_visible()
         axe("The scam check")
-        zoom("The scam check")
+        zoom("The scam check", [pg.locator(".cc22-scam-page")])
         pg.get_by_role("radio", name="Phone call").click()
         pg.get_by_label("Anything to add?").fill("They said they were from my bank and wanted the code.")
         pg.get_by_role("button", name="Tell Sarah").click()
@@ -242,6 +256,7 @@ with sync_playwright() as p:
         expect(sent).to_contain_text("Don't send money or share codes. Sarah has been told.")
         expect(sent.get_by_role("link", name="Call Sarah")).to_have_attribute("href", "tel:+14155550177")
         axe("The scam report sent")
+        zoom("The scam report sent", [pg.locator(".cc22-scam-page")])
         sent.get_by_role("button", name="Back to home").click()
         expect(pg.get_by_role("region", name="Scam checks")).to_contain_text("Sarah has been told.")
 

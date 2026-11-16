@@ -113,7 +113,7 @@ export function QuietNotice() {
   const q = currentQuiet(state);
   if (!q) return null;
   return (
-    <section className="panel cc22-quiet-notice" aria-label="Maggie's quiet day" role="status">
+    <section className="panel cc22-quiet-notice" aria-label="Maggie's quiet day" aria-live="polite">
       {q.kind === "resting" ? <BedDouble size={28} aria-hidden="true" /> : <Plane size={28} aria-hidden="true" />}
       <div className="grow">
         <b>{quietLine(state, q)}</b>
@@ -329,7 +329,7 @@ export function ElderScamPage() {
 
   if (sent) {
     return (
-      <div className="page stack" style={{ "--gap": "20px" } as CSSProperties}>
+      <div className="page stack cc22-scam-page" style={{ "--gap": "20px" } as CSSProperties}>
         <section className="panel stack cc22-sent" style={{ "--gap": "16px" } as CSSProperties} role="status" aria-label="Report sent">
           <ShieldAlert size={48} aria-hidden="true" />
           <p className="cc22-sent-line">{scamSentLine(state)}</p>
@@ -341,7 +341,7 @@ export function ElderScamPage() {
   }
 
   return (
-    <div className="page stack" style={{ "--gap": "18px" } as CSSProperties}>
+    <div className="page stack cc22-scam-page" style={{ "--gap": "18px" } as CSSProperties}>
       <button className="btn ghost" style={{ alignSelf: "flex-start", fontSize: "inherit", paddingLeft: 0 }} onClick={() => nav("/app/elder")}><ArrowLeft /> Home</button>
       <h1 style={{ fontSize: "1.8em" }}>Is this a scam?</h1>
       <p className="muted">{hasGuardian(state) ? `Tell us what it was. ${g!.short} will be told straight away.` : "Tell us what it was. Then hang up and call someone you trust."}</p>
