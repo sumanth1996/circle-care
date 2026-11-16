@@ -274,3 +274,65 @@ describe("Sprint 15 research prep kit (CC-1 to CC-5)", () => {
     expect(section(PREP.fieldwork, /^## 1\. Roles/)).toMatch(/never see recordings, names, contact details or the safety log/);
   });
 });
+
+// Sprint 15 leftovers: a practice round built from published research while no one may be contacted.
+// It must never pass for real research: every participant is labelled synthetic, no hypothesis gets a
+// verdict, every source is a public https page, and CC-2 to CC-5 stay open in what it says is left.
+const PRACTICE = read("docs/research/12-practice-round.md");
+
+describe("Sprint 15 practice round (synthetic)", () => {
+  it("says up front that no real person took part and nothing is a finding", () => {
+    expect(PRACTICE.split("\n").find((l) => l.startsWith("Notion stor"))).toMatch(/CC-2.*CC-3.*CC-4.*CC-5/);
+    const status = PRACTICE.split("\n").find((l) => l.startsWith("Status:"))!;
+    expect(status).toMatch(/^Status: PRACTICE ROUND, SYNTHETIC, \d{4}-\d{2}-\d{2}\./);
+    expect(status).toMatch(/No real person was interviewed/);
+    expect(status).toMatch(/Nothing here is a finding/);
+  });
+
+  it("labels every practice participant synthetic, keeps them apart from real IDs, and runs no concept test", () => {
+    const rows = PRACTICE.split("\n").filter((l) => /^\| PR-/.test(l));
+    expect(rows.length).toBe(18);
+    for (const r of rows) expect(r, r.slice(0, 10)).toMatch(/^\| PR-[ECG]\d \| SYNTHETIC \|/);
+    for (const seg of ["E", "C", "G"]) expect(rows.filter((r) => r.startsWith(`| PR-${seg}`)).length, seg).toBe(6);
+    expect(PRACTICE.match(/^Concept tasks T1 to T\d: not run\.$/gm)?.length).toBe(3);
+    expect(PRACTICE).not.toMatch(/\bT\d \d\/5\b/);
+  });
+
+  it("gives every guide hypothesis a row and marks none of them tested", () => {
+    const table = section(PRACTICE, /^## Hypotheses: what desk research says/);
+    const rows = [...table.matchAll(/^\| (H-[ECG]\d+) \| ([^|]+) \|/gm)];
+    const listed = new Set(rows.map((m) => m[1]));
+    for (const doc of Object.values(GUIDES)) {
+      for (const [, id] of doc.matchAll(/^\| (H-[ECG]\d+) \|/gm)) expect(listed.has(id), id).toBe(true);
+    }
+    for (const [, id, verdict] of rows) expect(verdict.trim(), id).toBe("not tested");
+    expect(PRACTICE).not.toMatch(/\|\s*(supported|not supported|mixed)\s*\|/i);
+  });
+
+  it("cites only public https sources, and holds no contact details", () => {
+    const links = [...PRACTICE.matchAll(/\]\((https?:[^)]+)\)/g)].map((m) => m[1]);
+    expect(links.length).toBeGreaterThanOrEqual(7);
+    for (const l of links) expect(l).toMatch(/^https:\/\//);
+    expect(PRACTICE).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/);
+    expect(PRACTICE).not.toMatch(/\(?\b\d{3}\)?[-. ]\d{3}[-. ]\d{4}\b/);
+    expect(PRACTICE).not.toMatch(/\b(?:211|311|411|511|611|711|811|988)\b/);
+  });
+
+  it("leaves CC-2 to CC-5 open on real interviews, and the journey maps still hypotheses", () => {
+    const left = section(PRACTICE, /^## What closes CC-2 to CC-5/);
+    for (const id of ["CC-2", "CC-3", "CC-4", "CC-5"]) expect(left, id).toContain(`| ${id} `);
+    expect(left).toMatch(/needs real people/);
+    const maps = read("docs/research/05-journey-maps.md");
+    expect(maps).toMatch(/^Status: HYPOTHESIS JOURNEYS/m);
+    expect(maps).toMatch(/\[practice round\]\(12-practice-round\.md#sources\)/);
+    expect(PREP.synthesis).toMatch(/\[practice round\]\(12-practice-round\.md\)/);
+  });
+
+  it("checks the guide timings it reports against the guides themselves", () => {
+    const minutes = (doc: string) => [...doc.matchAll(/^## \d+b?\. .*\((\d+) min\)/gm)].reduce((n, m) => n + Number(m[1]), 0);
+    expect(minutes(GUIDES.guardian)).toBe(70);
+    expect(70 - minutes(GUIDES.elder)).toBe(3);
+    expect(70 - minutes(GUIDES.caregiver)).toBe(2);
+    expect(PRACTICE).toMatch(/The elder and caregiver guides leave 3 and 2 minutes/);
+  });
+});

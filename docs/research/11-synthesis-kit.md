@@ -3,6 +3,8 @@
 Notion stories: CC-2, CC-3, CC-4 (notes after each session) · CC-5 Synthesize research into journey maps (Sprint 15)
 Status: DRAFT, 2026-11-16. Empty templates. No interview has taken place, so nothing below is a finding. The repository is public: copy these tables into the encrypted research folder and fill them in there, never here.
 
+A worked example of these tables, filled once from synthetic practice participants and published research, is in the [practice round](12-practice-round.md). Overwrite it, never build on it, once real notes exist.
+
 This adds two things to the synthesis process in the [journey maps](05-journey-maps.md#synthesis-process-after-interviews): a rolling check after every session, so saturation shows up while interviews are still running, and the script for checking the finished maps with 5 participants, which CC-5 needs.
 
 ## 1. What agents may receive

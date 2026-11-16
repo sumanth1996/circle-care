@@ -55,6 +55,16 @@ Status: HYPOTHESIS JOURNEYS — update after interviews. These maps are assumpti
 
 ---
 
+## Desk-research notes (v0.5, 2026-11-16)
+
+Published research read for the [practice round](12-practice-round.md#sources) (sources S1 to S7 there). It doesn't replace interviews: every cell above is still a hypothesis until CC-2 to CC-4 notes confirm, change or delete it.
+
+- **Journey 1, Medicines:** missing or doubling doses is common among older adults (S7, about a third of outpatients 65+, though in China). Supports the pain point; doesn't show that elders want a record of it.
+- **Journey 1, every stage:** smartphone ownership drops from 59% at 65–69 to 17% at 80+ (S6, dated). The opportunities that rely on the elder tapping an app may reach fewer elders than the map assumes.
+- **Journey 2, Communicating and hand-off:** aides are often left out of care planning, leading to "fragmentation, miscommunication, and information gaps" (S4). Supports the scattered-channels pain points.
+- **Journey 3, Morning, At work, Problem appears:** distance caregivers describe anxiety, guilt and uncertainty (S2), and 11% of family caregivers live more than two hours away (S3, dated). Seven in ten family caregivers also work (S1). Supports the anxiety and late-discovery cells.
+- **Missing from all three maps:** a family helper doing medical tasks at home with no training (S1: only 22% trained). Add a row or a fourth map if real interviews show it.
+
 ## Synthesis process (after interviews)
 
 Run within 5 working days of the last interview, with at least 2 people.
