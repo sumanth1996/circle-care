@@ -9,8 +9,8 @@ Use with the [recruiting screener](01-recruiting-screener.md). Fill the placehol
 
 | Dates | What | Owner |
 |---|---|---|
-| Mon Nov 16 to Fri Nov 20 | Name the recruiting owner, secure the incentive budget, get the consent text reviewed, write the safety protocol (see the [fieldwork plan](10-fieldwork-plan.md) §5) | PO and recruiting owner |
-| Mon Nov 23 to Fri Dec 4 | Send outreach to each channel in screener §3; screen people as they reply; send consent forms | Recruiting owner |
+| Mon Nov 16 to Fri Nov 20 | Name the recruiting owner, secure the incentive budget, get the consent text reviewed, review and approve the safety protocol (see the [fieldwork plan](10-fieldwork-plan.md) §5) | PO and recruiting owner |
+| Mon Nov 23 to Fri Dec 4 | Send outreach to each channel in screener §3; screen people as they reply; send consent forms. Thanksgiving week is slow, so send the first outreach on Mon Nov 23 | Recruiting owner |
 | Mon Dec 7 to Fri Dec 11 | Fill gaps in the quotas; confirm every booking; send reminders | Recruiting owner |
 | Mon Dec 14 to Wed Dec 23 | Interviews (see the fieldwork plan) | Moderator and note-taker |
 
@@ -41,7 +41,7 @@ Recruiting stops early for a segment once its minimum is booked and the mix in s
 >
 > We'd like to talk with caregivers about a recent shift: what they had to remember, how they handed over and what got in the way. Conversations are up to 70 minutes, outside work hours, between December 14 and 23, and each person gets a [$40] gift card.
 >
-> With your permission, could we post the attached flyer in the break room or staff chat? Your agency won't see anyone's answers or learn who took part, and we won't recruit through supervisors. If your staff need written approval to take part, we'll send it to you first.
+> With your permission, could we post the attached flyer in the break room or staff chat? Your agency won't see anyone's answers, and we won't recruit through supervisors. If your policy needs written approval, a caregiver can ask us for a letter to give you; you'll then know only that they took part.
 >
 > Thank you,
 > [owner's name]
@@ -77,7 +77,7 @@ Use tear-off tabs with the project phone or email only. Never put a participant'
 3. If they qualify: "Thank you, you'd be a great fit. Can I send you the consent form to read before we pick a time?" Agree the format (phone, video or in person) and two possible times from the [fieldwork plan](10-fieldwork-plan.md) §2.
 4. If they don't qualify: "Thank you so much for calling. We don't need more people like you for this round, so I'll delete your details today."
 5. Close every call with the line in screener §4: *"We keep your answers under a number, not your name. We don't need to know about your health, and if you tell us something we don't need, we won't write it down."*
-6. Record the result in the [recruiting tracker](09-recruiting-tracker.csv) under the participant ID only.
+6. Record the result under the participant ID only, in the encrypted copy of the [recruiting tracker](09-recruiting-tracker.csv), never in the repository.
 
 ## 7. Confirmation and reminder
 

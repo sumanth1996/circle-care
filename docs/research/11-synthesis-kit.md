@@ -1,7 +1,7 @@
 # Synthesis Kit
 
 Notion stories: CC-2, CC-3, CC-4 (notes after each session) · CC-5 Synthesize research into journey maps (Sprint 15)
-Status: DRAFT, 2026-11-16. Empty templates. No interview has taken place, so nothing below is a finding.
+Status: DRAFT, 2026-11-16. Empty templates. No interview has taken place, so nothing below is a finding. The repository is public: copy these tables into the encrypted research folder and fill them in there, never here.
 
 This adds two things to the synthesis process in the [journey maps](05-journey-maps.md#synthesis-process-after-interviews): a rolling check after every session, so saturation shows up while interviews are still running, and the script for checking the finished maps with 5 participants, which CC-5 needs.
 
@@ -13,15 +13,15 @@ Agents work only from notes that the note-taker has already de-identified (the [
 - "[condition]", "[med]" and "[doctor]" in place of any health detail the participant volunteered;
 - no recording, transcript file or photo.
 
-If an agent finds anything identifying in a note, it stops, deletes its copy, and tells the research lead which ID it was in, without repeating the detail.
+If an agent finds anything identifying in a note, it stops work on that note, doesn't repeat or store the detail, and tells the research lead which ID it was in.
 
 ## 2. Rolling check after each session
 
-Fill one row per session within 24 hours. Agents draft the row from the note; the moderator checks it.
+Fill one row per session within 24 hours, in the encrypted copy. Agents draft the row from the de-identified note; the moderator checks it. Anything about the safety protocol stays in the research lead's safety log, not here.
 
-| ID | Date | Top 3 observations (participant's words) | New theme? | Hypotheses touched (supported / against) | Task scores | Safety protocol used? |
-|---|---|---|---|---|---|---|
-| | | | | | | |
+| ID | Date | Top 3 observations (participant's words) | New theme? | Hypotheses touched (supported / against) | Task scores |
+|---|---|---|---|---|---|
+| | | | | | |
 
 **Saturation.** A segment reaches saturation when two sessions in a row add no new theme (screener §2). Track it here:
 
@@ -35,15 +35,15 @@ Never stop below the minimum, even at saturation.
 
 ## 3. Hypothesis scorecard
 
-One row per hypothesis in the guides: H-E1 to H-E10 ([elders](02-interview-guide-elders.md#hypotheses-to-validate-not-findings)), H-C1 to H-C11 ([caregivers](03-interview-guide-caregivers.md#hypotheses-to-validate-not-findings)) and H-G1 to H-G11 ([guardians](04-interview-guide-guardians.md#hypotheses-to-validate-not-findings)). Mark each one supported, mixed, not supported or not tested, with the participant IDs behind it. A hypothesis needs 3 or more participants either way to count as supported or not supported.
+One row per hypothesis in the guides: H-E1 to H-E10 ([elders](02-interview-guide-elders.md#hypotheses-to-validate-not-findings)), H-C1 to H-C11 ([caregivers](03-interview-guide-caregivers.md#hypotheses-to-validate-not-findings)) and H-G1 to H-G11 ([guardians](04-interview-guide-guardians.md#hypotheses-to-validate-not-findings)). Mark each one supported, mixed, not supported or not tested, with the participant IDs behind it. Judge each hypothesis by its own *Validated if* and *Invalidated if* columns in its guide (for example, H-E1 needs 4 or more of 6 elders). The 3-participant rule in the journey-map process is for themes, not hypotheses.
 
-| Hypothesis | Supported by | Against | Verdict | What it changes |
-|---|---|---|---|---|
-| H-E1 | | | not tested | |
+| Hypothesis | Validated if (from the guide) | Supported by | Against | Verdict | What it changes |
+|---|---|---|---|---|---|
+| H-E1 | 4+ of 6 | | | not tested | |
 
 ## 4. Checking the journey maps with participants (CC-5)
 
-CC-5 needs the three journey maps checked with at least 5 participants, including at least one from each segment. Use a 15-minute follow-up call (incentive in screener §6), Mon Dec 21 to Wed Dec 23, PT.
+CC-5 needs the three journey maps checked with at least 5 participants, including at least one from each segment. Use a 15-minute follow-up call (incentive in screener §6) on Tue Dec 22 or Wed Dec 23, after the affinity session on Mon Dec 21 (the [fieldwork plan](10-fieldwork-plan.md) §2). For elders, the same call can cover the elder guide's §6b follow-up.
 
 **Script.**
 
@@ -53,7 +53,7 @@ CC-5 needs the three journey maps checked with at least 5 participants, includin
 4. "Which part of this day would you most like to be easier?"
 5. Thank them and confirm the follow-up incentive.
 
-**Record** for each stage: confirmed, changed (with the change) or wrong. A stage that 2 or more of the checkers call wrong is rewritten or removed before the maps change status to "Evidence-based, v1".
+**Record** for each stage: confirmed, changed (with the change) or wrong. If any checker from a segment calls a stage of that segment's map wrong, the stage is reviewed against the notes and rewritten or removed before the maps change status to "Evidence-based, v1".
 
 | ID | Segment | Stages confirmed | Stages changed | Stages wrong | Missing moment |
 |---|---|---|---|---|---|

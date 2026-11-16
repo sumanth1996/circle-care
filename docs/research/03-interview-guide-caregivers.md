@@ -20,6 +20,7 @@ Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No inter
 - Ask about the last shift, not shifts in general.
 - No client names, no medicine names, no addresses. Use "[client]", "[med]".
 - Respect language preference; offer an interpreter if needed (budget TBD).
+- If they describe neglect, abuse or an unsafe situation, for themselves or a client, pause and follow the [safety protocol](10-fieldwork-plan.md#5-safety-protocol-for-disclosures-of-harm-draft-needs-review).
 - Run the concept tests on the research phone, never the participant's. After the session, tap *Reset demo* in the presenter sheet so nothing carries over to the next person.
 - Chat voice: before the session, block the microphone for the prototype site in the research phone's browser (screener §9), so the chat opens its typing box instead of listening. In Chrome and most browsers the chat's voice reply sends speech to an online service, though the screen says it stays on the device (CC-222), and one tap starts it listening to the whole room. Ask what they expect happens to their words if they spoke. Remove this line once CC-222 is done.
 - The demo's medicine names (Metformin, Lisinopril, Vitamin D3, Atorvastatin) belong to the made-up Maggie and are fine in prompts. Never note them as the participant's.

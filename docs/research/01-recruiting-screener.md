@@ -100,8 +100,9 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 7. **How notes are stored.** Notes use your participant number, never your name. They are kept in an encrypted folder that only the research team can open, and never pasted into tools that learn from what is typed into them. Recordings are transcribed by the team, or by a tool that doesn't learn from what it is given, and names are taken out of the transcript. The list that links your name to your number is kept separately, in one locked file.
 8. **When things are deleted.** Recordings within 30 days of transcription; until then the recording still has your voice and anything you said. The name-to-number list once your incentive is paid and any follow-up is done. De-identified notes within 12 months. You can ask us to delete your notes and recording sooner, any time until the name-to-number list is deleted. After that we can no longer tell which notes are yours.
 9. Quotes may be used without names or identifying details.
-10. Contact for questions or withdrawal.
-11. Signature or recorded verbal consent with date.
+10. **When we may have to share something.** If you tell us that you or someone else is in danger or being harmed, we may need to share that to keep them safe, and in some states we must report it. We will tell you if we do.
+11. Contact for questions or withdrawal.
+12. Signature or recorded verbal consent with date.
 
 **Human action:** have the consent text reviewed (e.g., by an instructor or IRB-style reviewer) before first use. Elders who cannot consent for themselves are excluded; we do not take proxy consent for research.
 
@@ -118,12 +119,12 @@ Plain language, 14pt+ print, read aloud for elders. Draft sections:
 - In notes: replace names with role words ("my daughter", "the aide"); replace medicine names with "[med]"; replace conditions with "[condition]"; replace employer/agency names with "[agency]"; generalize location to state.
 - Never paste notes into tools that train on inputs.
 - Recordings: store encrypted, delete within 30 days after transcription.
-- Notes: one file per participant ID in the encrypted research folder. Delete the de-identified notes within 12 months, and log each deletion (date and ID only) in the tracker.
+- Notes: one file per participant ID in the encrypted research folder. Delete the de-identified notes within 12 months, and log each deletion (date and ID only) in the encrypted tracker.
 - The practice app: run sessions on a research phone, never the participant's, in a guest browser profile, with keyboard learning and suggestions turned off and the microphone blocked for the prototype site. After each session, open the presenter sheet and tap *Reset demo* so no taps, typed chat messages or check-ins carry over, then clear the browser's site data and history for the prototype. *Reset demo* resets the practice app only: feedback answers, pilot sign-ups and browser history are cleared by the site-data step.
 
 ## 8. Scheduling tracker (template)
 
-The working tracker is [09-recruiting-tracker.csv](09-recruiting-tracker.csv), with IDs pre-assigned up to the stretch quotas. The table below shows its shape.
+The blank template is [09-recruiting-tracker.csv](09-recruiting-tracker.csv), with IDs pre-assigned up to the stretch quotas. Copy it into the encrypted research folder and fill it in there. Never fill it in inside the repository: the repository is public and its history keeps everything. The table below shows its shape.
 
 | ID | Segment | Channel | Screened (date) | Qualifies? | Consent sent | Session date/time | Mode | Interviewer | Note-taker | Incentive sent | Follow-up? | Notes (no PII) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|

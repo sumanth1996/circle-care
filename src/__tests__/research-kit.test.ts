@@ -196,12 +196,17 @@ describe("Sprint 15 research prep kit (CC-1 to CC-5)", () => {
     for (const [name, doc] of Object.entries({ ...PREP, tracker })) {
       expect(doc, name).not.toMatch(email);
       expect(doc, name).not.toMatch(phone);
+      // Short dial numbers (988, 311 and the like) belong on the research lead's printed card, not here.
+      for (const [, n] of doc.matchAll(/\b(?:call|dial|text|ring)\s+(\d{3,})\b/gi)) expect(n, name).toBe("911");
     }
   });
 
-  it("keeps the tracker to participant IDs, with an ID for every stretch-quota place", () => {
+  it("ships the tracker as a blank, ID-only template with an ID for every stretch-quota place", () => {
     const [header, ...rows] = TRACKER;
     expect(header[0]).toBe("ID");
+    // The repository is public: it holds the blank template, and the filled copy lives in the encrypted folder.
+    for (const r of rows) expect(r.slice(2).every((c) => c === ""), `${r[0]} is blank`).toBe(true);
+    expect(SCREENER).toMatch(/Never fill it in inside the repository/);
     for (const col of header) expect(col, "no column for who someone is").not.toMatch(/name|phone|email|address|contact|birth/i);
     expect(new Set(rows.map((r) => r.length))).toEqual(new Set([header.length]));
     expect(new Set(rows.map((r) => r[0])).size).toBe(rows.length);
@@ -235,7 +240,9 @@ describe("Sprint 15 research prep kit (CC-1 to CC-5)", () => {
     expect(checked).toBeGreaterThan(5);
   });
 
-  it("scores exactly the hypotheses the guides list", () => {
+  it("points the scorecard at every hypothesis the guides list, judged by the guides' own thresholds", () => {
+    expect(PREP.synthesis).toMatch(/its own \*Validated if\* and \*Invalidated if\* columns/);
+    for (const doc of Object.values(GUIDES)) expect(doc).toMatch(/\| ID \| Hypothesis \| Validated if \| Invalidated if \|/);
     for (const [prefix, doc] of [["H-E", GUIDES.elder], ["H-C", GUIDES.caregiver], ["H-G", GUIDES.guardian]] as const) {
       const last = Math.max(...[...doc.matchAll(new RegExp(`^\\| ${prefix}(\\d+) \\|`, "gm"))].map((m) => Number(m[1])));
       expect(PREP.synthesis, prefix).toContain(`${prefix}1 to ${prefix}${last}`);
@@ -246,7 +253,12 @@ describe("Sprint 15 research prep kit (CC-1 to CC-5)", () => {
     const protocol = section(PREP.fieldwork, /^## 5\. Safety protocol/);
     expect(protocol).toMatch(/no interviews run/i);
     expect(protocol).toMatch(/call 911/);
-    expect(protocol).toMatch(/never in the notes or the repository/);
+    expect(protocol).toMatch(/never in the notes, the tracker or the repository/);
+    expect(protocol).toMatch(/reaches the moderator's own area/);
+    expect(protocol).toMatch(/anyone who suspects elder abuse must report/);
+    // Participants are told up front that a disclosure of danger may be shared.
+    expect(section(SCREENER, /^## 5\. Consent form outline/)).toMatch(/we may need to share that to keep them safe/);
+    for (const doc of Object.values(GUIDES)) expect(doc).toMatch(/\]\(10-fieldwork-plan\.md#5-safety-protocol/);
     expect(protocol).toMatch(/receive the incentive either way/);
     expect(SCREENER).toMatch(/\[fieldwork plan\]\(10-fieldwork-plan\.md#5-safety-protocol/);
   });
@@ -256,6 +268,8 @@ describe("Sprint 15 research prep kit (CC-1 to CC-5)", () => {
     expect(rules).toMatch(/participant ID only/);
     expect(rules).toMatch(/\[condition\].*\[med\]/);
     expect(rules).toMatch(/no recording/);
-    expect(section(PREP.fieldwork, /^## 1\. Roles/)).toMatch(/never see recordings, names or contact details/);
+    const rolling = section(PREP.synthesis, /^## 2\. Rolling check/);
+    expect(rolling, "the safety flag stays in the research lead's log").not.toMatch(/\| Safety/i);
+    expect(section(PREP.fieldwork, /^## 1\. Roles/)).toMatch(/never see recordings, names, contact details or the safety log/);
   });
 });
