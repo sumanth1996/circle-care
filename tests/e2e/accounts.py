@@ -1,4 +1,5 @@
-"""End-to-end tests for Sprint 11 — Accounts, Identity & Payments (CC-172 – CC-190).
+"""End-to-end tests for Sprint 11 — Accounts, Identity & Payments (CC-172 – CC-190),
+plus two-step sign-in (CC-200) and sign out everywhere, password change and reset (CC-201).
 
 Runs against the real server (API + PostgreSQL/PGlite), not the static preview:
 
@@ -7,9 +8,11 @@ Runs against the real server (API + PostgreSQL/PGlite), not the static preview:
 
 Set SHOTS=1 to also save wiki screenshots.
 """
-import io, os, re, time
+import io, os, re, sys, time
 from PIL import Image, ImageDraw
 from playwright.sync_api import sync_playwright, expect
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from totp_helper import Authenticator  # standard library only
 
 ROOT = os.environ.get("E2E_BASE", "http://127.0.0.1:4180")
 B = ROOT + "/#"
@@ -52,6 +55,21 @@ with sync_playwright() as p:
     pg.on("console", lambda m: errs.append(m.text) if m.type == "error" and "unsplash" not in m.text and "Failed to load resource" not in m.text else None)
 
     guardian = {"first": "Sarah", "last": "Lee", "phone": "(415) 555-0142", "email": f"sarah.{RUN}@example.com", "pw": "blue-heron-sunrise-42"}
+    NEW_PW = "copper-kettle-meadow-77"
+    app = {}  # the guardian's authenticator app and recovery codes, filled in at set-up
+
+    def enter_code(page, code):
+        expect(page.get_by_role("heading", name="Enter your sign-in code")).to_be_visible()
+        page.get_by_label("6-digit code").fill(code)
+        page.get_by_role("button", name="Sign in").click()
+
+    def sign_in(page, email, pw):
+        page.goto(B + "/app/login")
+        page.get_by_label("Email").fill(email)
+        page.get_by_label("Password").fill(pw)
+        page.get_by_role("button", name="Sign in").click()
+        enter_code(page, app["auth"].code())
+        expect(page).to_have_url(re.compile(r"/app/account$"))
 
     def no_horizontal_scroll():
         w = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
@@ -74,7 +92,7 @@ with sync_playwright() as p:
         pg.get_by_role("link", name="Change role").click()
         pg.get_by_role("button", name=re.compile("I'm the legal guardian")).click()
         expect(pg.get_by_label("First name")).to_have_value("Sarah")
-        expect(pg.get_by_role("list", name=re.compile("Step 1 of 4"))).to_be_visible()
+        expect(pg.get_by_role("list", name=re.compile("Step 1 of 5"))).to_be_visible()
 
     # CC-173
     def account_step_validation():
@@ -97,7 +115,37 @@ with sync_playwright() as p:
         pg.get_by_role("checkbox").check()
         shot("account-create")
         pg.get_by_role("button", name="Create account").click()
+        expect(pg.get_by_role("heading", name="Set up two-step sign-in", level=1)).to_be_visible()
+        expect(pg.get_by_role("list", name=re.compile("Step 2 of 5"))).to_be_visible()
+
+    # CC-200: guardians set up an authenticator app before anything else
+    def two_step_setup():
+        r = pg.request.get(ROOT + "/api/me")
+        assert r.status == 403 and r.json().get("code") == "mfa_enrolment_required", r.status
+        pg.get_by_role("button", name="Set up two-step sign-in").click()
+        groups = pg.locator(".key-groups span")
+        expect(groups.first).to_be_visible()
+        secret = "".join(groups.all_inner_texts())
+        assert re.fullmatch(r"[A-Z2-7]{32}", secret), secret
+        uri = pg.locator("code.otpauth-uri").inner_text()
+        assert uri.startswith("otpauth://totp/") and f"secret={secret}" in uri, uri
+        app["auth"] = Authenticator(secret)
+        no_horizontal_scroll()
+        pg.get_by_label("6-digit code").fill(app["auth"].wrong_code())
+        pg.get_by_role("button", name="Turn on two-step sign-in").click()
+        expect(pg.get_by_text("That code didn't match. Check your authenticator app and try again.")).to_be_visible()
+        pg.get_by_label("6-digit code").fill(app["auth"].code())
+        pg.get_by_role("button", name="Turn on two-step sign-in").click()
+        expect(pg.get_by_role("heading", name="Save your recovery codes")).to_be_focused()
+        codes = pg.get_by_role("list", name="Recovery codes").locator("li").all_inner_texts()
+        assert len(codes) == 10 and all(re.fullmatch(r"[a-z2-7]{5}-[a-z2-7]{5}", c.strip()) for c in codes), codes
+        app["codes"] = [c.strip() for c in codes]
+        shot("account-two-step")
+        expect(pg.get_by_role("button", name="Continue")).to_be_disabled()
+        pg.get_by_label("I've saved my recovery codes somewhere safe").check()
+        pg.get_by_role("button", name="Continue").click()
         expect(pg.get_by_role("heading", name="Verify your identity")).to_be_visible()
+        assert secret not in pg.content()
 
     # CC-180 / CC-182
     def identity_step():
@@ -204,7 +252,7 @@ with sync_playwright() as p:
 
     # CC-174 / CC-175
     def sign_out_in():
-        pg.get_by_role("button", name="Sign out").click()
+        pg.get_by_role("button", name="Sign out", exact=True).click()
         expect(pg).to_have_url(B + "/")
         pg.goto(B + "/app/login")
         pg.get_by_label("Email").fill(guardian["email"])
@@ -214,8 +262,92 @@ with sync_playwright() as p:
         shot("account-signin")
         pg.get_by_label("Password").fill(guardian["pw"])
         pg.get_by_role("button", name="Sign in").click()
+        # CC-200: the password alone starts no session
+        enter_code(pg, app["auth"].wrong_code())
+        expect(pg.get_by_text("That code didn't match. Check your authenticator app and try again.")).to_be_visible()
+        r = pg.request.get(ROOT + "/api/me")
+        assert r.status == 401, r.status
+        shot("account-signin-code")
+        pg.get_by_label("6-digit code").fill(app["auth"].code())
+        pg.get_by_role("button", name="Sign in").click()
         expect(pg).to_have_url(re.compile(r"/app/account$"))
         expect(pg.get_by_role("link", name="My account")).to_have_count(0)  # account page has its own header
+        expect(pg.get_by_text("On · authenticator app")).to_be_visible()
+
+    # CC-200: a recovery code works once, on another device
+    def recovery_code():
+        c5 = b.new_context(viewport={"width": 390, "height": 844}); p5 = c5.new_page()
+        app["other"] = (c5, p5)
+        p5.goto(B + "/app/login")
+        p5.get_by_label("Email").fill(guardian["email"])
+        p5.get_by_label("Password").fill(guardian["pw"])
+        p5.get_by_role("button", name="Sign in").click()
+        expect(p5.get_by_role("heading", name="Enter your sign-in code")).to_be_visible()
+        p5.get_by_role("button", name="Use a recovery code instead").click()
+        expect(p5.get_by_label("Recovery code")).to_be_focused()
+        p5.get_by_label("Recovery code").fill(app["codes"][0])
+        p5.get_by_role("button", name="Sign in").click()
+        expect(p5).to_have_url(re.compile(r"/app/account$"))
+        expect(p5.get_by_text("Signed in. You have 9 recovery codes left.")).to_be_visible()
+
+    # CC-201: change password ends the other device's session, keeps this one
+    def change_password():
+        pg.get_by_role("button", name="Change password").click()
+        pg.get_by_label("Current password").fill("not-my-password-1")
+        pg.get_by_label("New password", exact=True).fill(NEW_PW)
+        pg.get_by_label("Confirm new password").fill(NEW_PW)
+        pg.get_by_role("button", name="Change password").click()
+        expect(pg.get_by_text("That isn't your current password.")).to_be_visible()
+        expect(pg.get_by_label("Current password")).to_be_focused()
+        pg.get_by_label("Current password").fill(guardian["pw"])
+        shot("account-change-password")
+        pg.get_by_role("button", name="Change password").click()
+        expect(pg.get_by_text("Password changed. 1 other device was signed out.")).to_be_visible()
+        guardian["pw"] = NEW_PW
+        c5, p5 = app.pop("other")
+        p5.reload()
+        expect(p5).to_have_url(re.compile(r"/app/login"))
+        c5.close()
+        pg.reload()
+        expect(pg.get_by_role("heading", name="Sarah Lee", level=1)).to_be_visible()
+
+    # CC-201: sign out everywhere, then back in with the new password
+    def sign_out_everywhere():
+        pg.get_by_role("button", name="Sign out everywhere").click()
+        expect(pg.get_by_text(re.compile("Sign out on every device, including this one"))).to_be_visible()
+        pg.get_by_role("button", name="Sign out everywhere").click()
+        expect(pg).to_have_url(re.compile(r"/app/login\?everywhere=1"))
+        expect(pg.get_by_text("You've been signed out on every device.")).to_be_visible()
+        sign_in(pg, guardian["email"], guardian["pw"])
+
+    # CC-201: forgotten password gives the same answer for any email; a bad link is refused
+    def forgot_password():
+        c6 = b.new_context(viewport={"width": 390, "height": 844}); p6 = c6.new_page()
+        replies = []
+        for email in [guardian["email"], f"nobody.{RUN}@example.com"]:
+            p6.goto(B + "/app/login")
+            p6.get_by_role("link", name="Forgot your password?").click()
+            expect(p6.get_by_role("heading", name="Reset your password")).to_be_visible()
+            p6.get_by_label("Email").fill(email)
+            p6.get_by_role("button", name="Send reset link").click()
+            status = p6.get_by_role("status").filter(has_text="reset the password")
+            expect(status).to_be_visible()
+            replies.append(status.inner_text())
+        assert replies[0] == replies[1], replies
+        shot("account-forgot-password")
+        p6.goto(B + "/app/reset-password?token=" + "x" * 43)
+        expect(p6).to_have_url(re.compile(r"/app/reset-password$"))  # the token leaves the address bar
+        p6.get_by_label("New password", exact=True).fill("river-stones-and-fern-5")
+        p6.get_by_label("Confirm new password").fill("river-stones-and-fern-5")
+        p6.get_by_role("button", name="Reset password").click()
+        expect(p6.get_by_text(re.compile("This reset link has expired or was already used"))).to_be_visible()
+        expect(p6.get_by_role("link", name="Ask for a new link")).to_be_visible()
+        p6.goto(B + "/app/login")
+        p6.get_by_label("Email").fill(guardian["email"])
+        p6.get_by_label("Password").fill(guardian["pw"])
+        p6.get_by_role("button", name="Sign in").click()
+        expect(p6.get_by_role("heading", name="Enter your sign-in code")).to_be_visible()  # the password still works
+        c6.close()
 
     def lockout():
         c2 = b.new_context(viewport={"width": 390, "height": 844}); p2 = c2.new_page()
@@ -269,6 +401,7 @@ with sync_playwright() as p:
         ("CC-172 role picker, change role keeps details", role_picker),
         ("CC-173 account step validation and focus", account_step_validation),
         ("CC-173 create guardian account", account_step_success),
+        ("CC-200 guardian sets up two-step sign-in; nothing else works first", two_step_setup),
         ("CC-180/182 identity: real SSN blocked, test SSN saved, never in page", identity_step),
         ("CC-179 photo upload with preview", photo_step),
         ("CC-186 bank: real routing blocked, mismatch caught, saved", bank_step),
@@ -276,7 +409,11 @@ with sync_playwright() as p:
         ("CC-187/188 cards: test-only, primary, auto-promote on remove", cards),
         ("CC-185 recent activity", activity),
         ("CC-176 edit profile", edit_profile),
-        ("CC-174 sign out, wrong password, sign in", sign_out_in),
+        ("CC-174/200 sign out, wrong password, password then code", sign_out_in),
+        ("CC-200 recovery code on another device, once", recovery_code),
+        ("CC-201 change password signs out other devices", change_password),
+        ("CC-201 sign out everywhere", sign_out_everywhere),
+        ("CC-201 forgot password: same reply, bad link refused", forgot_password),
         ("CC-175 lockout after 5 failures", lockout),
         ("CC-172/177 elder: 3 steps, skip photo, no payments", elder_flow),
         ("CC-173 duplicate email gives a generic message", duplicate_email),
