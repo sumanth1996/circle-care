@@ -15,7 +15,7 @@ vi.mock("pg", () => {
   return { default: { Pool } };
 });
 
-const { explainConnectError, isLocalDb, openDb, pgConnection } = await import("../db");
+const { explainConnectError, isLocalDb, isReplitDevDb, openDb, pgConnection } = await import("../db");
 const { loadConfig } = await import("../config");
 
 afterEach(() => { pools.length = 0; failWith = null; });
@@ -66,6 +66,34 @@ describe("CC-203: database TLS", () => {
     expect(isLocalDb("postgres:///cc", {})).toBe(true);
     expect(isLocalDb("postgres:///cc?host=/var/run/postgresql", {})).toBe(true);
     expect(isLocalDb("postgres://u@localhost/cc?host=localhost", {})).toBe(true);
+  });
+
+  it("allows Replit's built-in development database (host helium) without TLS, only on Replit", () => {
+    const onReplit = { REPL_ID: "test-repl" };
+    const url = "postgresql://postgres:pw@helium/heliumdb?sslmode=disable";
+    expect(isReplitDevDb(url, onReplit)).toBe(true);
+    expect(pgConnection(url, undefined, onReplit)).toEqual({ connectionString: url });
+    // An empty host falls back to PGHOST, which Replit sets to helium for its dev database.
+    expect(isReplitDevDb("postgresql:///heliumdb?sslmode=disable", { ...onReplit, PGHOST: "helium" })).toBe(true);
+  });
+
+  it("keeps the TLS check for every other host, and for helium off Replit", () => {
+    const onReplit = { REPL_ID: "test-repl" };
+    // Not on Replit: the exception doesn't apply.
+    expect(isReplitDevDb("postgresql://postgres:pw@helium/heliumdb", {})).toBe(false);
+    expect(() => pgConnection("postgresql://postgres:pw@helium/heliumdb?sslmode=disable", undefined, {})).toThrow(/sslmode=disable/);
+    // On Replit, but a look-alike or other host.
+    for (const url of [
+      "postgres://u:p@helium.evil.example/x?sslmode=disable",
+      "postgres://u:p@heliumdb/x?sslmode=disable",
+      "postgres://u:p@ep-cool-db.us-east-2.aws.neon.tech/x?sslmode=disable",
+      "postgres://u:p@helium/x?host=db.evil.example&sslmode=disable",
+    ]) {
+      expect(isReplitDevDb(url, onReplit)).toBe(false);
+      expect(() => pgConnection(url, undefined, onReplit)).toThrow(/sslmode=disable/);
+    }
+    // A Neon URL on Replit still gets verified TLS.
+    expect(pgConnection("postgres://u:p@ep-cool-db.us-east-2.aws.neon.tech/x?sslmode=require", undefined, onReplit).ssl).toEqual({ rejectUnauthorized: true });
   });
 
   it("stops at start-up with a clear message when the certificate can't be verified", async () => {

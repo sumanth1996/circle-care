@@ -19,16 +19,31 @@ export interface Db extends Queryable {
 
 const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1", "[::1]"];
 
+/** The host node-postgres will really connect to, lower-cased; undefined if the URL won't parse. */
+function dbHost(url: string, env: Record<string, string | undefined>): string | undefined {
+  let u: URL;
+  try { u = new URL(url); } catch { return undefined; }
+  return ((u.searchParams.get("host") ?? decodeURIComponent(u.hostname)) || env.PGHOST || "localhost").toLowerCase();
+}
+
 /**
  * True when the database runs on this machine, where TLS isn't needed. It checks the host node-postgres
  * will actually use: a `host` query parameter wins over the URL's host, and an empty host falls back to
  * PGHOST (which Replit points at its remote database), then to localhost. A unix socket path is local.
  */
 export function isLocalDb(url: string, env: Record<string, string | undefined> = process.env): boolean {
-  let u: URL;
-  try { u = new URL(url); } catch { return false; }
-  const host = (u.searchParams.get("host") ?? decodeURIComponent(u.hostname)) || env.PGHOST || "localhost";
-  return host.startsWith("/") || LOCAL_HOSTS.includes(host.toLowerCase());
+  const host = dbHost(url, env);
+  return !!host && (host.startsWith("/") || LOCAL_HOSTS.includes(host));
+}
+
+/**
+ * True for Replit's built-in development database. Replit gives every Repl a PostgreSQL server at the
+ * bare host name "helium" on the Repl's private network, and its DATABASE_URL ends in sslmode=disable
+ * because that server doesn't offer TLS. We allow it only when the app is running on Replit (REPL_ID
+ * is set) and the host is exactly "helium", so no other host can borrow the exception.
+ */
+export function isReplitDevDb(url: string, env: Record<string, string | undefined> = process.env): boolean {
+  return !!env.REPL_ID && dbHost(url, env) === "helium";
 }
 
 // Query parameters that would change how node-postgres sets up TLS. They are
@@ -42,10 +57,10 @@ const TLS_PARAMS = ["sslmode", "ssl", "sslcert", "sslkey", "sslrootcert", "sslpa
  * provider uses its own CA. A local database connects without TLS.
  */
 export function pgConnection(url: string, ca?: string, env: Record<string, string | undefined> = process.env): { connectionString: string; ssl?: { rejectUnauthorized: true; ca?: string } } {
-  if (isLocalDb(url, env)) return { connectionString: url };
+  if (isLocalDb(url, env) || isReplitDevDb(url, env)) return { connectionString: url };
   const u = new URL(url);
   if (u.searchParams.get("sslmode") === "disable") {
-    throw new Error("DATABASE_URL turns TLS off (sslmode=disable) for a remote database. Remove sslmode=disable: Circle Care only connects to a remote database over verified TLS.");
+    throw new Error("DATABASE_URL turns TLS off (sslmode=disable) for a remote database. Remove sslmode=disable: Circle Care only connects to a remote database over verified TLS. (Replit's built-in development database at host \"helium\" is the one exception, and only when running on Replit.)");
   }
   for (const p of TLS_PARAMS) u.searchParams.delete(p);
   return { connectionString: u.toString(), ssl: ca ? { rejectUnauthorized: true, ca } : { rejectUnauthorized: true } };
