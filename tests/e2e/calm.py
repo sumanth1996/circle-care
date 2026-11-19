@@ -1,4 +1,4 @@
-"""Sprint 16: browser tests for calm alerts (CC-206, CC-207).
+"""Sprint 16: browser tests for calm alerts (CC-206, CC-207, CC-208).
 
 Runs against the production build, like e2e.py:
     npm run build && npx vite preview --port 4173 &
@@ -101,6 +101,51 @@ with sync_playwright() as p:
         expect(pg.get_by_text(re.compile(r"^Resolved: marked taken at .* by Maggie\.$")).first).to_be_visible()
         pg.screenshot(path=f"{OUT}/calm-guardian-all-clear.png", full_page=True)
     step("CC-206 Sarah gets an all-clear naming no medicine once Maggie takes a missed dose", all_clear)
+
+    # CC-208 runs in a fresh browser so the earlier steps' alerts don't mix in. 11 PM is inside the
+    # seeded quiet hours (10 PM to 7 AM).
+    pg = b.new_context(viewport={"width": 390, "height": 844}, timezone_id="America/New_York").new_page()
+    EDT = datetime.timezone(datetime.timedelta(hours=-4))
+    pg.clock.set_system_time(datetime.datetime(2026, 10, 21, 23, 0, tzinfo=EDT))
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.on("console", lambda m: errs.append(m.text) if m.type == "error" and "unsplash" not in m.text and "Failed to load resource" not in m.text else None)
+
+    def quiet_setting():
+        signin("guardian")
+        pg.goto(B + "/app/guardian/settings")
+        start = pg.get_by_label("Quiet hours start")
+        start.evaluate("e => e.scrollIntoView({ block: 'center' })")
+        expect(start).to_have_value("22:00")
+        expect(pg.get_by_label("Quiet hours end")).to_have_value("07:00")
+    step("CC-208 Sarah's quiet hours are on, 10 PM to 7 AM", quiet_setting)
+
+    def quiet_hold():
+        pg.get_by_role("button", name="Demo mode", exact=False).click()
+        pg.get_by_role("button", name="Simulate a missed check-in").click()
+        pg.wait_for_timeout(500)
+        pg.goto(B + "/app/guardian/alerts")
+        pg.wait_for_timeout(500)
+        expect(pg.get_by_text("hasn't checked in", exact=False)).to_have_count(0)
+        pg.get_by_role("button", name="Demo mode", exact=False).click()
+        pg.get_by_role("button", name="Simulate a low blood-oxygen reading").click()
+        pg.wait_for_timeout(500)
+        pg.goto(B + "/app/guardian/alerts")
+        expect(pg.get_by_text("Blood oxygen low: 88%", exact=False).first).to_be_visible()
+        expect(pg.get_by_text("hasn't checked in", exact=False)).to_have_count(0)
+        pg.screenshot(path=f"{OUT}/calm-guardian-quiet-hours.png", full_page=True)
+    step("CC-208 at 11 PM a missed check-in waits, but a low oxygen reading comes at once", quiet_hold)
+
+    def morning_summary():
+        pg.clock.set_system_time(datetime.datetime(2026, 10, 22, 7, 5, tzinfo=EDT))
+        signin("guardian")
+        pg.goto(B + "/app/guardian/alerts")
+        summary = pg.get_by_text(re.compile(r"^Overnight summary: \d+ updates? waited for your quiet hours to end\.$"))
+        expect(summary).to_have_count(1)
+        row = pg.locator(".list-row", has=summary)
+        expect(row.locator("li", has_text="hasn't checked in")).to_have_count(1)
+        expect(row.locator("li", has_text="Blood oxygen")).to_have_count(0)
+        pg.screenshot(path=f"{OUT}/calm-guardian-morning-summary.png", full_page=True)
+    step("CC-208 at 7 AM what waited overnight arrives as one summary", morning_summary)
 
     b.close()
 
