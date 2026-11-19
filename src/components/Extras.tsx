@@ -54,12 +54,14 @@ export function AccessGuard({ resource, children }: { resource: Resource; childr
 
 /* ---------- CC-75: first-run tour and setup help ---------- */
 
-const TOURS: Record<Persona, { title: string; body: string }[]> = {
+export const TOURS: Record<Persona, { title: string; body: string }[]> = {
+  // CC-238 (Sprint 25, from the dummy-profile POC round): walk through the three big buttons once, and say where text size lives.
   elder: [
-    { title: "Hello, Maggie", body: "Circle Care helps you remember your medicines and lets the people you choose know you're OK." },
-    { title: "One tap each morning", body: "Tap “I'm OK” when you wake up. If you forget, we'll remind you before anyone is told." },
-    { title: "Help is one press away", body: "Press SOS and hold. We call Sarah first, then the next person, until someone answers." },
-    { title: "You're in charge", body: "The Privacy Center shows who can see your information. You can pause sharing at any time." },
+    { title: "Hello, Maggie", body: "Circle Care helps you remember your medicines and lets the people you choose know you're OK. The text starts large. Tap Text size at the bottom of Home to change it." },
+    { title: "What's next", body: "The top button shows your next medicine or task. Tap it, then tap “I took it” or Done." },
+    { title: "SOS", body: "The SOS button gets help. Tap it, then press and hold for 2 seconds. We call Sarah first, then the next person, until someone answers." },
+    { title: "Call my person", body: "This button calls the people closest to you. Tap it, then tap the person you want." },
+    { title: "You're in charge", body: "Tap “I'm OK” each morning. When you tick My day, you'll see Saved. The Privacy Center shows who can see your information." },
   ],
   caregiver: [
     { title: "Welcome, Ana", body: "Circle Care shows you today's plan for Maggie: medicines, tasks and anything Sarah wants you to know." },

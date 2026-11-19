@@ -418,7 +418,8 @@ export interface Settings {
   checkinWindow: { start: string; end: string };
   escalation: string[]; // ordered member ids
   escalationDelayMin: number;
-  doseEscalation: { caregiverMin: number; guardianMin: number };
+  /** CC-239: withCaregiver tells the guardian at the same time as the caregiver. Off by default: caregiver first. */
+  doseEscalation: { caregiverMin: number; guardianMin: number; withCaregiver?: boolean };
   quietHours: { on: boolean; start: string; end: string };
   /** CC-207: how many reminders Maggie gets for one dose, 1 to 5. Default 3. */
   reminderRepeats: number;

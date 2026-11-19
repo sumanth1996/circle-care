@@ -29,7 +29,10 @@ export interface DoseSlot {
 
 export function doseThresholds(s: State, med: Medication) {
   const k = med.critical ? 0.5 : 1; // CC: high-priority meds escalate twice as fast
-  return { caregiver: Math.round(s.settings.doseEscalation.caregiverMin * k), guardian: Math.round(s.settings.doseEscalation.guardianMin * k) };
+  const e = s.settings.doseEscalation;
+  const caregiver = Math.round(e.caregiverMin * k);
+  // CC-239: a guardian who opts in hears at the same moment as the caregiver; otherwise the caregiver goes first.
+  return { caregiver, guardian: e.withCaregiver ? caregiver : Math.round(e.guardianMin * k) };
 }
 
 export function dosesFor(s: State, date = todayOf(s)): DoseSlot[] {

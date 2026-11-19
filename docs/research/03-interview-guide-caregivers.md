@@ -85,7 +85,7 @@ Same phone, still as Ana, on shift from T1 and before T3. Before T6, switch to S
 
 | Task | Prompt | Watch for | Success = |
 |---|---|---|---|
-| T5 Pills on hand | "One of Maggie's medicines is running low. Which one, and what would you do?" Then: "A new bottle of 30 just arrived." | Finds *Pills on hand* on Today; taps **Request refill**; the app then says *asked Fog City Pharmacy for a refill*: do they read that as the app having told the pharmacy? (It only records that Ana asked.) Finds **New bottle** | Names the low medicine, requests a refill and records the new bottle |
+| T5 Pills on hand | "One of Maggie's medicines is running low. Which one, and what would you do?" Then: "A new bottle of 30 just arrived." | Finds *Pills on hand* on Today; taps **I asked the pharmacy**; the app then says *asked Fog City Pharmacy for a refill* and *Circle Care doesn't contact pharmacies.*: do they still read it as the app having told the pharmacy? (It only records that Ana asked. The label was reworded in Sprint 25, CC-236, after the dummy POC round.) Finds **New bottle** | Names the low medicine, requests a refill and records the new bottle |
 | T6 Family chat | "Let the family know Maggie enjoyed her walk today." Then: "Tell them she took her Metformin 500 mg with breakfast." (Typed; see the reminder on chat voice.) | Reaction to being added by the family; the health-detail check on the second message: **Save as a note**, **Send anyway** or **Edit**; sees only messages from after joining | Sends the first message and makes a choice on the check |
 | T7 Check-ins and the recap (concept) | "Maggie can log how she feels, her water and meals, and only Sarah sees it, when Maggie shares. Sarah also gets an evening recap of Maggie's day at 7 PM." | Do they want to see Maggie's check-ins? Why? Would the recap change the texts and calls they get from Sarah? | Not scored; record the answers |
 
@@ -139,7 +139,7 @@ Surprises / contradicts a hypothesis:
 | H-C5 | Shift-limited access to the care plan is acceptable to caregivers. | 4+ of 6 | Most say they need off-shift access (record why) |
 | H-C6 | Agency software already covers EVV, so Circle Care must coexist rather than replace it. | Agency caregivers describe mandatory EVV tools | Few use EVV |
 | H-C7 | Caregivers would record pill counts and request refills in the app if it saves a call or a text. | 4+ of 6 complete T5 and say they'd use it | Most say it adds work |
-| H-C8 | Caregivers understand that **Request refill** records the request and doesn't contact the pharmacy. Correct means: "it notes that I asked the pharmacy myself; Circle Care doesn't contact it." | 4+ of 6 explain it correctly after T5 | Most expect the app to have told the pharmacy (the label or the confirmation needs to change) |
+| H-C8 | Caregivers understand that **I asked the pharmacy** records the request and doesn't contact the pharmacy. Correct means: "it notes that I asked the pharmacy myself; Circle Care doesn't contact it." | 4+ of 6 explain it correctly after T5 | Most expect the app to have told the pharmacy (the Sprint 25 wording needs another change) |
 | H-C9 | Caregivers accept joining the family chat only when the family adds them. | 4+ of 6 | Most expect to be in it from the start, or not at all |
 | H-C10 | The health-detail check in the chat feels helpful, not like being policed. | 4+ of 6 | Most find it intrusive |
 | H-C11 | Sarah's evening recap would cut the check-up texts caregivers get from family. | Half or more of those asked T7 expect fewer | Most expect no change |

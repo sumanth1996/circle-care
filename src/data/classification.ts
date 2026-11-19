@@ -258,7 +258,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     resource: ["settings", "emergencyCard", "vitals", "wellbeing"],
     fields: {
       "checkinWindow.start": O, "checkinWindow.end": O, escalation: O, escalationDelayMin: O,
-      "doseEscalation.caregiverMin": O, "doseEscalation.guardianMin": O,
+      "doseEscalation.caregiverMin": O, "doseEscalation.guardianMin": O, "doseEscalation.withCaregiver": O,
       "quietHours.on": O, "quietHours.start": O, "quietHours.end": O, reminderRepeats: O,
       "channels.push": O, "channels.sms": O, "channels.email": O, criticalBypass: O,
       textSize: O, highContrast: O, readAloud: O, sharingPaused: O,
