@@ -97,7 +97,7 @@ with sync_playwright() as p:
         assert dlg, "the walkthrough did not show on Maggie's first sign-in"
         seen = []
         while True:
-            seen.append(dlg.get_by_role("heading").first.inner_text())
+            seen.append(dlg.locator("h2.t-lg").inner_text())  # the step title; the sheet's own heading is "Getting started"
             if dlg.get_by_role("button", name="Next").count():
                 dlg.get_by_role("button", name="Next").click()
             else:
