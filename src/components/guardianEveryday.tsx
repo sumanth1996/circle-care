@@ -3,7 +3,7 @@ import { PackageCheck, PackagePlus, Truck, EyeOff, Utensils, Moon, MessageCircle
 import { Link, useLocation } from "react-router-dom";
 import type { Medication, State } from "../data/types";
 import { useStore, useCan } from "../data/store";
-import { pillsLeft, daysLeft, supplyState, refillPlan, scheduledRefill, sharedWeek, feelingOf, MEALS, dailyShared, recap } from "../data/everyday";
+import { pillsLeft, daysLeft, supplyState, refillPlan, scheduledRefill, sharedWeek, feelingOf, MEALS, dailyShared, recap, REFILL_BUTTON, REFILL_HINT, REFILL_NOT_CONTACTED, refillSavedToast, pharmacyOf } from "../data/everyday";
 import { Face } from "./everyday";
 import { nameOf } from "../data/selectors";
 import { Sheet, useToast } from "./ui";
@@ -41,9 +41,10 @@ export function SupplyRow({ med, state }: { med: Medication; state: State }) {
       </div>
       <div className="supply-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, ((days ?? 0) / 30) * 100)}%` }} /></div>
       {st === "low" && <p className="small" style={{ color: "#9a4f00" }}>{entry ? `Refill on the Calendar for ${fmtShortDay(entry.date)}.` : "Not on the Calendar yet."}</p>}
-      {st === "requested" && <p className="small" style={{ color: "var(--blue)" }}><Truck size={14} style={{ verticalAlign: "-2px" }} /> {nameOf(state, med.supply?.requestedBy)} asked {med.supply?.pharmacy ?? "the pharmacy"} for a refill.</p>}
+      {st === "requested" && <p className="small" style={{ color: "var(--blue)" }}><Truck size={14} style={{ verticalAlign: "-2px" }} /> {nameOf(state, med.supply?.requestedBy)} asked {pharmacyOf(med)} for a refill. {REFILL_NOT_CONTACTED}</p>}
+      {st === "low" && canWrite && <p className="tiny muted">{REFILL_HINT}</p>}
       <div className="row wrap" style={{ "--gap": "8px" } as CSSProperties}>
-        {canWrite && st === "low" && <button className="btn sm" onClick={() => { actions.requestRefill(med.id); toast(`Refill of ${med.name} requested`); }}><Truck size={15} /> Request refill</button>}
+        {canWrite && st === "low" && <button className="btn sm" onClick={() => { actions.requestRefill(med.id); toast(refillSavedToast(med)); }}><Truck size={15} /> {REFILL_BUTTON}</button>}
         {canWrite && <button className="btn sm secondary" onClick={() => setCount("")}><PackageCheck size={15} /> New bottle</button>}
       </div>
       {count !== null && <BottleSheet med={med} onClose={() => setCount(null)} onSave={(n) => { actions.recordRefill(med.id, n); setCount(null); toast(`${med.name}: ${n} on hand`); }} />}

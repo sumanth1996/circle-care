@@ -66,6 +66,14 @@ export function refillPlan(s: State, med: Medication) {
 /** An approved change request was made against an older copy of the medicine: keep today's pill count. */
 export const withCurrentSupply = (proposed: Medication, current: Medication): Medication => ({ ...proposed, supply: current.supply });
 
+/* CC-236 (Sprint 25, from the dummy-profile POC round): people read the old refill button as Circle Care
+ * contacting the pharmacy. It never does. The button and every line after it say the person asked themselves. */
+export const REFILL_BUTTON = "I asked the pharmacy";
+export const REFILL_HINT = "Call or visit the pharmacy yourself, then tap “I asked the pharmacy”. Circle Care doesn't contact pharmacies.";
+export const pharmacyOf = (med: Medication) => med.supply?.pharmacy ?? "the pharmacy";
+export const refillSavedToast = (med: Medication) => `Saved: you asked ${pharmacyOf(med)} for ${med.name}. Circle Care didn't contact them.`;
+export const REFILL_NOT_CONTACTED = "Circle Care doesn't contact pharmacies.";
+
 /** The earliest refill already on the Calendar for this medicine, from today on. */
 export function scheduledRefill(s: State, med: Medication) {
   const today = todayOf(s);
