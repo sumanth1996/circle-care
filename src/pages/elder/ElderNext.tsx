@@ -33,7 +33,8 @@ export default function ElderNext() {
     actions.recordDose(n.slot.med.id, n.slot.time, status, why, n.slot.date);
     const msg = status === "taken" ? "Great — marked as taken" : status === "skipped" ? "OK — marked as skipped" : "Got it. Sarah will see your note";
     toast(msg);
-    if (state.settings.readAloud) speak(msg);
+    // CC-244: her home shows a large Undo for 10 minutes; say so when Read aloud is on.
+    if (state.settings.readAloud) speak(`${msg}. If that was a mistake, tap Undo.`);
     back();
   };
 

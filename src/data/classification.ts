@@ -45,7 +45,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   State: {
     resource: null,
     fields: {
-      version: O, persona: O, signedIn: O, clockOffsetMin: O, lastRunAt: O, elderId: O, filesToDelete: O,
+      version: O, persona: O, signedIn: O, clockOffsetMin: O, lastRunAt: O, elderId: O, filesToDelete: O, demoScenario: O,
       "health.heightCm": P, "health.birthYear": I, "health.device": O,
       "health.overrides.at": P, "health.overrides.hr": P, "health.overrides.spo2": P, "health.overrides.addedAt": P,
     },
@@ -63,6 +63,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
       id: P, name: P, strength: P, dose: P, times: P, instructions: P, prescriber: P, purpose: P,
       critical: P, paused: P, "pill.color": P, "pill.shape": P,
       "history.at": P, "history.by": P, "history.change": P,
+      "stopped.at": P, "stopped.by": P, "stopped.reason": P, "stopped.demo": O,
     },
   },
   MedSupply: {
@@ -71,7 +72,19 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   DoseLog: {
     resource: "doses",
-    fields: { id: O, medId: P, date: P, time: P, status: P, by: P, at: P, verified: P, reason: P },
+    fields: {
+      id: O, medId: P, date: P, time: P, status: P, by: P, at: P, verified: P, reason: P,
+      correctedAt: P, correctedBy: P, demo: O,
+    },
+  },
+  // CC-243, CC-244: every mark, blocked double mark, undo and correction of a dose. Who and when someone
+  // gave Maggie a medicine, so PHI like the dose record itself.
+  DoseEvent: {
+    resource: "doses",
+    fields: {
+      id: O, medId: P, date: P, time: P, kind: P, doseId: O, status: P, from: P, firstBy: P, by: P, at: P,
+      markedAt: P, reason: P, demo: O,
+    },
   },
   CareTask: {
     resource: "tasks",

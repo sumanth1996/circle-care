@@ -7,7 +7,7 @@
 | **Feature ID / area** | F-04 · Medication schedule, dose confirmation and care tasks |
 | **Personas** | Sarah (manages the plan), Ana (gives and verifies doses, completes tasks), Maggie (takes, skips or refuses), James (family) |
 | **Status** | <span class="cc-badge cc-badge--built">Built in prototype</span> |
-| **Related stories** | CC-36 add medication · CC-37 edit / pause · CC-38 caregiver's schedule for today · CC-39 reminder · CC-40 taken / skipped / refused · CC-41 caregiver-verified doses · CC-42 missed-dose escalation timers · CC-43 high-priority medicines · CC-44 recurring care tasks · CC-45 complete tasks with notes · CC-64 change requests via approvals · CC-120 pills on hand · CC-121 low-supply alerts and Calendar refills |
+| **Related stories** | CC-36 add medication · CC-37 edit / pause · CC-38 caregiver's schedule for today · CC-39 reminder · CC-40 taken / skipped / refused · CC-41 caregiver-verified doses · CC-42 missed-dose escalation timers · CC-43 high-priority medicines · CC-44 recurring care tasks · CC-45 complete tasks with notes · CC-64 change requests via approvals · CC-120 pills on hand · CC-121 low-supply alerts and Calendar refills · CC-243 one record per dose · CC-244 undo · CC-246 stopped medicines · CC-248 Safer Doses demo |
 | **Last updated** | 2026-11-14 |
 
 </div>
@@ -150,6 +150,14 @@ Where it shows: a supply row on each **Medications** card (bar, days left, *runs
 
 Mockups: [Sprint 12 design](../../design/sprint-12/README.md).
 
+### Safer Doses (CC-243, CC-244, CC-246, CC-248, Sprint 26)
+
+- **One record per dose (CC-243).** A dose that's already marked can't be marked again. Rows say who marked it and when ("Taken at 8:05 AM by Ana"). A second tap isn't saved; it's kept in the dose history with who got there first, audited as a refusal, and the person who tapped sees "Your tap wasn't saved: Ana recorded it first." Two tabs on one device sync through storage; when both marked, the earliest mark wins on both. James has a Today's doses page under More, and Sarah sees the same list on Medicines.
+- **Correct this (CC-243).** Only Sarah and the person who recorded the dose are offered it. It changes the status and note, keeps the first entry in the history, is audited, and tells the person who recorded it when someone else corrected it (lock-screen title "Update from Circle Care", no medicine name).
+- **Undo (CC-244).** The person who marked a dose can undo it for 10 minutes. The record goes, the history says "undone", and the missed-dose escalation the mark settled is open again and carries on. If an all-clear went out, the same people get one short correction with no medicine name. Maggie's home shows a large Undo for those 10 minutes; with Read aloud on, she hears "If that was a mistake, tap Undo". After 10 minutes only Correct this remains.
+- **Stopped medicines (CC-246).** Stop moves a medicine to a Stopped list with the date and who stopped it; it has no reminders or escalation and isn't on Maggie's screens. Adding a medicine with a stopped one's name asks "This was stopped on Jan 5 by Sarah. Add it again?". Restart is Sarah's direct change, recorded as approved (CC-37).
+- **Demo scenario (CC-248).** Demo mode → Load the Safer Doses scenario adds a stopped Ibuprofen, a blocked double mark and an undo, all labelled "Dummy profile (demo)", with a banner on every screen. History (Activity) shows each one. The as-needed dose and warning in the story wait on CC-241, CC-242 and CC-245.
+
 ## Permissions & privacy
 
 From `MATRIX` in `src/data/policy.ts`:
@@ -210,8 +218,9 @@ No lock-screen text names a medicine. Alerts are de-duplicated by key, so each d
 | Type | Test |
 |---|---|
 | E2E | *Missed dose escalates to guardian, caregiver gives it, alert clears* · *CC-45 task note; CC-19 notes open once on shift* · *Guardian approves request; elder sees decision* |
-| Unit | `rules.test.ts` — *escalates a missed dose to the caregiver, then the guardian* (and the elder repeat) · *does not repeat the same alert* · doses that cross midnight (CC-199): escalation, timings, no repeats, nothing from two nights ago, taken after midnight, reminders and quiet hours. `policy.test.ts` — every `meds`, `doses`, `tasks`, `supply` cell for every role, on and off shift. `everyday.test.ts` — 24 tests for CC-120 and CC-121 (counts, days left morning and evening, pills per dose, threshold, one alert per bottle, Calendar entry and reuse, request and new bottle, pause, approvals keep the count, caregiver off shift refused and audited) |
-| Accessibility | `/app/guardian/meds`, `/app/caregiver`, `/app/elder/next` |
+| Unit | `rules.test.ts` — *escalates a missed dose to the caregiver, then the guardian* (and the elder repeat) · *does not repeat the same alert* · doses that cross midnight (CC-199): escalation, timings, no repeats, nothing from two nights ago, taken after midnight, reminders and quiet hours. `policy.test.ts` — every `meds`, `doses`, `tasks`, `supply` cell for every role, on and off shift. `everyday.test.ts` — 24 tests for CC-120 and CC-121 (counts, days left morning and evening, pills per dose, threshold, one alert per bottle, Calendar entry and reuse, request and new bottle, pause, approvals keep the count, caregiver off shift refused and audited). `sprint26.test.ts` — 15 tests for CC-243, CC-244, CC-246, CC-248 (duplicates, who may correct, two tabs, undo window and escalation, all-clear correction, stopped list, restart, demo scenario) |
+| E2E (Sprint 26) | `sprint26.py` — undo and the correction note, the 10-minute window, Correct this, James's view, two tabs marking at once, Stopped list and Add it again, the demo scenario |
+| Accessibility | `/app/guardian/meds`, `/app/caregiver`, `/app/elder/next`, `/app/family/doses`, Elder Home with Undo, the Correct this sheet, History with the demo scenario |
 
 ## Known limitations & production gaps
 
@@ -222,7 +231,8 @@ No lock-screen text names a medicine. Alerts are de-duplicated by key, so each d
 | No interaction or identity checks | Drug-interaction check and photo pill check — with clinical review ([R3](../roadmap.md)) |
 | Escalation runs only while a browser is open | Server-side scheduler and real delivery |
 | Times are local device time; no time-zone handling | Store times in the elder's time zone |
-| No as-needed (PRN) or tapering schedules | Richer schedule types |
+| No as-needed (PRN) or tapering schedules | Richer schedule types (CC-241, CC-242, waiting on wording and privacy review) |
+| Two-device sync is two tabs on one device (storage events) | Server-side dose records with a unique slot key, so the first write wins across devices |
 
 ## Related pages
 

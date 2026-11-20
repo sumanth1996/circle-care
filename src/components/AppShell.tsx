@@ -14,6 +14,7 @@ import { PrivacyShield, WelcomeTour, NpsCard } from "./Extras";
 import { fmtTime } from "../lib/time";
 import { inChat, unreadChat } from "../data/everyday";
 import { coverView } from "../data/away";
+import { DemoBanner, DoseConflictToasts } from "./saferDoses";
 import "./shell.css";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; badge?: number; tab?: boolean };
@@ -118,6 +119,8 @@ export default function AppShell({ persona }: { persona: Persona }) {
           ? [
               { to: "/app/family", label: "Help", icon: HandHeart, tab: true },
               { to: "/app/family/chat", label: "Chat", icon: MessageCircleHeart, badge: unreadChat(state, meId("family")), tab: true },
+              // CC-243: today's doses, with who marked each one.
+              { to: "/app/family/doses", label: "Today's doses", icon: Pill },
               { to: "/app/family/questions", label: "Questions", icon: ListChecks, tab: true },
               { to: "/app/family/card", label: "Emergency card", icon: IdCard, tab: true },
               { to: "/app/family/about-me", label: "What matters to Maggie", icon: Heart },
@@ -177,6 +180,8 @@ export default function AppShell({ persona }: { persona: Persona }) {
           <div className="info-bar"><PauseCircle size={20} /> Maggie has paused sharing. You still have access as her legal guardian; other members only receive emergency alerts.</div>
         )}
         {!paused && (npsNow || loc.pathname === `/app/${persona}`) && <div className="page narrow" style={{ paddingBottom: 0 }}><NpsCard persona={persona} force={npsNow} onDone={() => setNpsNow(false)} /></div>}
+        {state.demoScenario && <div className="page narrow" style={{ paddingBottom: 0 }}><DemoBanner /></div>}
+        <DoseConflictToasts />
         {paused ? <PausedScreen /> : <Outlet />}
       </main>
 

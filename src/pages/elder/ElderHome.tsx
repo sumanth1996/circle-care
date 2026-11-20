@@ -12,6 +12,7 @@ import { MyNextSteps } from "../../components/visitNotes";
 import { ElderCovering } from "../../components/away";
 import { activeAway } from "../../data/away";
 import { ElderMemoryAids, ElderQuietDays, ElderScamTile, ElderScamUpdates, ElderTipCard } from "../../components/confident";
+import { ElderUndoBanner } from "../../components/saferDoses";
 import "./elder.css";
 
 /** CC-68: elder home with three big actions — What's next, SOS, Call my person.
@@ -76,6 +77,9 @@ export default function ElderHome() {
         </div>
       )}
       {!showCheckin && done && <p className="small muted" style={{ marginTop: -8 }}><CheckCircle2 size={16} color="var(--green)" style={{ verticalAlign: "-3px" }} /> You checked in at {fmtTime(done.at)}</p>}
+
+      {/* CC-244: a large Undo for 10 minutes after Maggie marks a dose. */}
+      <ElderUndoBanner />
 
       <ElderCovering />
 

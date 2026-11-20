@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { FastForward, Pill, Sun, Clock3, Siren, Lock, RotateCcw, Globe, Check, ShieldAlert, MessageSquareHeart, BarChart3, FileCheck2, Hourglass, HeartPulse, Droplets, PackageOpen, Utensils, Moon, Sunset } from "lucide-react";
+import { FastForward, Pill, Sun, Clock3, Siren, Lock, RotateCcw, Globe, Check, ShieldAlert, MessageSquareHeart, BarChart3, FileCheck2, Hourglass, HeartPulse, Droplets, PackageOpen, Utensils, Moon, Sunset, ShieldCheck } from "lucide-react";
 import { useStore } from "../data/store";
 import { member, meId, clock } from "../data/selectors";
 import type { Persona } from "../data/types";
@@ -61,6 +61,8 @@ export default function PersonaSheet({ onClose }: { onClose: () => void }) {
           <button className="list-row has-icon" onClick={() => run("No meals logged for 2 days", () => actions.simulate("no-meals"))}><Utensils size={22} color="var(--blue)" /><span className="grow">Simulate 2 days with no meals logged</span></button>
           <button className="list-row has-icon" onClick={() => run("It's 7 PM and Maggie hasn't added anything today", () => actions.simulate("nothing-logged"))}><Moon size={22} color="var(--guard)" /><span className="grow">Simulate no check-ins by 7 PM</span></button>
           {toRecap > 0 && <button className="list-row has-icon" onClick={() => run(`It's now ${fmtTime("19:05")}`, () => actions.skipAhead(toRecap))}><Sunset size={22} color="var(--guard)" /><span className="grow">Skip to 7 PM for the evening recap</span></button>}
+          {/* CC-248: Sprint 26's dose story, on labelled dummy profiles. */}
+          <button className="list-row has-icon" onClick={() => run("Safer Doses scenario loaded (dummy profiles)", () => actions.loadSaferDoses())}><ShieldCheck size={22} color="var(--green)" /><span className="grow">Load the Safer Doses scenario</span></button>
           <button className="list-row has-icon" onClick={() => run("James opened 9 records in a minute", () => actions.simulate("suspicious-access"))}><ShieldAlert size={22} color="var(--orange, #ff9f0a)" /><span className="grow">Simulate suspicious access</span></button>
           <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:lock")); }}><Lock size={22} color="var(--blue)" /><span className="grow">Lock the app now</span></button>
           <button className="list-row has-icon" onClick={() => { onClose(); window.dispatchEvent(new Event("cc:nps")); }}><MessageSquareHeart size={22} color="var(--blue)" /><span className="grow">Show the feedback survey</span></button>

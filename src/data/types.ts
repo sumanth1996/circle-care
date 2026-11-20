@@ -38,6 +38,8 @@ export interface Medication {
   history: { at: string; by: string; change: string }[];
   /** Pills on hand (CC-120). Counted when a bottle is opened; each taken dose since then is subtracted. */
   supply?: MedSupply;
+  /** CC-246: stopped for good (not just paused). It sits on the Stopped list with no reminders. A stopped medicine is also paused. */
+  stopped?: { at: string; by: string; reason?: string; demo?: boolean };
 }
 
 /** CC-120 – CC-121: how much of a medicine is left. */
@@ -66,6 +68,37 @@ export interface DoseLog {
   at: string; // ISO
   verified: boolean; // caregiver-verified during a visit (CC-41)
   reason?: string;
+  /** CC-243: when the record was corrected, by whom. The earlier entry is kept in `doseHistory`. */
+  correctedAt?: string;
+  correctedBy?: string;
+  /** CC-248: seeded by the Safer Doses demo scenario. */
+  demo?: boolean;
+}
+
+/**
+ * Sprint 26 "Safer Doses" (CC-243, CC-244): what happened to a dose record besides the record itself, oldest
+ * first. Nothing here is ever removed, so a correction or an undo keeps the first entry.
+ *  - duplicate: someone tried to mark a dose already marked; `firstBy` is who got there first. Their tap wasn't saved.
+ *  - undone: the person who marked it took the mark back within 10 minutes.
+ *  - corrected: Sarah or the person who marked it changed it from `from` to `status`; `firstBy` is who marked it.
+ */
+export interface DoseEvent {
+  id: string;
+  medId: string;
+  date: string; // the day the dose was due
+  time: string; // scheduled HH:MM
+  kind: "duplicate" | "undone" | "corrected";
+  /** The dose record this is about (for a duplicate, the one that was kept). */
+  doseId?: string;
+  /** When the dose was first marked (undone and corrected events). */
+  markedAt?: string;
+  status?: DoseStatus;
+  from?: DoseStatus;
+  firstBy?: string;
+  by: string;
+  at: string;
+  reason?: string;
+  demo?: boolean;
 }
 
 export interface CareTask {
@@ -484,6 +517,10 @@ export interface State {
   members: Member[];
   meds: Medication[];
   doses: DoseLog[];
+  /** CC-243, CC-244: every blocked double mark, undo and correction, oldest first. */
+  doseHistory: DoseEvent[];
+  /** CC-248: a demo scenario the presenter loaded, shown with a "Dummy profile (demo)" banner. */
+  demoScenario?: "safer-doses";
   tasks: CareTask[];
   taskLogs: TaskLog[];
   shifts: Shift[];

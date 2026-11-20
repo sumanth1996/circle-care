@@ -13,6 +13,7 @@ import { cryptoAvailable, deleteFile, deviceKey, encryptForStorage, loadEncrypte
 import { createSaver, saveWhenPageGoes } from "./saver";
 import { runReminders, settleDose, snoozeReminder, heldFor, releaseHeld } from "./calmAlerts";
 import * as help from "./help";
+import * as safer from "./saferDoses";
 import * as plans from "./comingHome";
 import * as questions from "./visitQuestions";
 import * as visitNotes from "./visitNotes";
@@ -40,14 +41,17 @@ export function pushAlert(s: State, input: Omit<Alert, "id" | "at" | "read">, at
 /**
  * CC-40 – CC-41 and CC-206: record a dose, then settle its reminders and any missed-dose alert.
  * `date` is the day the dose was due: today, or yesterday for a late-evening dose marked after midnight (CC-199).
- * Any other day is ignored and nothing changes. Returns whether the dose was recorded.
+ * Any other day is ignored and nothing changes. Returns whether the dose was recorded. A dose already
+ * recorded isn't recorded again (CC-243): use correctDose or undoDose (src/data/saferDoses.ts).
  */
 export function logDose(s: State, by: string, medId: string, time: string, status: DoseStatus, reason?: string, date = todayOf(s)) {
   if (date !== todayOf(s) && date !== yesterdayOf(s)) return false;
   if (!allowed(s, by, "write", "doses")) return false;
   const visit = todayVisit(s, by);
   const verified = roleOf(s, by) === "pro" && !!visit?.checkIn && !visit?.checkOut;
-  s.doses = s.doses.filter((d) => !(d.medId === medId && d.date === date && d.time === time));
+  // CC-243: one record per dose. A second mark isn't saved; it's kept in history with who got there first.
+  const existing = s.doses.find((d) => d.medId === medId && d.date === date && d.time === time);
+  if (existing) { safer.refuseDuplicate(s, by, existing, status); return false; }
   s.doses.push({ id: uid("dose"), medId, date, time, status, by, at: clock(s).toISOString(), verified, reason });
   audit(s, by, "created", `a dose record (${s.meds.find((m) => m.id === medId)?.name})`);
   settleDose(s, by, medId, time, status, reason, date);
@@ -308,7 +312,29 @@ function useStoreState(initial: State) {
   latest.current = state;
 
   // Encrypted save (CC-26), started as soon as the state changes (CC-195). Also saved when the page is hidden or closed.
-  useEffect(() => { saver.changed(state).catch(() => {}); }, [state]);
+  // A state taken from another tab unchanged is already stored, so it isn't written back (that would ping-pong).
+  const fromOtherTab = useRef<State | null>(null);
+  useEffect(() => {
+    if (state === fromOtherTab.current) { saver.seen(state); return; }
+    saver.changed(state).catch(() => {});
+  }, [state]);
+  // CC-243: two tabs (two people on one device in the demo) see each other's changes. Doses are reconciled so the
+  // first mark wins and the second person is told; this tab keeps its own persona.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STATE_KEY || !e.newValue) return;
+      readStored().then((incoming) => {
+        if (!incoming || incoming.version !== STATE_VERSION) return;
+        setState((prev) => {
+          const merged = safer.mergeFromOtherTab(prev, incoming);
+          fromOtherTab.current = safer.sameAsIncoming(merged, incoming) ? merged : null;
+          return merged;
+        });
+      }).catch(() => {});
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
   useEffect(() => saveWhenPageGoes(() => { saver.flush().catch(() => {}); }), []);
   // Sprint 22: photos that were replaced, removed or aged out are deleted from the device, then crossed off.
   useEffect(() => {
@@ -454,6 +480,15 @@ function useStoreState(initial: State) {
         update((s) => { if (s.persona) audit(s, actor(s), "viewed", resource); });
       },
       recordDose: (medId: string, time: string, status: DoseStatus, reason?: string, date?: string) => update((s) => logDose(s, actor(s), medId, time, status, reason, date)),
+      /** CC-243: Sarah, or whoever marked it, changes a dose's status; the first entry stays in history. */
+      correctDose: (doseId: string, status: DoseStatus, reason?: string) => update((s) => { safer.correctDose(s, actor(s), doseId, status, reason); }),
+      /** CC-244: take back a mark made by mistake, within 10 minutes. */
+      undoDose: (doseId: string) => update((s) => { safer.undoDose(s, actor(s), doseId); }),
+      /** CC-246: stop a medicine for good, or restart a stopped one. */
+      stopMed: (medId: string, reason?: string) => update((s) => { safer.stopMed(s, actor(s), medId, reason); }),
+      restartMed: (medId: string) => update((s) => { safer.restartMed(s, actor(s), medId); }),
+      /** CC-248: the Safer Doses demo scenario, with labelled dummy profiles. */
+      loadSaferDoses: () => update((s) => { safer.loadSaferDosesDemo(s); }),
       /** CC-207: Maggie snoozes a reminder for 15 minutes. */
       snoozeDose: (medId: string, time: string, date?: string) => update((s) => { snoozeReminder(s, actor(s), medId, time, date); }),
       verifyDose: (medId: string, time: string) => update((s) => {
@@ -782,12 +817,16 @@ const saver = createSaver<State>(
   (state) => (cryptoAvailable() ? encryptForStorage(state) : JSON.stringify(state)),
   (encoded) => localStorage.setItem(STATE_KEY, encoded),
 );
+async function readStored() {
+  return cryptoAvailable() ? loadEncrypted<State>(STATE_KEY) : (JSON.parse(localStorage.getItem(STATE_KEY) ?? "null") as State | null);
+}
+
 async function loadState(): Promise<State> {
   try {
     // Start loading the device key now, so the first save after a change isn't held up by it (CC-195).
     // Not awaited: a slow or blocked IndexedDB must not keep the app from opening.
     if (cryptoAvailable()) deviceKey().catch(() => {});
-    const s = cryptoAvailable() ? await loadEncrypted<State>(STATE_KEY) : (JSON.parse(localStorage.getItem(STATE_KEY) ?? "null") as State | null);
+    const s = await readStored();
     if (s && s.version === STATE_VERSION) return s;
   } catch {
     /* storage unavailable or unreadable — start a fresh demo */
