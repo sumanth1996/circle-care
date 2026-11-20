@@ -46,11 +46,17 @@ describe("CC-203: database TLS", () => {
   });
 
   it("doesn't need TLS for a database on this machine", () => {
-    for (const url of ["postgres://app@localhost:5432/cc", "postgres://app@127.0.0.1/cc?sslmode=disable", "postgres://app@[::1]/cc"]) {
+    for (const url of [
+      "postgres://app@localhost:5432/cc",
+      "postgres://app@127.0.0.1/cc?sslmode=disable",
+      "postgres://app@[::1]/cc",
+      "postgres://app@helium/cc?sslmode=disable",
+    ]) {
       expect(isLocalDb(url)).toBe(true);
       expect(pgConnection(url)).toEqual({ connectionString: url });
     }
     expect(isLocalDb("postgres://app@localhost.evil.example/cc")).toBe(false);
+    expect(isLocalDb("postgres://app@helium.evil.example/cc")).toBe(false);
   });
 
   it("checks the host node-postgres really connects to, not just the URL's host", () => {
