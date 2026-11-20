@@ -1,0 +1,20 @@
+# CC-221: keep the Browser tests workflow's action pins current. Dependabot opens one pull request a week
+# when any pinned action has a new release; it changes the commit SHA and the "# vX.Y.Z" comment together,
+# and the Browser tests workflow runs on that pull request like any other before it can merge.
+# Only GitHub Actions are covered here; npm and Python packages are not.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 3
+    groups:
+      ci-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "CI"
