@@ -63,6 +63,8 @@ with sync_playwright() as p:
 
     def axe(label, page=None):
         page = page or pg
+        # Let a sheet rise or a notice banner drop in fully: mid-animation text is faded and fails contrast.
+        page.wait_for_timeout(700)
         page.add_script_tag(path=AXE)
         v = page.evaluate(f"axe.run(document, {WCAG}).then(r => r.violations.map(v => v.impact + ' ' + v.id + ': ' + v.nodes.map(n => n.target.join(' ')).join(' | ')))")
         assert not v, f"{label} has accessibility problems: {v}"
