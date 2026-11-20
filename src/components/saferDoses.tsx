@@ -13,10 +13,11 @@ import { fmtTime } from "../lib/time";
 /** CC-248: every screen says the Safer Doses story is made up. */
 export function DemoBanner() {
   const { state } = useStore();
-  if (state.demoScenario !== "safer-doses") return null;
+  const name = state.demoScenario === "safer-doses" ? "Safer Doses" : state.demoScenario === "circle-messages" ? "Circle Messages" : null;
+  if (!name) return null;
   return (
     <p className="demo-banner" role="note">
-      <Info size={16} aria-hidden="true" /> <b>{DEMO_LABEL}</b> Safer Doses scenario. Every person and record here is made up.
+      <Info size={16} aria-hidden="true" /> <b>{DEMO_LABEL}</b> {name} scenario. Every person and record here is made up.
     </p>
   );
 }

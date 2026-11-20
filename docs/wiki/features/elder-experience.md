@@ -131,6 +131,21 @@ An optional card on the elder home, under the three big actions. Nothing is requ
 
 Demo: the presenter sheet's *Simulate no check-ins by 7 PM* clears today's log and moves the clock to 7 PM so the reminder shows. Mockup: [daily check-ins](../../design/sprint-12/README.md).
 
+### Circle Messages (CC-249 – CC-256, Sprint 27)
+
+The family chat (CC-164, CC-165) gains the everyday tools families asked for. Rules live in `src/data/circleMessages.ts`; screens in `src/components/circleMessages.tsx`.
+
+- **Pinned notes (CC-249).** Maggie and Sarah can pin up to 3 messages; they show at the top, in large text for Maggie with a Read aloud button. A fourth asks which one to unpin. Pinning a message that looks like a health detail asks first ("Pin anyway"). James and caregivers see pins but can't change them.
+- **Seen by (CC-250).** Each pinned note says "Seen by Ana, James. Not yet: Maggie", from when each person last opened the chat. Maggie can turn off "Show when I've read" in her Privacy Center; then she shows as "not shared", never as unread, and is left out of "Read by" too. Only Maggie can change it.
+- **Edit or take back (CC-251).** The sender can edit or take back a message for 5 minutes. Edits show "edited"; a message taken back shows "Message removed by Sarah". The earlier words aren't kept anywhere: the audit log records only who and when (PO decision, Nov 20 2026). An edit goes through the health-detail check again.
+- **Send later (CC-252).** Pick a time; only the sender sees "Scheduled for tomorrow at 8:00 AM", with Send now, Change and Cancel. It goes out as a normal message, with quiet hours (CC-208) holding Sarah's notice. A message from someone who has left the chat is dropped, not sent. In this web POC it sends while the app is open; server sending waits for CC-205.
+- **Mute (CC-253).** "Until tomorrow morning" (8 AM) or "For 24 hours". Messages still arrive without a notice; safety alerts are never muted. A banner offers Unmute.
+- **Read aloud (CC-254).** When Maggie opens the chat, pinned notes and then new messages, oldest first, are read with big Read to me, Pause and Next buttons. "Names only" in her settings says just who wrote.
+- **Search (CC-255).** Finds words in messages you can already read, newest first; a caregiver added later never finds older messages, and messages taken back are never found. Tapping a result jumps to it.
+- **Demo scenario (CC-256).** Demo mode → Load the Circle Messages scenario adds a week of chat on the fictional circle, labelled "Dummy profile (demo)", with a pinned note, a message taken back and a scheduled message.
+
+Tests: `sprint27.test.ts` (19 unit tests) and `tests/e2e/sprint27.py` (browser, with axe and 44 px target checks on Maggie's screens).
+
 ### Voice confirmation (`src/lib/voice.ts`)
 
 | Rule | Value |

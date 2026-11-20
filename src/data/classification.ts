@@ -123,11 +123,15 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   },
   ChatMessage: {
     resource: "chat",
-    fields: { id: O, by: P, at: P, text: P, via: O },
+    fields: { id: O, by: P, at: P, text: P, via: O, editedAt: P, removedAt: P, removedBy: P, pinnedAt: P, pinnedBy: P, demo: O },
+  },
+  ScheduledMessage: {
+    resource: "chat",
+    fields: { id: O, by: P, text: P, sendAt: P, createdAt: P, demo: O },
   },
   Chat: {
     resource: "chat",
-    fields: { pros: O, readAt: O, joinedAt: O },
+    fields: { pros: O, readAt: O, joinedAt: O, mutedUntil: O },
   },
   Approval: {
     resource: "approvals",
@@ -282,7 +286,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
       "vitals.thresholds.spo2Low": P, "vitals.thresholds.spo2Drop": P,
       "vitals.shareWithGuardian": O, refillAlertDays: O,
       "dailyLog.shareWithGuardian": O, "dailyLog.waterGoal": O, "dailyLog.sharedSince": O,
-      recapNotify: O, elderChatOnHome: O, helpFrom: O, adminTo: O,
+      recapNotify: O, elderChatOnHome: O, elderShowsRead: O, elderChatReading: O, helpFrom: O, adminTo: O,
       "emergencyCard.allergies": P, "emergencyCard.conditions": P, "emergencyCard.directives": P,
       "emergencyCard.bloodType": P, "emergencyCard.approvedByElder": O, "emergencyCard.approvedAt": P,
     },
