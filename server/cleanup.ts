@@ -7,7 +7,7 @@ import type { Config } from "./config";
 import type { Queryable } from "./db";
 import { pruneRateLimits } from "./ratelimit";
 
-export interface CleanupResult { sessions: number; passwordResets: number; mfaChallenges: number; mfaPendingSetups: number; rateLimits: number }
+export interface CleanupResult { sessions: number; passwordResets: number; mfaChallenges: number; mfaPendingSetups: number; mfaRecoveryRequests: number; rateLimits: number }
 
 export async function cleanupExpired(q: Queryable, cfg: Pick<Config, "sessionIdleMinutes">, now: Date): Promise<CleanupResult> {
   const idleCutoff = new Date(now.getTime() - cfg.sessionIdleMinutes * 60_000);
@@ -16,8 +16,13 @@ export async function cleanupExpired(q: Queryable, cfg: Pick<Config, "sessionIdl
   const mfaChallenges = (await q.query("DELETE FROM mfa_challenges WHERE expires_at <= $1 RETURNING token_hash", [now])).rows.length;
   // An authenticator setup that was started but never confirmed (15 minutes) drops its secret.
   const mfaPendingSetups = (await q.query("UPDATE users SET mfa_pending_secret_enc = NULL, mfa_pending_at = NULL WHERE mfa_pending_at <= $1 RETURNING id", [new Date(now.getTime() - 15 * 60_000)])).rows.length;
+  // CC-235: unconfirmed reset links that expired, and finished or cancelled resets after 30 days (the audit trail keeps the history).
+  const monthAgo = new Date(now.getTime() - 30 * 24 * 3600_000);
+  const mfaRecoveryRequests = (await q.query(
+    `DELETE FROM mfa_recovery_requests WHERE (confirmed_at IS NULL AND confirm_expires_at <= $1)
+        OR (cancelled_at IS NOT NULL AND cancelled_at <= $2) OR (completed_at IS NOT NULL AND completed_at <= $2) RETURNING id`, [now, monthAgo])).rows.length;
   const rateLimits = await pruneRateLimits(q, now);
-  return { sessions, passwordResets, mfaChallenges, mfaPendingSetups, rateLimits };
+  return { sessions, passwordResets, mfaChallenges, mfaPendingSetups, mfaRecoveryRequests, rateLimits };
 }
 
 export const CLEANUP_EVERY_MS = 24 * 3600_000;

@@ -11,6 +11,7 @@ import { elderHelpLines } from "../../data/help";
 import { MyNextSteps } from "../../components/visitNotes";
 import { ElderCovering } from "../../components/away";
 import { activeAway } from "../../data/away";
+import { ElderMemoryAids, ElderQuietDays, ElderScamTile, ElderScamUpdates, ElderTipCard } from "../../components/confident";
 import "./elder.css";
 
 /** CC-68: elder home with three big actions — What's next, SOS, Call my person.
@@ -78,6 +79,10 @@ export default function ElderHome() {
 
       <ElderCovering />
 
+      {/* CC-138, CC-139: notes from family. CC-132: answers to "Is this a scam?". */}
+      <ElderMemoryAids />
+      <ElderScamUpdates />
+
       <div className="elder-tiles">
         <div style={{ position: "relative" }}>
           <Link to="/app/elder/next" className={`elder-tile next ${late ? "late" : ""}`} aria-label={`${label}: ${title}. ${sub}`}>
@@ -99,6 +104,7 @@ export default function ElderHome() {
           <Phone size={32} />
         </Link>
         {/* CC-211: ask the circle for a hand. */}
+        <ElderScamTile />
         <Link to="/app/elder/ask" className="elder-tile hand">
           <HandHeart size={56} aria-hidden="true" />
           <span className="grow"><span className="v" style={{ display: "block" }}>I could use a hand</span><span className="s" style={{ display: "block" }}>Groceries, a ride, company</span></span>
@@ -111,11 +117,16 @@ export default function ElderHome() {
         </section>
       )}
 
+      <ElderTipCard />
+
       <MyNextSteps />
 
       <ElderChatTile />
 
       <DailyCheckins />
+
+      {/* CC-129 */}
+      <ElderQuietDays />
 
       <nav className="elder-links" aria-label="More">
         <Link to="/app/elder/chat"><MessageCircleHeart size={20} /> Family</Link>

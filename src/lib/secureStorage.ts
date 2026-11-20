@@ -154,6 +154,17 @@ export async function getFile(id: string): Promise<ArrayBuffer | null> {
   try { return await decryptBytes(rec.iv, rec.ct); } catch { return null; }
 }
 
+/** Sprint 22: removes one stored file (a memory-aid photo that was replaced, or a scam photo past its 30 days). */
+export async function deleteFile(id: string) {
+  const db = await filesDb();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction("files", "readwrite");
+    tx.objectStore("files").delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 async function clearFiles() {
   const db = await filesDb();
   await new Promise<void>((resolve, reject) => {

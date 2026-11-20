@@ -3,6 +3,8 @@
 Notion stories: CC-2, CC-3, CC-4 (notes after each session) · CC-5 Synthesize research into journey maps (Sprint 15)
 Status: DRAFT, 2026-11-16. Empty templates. No interview has taken place, so nothing below is a finding. The repository is public: copy these tables into the encrypted research folder and fill them in there, never here.
 
+A worked example of these tables, filled once from synthetic practice participants and published research, is in the [practice round](12-practice-round.md). Overwrite it, never build on it, once real notes exist.
+
 This adds two things to the synthesis process in the [journey maps](05-journey-maps.md#synthesis-process-after-interviews): a rolling check after every session, so saturation shows up while interviews are still running, and the script for checking the finished maps with 5 participants, which CC-5 needs.
 
 ## 1. What agents may receive
@@ -29,13 +31,14 @@ Fill one row per session within 24 hours, in the encrypted copy. Agents draft th
 |---|---|---|---|---|
 | Elders | 0 | 6 | | |
 | Caregivers | 0 | 6 | | |
-| Guardians | 0 | 5 | | |
+| Guardians | 0 | 6 | | |
+| Family helpers | 0 | 2 | | |
 
 Never stop below the minimum, even at saturation.
 
 ## 3. Hypothesis scorecard
 
-One row per hypothesis in the guides: H-E1 to H-E10 ([elders](02-interview-guide-elders.md#hypotheses-to-validate-not-findings)), H-C1 to H-C11 ([caregivers](03-interview-guide-caregivers.md#hypotheses-to-validate-not-findings)) and H-G1 to H-G11 ([guardians](04-interview-guide-guardians.md#hypotheses-to-validate-not-findings)). Mark each one supported, mixed, not supported or not tested, with the participant IDs behind it. Judge each hypothesis by its own *Validated if* and *Invalidated if* columns in its guide (for example, H-E1 needs 4 or more of 6 elders). The 3-participant rule in the journey-map process is for themes, not hypotheses.
+One row per hypothesis in the guides: H-E1 to H-E10 ([elders](02-interview-guide-elders.md#hypotheses-to-validate-not-findings)), H-C1 to H-C13 ([caregivers](03-interview-guide-caregivers.md#hypotheses-to-validate-not-findings)) and H-G1 to H-G11 ([guardians](04-interview-guide-guardians.md#hypotheses-to-validate-not-findings)). Mark each one supported, mixed, not supported or not tested, with the participant IDs behind it. Judge each hypothesis by its own *Validated if* and *Invalidated if* columns in its guide (for example, H-E1 needs 4 or more of 6 elders). The 3-participant rule in the journey-map process is for themes, not hypotheses.
 
 | Hypothesis | Validated if (from the guide) | Supported by | Against | Verdict | What it changes |
 |---|---|---|---|---|---|

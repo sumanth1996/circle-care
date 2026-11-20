@@ -11,6 +11,7 @@ import type { Db } from "./db";
 import { errorHandler, HttpError } from "./http";
 import { createMailer, type Mailer } from "./mailer";
 import { MFA_REQUIRED, mfaRouter, requireMfaReady } from "./mfa";
+import { mfaRecoveryRouter } from "./mfaRecovery";
 import { paymentsRouter } from "./payments";
 import { TEST_CARDS, TEST_ROUTING } from "../src/lib/validation";
 import { vaultRouter } from "./vault";
@@ -88,6 +89,7 @@ export function createApp(opts: { cfg: Config; db: Db; now?: () => Date; dev?: b
     });
   });
 
+  app.use("/api/auth/mfa/recovery", mfaRecoveryRouter(d)); // CC-235
   app.use("/api/auth/mfa", mfaRouter(d));
   app.use("/api/auth", authRouter(d));
   app.get("/api/auth/me", (req, res) => {

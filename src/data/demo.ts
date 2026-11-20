@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, Dail
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 17;
+export const STATE_VERSION = 18;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -225,6 +225,12 @@ export function seed(now = new Date()): State {
     calls: callsSeed(now, tasks),
     aboutMe: aboutMeSeed(now),
     aways: [],
+    // Sprint 22: one note from Sarah that is always on Maggie's home. Already read aloud once.
+    quietDays: [],
+    memoryAids: [{ id: "aid-keys", text: "Your keys are in the blue bowl by the door.", kind: "always", by: GUARDIAN, at: iso(ymd(addDays(now, -3)), "18:05"), spokenAt: iso(ymd(addDays(now, -3)), "18:30") }],
+    scams: [],
+    scamTips: { done: [], notNow: 0 },
+    filesToDelete: [],
     health: { heightCm: 163, birthYear: 1946, device: "Maggie's watch", overrides: [] },
     audit,
     alerts: [
@@ -236,12 +242,12 @@ export function seed(now = new Date()): State {
       checkinWindow: { start: "08:00", end: "10:00" },
       escalation: [GUARDIAN, CAREGIVER, FAMILY],
       escalationDelayMin: 2,
-      doseEscalation: { caregiverMin: 30, guardianMin: 60 },
+      doseEscalation: { caregiverMin: 30, guardianMin: 60, withCaregiver: false },
       quietHours: { on: true, start: "22:00", end: "07:00" },
       reminderRepeats: 3,
       channels: { push: true, sms: true, email: false },
       criticalBypass: true,
-      textSize: "xl",
+      textSize: "xxl", // CC-238: largest text by default; Maggie can make it smaller under Text size.
       highContrast: false,
       readAloud: true,
       sharingPaused: false,

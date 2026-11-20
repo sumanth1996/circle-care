@@ -22,6 +22,8 @@
 .daily-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .daily-head h2 { font-size: calc(var(--text-base) * 1.35); letter-spacing: -0.02em; }
 .daily-note { color: var(--muted); font-size: calc(var(--text-base) * 0.85); }
+/* CC-238: the Saved tick on My day. */
+.daily-saved { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-weight: 600; font-size: calc(var(--text-base) * 0.9); }
 .daily-foot { color: var(--ink-2); font-size: calc(var(--text-base) * 0.85); }
 .daily-row { display: grid; gap: 10px; }
 .daily-row h3 { font-size: calc(var(--text-base) * 0.95); font-weight: 700; }

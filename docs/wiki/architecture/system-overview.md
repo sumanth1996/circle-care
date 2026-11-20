@@ -121,6 +121,8 @@ From `src/App.tsx`. All paths are hash routes (prefix `/#`).
 | `/app/two-step` | `account/TwoStep` | Set up two-step sign-in; guardians and caregivers are sent here until they do (CC-200) |
 | `/app/forgot-password` | `account/PasswordReset` | Ask for a password-reset link (CC-201) |
 | `/app/reset-password` | `account/PasswordReset` | Choose a new password with the link's token (CC-201) |
+| `/app/recover-two-step` | `account/RecoverTwoStep` | Start the 72-hour wait to reset two-step sign-in, from the emailed link (CC-235) |
+| `/app/recover-two-step/cancel` | `account/RecoverTwoStep` | Cancel a waiting reset from the emailed link (CC-235) |
 | `/app/account` | `account/MyAccount` | Profile, identity, photo, payment methods (CC-176 – CC-188), sign-in & security (CC-200, CC-201) |
 | `/app/sign-in/:persona` | `SignIn` | Demo sign-in, MFA, consent |
 | `/app/invite/:memberId` | `Invite` | Accept an invitation |

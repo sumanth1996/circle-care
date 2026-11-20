@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { State, Persona, Alert, DoseStatus, Medication, Approval, Member, CareTask, Shift, Handoff, AuditEvent, Settings, CareDoc, Appointment, AboutKey } from "./types";
 import { seed, STATE_VERSION, ELDER, GUARDIAN, CAREGIVER, FAMILY } from "./demo";
-import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, yesterdayOf, activeSos, member, todayVisit, tasksFor, followUpDoses, checkinFollowUps } from "./selectors";
+import { clock, dosesFor, doseThresholds, meId, nameOf, lateCheckins, todayOf, yesterdayOf, activeSos, member, todayVisit, tasksFor, followUpDoses, checkinFollowUps, currentQuiet } from "./selectors";
 import { append } from "./audit";
 import { can, roleOf, type Action, type Resource } from "./policy";
 import { hm, uid, ymd, toMin, minutesOfDay, fmtTime, addDays, greeting } from "../lib/time";
@@ -9,7 +9,7 @@ import { readingsFor, detectEvents } from "../lib/health";
 import { lowSupply, autoRefillId, bottleOf, withCurrentSupply, rebaseSupply, hasLoggedToday, mealsGap, dailyShared, inQuietHours, RECAP_NOTIFY_AT, RECAP_LAST_CALL } from "./everyday";
 import { noteSharedSince } from "./everydayActions";
 import * as everyday from "./everydayActions";
-import { cryptoAvailable, deviceKey, encryptForStorage, loadEncrypted, wipeDevice } from "../lib/secureStorage";
+import { cryptoAvailable, deleteFile, deviceKey, encryptForStorage, loadEncrypted, wipeDevice } from "../lib/secureStorage";
 import { createSaver, saveWhenPageGoes } from "./saver";
 import { runReminders, settleDose, snoozeReminder, heldFor, releaseHeld } from "./calmAlerts";
 import * as help from "./help";
@@ -19,6 +19,9 @@ import * as visitNotes from "./visitNotes";
 import * as callLog from "./callLog";
 import * as aboutMe from "./aboutMe";
 import * as away from "./away";
+import * as quiet from "./quietDays";
+import * as aids from "./memoryAids";
+import * as scams from "./scams";
 
 export const STATE_KEY = "circle-care-demo";
 
@@ -241,11 +244,12 @@ export function evaluate(s: State) {
   }
 
   // Daily check-ins (CC-142): at most one gentle reminder a day, only if Maggie added nothing.
-  if (nowMin >= toMin("19:00") && !hasLoggedToday(s)) {
+  // CC-129: not on a day Maggie said she's resting or away.
+  if (nowMin >= toMin("19:00") && !hasLoggedToday(s) && !currentQuiet(s)) {
     pushAlert(s, { key: `daily-elder-${today}`, to: ["elder"], severity: "info", title: "You have a reminder from Circle Care", detail: "If you like, tap how you feel, your water and your meals. You can skip it.", link: "/app/elder" });
   }
   // No meals logged for two days (CC-143): a gentle note to Sarah, only while Maggie shares check-ins.
-  if (dailyShared(s) && mealsGap(s)) {
+  if (dailyShared(s) && mealsGap(s) && !currentQuiet(s)) {
     pushAlert(s, { key: `meals-${today}`, to: ["guardian"], severity: "info", title: "Update from Circle Care", detail: "Maggie hasn't logged meals for 2 days. A quick call might help.", link: "/app/guardian/health#wellbeing" });
   }
 
@@ -277,6 +281,9 @@ export function evaluate(s: State) {
   // CC-227: a call's follow-up: a reminder the day before, then Sarah hears if it's past its day.
   callLog.runCalls(s);
 
+  // CC-132: a resolved scam report's photo is removed after 30 days.
+  scams.runScams(s);
+
   // CC-208: when quiet hours end, what waited overnight goes out as one morning summary.
   releaseHeld(s);
 
@@ -303,6 +310,14 @@ function useStoreState(initial: State) {
   // Encrypted save (CC-26), started as soon as the state changes (CC-195). Also saved when the page is hidden or closed.
   useEffect(() => { saver.changed(state).catch(() => {}); }, [state]);
   useEffect(() => saveWhenPageGoes(() => { saver.flush().catch(() => {}); }), []);
+  // Sprint 22: photos that were replaced, removed or aged out are deleted from the device, then crossed off.
+  useEffect(() => {
+    const ids = state.filesToDelete ?? [];
+    if (!ids.length || !cryptoAvailable()) return;
+    Promise.all(ids.map((id) => deleteFile(id).catch(() => {}))).then(() => {
+      setState((prev) => ({ ...prev, filesToDelete: (prev.filesToDelete ?? []).filter((x) => !ids.includes(x)) }));
+    });
+  }, [state.filesToDelete]);
   // Screens that show time (a dose coming due, "5 min ago") re-render on the tick even when the state is unchanged.
   const [, setBeat] = useState(0);
 
@@ -702,6 +717,20 @@ function useStoreState(initial: State) {
       askOtherBackup: () => update((s) => { away.maggieAsksChange(s, actor(s)); }),
       imBack: () => update((s) => { away.imBack(s, actor(s)); }),
       seenAwaySummary: () => update((s) => { away.seenSummary(s, actor(s)); }),
+      setQuiet: (kind: "resting" | "away", until?: string) => update((s) => { quiet.setQuiet(s, actor(s), kind, until); }),
+      endQuiet: () => update((s) => { quiet.endQuiet(s, actor(s)); }),
+      addAid: (input: aids.AidInput) => update((s) => { aids.addAid(s, actor(s), input); }),
+      editAid: (id: string, input: aids.AidInput) => update((s) => { aids.editAid(s, actor(s), id, input); }),
+      removeAid: (id: string) => update((s) => { aids.removeAid(s, actor(s), id); }),
+      setAidOn: (id: string, on: boolean) => update((s) => { aids.setAidOn(s, actor(s), id, on); }),
+      seeAid: (id: string) => update((s) => { aids.seeAid(s, actor(s), id); }),
+      spokeAid: (id: string) => update((s) => { aids.spokeAid(s, actor(s), id); }),
+      reportScam: (input: scams.ScamInput) => update((s) => { scams.reportScam(s, actor(s), input); }),
+      checkScam: (id: string, item: string, on: boolean) => update((s) => { scams.checkScam(s, actor(s), id, item, on); }),
+      resolveScam: (id: string, reply?: string) => update((s) => { scams.resolveScam(s, actor(s), id, reply); }),
+      seeScamAnswer: (id: string) => update((s) => { scams.seeScamAnswer(s, actor(s), id); }),
+      tipGotIt: () => update((s) => { scams.tipGotIt(s, actor(s)); }),
+      tipNotNow: () => update((s) => { scams.tipNotNow(s, actor(s)); }),
       readChat: () => update((s) => everyday.readChat(s, actor(s))),
       setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */

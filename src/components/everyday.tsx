@@ -1,4 +1,5 @@
-import { Check, GlassWater, Minus, Plus, Coffee, Sandwich, Soup } from "lucide-react";
+import { useState } from "react";
+import { Check, CheckCircle2, GlassWater, Minus, Plus, Coffee, Sandwich, Soup } from "lucide-react";
 import type { Feeling, Meal } from "../data/types";
 import { useStore } from "../data/store";
 import { FEELINGS, MEALS, dailyLogFor, dailyShared } from "../data/everyday";
@@ -41,13 +42,17 @@ export function DailyCheckins() {
   const toast = useToast();
   const log = dailyLogFor(state);
   const goal = state.settings.dailyLog.waterGoal;
-  const saved = (msg: string) => toast(msg);
+  // CC-238: a Saved tick that stays in view after each tap, not only a toast that fades.
+  const [savedMark, setSavedMark] = useState<string | null>(null);
+  const saved = (msg: string) => { toast(msg); setSavedMark(msg); };
 
   return (
     <section className="daily glass" aria-labelledby="daily-h">
       <div className="daily-head">
         <h2 id="daily-h">My day</h2>
-        <span className="daily-note">Optional · saves as you tap</span>
+        {savedMark
+          ? <span className="daily-saved" role="status" aria-label={savedMark}><CheckCircle2 size={20} aria-hidden="true" /> Saved</span>
+          : <span className="daily-note">Optional · saves as you tap</span>}
       </div>
 
       <div className="daily-row" role="group" aria-labelledby="feel-h">
@@ -66,12 +71,12 @@ export function DailyCheckins() {
       <div className="daily-row" role="group" aria-labelledby="water-h">
         <h3 id="water-h">Water</h3>
         <div className="water">
-          <button type="button" className="round" aria-label="One glass less" disabled={log.water === 0} onClick={() => actions.logDaily({ waterBy: -1 })}><Minus size={26} /></button>
+          <button type="button" className="round" aria-label="One glass less" disabled={log.water === 0} onClick={() => { actions.logDaily({ waterBy: -1 }); setSavedMark(`Saved: ${log.water - 1} of ${goal} glasses`); }}><Minus size={26} /></button>
           <div className="glasses" aria-live="polite" aria-label={`${log.water} of ${goal} glasses`}>
             <b>{log.water}</b> <span>of {goal} glasses</span>
             <span className="glass-dots" aria-hidden="true">{Array.from({ length: Math.max(goal, log.water) }, (_, i) => <GlassWater key={i} size={20} className={i < log.water ? "on" : ""} />)}</span>
           </div>
-          <button type="button" className="round add" aria-label="One more glass" disabled={log.water >= 20} onClick={() => { actions.logDaily({ waterBy: 1 }); if (log.water + 1 === goal) saved("That's your goal for today"); }}><Plus size={26} /></button>
+          <button type="button" className="round add" aria-label="One more glass" disabled={log.water >= 20} onClick={() => { actions.logDaily({ waterBy: 1 }); if (log.water + 1 === goal) saved("That's your goal for today"); else setSavedMark(`Saved: ${log.water + 1} of ${goal} glasses`); }}><Plus size={26} /></button>
         </div>
       </div>
 

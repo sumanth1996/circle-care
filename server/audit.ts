@@ -13,7 +13,8 @@ export type AuditAction =
   | "nonprod.blocked" | "audit.exported"
   | "ratelimit.exceeded"
   | "auth.signout_all" | "password.changed" | "password.reset_requested" | "password.reset" | "email.undeliverable"
-  | "auth.challenge" | "auth.mfa_failed" | "mfa.locked" | "mfa.enrolled" | "mfa.recovery_used" | "mfa.enrol_password_wrong";
+  | "auth.challenge" | "auth.mfa_failed" | "mfa.locked" | "mfa.enrolled" | "mfa.recovery_used" | "mfa.enrol_password_wrong"
+  | "mfa.reset_requested" | "mfa.reset_wait_started" | "mfa.reset_cancelled" | "mfa.reset_completed";
 
 /** A standalone run of 9+ digits (SSN, account or card number) or a dashed SSN. Hex hashes don't match. */
 export const LOOKS_SENSITIVE = /(^|[^0-9a-z])\d{9,}([^0-9a-z]|$)|\b\d{3}-\d{2}-\d{4}\b/i;
@@ -41,6 +42,10 @@ export function describe(action: string, d: Record<string, unknown>): string {
     case "mfa.enrolled": return "Two-step sign-in turned on (authenticator app)";
     case "mfa.enrol_password_wrong": return "Wrong password entered while setting up two-step sign-in";
     case "mfa.recovery_used": return `A recovery code was used — ${d.remaining} left`;
+    case "mfa.reset_requested": return "Someone with your password asked to reset two-step sign-in — a confirm link was emailed";
+    case "mfa.reset_wait_started": return `Reset of two-step sign-in confirmed by email — it can be finished after a ${d.waitHours}-hour wait`;
+    case "mfa.reset_cancelled": return d.by === "password" ? "Waiting reset of two-step sign-in cancelled because the password changed" : "Waiting reset of two-step sign-in cancelled";
+    case "mfa.reset_completed": return "Two-step sign-in reset after the wait — every device signed out";
     case "auth.failed": return "Sign-in attempt with a wrong password";
     case "auth.locked": return "Sign-in locked for 15 minutes after too many attempts";
     case "auth.signout": return "Signed out";

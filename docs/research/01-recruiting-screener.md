@@ -13,7 +13,7 @@ Recruit enough people across the three personas to test whether the core problem
 - **Professional caregivers** (like Ana Rivera): proving work was done, and hand-offs between shifts.
 - **Legal guardians / healthcare POA holders** (like Sarah Lee): knowing Mom is OK without calling five times a day, and making decisions with good information.
 
-Secondary: family helpers (like grandson James) and respite caregivers (like Ruth Okafor). Interview 1–2 of each if they come up naturally, but they do not count toward quotas.
+Secondary: family helpers (like grandson James) and respite caregivers (like Ruth Okafor). Family helpers have a quota of 2 (§2), because only about one in five family caregivers who do medical tasks has been trained for them, and the caregiver guide now covers them. Interview 1–2 respite caregivers if they come up naturally; they do not count toward quotas.
 
 ## 2. Quotas
 
@@ -21,8 +21,8 @@ Secondary: family helpers (like grandson James) and respite caregivers (like Rut
 |---|---|---|---|
 | Elders (70+, living at home) | 6 | 8 | At least 2 living alone; at least 2 who use a smartphone only for calls/texts; at least 1 with low vision or hearing |
 | Professional caregivers | 6 | 8 | At least 3 agency-employed, at least 2 private-pay/independent; at least 2 non-native English speakers |
-| Legal guardians / POA holders | 5 | 7 | At least 2 long-distance (more than 1 hour away); at least 1 court-appointed guardian (not POA); at least 1 who also works full time |
-| Family helpers (bonus) | 0 | 2 | — |
+| Legal guardians / POA holders | 6 | 7 | At least 2 long-distance (more than 1 hour away); at least 1 court-appointed guardian (not POA); at least 1 who also works full time |
+| Family helpers | 2 | 2 | Unpaid relatives who do hands-on care (medicines, wound care, lifting); interviewed with the family-helper part of the caregiver guide |
 
 Stop recruiting a segment when two consecutive interviews produce no new themes (saturation), but never below the minimum.
 

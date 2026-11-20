@@ -45,7 +45,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
   State: {
     resource: null,
     fields: {
-      version: O, persona: O, signedIn: O, clockOffsetMin: O, lastRunAt: O, elderId: O,
+      version: O, persona: O, signedIn: O, clockOffsetMin: O, lastRunAt: O, elderId: O, filesToDelete: O,
       "health.heightCm": P, "health.birthYear": I, "health.device": O,
       "health.overrides.at": P, "health.overrides.hr": P, "health.overrides.spo2": P, "health.overrides.addedAt": P,
     },
@@ -213,6 +213,35 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
       "summaryFor.alerts": O, "summaryFor.tasksDone": O, "summaryFor.sos": O, "summaryFor.open": O,
     },
   },
+  // CC-129: Maggie's resting or away days. Personal, not health: no reason is asked or kept, but it says when she
+  // may not be home.
+  QuietDay: {
+    resource: "quietDays",
+    fields: { id: O, kind: I, from: I, until: I, by: I, at: O, endedAt: O },
+  },
+  // CC-138, CC-139: a note to help Maggie remember says something about her memory, so the note, its photo and
+  // who wrote or read it when are health data.
+  MemoryAid: {
+    resource: "memoryAids",
+    fields: {
+      id: O, text: P, photoId: P, kind: O, date: O, time: O, by: P, at: P, updatedAt: P, offAt: P, seenAt: P,
+      hiddenOn: O, spokenAt: P,
+    },
+  },
+  // CC-132, CC-133: what Maggie shares about a possible scam can hold account or card details, so the note and photo
+  // are sensitive. Guardians and Maggie only; never the audit log. The photo goes 30 days after it's resolved.
+  ScamReport: {
+    resource: "scams",
+    fields: {
+      id: O, kind: I, note: S, photoId: S, by: I, at: I, checked: O, status: O, resolvedBy: I, resolvedAt: O,
+      reply: I, elderSeenAt: O, photoRemovedAt: O,
+    },
+  },
+  // CC-134: which weekly tips Maggie has finished.
+  ScamTips: {
+    resource: "tips",
+    fields: { "done.id": O, "done.at": O, week: O, notNow: O, hiddenOn: O },
+  },
   // CC-217: questions and observations for a visit describe Maggie's health.
   VisitQuestion: {
     resource: "questions",
@@ -229,7 +258,7 @@ export const STATE_CLASSIFICATION: Record<string, EntityClassification> = {
     resource: ["settings", "emergencyCard", "vitals", "wellbeing"],
     fields: {
       "checkinWindow.start": O, "checkinWindow.end": O, escalation: O, escalationDelayMin: O,
-      "doseEscalation.caregiverMin": O, "doseEscalation.guardianMin": O,
+      "doseEscalation.caregiverMin": O, "doseEscalation.guardianMin": O, "doseEscalation.withCaregiver": O,
       "quietHours.on": O, "quietHours.start": O, "quietHours.end": O, reminderRepeats: O,
       "channels.push": O, "channels.sms": O, "channels.email": O, criticalBypass: O,
       textSize: O, highContrast: O, readAloud: O, sharingPaused: O,
@@ -263,6 +292,11 @@ export const DB_CLASSIFICATION: Record<string, Record<string, DataClass>> = {
   // Recovery codes and pending second steps (CC-200): hashes only.
   mfa_recovery_codes: { id: O, user_id: O, code_hash: S, created_at: O, used_at: O },
   mfa_challenges: { token_hash: S, user_id: O, created_at: O, expires_at: O },
+  // Resetting two-step sign-in after a lost phone (CC-235): link hashes only.
+  mfa_recovery_requests: {
+    id: O, user_id: O, confirm_hash: S, cancel_hash: S, created_at: O, confirm_expires_at: O,
+    confirmed_at: O, ready_at: O, cancelled_at: O, completed_at: O,
+  },
   // Shared rate-limit counters (CC-204): keys are hashes of an address or account id.
   rate_limits: { key: O, reset_at: O, count: O },
   elders: { ...persona },

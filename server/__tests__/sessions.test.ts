@@ -281,7 +281,7 @@ describe("CC-201 cleanup of expired rows", () => {
     try {
       // At start-up: the expired bucket goes, the live one stays.
       expect(await s.first).toMatchObject({ rateLimits: 1 });
-      expect(lines).toEqual(["[cleanup] removed 0 sessions, 0 passwordResets, 0 mfaChallenges, 0 mfaPendingSetups, 1 rateLimits"]);
+      expect(lines).toEqual(["[cleanup] removed 0 sessions, 0 passwordResets, 0 mfaChallenges, 0 mfaPendingSetups, 0 mfaRecoveryRequests, 1 rateLimits"]);
       expect((await c.db.query<{ key: string }>("SELECT key FROM rate_limits")).rows.map((x) => x.key)).toEqual(["later"]);
       // Then daily, unref'd.
       const i = spy.mock.calls.findIndex(([, ms]) => ms === CLEANUP_EVERY_MS);

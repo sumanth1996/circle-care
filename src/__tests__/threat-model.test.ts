@@ -10,7 +10,7 @@ const ROOT = resolve(__dirname, "../..");
 const DOC = readFileSync(resolve(ROOT, "docs/security/10-threat-model.md"), "utf8");
 
 /** Change this when threats are added or removed, so a row can't drop out of the parse unnoticed. */
-const THREAT_COUNT = 57;
+const THREAT_COUNT = 58; // CC-235 added C4-S4
 
 const REF = /`((?:[\w.-]+\/)*[\w.-]+\.(?:ts|tsx|js|sql|yml|json|html)|\.replit):([^`]+)`/g;
 const STATUSES = ["In place", "Partial", "Demo only", "Missing"];

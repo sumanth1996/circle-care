@@ -1,5 +1,6 @@
 // Sign in with email and password (CC-174, CC-175), then the code from an
-// authenticator app or a recovery code when two-step sign-in is on (CC-200).
+// authenticator app or a recovery code when two-step sign-in is on (CC-200),
+// or a reset of two-step sign-in when the phone and codes are lost (CC-235).
 
 import { useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
@@ -7,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { Logo } from "../../components/Logo";
 import { useToast } from "../../components/ui";
 import { useAccount } from "../../data/account";
-import { auth } from "../../lib/api";
+import { auth, type RecoveryWait } from "../../lib/api";
 import { apiErrors, Field, FormError, type Errors } from "./parts";
 import { CodeStep } from "./security";
 import "./account.css";
@@ -27,6 +28,7 @@ export default function Login() {
   const [message, setMessage] = useState<string | undefined>(params.get("expired") ? START_MESSAGE.expired : params.get("everywhere") ? START_MESSAGE.everywhere : undefined);
   const [busy, setBusy] = useState(false);
   const [challenge, setChallenge] = useState<string | null>(null);
+  const [recovery, setRecovery] = useState<RecoveryWait>();
   const ref = useRef<HTMLFormElement>(null);
 
   if (ready && me && !busy) return <Navigate to={me.profileStatus === "complete" ? "/app/account" : `/app/join/${me.role}`} replace />;
@@ -49,7 +51,7 @@ export default function Login() {
     try {
       const r = await auth.signIn(f.email, f.password);
       setF({ ...f, password: "" });
-      if ("mfaRequired" in r) { setChallenge(r.challenge); setBusy(false); return; }
+      if ("mfaRequired" in r) { setChallenge(r.challenge); setRecovery(r.recovery); setBusy(false); return; }
       await finish();
     } catch (err) {
       const x = apiErrors(err);
@@ -68,8 +70,14 @@ export default function Login() {
       </div>
       <section className="acct-card panel narrow">
         {challenge ? (
-          <CodeStep challenge={challenge}
+          <CodeStep challenge={challenge} recovery={recovery}
             onSignedIn={async (left) => { setBusy(true); await finish(left); }}
+            onReset={async (ended) => {
+              setBusy(true);
+              await refresh();
+              toast(ended ? `Two-step sign-in was reset and ${ended === 1 ? "1 device was" : `${ended} devices were`} signed out. Set it up on your new phone.` : "Two-step sign-in was reset. Set it up on your new phone.");
+              nav("/app/two-step");
+            }}
             onRestart={(m) => { setChallenge(null); setMessage(m); }} />
         ) : (
           <form ref={ref} className="stack" onSubmit={submit} noValidate>

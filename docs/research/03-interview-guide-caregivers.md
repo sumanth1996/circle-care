@@ -1,9 +1,9 @@
 # Interview Guide — Professional Caregivers
 
 Notion story: CC-3 Interview guide: professional caregivers · CC-197 concept tests of the built features
-Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No interviews have taken place.
+Status: DRAFT v3, updated 2026-11-16 (CC-197). Not yet used with real participants. No interviews have taken place. v3 fixes the gaps the practice round found and adds the family-helper part; a POC round with dummy profiles ran against it ([13](13-poc-research-round.md)).
 
-> Participants come through the CC-1 screener. If the caregiver works for an agency and the agency required approval, confirm written approval is on file. Never ask for client names. Session length up to 70 minutes; schedule around shifts and offer evenings. If time is short, drop T4. Run sessions Monday to Saturday, when the demo gives Ana a shift.
+> Participants come through the CC-1 screener. Family helpers (unpaid relatives who do hands-on care) use this guide too, with the [family-helper part](#family-helpers-in-place-of-2-to-4) in place of §2 to §4. If the caregiver works for an agency and the agency required approval, confirm written approval is on file. Never ask for client names. Session length up to 70 minutes: the sections add up to 66, which leaves about 4 for consent at the start (fieldwork plan §4 step 1). Schedule around shifts and offer evenings. T4 is optional; if time is short, drop it. Run sessions Monday to Saturday, when the demo gives Ana a shift.
 
 ## Goals
 
@@ -64,7 +64,7 @@ Status: DRAFT v2, updated 2026-11-15 (CC-197). Not yet piloted or used. No inter
 - What happens when the client refuses a dose?
 - When a medicine changes, how do you find out? Has that ever gone wrong?
 
-## 6. Concept test — prototype tasks (12 min)
+## 6. Concept test — prototype tasks (10 min)
 
 Use `/#/app` → Ana on a phone. Read each task aloud. The demo checks Ana in at 8 AM on its own; if she is already on shift, T1 becomes "Show me how you'd know you're on shift."
 
@@ -85,7 +85,7 @@ Same phone, still as Ana, on shift from T1 and before T3. Before T6, switch to S
 
 | Task | Prompt | Watch for | Success = |
 |---|---|---|---|
-| T5 Pills on hand | "One of Maggie's medicines is running low. Which one, and what would you do?" Then: "A new bottle of 30 just arrived." | Finds *Pills on hand* on Today; taps **Request refill**; the app then says *asked Fog City Pharmacy for a refill*: do they read that as the app having told the pharmacy? (It only records that Ana asked.) Finds **New bottle** | Names the low medicine, requests a refill and records the new bottle |
+| T5 Pills on hand | "One of Maggie's medicines is running low. Which one, and what would you do?" Then: "A new bottle of 30 just arrived." | Finds *Pills on hand* on Today; taps **I asked the pharmacy**; the app then says *asked Fog City Pharmacy for a refill* and *Circle Care doesn't contact pharmacies.*: do they still read it as the app having told the pharmacy? (It only records that Ana asked. The label was reworded in Sprint 25, CC-236, after the dummy POC round.) Finds **New bottle** | Names the low medicine, requests a refill and records the new bottle |
 | T6 Family chat | "Let the family know Maggie enjoyed her walk today." Then: "Tell them she took her Metformin 500 mg with breakfast." (Typed; see the reminder on chat voice.) | Reaction to being added by the family; the health-detail check on the second message: **Save as a note**, **Send anyway** or **Edit**; sees only messages from after joining | Sends the first message and makes a choice on the check |
 | T7 Check-ins and the recap (concept) | "Maggie can log how she feels, her water and meals, and only Sarah sees it, when Maggie shares. Sarah also gets an evening recap of Maggie's day at 7 PM." | Do they want to see Maggie's check-ins? Why? Would the recap change the texts and calls they get from Sarah? | Not scored; record the answers |
 
@@ -97,6 +97,18 @@ After T5 and T6: "1–5, how easy?" and "Would this save you time or add time co
 - Would your agency allow it? Who decides?
 - Follow-up OK? Confirm incentive.
 
+## Family helpers (in place of §2 to §4)
+
+For a family helper, run §1, then these questions in place of §2 to §4 (the same 32 minutes), then §5 to §7. Before §6, say that Ana in the demo is a paid aide, so they'll be doing her part. Ask about time off work, never about money amounts.
+
+- Walk me through the last time you helped [elder] with a hands-on task: medicines, an injection, a dressing, lifting or a transfer.
+- Who showed you how to do it? (a nurse, the aide, a pharmacist, a video, nobody.) How sure were you the first time?
+- Is there a task you do that nobody showed you? What would have helped?
+- What do you do that the paid aide also does? How do the two of you know who did what today?
+- Has a task ever been done twice, or missed, because each of you thought the other had it? What happened?
+- When a medicine or the care plan changes, how do you hear? Who tells the aide?
+- About how many hours a week do you help? Do you also work? Have you taken time off for it?
+
 ## Note-taking template
 
 ```
@@ -107,6 +119,8 @@ Duplicate entry examples:
 Verification method today:          Feelings about it (quote):
 Hand-off method today:
 Medicine involvement:
+Who showed them each hands-on task (role, never a name):
+Family helper only: tasks shared with the aide, and how they know who did what:
 Quotes (verbatim, de-identified):
 Task results:  T1 __/5  T2 __/5  T3 __/5  T4 __/5   Time saved/added (their view):
 Everyday care:  T5 __/5  T6 __/5   Expected the pharmacy to be told? Y/N
@@ -125,7 +139,9 @@ Surprises / contradicts a hypothesis:
 | H-C5 | Shift-limited access to the care plan is acceptable to caregivers. | 4+ of 6 | Most say they need off-shift access (record why) |
 | H-C6 | Agency software already covers EVV, so Circle Care must coexist rather than replace it. | Agency caregivers describe mandatory EVV tools | Few use EVV |
 | H-C7 | Caregivers would record pill counts and request refills in the app if it saves a call or a text. | 4+ of 6 complete T5 and say they'd use it | Most say it adds work |
-| H-C8 | Caregivers understand that **Request refill** records the request and doesn't contact the pharmacy. Correct means: "it notes that I asked the pharmacy myself; Circle Care doesn't contact it." | 4+ of 6 explain it correctly after T5 | Most expect the app to have told the pharmacy (the label or the confirmation needs to change) |
+| H-C8 | Caregivers understand that **I asked the pharmacy** records the request and doesn't contact the pharmacy. Correct means: "it notes that I asked the pharmacy myself; Circle Care doesn't contact it." | 4+ of 6 explain it correctly after T5 | Most expect the app to have told the pharmacy (the Sprint 25 wording needs another change) |
 | H-C9 | Caregivers accept joining the family chat only when the family adds them. | 4+ of 6 | Most expect to be in it from the start, or not at all |
 | H-C10 | The health-detail check in the chat feels helpful, not like being policed. | 4+ of 6 | Most find it intrusive |
 | H-C11 | Sarah's evening recap would cut the check-up texts caregivers get from family. | Half or more of those asked T7 expect fewer | Most expect no change |
+| H-C12 | Family helpers do at least one hands-on medical task that nobody showed them how to do. | Both family helpers name one | Neither does |
+| H-C13 | When a family helper and a paid aide share tasks, some get done twice or missed because nobody records who did what. | Both family helpers describe a doubled or missed task | Neither does |
