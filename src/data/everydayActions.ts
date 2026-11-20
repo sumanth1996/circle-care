@@ -31,7 +31,7 @@ export function requestRefill(s: State, by: string, medId: string) {
   med.supply.requestedAt = at;
   med.supply.requestedBy = by;
   const pharmacy = med.supply.pharmacy ?? "the pharmacy";
-  med.history.push({ at, by, change: `Refill requested from ${pharmacy}` });
+  med.history.push({ at, by, change: `Asked ${pharmacy} for a refill (Circle Care does not contact pharmacies)` });
   audit(s, by, "updated", `refill request for ${med.name}`);
   const to = (["guardian", "caregiver"] as Persona[]).filter((p) => p !== s.persona);
   pushAlert(s, { to, severity: "info", title: "Update from Circle Care", detail: `${nameOf(s, by)} asked ${pharmacy} to refill ${med.name}.`, link: "/app/guardian/meds" });

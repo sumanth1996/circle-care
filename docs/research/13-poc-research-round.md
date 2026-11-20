@@ -204,3 +204,11 @@ Against the [synthesis kit](11-synthesis-kit.md) §5, for a POC with dummy profi
 - **CC-5 synthesis:** 7 themes, the maps revised (v0.6) and 7 dummy checks, one per segment at least. Done (POC). The maps stay hypothesis journeys until real people check them.
 
 For real research, the [practice round](12-practice-round.md#what-closes-cc-2-to-cc-5) still lists what each story would need.
+
+## Built from this round (Sprint 25, POC)
+
+Three changes from the learnings were built in Sprint 25. Each still needs real research before it counts as validated.
+
+- **CC-236, learning 1:** the refill button now says **I asked the pharmacy**. A hint under it and the line after it both say Circle Care doesn't contact pharmacies. The guides test the new wording (H-C8, H-G9).
+- **CC-238, learning 3:** elders start with the largest text. Their first sign-in shows a one-time walkthrough of What's next, SOS and Call my person, and My day shows a Saved tick that stays after each tap.
+- **CC-239, learning 5:** guardians can turn on "Tell me at the same time as the caregiver". It is off by default, so the caregiver still gets the first chance to fix a missed dose.
