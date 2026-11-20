@@ -31,6 +31,7 @@ import Approvals from "./pages/guardian/Approvals";
 import Circle from "./pages/guardian/Circle";
 import Schedule from "./pages/guardian/Schedule";
 import Feed from "./pages/guardian/Feed";
+import FamilyDoses from "./pages/shared/FamilyDoses";
 import Digest from "./pages/guardian/Digest";
 import GuardianSettings from "./pages/guardian/GuardianSettings";
 import Health from "./pages/guardian/Health";
@@ -140,6 +141,7 @@ export default function App() {
               <Route path="about-me" element={<AboutMePage />} />
               <Route path="away" element={<AwayPage />} />
               <Route path="memory-aids" element={<MemoryAidsPage />} />
+              <Route path="doses" element={<FamilyDoses />} />
             </Route>
             <Route path="/app/guardian" element={<AppShell persona="guardian" />}>
               <Route index element={<GuardianHome />} />

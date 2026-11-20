@@ -14,6 +14,8 @@ export interface Saver<T> {
   changed(value: T): Promise<void>;
   /** Saves the latest value again, for a page that is being hidden or closed. */
   flush(): Promise<void>;
+  /** Takes a value that is already stored (another tab saved it) as the latest, without writing it. */
+  seen(value: T): void;
   /** Stops saving, drops every save under way and forgets the last value, until resume(). */
   pause(): void;
   resume(): void;
@@ -54,6 +56,9 @@ export function createSaver<T>(encode: (value: T) => Promise<string> | string, s
     },
     flush() {
       return latest ? saver.save(latest.value) : Promise.resolve();
+    },
+    seen(value) {
+      if (!paused) latest = { value };
     },
     pause() {
       paused = true;

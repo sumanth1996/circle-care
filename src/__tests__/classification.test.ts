@@ -15,7 +15,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
 const LINKS = {
-  "State.members": "Member", "State.meds": "Medication", "Medication.supply": "MedSupply", "State.doses": "DoseLog",
+  "State.members": "Member", "State.meds": "Medication", "Medication.supply": "MedSupply", "State.doses": "DoseLog", "State.doseHistory": "DoseEvent",
   "State.tasks": "CareTask", "State.taskLogs": "TaskLog", "State.shifts": "Shift", "State.visits": "Visit",
   "State.handoffs": "Handoff", "State.sos": "SosEvent", "State.checkins": "Checkin", "State.dailyLogs": "DailyLog",
   "State.chat": "Chat", "Chat.messages": "ChatMessage", "State.approvals": "Approval", "State.notes": "CareNote",

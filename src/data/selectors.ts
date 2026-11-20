@@ -1,4 +1,5 @@
 import type { State, Medication, DoseLog, CareTask, Member, Persona, Shift } from "./types";
+import { doseEventText, DEMO_LABEL } from "./saferDoses";
 import { ymd, toMin, minutesOfDay, nowFrom, addDays, at, fmtShortDay } from "../lib/time";
 import { CAREGIVER, ELDER, FAMILY, GUARDIAN } from "./demo";
 
@@ -308,8 +309,12 @@ export function feed(s: State) {
   const items: Item[] = [];
   for (const d of s.doses) {
     const med = s.meds.find((m) => m.id === d.medId);
-    items.push({ at: d.at, kind: "dose", by: d.by, tone: d.status === "taken" ? "good" : "warn", text: `${med?.name ?? "Medication"} ${d.status}${d.verified ? " · verified by caregiver" : ""}${d.reason ? ` — “${d.reason}”` : ""}` });
+    items.push({ at: d.at, kind: "dose", by: d.by, tone: d.status === "taken" ? "good" : "warn", text: `${med?.name ?? "Medication"} ${d.status}${d.verified ? " · verified by caregiver" : ""}${d.reason ? ` — “${d.reason}”` : ""}${d.correctedBy ? ` · corrected by ${nameOf(s, d.correctedBy)}` : ""}${d.demo ? ` · ${DEMO_LABEL}` : ""}` });
   }
+  // CC-243, CC-244: blocked double marks, undos and corrections, with the first entry kept.
+  for (const e of s.doseHistory ?? []) items.push({ at: e.at, kind: "dose", by: e.by, tone: "warn", text: `${doseEventText(s, e)}${e.demo ? ` · ${DEMO_LABEL}` : ""}` });
+  // CC-246: a stopped medicine.
+  for (const m of s.meds) if (m.stopped) items.push({ at: m.stopped.at, kind: "dose", by: m.stopped.by, tone: "warn", text: `${m.name} stopped${m.stopped.reason ? ` — “${m.stopped.reason}”` : ""}${m.stopped.demo ? ` · ${DEMO_LABEL}` : ""}` });
   for (const l of s.taskLogs) {
     const t = s.tasks.find((t) => t.id === l.taskId);
     items.push({ at: l.at, kind: "task", by: l.by, tone: "good", text: `${t?.title ?? "Task"} done${l.note ? ` — “${l.note}”` : ""}` });

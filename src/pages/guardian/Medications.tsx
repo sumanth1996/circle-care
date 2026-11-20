@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { Plus, Clock, History, AlertCircle, Pause, Play } from "lucide-react";
+import { Plus, Clock, History, AlertCircle, Pause, Play, Ban } from "lucide-react";
 import { useStore } from "../../data/store";
 import { nameOf } from "../../data/selectors";
 import { PillArt, Sheet, Toggle, useToast, IconTile, taskIcons, Segmented } from "../../components/ui";
 import { fmtTime, fmtShortDay, uid } from "../../lib/time";
 import type { Medication, CareTask } from "../../data/types";
 import { SupplyRow } from "../../components/guardianEveryday";
+import { StoppedMeds, TodayDoses } from "../../components/saferDoses";
+import { stoppedLine, stoppedMatch } from "../../data/saferDoses";
 import "./guardian.css";
 
 const blank = (): Medication => ({ id: uid("med"), name: "", strength: "", dose: "1 tablet", times: ["08:00"], instructions: "", prescriber: "", purpose: "", critical: false, paused: false, pill: { color: "#FFFFFF", shape: "round" }, history: [] });
@@ -19,6 +21,11 @@ export default function Medications() {
   const [edit, setEdit] = useState<{ med: Medication; isNew: boolean } | null>(null);
   const [history, setHistory] = useState<Medication | null>(null);
   const [taskSheet, setTaskSheet] = useState(false);
+  // CC-246: stopping a medicine, and the "Add it again?" check for a stopped one's name.
+  const [stop, setStop] = useState<Medication | null>(null);
+  const [stopWhy, setStopWhy] = useState("");
+  const [again, setAgain] = useState<{ med: Medication; stopped: Medication } | null>(null);
+  const addNew = (m: Medication) => { actions.saveMed(m, true); setEdit(null); setAgain(null); toast(`${m.name} added`); };
 
   useEffect(() => { actions.logView("medications"); }, [actions]);
 
@@ -38,7 +45,7 @@ export default function Medications() {
       </label>
 
       <div className="grid-2">
-        {state.meds.map((m) => (
+        {state.meds.filter((m) => !m.stopped).map((m) => (
           <article key={m.id} className="panel stack" style={{ "--gap": "12px", opacity: m.paused ? 0.6 : 1 } as React.CSSProperties}>
             <div className="med-card">
               <PillArt med={m} size={56} />
@@ -58,10 +65,15 @@ export default function Medications() {
               <button className="btn sm secondary" onClick={() => setEdit({ med: structuredClone(m), isNew: false })}>Edit</button>
               <button className="btn sm plain" onClick={() => { actions.saveMed({ ...m, paused: !m.paused }, false); toast(m.paused ? `${m.name} resumed` : `${m.name} paused`); }}>{m.paused ? <><Play size={14} /> Resume</> : <><Pause size={14} /> Pause</>}</button>
               <button className="btn sm ghost" onClick={() => setHistory(m)}><History size={15} /> History</button>
+              <button className="btn sm ghost" onClick={() => { setStopWhy(""); setStop(m); }} aria-label={`Stop ${m.name}`}><Ban size={15} /> Stop</button>
             </div>
           </article>
         ))}
       </div>
+
+      <StoppedMeds />
+
+      <TodayDoses />
 
       <section className="stack" style={{ "--gap": "10px" } as React.CSSProperties}>
         <div className="section-head"><h2 className="section-title">Daily routines</h2><button className="btn sm secondary" onClick={() => setTaskSheet(true)}><Plus size={16} /> Add routine</button></div>
@@ -75,7 +87,33 @@ export default function Medications() {
         </div>
       </section>
 
-      {edit && <MedForm med={edit.med} isNew={edit.isNew} onClose={() => setEdit(null)} onSave={(m) => { actions.saveMed(m, edit.isNew); setEdit(null); toast(edit.isNew ? `${m.name} added` : `${m.name} updated`); }} />}
+      {edit && !again && <MedForm med={edit.med} isNew={edit.isNew} onClose={() => setEdit(null)} onSave={(m) => {
+        const was = edit.isNew ? stoppedMatch(state, m.name) : undefined;
+        if (was) { setAgain({ med: m, stopped: was }); return; }
+        if (edit.isNew) { addNew(m); return; }
+        actions.saveMed(m, false); setEdit(null); toast(`${m.name} updated`);
+      }} />}
+      {again && (
+        <Sheet title="Add it again?" onClose={() => setAgain(null)}>
+          <div className="stack">
+            <p>This was stopped on {stoppedLine(state, again.stopped).replace(/^Stopped on /, "")}. Add it again?</p>
+            {again.stopped.stopped?.reason && <p className="small muted">Reason it was stopped: {again.stopped.stopped.reason}</p>}
+            <div className="row wrap" style={{ "--gap": "8px" } as React.CSSProperties}>
+              <button className="btn" onClick={() => addNew(again.med)}>Add it again</button>
+              <button className="btn plain" onClick={() => { setAgain(null); setEdit(null); }}>Don't add</button>
+            </div>
+          </div>
+        </Sheet>
+      )}
+      {stop && (
+        <Sheet title={`Stop ${stop.name}?`} onClose={() => setStop(null)}>
+          <form className="stack" onSubmit={(e) => { e.preventDefault(); actions.stopMed(stop.id, stopWhy); setStop(null); toast(`${stop.name} stopped`); }}>
+            <p>It moves to the Stopped list with today's date and your name, and its reminders end. Pause instead if it's only for a while.</p>
+            <div className="field"><label htmlFor="stop-why">Why (optional)</label><input id="stop-why" className="input" value={stopWhy} onChange={(e) => setStopWhy(e.target.value)} placeholder="e.g. Doctor stopped it" /></div>
+            <button className="btn block">Stop {stop.name}</button>
+          </form>
+        </Sheet>
+      )}
       {history && (
         <Sheet title={`${history.name} history`} onClose={() => setHistory(null)}>
           <div className="list">

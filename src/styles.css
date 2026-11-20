@@ -223,3 +223,9 @@ hr.sep { border: 0; height: 1px; background: var(--line); margin: 4px 0; }
 .nps-scale button { min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); }
 .nps-scale button.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 @media (max-width: 420px) { .nps-scale button { min-height: 36px; font-size: 14px; } }
+
+/* Sprint 26 Safer Doses (CC-243, CC-244, CC-248) */
+.demo-banner { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; padding: 8px 14px; border-radius: 12px; background: #fff4d6; color: #5c4300; font-size: 14px; border: 1px solid #f0d58a; }
+.dose-dup { color: #8a4b00; display: flex; gap: 4px; align-items: center; margin-top: 2px; }
+.elder-undo { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 26px; background: #eef4ff; border: 2px solid #b9cdf5; }
+.elder-undo .btn.lg { min-height: 64px; font-size: 1.1em; gap: 8px; }

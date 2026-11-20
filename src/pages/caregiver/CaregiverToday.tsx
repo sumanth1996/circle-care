@@ -11,6 +11,7 @@ import { lowSupply } from "../../data/everyday";
 import "./caregiver.css";
 import { MyNextSteps } from "../../components/visitNotes";
 import { ShiftAboutMe } from "../../components/aboutMe";
+import { DoseMarked, DuplicateNote } from "../../components/saferDoses";
 
 const stateBadge: Record<DoseSlot["state"], [string, string]> = {
   taken: ["green", "Given"], skipped: ["yellow", "Skipped"], refused: ["yellow", "Declined"],
@@ -58,7 +59,12 @@ export default function CaregiverToday() {
             {d.med.critical && <span className="badge red">High priority</span>}
           </div>
           <p className="list-sub">{lastNightDose ? `Last night, ${fmtTime(d.time)}` : fmtTime(d.time)} · {d.med.dose} · {d.med.instructions}</p>
-          {d.log && <p className="tiny">{d.log.status === "taken" ? "Given" : d.log.status === "skipped" ? "Skipped" : "Declined"} by {nameOf(state, d.log.by)} at {fmtTime(d.log.at)}{d.log.reason ? ` — “${d.log.reason}”` : ""} {d.log.verified && <BadgeCheck size={13} color="var(--care)" style={{ verticalAlign: "-2px" }} />}</p>}
+          {/* CC-243, CC-244: who marked it and when, Undo for 10 minutes, then "Correct this". */}
+          {d.log && <>
+            <DoseMarked log={d.log} label={`${d.med.name} at ${fmtTime(d.time)}`} />
+            {d.log.verified && <p className="tiny"><BadgeCheck size={13} color="var(--care)" style={{ verticalAlign: "-2px" }} /> Verified on shift</p>}
+            <DuplicateNote d={d} />
+          </>}
         </div>
         <div className="dose-actions">
           {open ? (
