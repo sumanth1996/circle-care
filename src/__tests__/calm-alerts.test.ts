@@ -237,6 +237,9 @@ describe("quiet hours hold non-urgent alerts for one morning summary (CC-208)", 
     const s = noon();
     for (const m of s.meds) m.paused = true;
     s.approvals = s.approvals.filter((a) => a.status !== "pending");
+    // Open Help board asks warn a day ahead if no one has picked them up, so on the night before a seeded
+    // ask (a Friday for the Saturday one) that warning would be held too. Keep the night quiet on any day.
+    s.help = (s.help ?? []).filter((r) => r.status !== "open");
     s.settings.quietHours = { on: true, start: "22:00", end: "07:00" };
     at(s, "23:00");
     evaluate(s);

@@ -17,7 +17,7 @@ export interface Db extends Queryable {
   close(): Promise<void>;
 }
 
-const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1", "[::1]", "helium"];
+const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1", "[::1]"];
 
 /** The host node-postgres will really connect to, lower-cased; undefined if the URL won't parse. */
 function dbHost(url: string, env: Record<string, string | undefined>): string | undefined {
@@ -27,10 +27,10 @@ function dbHost(url: string, env: Record<string, string | undefined>): string | 
 }
 
 /**
- * True for local databases and Replit's built-in development database (helium), where TLS isn't needed.
- * It checks the host node-postgres will actually use: a `host` query parameter wins over the URL's host,
- * and an empty host falls back to PGHOST (which Replit points at its remote database), then to localhost.
- * A unix socket path is local.
+ * True when the database runs on this machine, where TLS isn't needed. It checks the host node-postgres
+ * will actually use: a `host` query parameter wins over the URL's host, and an empty host falls back to
+ * PGHOST (which Replit points at its remote database), then to localhost. A unix socket path is local.
+ * Replit's built-in database (helium) is handled by isReplitDevDb, only when running on Replit.
  */
 export function isLocalDb(url: string, env: Record<string, string | undefined> = process.env): boolean {
   const host = dbHost(url, env);
@@ -41,10 +41,11 @@ export function isLocalDb(url: string, env: Record<string, string | undefined> =
  * True for Replit's built-in development database. Replit gives every Repl a PostgreSQL server at the
  * bare host name "helium" on the Repl's private network, and its DATABASE_URL ends in sslmode=disable
  * because that server doesn't offer TLS. We allow it only when the app is running on Replit (REPL_ID
- * is set) and the host is exactly "helium", so no other host can borrow the exception.
+ * is set in the workspace, REPLIT_DEPLOYMENT in a published app) and the host is exactly "helium", so no
+ * other host can borrow the exception.
  */
 export function isReplitDevDb(url: string, env: Record<string, string | undefined> = process.env): boolean {
-  return !!env.REPL_ID && dbHost(url, env) === "helium";
+  return !!(env.REPL_ID || env.REPLIT_DEPLOYMENT) && dbHost(url, env) === "helium";
 }
 
 // Query parameters that would change how node-postgres sets up TLS. They are

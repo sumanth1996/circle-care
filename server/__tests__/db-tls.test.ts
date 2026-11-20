@@ -50,7 +50,6 @@ describe("CC-203: database TLS", () => {
       "postgres://app@localhost:5432/cc",
       "postgres://app@127.0.0.1/cc?sslmode=disable",
       "postgres://app@[::1]/cc",
-      "postgres://app@helium/cc?sslmode=disable",
     ]) {
       expect(isLocalDb(url)).toBe(true);
       expect(pgConnection(url)).toEqual({ connectionString: url });
@@ -81,6 +80,8 @@ describe("CC-203: database TLS", () => {
     expect(pgConnection(url, undefined, onReplit)).toEqual({ connectionString: url });
     // An empty host falls back to PGHOST, which Replit sets to helium for its dev database.
     expect(isReplitDevDb("postgresql:///heliumdb?sslmode=disable", { ...onReplit, PGHOST: "helium" })).toBe(true);
+    // A published Replit app sets REPLIT_DEPLOYMENT.
+    expect(pgConnection(url, undefined, { REPLIT_DEPLOYMENT: "1" })).toEqual({ connectionString: url });
   });
 
   it("keeps the TLS check for every other host, and for helium off Replit", () => {
