@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse, Smile, HandHeart } from "lucide-react";
+import { ArrowLeft, Download, PauseCircle, ShieldCheck, Eye, FileText, ScanFace, UserMinus, Clock, ShieldAlert, LogOut, Trash2, FolderOpen, KeyRound, HeartPulse, Smile, HandHeart, CheckCheck } from "lucide-react";
 import { useStore } from "../../data/store";
 import { dailyShared } from "../../data/everyday";
 import { clock, member, nameOf } from "../../data/selectors";
@@ -88,6 +88,15 @@ export default function PrivacyCenter() {
           <Smile size={30} color="var(--elder)" style={{ flex: "none" }} />
           <div className="grow"><b>Share daily check-ins with Sarah</b><p className="muted small">How {isElder ? "you feel" : "she feels"}, glasses of water and meals from {isElder ? "your" : "her"} home screen. {!state.settings.dailyLog.shareWithGuardian ? "Not shared right now." : state.settings.sharingPaused ? "Private while sharing is paused." : "Only Sarah can see them. Days logged while not sharing stay private."}</p></div>
           {isElder ? <Toggle checked={state.settings.dailyLog.shareWithGuardian} onChange={(v) => { actions.setDailySharing(v); toast(v ? "Sharing check-ins with Sarah" : "Check-ins are private"); }} label="Share daily check-ins with Sarah" /> : <span className={`badge ${dailyShared(state) ? "green" : "orange"}`}>{!state.settings.dailyLog.shareWithGuardian ? "Private" : state.settings.sharingPaused ? "Paused" : "Shared"}</span>}
+        </div>
+      </section>
+
+      {/* CC-250: Maggie decides whether others see when she has read a pinned note or a message. */}
+      <section className="panel stack" style={{ "--gap": "12px" } as React.CSSProperties}>
+        <div className="row">
+          <CheckCheck size={30} color="var(--guard)" style={{ flex: "none" }} />
+          <div className="grow"><b>Show when {isElder ? "I've" : "Maggie has"} read</b><p className="muted small">In the family chat, others see "Seen by" on pinned notes and "Read by" under their messages. {state.settings.elderShowsRead === false ? `When this is off, ${isElder ? "you show" : "she shows"} as "not shared", never as unread.` : `${isElder ? "Turn it off and you" : "If she turns it off, she"} show${isElder ? "" : "s"} as "not shared".`}</p></div>
+          {isElder ? <Toggle checked={state.settings.elderShowsRead !== false} onChange={(v) => { actions.settings({ elderShowsRead: v }); toast(v ? "Others can see when you've read" : "Your reading is private"); }} label="Show when I've read" /> : <span className={`badge ${state.settings.elderShowsRead === false ? "orange" : "green"}`}>{state.settings.elderShowsRead === false ? "Not shared" : "Shared"}</span>}
         </div>
       </section>
 

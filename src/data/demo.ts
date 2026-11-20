@@ -2,7 +2,7 @@ import type { State, DoseLog, Checkin, TaskLog, Visit, Handoff, AuditEvent, Dail
 import { chain } from "./audit";
 import { ymd, hm, toMin, minutesOfDay, addDays, uid, at as atTime } from "../lib/time";
 
-export const STATE_VERSION = 19;
+export const STATE_VERSION = 20;
 
 // Fictional people. No real health information is used anywhere in Circle Care's demo.
 export const ELDER = "m-maggie";
@@ -190,7 +190,7 @@ export function seed(now = new Date()): State {
     ],
     checkins,
     dailyLogs,
-    chat: { messages: chatMessages, pros: [], readAt: { [GUARDIAN]: iso(ymd(addDays(now, -1)), "13:00"), [ELDER]: iso(ymd(addDays(now, -1)), "12:41"), [FAMILY]: iso(today, "07:46") }, joinedAt: {} },
+    chat: { messages: chatMessages, pros: [], readAt: { [GUARDIAN]: iso(ymd(addDays(now, -1)), "13:00"), [ELDER]: iso(ymd(addDays(now, -1)), "12:41"), [FAMILY]: iso(today, "07:46") }, joinedAt: {}, scheduled: [], mutedUntil: {} },
     approvals: [
       {
         id: "ap-metformin", kind: "med-change", title: "Move evening Metformin to 6:30 PM",
@@ -259,6 +259,8 @@ export function seed(now = new Date()): State {
       refillAlertDays: 7,
       dailyLog: { shareWithGuardian: true, waterGoal: 6 },
       elderChatOnHome: true,
+      elderShowsRead: true,
+      elderChatReading: "full",
       recapNotify: true,
       helpFrom: [FAMILY],
       adminTo: [],

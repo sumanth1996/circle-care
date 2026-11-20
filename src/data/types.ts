@@ -198,9 +198,32 @@ export interface ChatMessage {
   text: string;
   /** CC-165: Maggie spoke it and read it back before sending. */
   via?: "voice";
+  /** CC-251: changed by its sender within 5 minutes. The earlier text isn't kept anywhere. */
+  editedAt?: string;
+  /** CC-251: taken back by its sender within 5 minutes. The text is cleared and isn't kept anywhere, the audit log included. */
+  removedAt?: string;
+  removedBy?: string;
+  /** CC-249: pinned to the top of the chat by Maggie or Sarah (up to 3 at once). */
+  pinnedAt?: string;
+  pinnedBy?: string;
+  /** CC-256: part of the Circle Messages demo scenario (dummy profiles). */
+  demo?: boolean;
+}
+/** CC-252: a message written now and posted later. Only its sender sees it until then. */
+export interface ScheduledMessage {
+  id: string;
+  by: string;
+  text: string;
+  sendAt: string;
+  createdAt: string;
+  demo?: boolean;
 }
 export interface Chat {
   messages: ChatMessage[];
+  /** CC-252: messages waiting to be posted, each seen only by its sender. */
+  scheduled: ScheduledMessage[];
+  /** CC-253: chat notices are off for a member until this time. Safety alerts aren't affected. */
+  mutedUntil: Record<string, string>;
   /** Paid caregivers join only when Maggie or Sarah adds them. */
   pros: string[];
   /** Last time each member read the chat. */
@@ -492,6 +515,10 @@ export interface Settings {
   recapNotify: boolean;
   /** CC-165: Maggie can hide the family chat from her home screen. It stays under Family. */
   elderChatOnHome: boolean;
+  /** CC-250: Maggie's choice to show others when she has read a pinned note. Off shows her as "not shared". */
+  elderShowsRead: boolean;
+  /** CC-254: with Read aloud on, new chat messages are read in full, or only who sent them. */
+  elderChatReading: "full" | "names";
   /** CC-211: the people Maggie lets see the help she asks for herself. */
   helpFrom: string[];
   /** CC-226: the people Maggie lets see insurance and admin details (call outcomes, contacts, reference numbers). Sarah always does. */
@@ -520,7 +547,7 @@ export interface State {
   /** CC-243, CC-244: every blocked double mark, undo and correction, oldest first. */
   doseHistory: DoseEvent[];
   /** CC-248: a demo scenario the presenter loaded, shown with a "Dummy profile (demo)" banner. */
-  demoScenario?: "safer-doses";
+  demoScenario?: "safer-doses" | "circle-messages";
   tasks: CareTask[];
   taskLogs: TaskLog[];
   shifts: Shift[];

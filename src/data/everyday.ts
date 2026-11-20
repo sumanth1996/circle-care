@@ -215,11 +215,20 @@ export function unreadChat(s: State, memberId: string) {
 
 export const lastChatMessage = (s: State, viewer?: string): ChatMessage | undefined => chatMessages(s, viewer).at(-1);
 
-/** The demo personas to notify about a new message: everyone in the chat except the sender. */
+/** CC-253: the time a member's chat notices come back, while they have the chat muted. */
+export function chatMutedUntil(s: State, memberId: string) {
+  const until = s.chat.mutedUntil?.[memberId];
+  return until && until > clock(s).toISOString() ? until : undefined;
+}
+
+/**
+ * The demo personas to notify about a new message: everyone in the chat except the sender, and except anyone who
+ * muted the chat (CC-253). Muting touches chat notices only; SOS, missed doses and other alerts keep their own rules.
+ */
 export function chatAudience(s: State, by: string): Persona[] {
   const to = new Set<Persona>();
   for (const m of chatMembers(s)) {
-    if (m.id === by) continue;
+    if (m.id === by || chatMutedUntil(s, m.id)) continue;
     if (m.id === ELDER) to.add("elder");
     else if (m.id === GUARDIAN) to.add("guardian");
     else if (m.id === CAREGIVER) to.add("caregiver");

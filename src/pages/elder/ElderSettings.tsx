@@ -41,6 +41,21 @@ export default function ElderSettings() {
       </div>
       <p className="muted" style={{ fontSize: "0.8em" }}>Circle Care also follows the text size you set on your phone.</p>
 
+      {/* CC-254: how much the family chat reads aloud. Names only keeps the words private if others are nearby. */}
+      <h2 style={{ fontSize: "1.4em", marginTop: 8 }}>Reading the family chat aloud</h2>
+      <div className="stack" role="radiogroup" aria-label="Reading the family chat aloud" style={{ "--gap": "10px" } as React.CSSProperties}>
+        {([{ v: "full", label: "Read the whole message", sub: "Who sent it, then what they wrote." }, { v: "names", label: "Names only", sub: "Just who wrote, if other people might hear." }] as const).map((o) => {
+          const on = (s.elderChatReading ?? "full") === o.v;
+          return (
+            <button key={o.v} role="radio" aria-checked={on} className="list-row" onClick={() => actions.settings({ elderChatReading: o.v })}
+              style={{ background: "#fff", borderRadius: 20, boxShadow: on ? "0 0 0 3px var(--blue)" : "var(--shadow-soft)", minHeight: 72, textAlign: "left" }}>
+              <span className="grow"><span style={{ fontWeight: 600, display: "block" }}>{o.label}</span><span className="muted" style={{ fontSize: "0.8em", display: "block" }}>{o.sub}</span></span>
+              {on && <span className="badge blue">Selected</span>}
+            </button>
+          );
+        })}
+      </div>
+
       <h2 style={{ fontSize: "1.4em", marginTop: 8 }}>Lock Circle Care</h2>
       <p className="muted" style={{ fontSize: "0.85em", marginTop: -8 }}>If other people use your phone, Circle Care can lock itself when you're not using it.</p>
       <div className="stack" role="radiogroup" aria-label="Lock Circle Care" style={{ "--gap": "10px" } as React.CSSProperties}>

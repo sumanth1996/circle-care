@@ -18,7 +18,7 @@ const LINKS = {
   "State.members": "Member", "State.meds": "Medication", "Medication.supply": "MedSupply", "State.doses": "DoseLog", "State.doseHistory": "DoseEvent",
   "State.tasks": "CareTask", "State.taskLogs": "TaskLog", "State.shifts": "Shift", "State.visits": "Visit",
   "State.handoffs": "Handoff", "State.sos": "SosEvent", "State.checkins": "Checkin", "State.dailyLogs": "DailyLog",
-  "State.chat": "Chat", "Chat.messages": "ChatMessage", "State.approvals": "Approval", "State.notes": "CareNote",
+  "State.chat": "Chat", "Chat.messages": "ChatMessage", "Chat.scheduled": "ScheduledMessage", "State.approvals": "Approval", "State.notes": "CareNote",
   "State.docs": "CareDoc", "State.appointments": "Appointment", "State.audit": "AuditEvent", "State.alerts": "Alert", "Alert.resolved": "AlertResolution", "State.reminders": "DoseReminder",
   "State.help": "HelpRequest", "HelpRequest.history": "HelpChange",
   "State.plans": "ComingHome", "ComingHome.items": "PlanItem", "Appointment.questions": "VisitQuestion", "Appointment.notes": "VisitNotes", "VisitNotes.nextSteps": "NextStep",

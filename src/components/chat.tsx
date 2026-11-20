@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, Lock, Mic, Send, StickyNote, Users, RotateCcw, MessageCircleHeart } from "lucide-react";
+import { BellOff, ChevronLeft, Clock, Ellipsis, Lock, Mic, Search, Send, StickyNote, Users, RotateCcw, MessageCircleHeart } from "lucide-react";
 import type { ChatMessage, State } from "../data/types";
 import { useStore, useCan } from "../data/store";
 import { CHAT_MAX, chatMembers, chatMessages, inChat, lastChatMessage, phiHint, unreadChat } from "../data/everyday";
 import { clock, member, meId, nameOf } from "../data/selectors";
+import { canChange, canPin, chatMutedUntil, messageText, readByNames } from "../data/circleMessages";
+import { ChatSearch, MessageBody, MessageOptions, MutedBanner, MuteSheet, PinnedNotes, ReadAloudPanel, ScheduledList, ScheduleSheet, messageTags, useReadAloudLines } from "./circleMessages";
 import { Avatar, Sheet, Toggle, useToast } from "./ui";
 import { fmtTime, fmtShortDay, ymd } from "../lib/time";
 import { voiceSupport } from "../lib/voice";
@@ -167,12 +169,8 @@ export function HealthHint({ text, spotted, canNote, onNote, onSend, onEdit, sen
 
 /* ---------------- The chat ---------------- */
 
-/** Names of the other people who have read up to this message. */
-function readBy(state: State, m: ChatMessage) {
-  return chatMembers(state)
-    .filter((p) => p.id !== m.by && (state.chat.joinedAt[p.id] ?? "") <= m.at && (state.chat.readAt[p.id] ?? "") >= m.at)
-    .map((p) => p.short);
-}
+/** Names of the other people who have read up to this message. Maggie is left out when she isn't sharing that (CC-250). */
+const readBy = (state: State, m: ChatMessage) => readByNames(state, m);
 
 export function ChatView({ large = false }: { large?: boolean }) {
   const { state, actions } = useStore();
@@ -189,6 +187,21 @@ export function ChatView({ large = false }: { large?: boolean }) {
   const unread = unreadChat(state, me);
   const canNote = useCan("write", "notes");
   const opened = useRef(false);
+  // Sprint 27 (CC-249 – CC-256)
+  const [options, setOptions] = useState<ChatMessage | null>(null);
+  const [later, setLater] = useState<string | null>(null);
+  const [mute, setMute] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
+  // CC-254: what's new is worked out before opening the chat marks it read.
+  const aloud = useReadAloudLines(state, me, large && inChat(state, me));
+  const speakOne = (text: string) => { if (typeof window !== "undefined" && "speechSynthesis" in window) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { rate: 0.92 })); } };
+  const jumpTo = (id: string) => {
+    setSearching(false);
+    setFlash(id);
+    setTimeout(() => document.getElementById(`msg-${id}`)?.scrollIntoView?.({ block: "center" }), 0);
+    setTimeout(() => setFlash((f) => (f === id ? null : f)), 2500);
+  };
 
   // Opening the chat marks it read; someone who isn't in it is refused and the refusal is audited.
   // Opening the chat once marks it read, or records a refused attempt by someone who isn't in it.
@@ -241,8 +254,17 @@ export function ChatView({ large = false }: { large?: boolean }) {
           {!large && <button type="button" className="btn plain sm" onClick={() => setPeople(true)}><Users size={16} /> People</button>}
         </div>
         <p className="chat-lock"><Lock size={large ? 18 : 14} /> Only {listNames(names)} can read this</p>
-        {large && <button type="button" className="btn plain people-btn" onClick={() => setPeople(true)}><Users size={22} /> People</button>}
+        <div className="chat-tools">
+          {large && <button type="button" className="btn plain people-btn" onClick={() => setPeople(true)}><Users size={22} /> People</button>}
+          <button type="button" className={`btn plain ${large ? "people-btn" : "sm"}`} onClick={() => setSearching((v) => !v)} aria-expanded={searching}><Search size={large ? 22 : 16} /> Search</button>
+          {!chatMutedUntil(state, me) && <button type="button" className={`btn plain ${large ? "people-btn" : "sm"}`} onClick={() => setMute(true)}><BellOff size={large ? 22 : 16} /> Mute</button>}
+        </div>
       </header>
+
+      <MutedBanner me={me} />
+      {searching && <ChatSearch me={me} onPick={jumpTo} onClose={() => setSearching(false)} />}
+      {large && <ReadAloudPanel lines={aloud} />}
+      <PinnedNotes large={large} me={me} onSpeak={large ? speakOne : undefined} />
 
       <div className="chat-list" role="log" aria-live="polite" aria-label="Messages">
         {msgs.length === 0 && <p className="chat-day">Say hello to your family</p>}
@@ -254,20 +276,24 @@ export function ChatView({ large = false }: { large?: boolean }) {
           const reads = m === lastMine ? readBy(state, m) : [];
           const who = member(state, m.by);
           const elderMsg = m.by === state.elderId && !mine;
+          const hasOptions = !m.removedAt && (canChange(state, me, m) || canPin(me));
+          const tags = messageTags(m);
           return (
-            <div key={m.id}>
+            <div key={m.id} id={`msg-${m.id}`} className={flash === m.id ? "msg-flash" : undefined}>
               {showDay && <p className="chat-day">{day === today ? "Today" : fmtShortDay(day)}</p>}
               <div className={`bubble-row ${mine ? "mine" : ""}`}>
                 {!mine && <Avatar m={who} size={large ? 48 : 32} />}
-                <div className={`bubble ${mine ? "mine" : "glass"} ${elderMsg ? "elder" : ""}`}>
+                <div className={`bubble ${mine ? "mine" : "glass"} ${elderMsg ? "elder" : ""} ${m.removedAt ? "removed" : ""}`}>
                   {!mine && <b className="who">{nameOf(state, m.by)}</b>}
-                  <p>{m.text}</p>
+                  <MessageBody state={state} m={m} />
                   <span className="when">
                     {fmtTime(m.at)}
                     {m.via === "voice" && <> · <Mic size={12} aria-hidden /> By voice</>}
+                    {tags.map((t) => <span key={t}> · {t}</span>)}
                     {reads.length > 0 && <> · Read by {listNames(reads)}</>}
                   </span>
                 </div>
+                {hasOptions && <button type="button" className="icon-btn msg-more" aria-label={`Options for ${mine ? "your" : `${nameOf(state, m.by)}'s`} message at ${fmtTime(m.at)}`} onClick={() => setOptions(m)}><Ellipsis size={large ? 24 : 18} /></button>}
               </div>
             </div>
           );
@@ -281,12 +307,16 @@ export function ChatView({ large = false }: { large?: boolean }) {
           <p className="center muted">Tap to talk, or <button type="button" className="linklike" onClick={() => setVoice({ typing: true })}>type instead</button></p>
         </div>
       ) : (
+        <>
+        <ScheduledList me={me} />
         <form className="composer glass" onSubmit={(e) => { e.preventDefault(); trySend(draft); }}>
           <button type="button" className="icon-btn" aria-label="Talk instead of typing" onClick={() => setVoice({})}><Mic size={20} /></button>
           <label className="sr-only" htmlFor="chat-input">Message</label>
           <input id="chat-input" className="input grow" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Message the family" autoComplete="off" aria-invalid={over || undefined} />
+          <button type="button" className="icon-btn" aria-label="Send later" onClick={() => setLater(draft)}><Clock size={20} /></button>
           <button className="btn send" disabled={!draft.trim() || over} aria-label="Send"><Send size={18} /></button>
         </form>
+        </>
       )}
       {over && <p className="small" role="alert" style={{ color: "var(--red)", marginTop: -8 }}>Messages can be up to {CHAT_MAX} characters. This one is {draft.trim().length}.</p>}
 
@@ -302,6 +332,9 @@ export function ChatView({ large = false }: { large?: boolean }) {
         />
       )}
       {people && <ChatPeople state={state} large={large} onClose={() => setPeople(false)} />}
+      {options && <MessageOptions m={options} me={me} large={large} onClose={() => setOptions(null)} />}
+      {later !== null && <ScheduleSheet initial={later} onClose={() => setLater(null)} onScheduled={() => setDraft("")} />}
+      {mute && <MuteSheet onClose={() => setMute(false)} />}
     </div>
   );
 }
@@ -353,7 +386,7 @@ export function ElderChatTile() {
         <span className="grow"><span className="v" style={{ display: "block" }}>Family chat</span><span className={`s ${unread ? "new" : ""}`} style={{ display: "block" }}>{status}</span></span>
       </div>
       {last && who && (
-        <p className="chat-tile-preview"><b>{last.by === elder ? "You" : who.short}:</b> {last.text}</p>
+        <p className="chat-tile-preview"><b>{last.by === elder ? "You" : who.short}:</b> {messageText(state, last)}</p>
       )}
       <Link to="/app/elder/chat" className="btn lg">Open chat</Link>
     </section>

@@ -23,6 +23,7 @@ import * as away from "./away";
 import * as quiet from "./quietDays";
 import * as aids from "./memoryAids";
 import * as scams from "./scams";
+import * as circle from "./circleMessages";
 
 export const STATE_KEY = "circle-care-demo";
 
@@ -79,6 +80,9 @@ export function applySettings(s: State, who: string, patch: Partial<Settings>) {
   if (patch.sharingPaused !== undefined && who !== ELDER) { audit(s, who, "denied", "change paused sharing"); return; }
   // What shows on Maggie's home is her choice (CC-165).
   if (patch.elderChatOnHome !== undefined && who !== ELDER) { audit(s, who, "denied", "change Maggie's home screen"); return; }
+  // CC-250, CC-254: only Maggie decides whether others see when she's read, and how much the chat reads aloud to her.
+  if (patch.elderShowsRead !== undefined && who !== ELDER) { audit(s, who, "denied", "change whether Maggie shares when she's read"); return; }
+  if (patch.elderChatReading !== undefined && who !== ELDER) { audit(s, who, "denied", "change how the chat reads aloud to Maggie"); return; }
   // CC-211: who sees the help Maggie asks for is hers to choose, through setHelpFrom (which checks and audits).
   if (patch.helpFrom !== undefined) { audit(s, who, "denied", "change who sees Maggie's help requests"); return; }
   // CC-226: who sees insurance and admin details is hers to choose, through setAdminTo.
@@ -103,7 +107,7 @@ export function leaveChat(s: State, id: string) {
 }
 
 /** The elder may change her own display, privacy and emergency-card preferences. */
-const ELDER_SETTINGS: (keyof Settings)[] = ["textSize", "highContrast", "readAloud", "sharingPaused", "elderLockMin", "emergencyCard", "toured", "elderChatOnHome"];
+const ELDER_SETTINGS: (keyof Settings)[] = ["textSize", "highContrast", "readAloud", "sharingPaused", "elderLockMin", "emergencyCard", "toured", "elderChatOnHome", "elderShowsRead", "elderChatReading"];
 
 /**
  * The rules engine. In production these run server-side on a scheduler;
@@ -116,6 +120,9 @@ export function evaluate(s: State) {
 
   // CC-229, CC-230: away mode starts, reminds Sarah if nobody has agreed to cover, and hands back at the end.
   away.runAway(s);
+
+  // CC-252: scheduled family chat messages go out when they're due.
+  circle.runScheduled(s);
 
   // Maggie's reminders (CC-39, CC-207): up to the limit Sarah set, with snooze, then they stop.
   runReminders(s);
@@ -768,6 +775,18 @@ function useStoreState(initial: State) {
       tipNotNow: () => update((s) => { scams.tipNotNow(s, actor(s)); }),
       readChat: () => update((s) => everyday.readChat(s, actor(s))),
       setChatPro: (memberId: string, on: boolean) => update((s) => everyday.setChatPro(s, actor(s), memberId, on)),
+      // Sprint 27: Circle Messages (CC-249 to CC-256)
+      editChat: (id: string, text: string) => update((s) => { circle.editChat(s, actor(s), id, text); }),
+      takeBackChat: (id: string) => update((s) => { circle.takeBack(s, actor(s), id); }),
+      pinChat: (id: string, replaceId?: string) => update((s) => { circle.pinMessage(s, actor(s), id, replaceId); }),
+      unpinChat: (id: string) => update((s) => { circle.unpinMessage(s, actor(s), id); }),
+      scheduleChat: (text: string, sendAt: string) => update((s) => { circle.scheduleChat(s, actor(s), text, sendAt); }),
+      changeScheduledChat: (id: string, text: string, sendAt: string) => update((s) => { circle.changeScheduled(s, actor(s), id, text, sendAt); }),
+      sendScheduledNow: (id: string) => update((s) => { circle.sendScheduledNow(s, actor(s), id); }),
+      cancelScheduledChat: (id: string) => update((s) => { circle.cancelScheduled(s, actor(s), id); }),
+      muteChat: (how: "morning" | "day") => update((s) => { circle.muteChat(s, actor(s), how); }),
+      unmuteChat: () => update((s) => { circle.unmuteChat(s, actor(s)); }),
+      loadCircleMessages: () => update((s) => { circle.loadCircleMessagesDemo(s); }),
       /** CC-87: only Maggie decides whether her guardian sees her health readings. */
       setHealthSharing: (on: boolean) => update((s) => {
         if (actor(s) !== ELDER) { audit(s, actor(s), "denied", "change health sharing"); return; }
