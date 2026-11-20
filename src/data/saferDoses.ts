@@ -46,7 +46,11 @@ export function refuseDuplicate(s: State, by: string, existing: DoseLog, status:
 export const canCorrect = (who: string, d: DoseLog) => who === GUARDIAN || who === d.by;
 
 /** CC-244: the person who marked it, within 10 minutes, and only before anyone corrected it. */
-export const canUndo = (s: State, who: string, d: DoseLog) => who === d.by && !d.correctedAt && minutesSince(s, d.at) < UNDO_MIN;
+export const canUndo = (s: State, who: string, d: DoseLog) => {
+  // A mark stamped after this tab's clock (another device a little ahead) isn't "just now" here, so it isn't offered.
+  const m = minutesSince(s, d.at);
+  return who === d.by && !d.correctedAt && m >= 0 && m < UNDO_MIN;
+};
 
 /** Minutes of undo left, rounded up (0 when gone). */
 export const undoLeft = (s: State, d: DoseLog) => Math.max(0, Math.ceil(UNDO_MIN - minutesSince(s, d.at)));
@@ -179,15 +183,19 @@ export function restartMed(s: State, by: string, medId: string) {
  */
 export function mergeFromOtherTab(local: State, incoming: State): State {
   const since = incoming.lastRunAt ? new Date(new Date(incoming.lastRunAt).getTime() - 10 * 60000).toISOString() : "";
+  // Only marks made up to now (allowing two minutes of clock difference between devices) can be "made here since
+  // the other tab last saved"; a record stamped hours ahead isn't a fresh mark.
+  const until = new Date(clock(incoming).getTime() + 2 * 60000).toISOString();
+  const recent = (iso: string) => iso >= since && iso <= until;
   const inIds = new Set(incoming.doses.map((d) => d.id));
   const inEvents = new Set((incoming.doseHistory ?? []).map((e) => e.id));
   const events = new Map<string, DoseEvent>();
   for (const e of incoming.doseHistory ?? []) events.set(e.id, e);
-  for (const e of local.doseHistory ?? []) if (!inEvents.has(e.id) && e.at >= since) events.set(e.id, e);
+  for (const e of local.doseHistory ?? []) if (!inEvents.has(e.id) && recent(e.at)) events.set(e.id, e);
   const undone = new Set([...events.values()].filter((e) => e.kind === "undone").map((e) => e.doseId));
   // Same record in both: the later version (a correction) wins.
   const byId = new Map<string, DoseLog>();
-  for (const d of [...incoming.doses, ...local.doses.filter((d) => inIds.has(d.id) || d.at >= since)]) {
+  for (const d of [...incoming.doses, ...local.doses.filter((d) => inIds.has(d.id) || recent(d.at))]) {
     if (undone.has(d.id)) continue;
     const had = byId.get(d.id);
     if (!had || (d.correctedAt ?? d.at) > (had.correctedAt ?? had.at)) byId.set(d.id, d);
