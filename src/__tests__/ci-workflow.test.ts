@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const WORKFLOW = readFileSync(resolve(__dirname, "../../.github/workflows/browser-tests.yml"), "utf8");
+const DEPENDABOT = readFileSync(resolve(__dirname, "../../.github/dependabot.yml"), "utf8");
 /** The workflow without its comment lines, so a commented-out setting can't satisfy a check. */
 const CODE = WORKFLOW.split("\n").filter((l) => !/^\s*#/.test(l)).join("\n");
 
@@ -50,5 +51,30 @@ describe("Browser tests workflow (CC-198)", () => {
       expect(CODE).toContain(step);
     }
     expect(CODE).not.toMatch(/continue-on-error|if:\s*false|if:\s*\$\{\{\s*false/);
+  });
+});
+
+// CC-221: Dependabot keeps the action pins current, one grouped pull request at a time, checked by the same workflow.
+describe("Dependabot for the action pins (CC-221)", () => {
+  const code = DEPENDABOT.split("\n").filter((l) => !/^\s*#/.test(l)).join("\n");
+
+  it("watches the GitHub Actions the workflow uses, every week", () => {
+    expect(code).toMatch(/^version: 2\n/m);
+    expect(code).toMatch(/- package-ecosystem: github-actions\n\s+directory: \/\n/);
+    expect(code).toMatch(/schedule:\n\s+interval: weekly\n/);
+  });
+
+  it("groups the updates into one pull request and caps how many stay open", () => {
+    expect(code).toMatch(/groups:\n\s+ci-actions:\n\s+patterns:\n\s+- "\*"/);
+    expect(code).toMatch(/open-pull-requests-limit: [1-5]\n/);
+  });
+
+  it("covers only GitHub Actions, so it never opens npm or pip pull requests", () => {
+    const ecosystems = [...code.matchAll(/package-ecosystem: (\S+)/g)].map((m) => m[1]);
+    expect(ecosystems).toEqual(["github-actions"]);
+  });
+
+  it("is checked by the Browser tests workflow, which runs on every pull request to main", () => {
+    expect(CODE).toMatch(/^on:\n {2}pull_request:\n {4}branches: \[main\]\n/m);
   });
 });
