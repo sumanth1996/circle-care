@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { seed, GUARDIAN, ELDER, FAMILY, CAREGIVER } from "../data/demo";
 import { applySettings, evaluate } from "../data/store";
 import { clock } from "../data/selectors";
@@ -201,12 +201,19 @@ describe("mute for a day (CC-253)", () => {
   });
 
   it("'for 24 hours' ends a day later, and the mute lifts by itself", () => {
-    const s = noon();
-    muteChat(s, ELDER, "day");
-    expect(new Date(chatMutedUntil(s, ELDER)!).getTime() - clock(s).getTime()).toBe(24 * 3600000);
-    later(s, 24 * 60 + 1);
-    expect(chatMutedUntil(s, ELDER)).toBeUndefined();
-    expect(chatAudience(s, FAMILY)).toContain("elder");
+    // Hold the real clock still so muteChat and the check read the same millisecond. Without this the
+    // two clock reads could land a millisecond apart and the gap came out as 86399999 (a flaky CI failure).
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const s = noon();
+      muteChat(s, ELDER, "day");
+      expect(new Date(chatMutedUntil(s, ELDER)!).getTime() - clock(s).getTime()).toBe(24 * 3600000);
+      later(s, 24 * 60 + 1);
+      expect(chatMutedUntil(s, ELDER)).toBeUndefined();
+      expect(chatAudience(s, FAMILY)).toContain("elder");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
